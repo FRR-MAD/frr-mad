@@ -1,0 +1,9 @@
+services:
+  batfish:
+    image: batfish/batfish:latest
+    container_name: batfish
+    ports:
+      - "9997:9997"
+    volumes:
+      - ./configs/snapshots:/batfish/snapshots
+    restart: unless-stopped
