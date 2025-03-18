@@ -1,92 +1,303 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
-	"os/exec"
-	"os/signal"
-	"syscall"
+	"strings"
+	"time"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/views"
-	"github.com/ba2025-ysmprc/frr-tui/internal/utils"
-
-	"github.com/ba2025-ysmprc/frr-tui/internal/batfish"
+	api "github.com/osrg/gobgp/v3/api"
+	"github.com/osrg/gobgp/v3/pkg/server"
+	"github.com/pterm/pterm"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func startBatfish() error {
-	// Start Batfish using Docker Compose
-	cmd := exec.Command("./scripts/start-batfish.sh")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to start Batfish: %v", err)
-	}
-	return nil
-}
-
-func stopBatfish() error {
-	// Stop Batfish using Docker Compose
-	cmd := exec.Command("./scripts/stop-batfish.sh")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to stop Batfish: %v", err)
-	}
-	return nil
-}
+// Enable verbose logging
+var logger = log.New(os.Stdout, "[BGP-DEBUG] ", log.LstdFlags)
 
 func main() {
-	// Start Batfish
-	if err := startBatfish(); err != nil {
-		log.Fatalf("Failed to start Batfish: %v", err)
+	logger.Println("Starting BGP server with debugging enabled")
+
+	// Initialize GoBGP server
+	bgpServer := server.NewBgpServer()
+	go bgpServer.Serve()
+
+	// Start the BGP server
+	logger.Println("Configuring BGP global settings")
+	if err := bgpServer.StartBgp(context.Background(), &api.StartBgpRequest{
+		Global: &api.Global{
+			Asn:        65001,
+			RouterId:   "1.1.1.1",
+			ListenPort: -1, // Let GoBGP choose the port
+		},
+	}); err != nil {
+		logger.Fatalf("Failed to start BGP server: %v", err)
+	}
+	logger.Println("BGP server started successfully")
+
+	// Try adding a route with the direct method
+	addSimpleRoute(bgpServer)
+
+	// Start TUI
+	startTUI(bgpServer)
+}
+
+func addSimpleRoute(bgpServer *server.BgpServer) {
+	ctx := context.Background()
+	logger.Println("Attempting to add a simple route")
+
+	// Create a simple route: 10.0.0.0/24 via 192.168.1.1
+	// Create NLRI
+	nlri := &api.IPAddressPrefix{
+		Prefix:    "10.0.0.0",
+		PrefixLen: 24,
+	}
+	nlriAny, err := anypb.New(nlri)
+	if err != nil {
+		logger.Printf("Failed to marshal NLRI: %v", err)
+		return
+	}
+	logger.Printf("Created NLRI: %s/%d", nlri.Prefix, nlri.PrefixLen)
+
+	// Create path attributes
+	origin := &api.OriginAttribute{
+		Origin: 0, // IGP
+	}
+	originAny, err := anypb.New(origin)
+	if err != nil {
+		logger.Printf("Failed to marshal origin: %v", err)
+		return
+	}
+	logger.Printf("Created origin attribute: %d", origin.Origin)
+
+	nextHop := &api.NextHopAttribute{
+		NextHop: "192.168.1.1",
+	}
+	nextHopAny, err := anypb.New(nextHop)
+	if err != nil {
+		logger.Printf("Failed to marshal next-hop: %v", err)
+		return
+	}
+	logger.Printf("Created next-hop attribute: %s", nextHop.NextHop)
+
+	// Create path
+	path := &api.Path{
+		Family: &api.Family{
+			Afi:  api.Family_AFI_IP,
+			Safi: api.Family_SAFI_UNICAST,
+		},
+		Nlri:   nlriAny,
+		Pattrs: []*anypb.Any{originAny, nextHopAny},
 	}
 
-	// Ensure Batfish is stopped when the TUI exits
-	defer func() {
-		if err := stopBatfish(); err != nil {
-			log.Printf("Failed to stop Batfish: %v", err)
-		} else {
-			log.Println("Batfish stopped successfully.")
+	// Add path to BGP server
+	logger.Printf("Adding path to BGP server, TypeUrl: %s", nlriAny.TypeUrl)
+	for i, attr := range path.Pattrs {
+		logger.Printf("Attribute[%d] TypeUrl: %s", i, attr.TypeUrl)
+	}
+
+	_, err = bgpServer.AddPath(ctx, &api.AddPathRequest{
+		TableType: api.TableType_GLOBAL,
+		Path:      path,
+	})
+	if err != nil {
+		logger.Printf("Failed to add path: %v", err)
+
+		// Check if the error is related to the NLRI format
+		if strings.Contains(err.Error(), "nlri") {
+			logger.Println("NLRI format issue detected. Trying alternative formatting...")
+
+			// Try alternative formatting
+			tryAlternativeFormats(bgpServer)
 		}
-	}()
+	} else {
+		logger.Println("Path added successfully!")
+	}
+}
 
-	// Catch termination signals (e.g., Ctrl+C)
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigChan
-		log.Println("Shutting down...")
-		if err := stopBatfish(); err != nil {
-			log.Printf("Failed to stop Batfish: %v", err)
-		}
-		os.Exit(0)
-	}()
+func tryAlternativeFormats(bgpServer *server.BgpServer) {
+	ctx := context.Background()
+	logger.Println("Trying alternative NLRI formats")
 
-	// Initialize Batfish client
-	bfClient := batfish.NewBatfishClient()
+	// Try with a different prefix format
+	prefixes := []string{"10.0.0.0/24", "10.0.0.0", "10.0.0"}
+	for i, prefix := range prefixes {
+		logger.Printf("Attempt %d: Trying with prefix format: %s", i+1, prefix)
 
-	// Simulate network monitoring
-	for {
-		anomalyDetected, err := utils.MonitorNetwork()
+		// Parse prefix
+		_, ipNet, err := net.ParseCIDR(prefix)
 		if err != nil {
-			log.Fatalf("Failed to monitor network: %v", err)
+			// If not CIDR, try as IP address
+			ip := net.ParseIP(prefix)
+			if ip == nil {
+				logger.Printf("Invalid prefix format: %s", prefix)
+				continue
+			}
+			// Create a /24 subnet
+			ipNet = &net.IPNet{
+				IP:   ip,
+				Mask: net.CIDRMask(24, 32),
+			}
 		}
 
-		if anomalyDetected {
-			fmt.Println("Anomaly detected! Analyzing with Batfish...")
+		// Create NLRI
+		nlri := &api.IPAddressPrefix{
+			Prefix:    ipNet.IP.String(),
+			PrefixLen: 24,
+		}
+		nlriAny, err := anypb.New(nlri)
+		if err != nil {
+			logger.Printf("Failed to marshal NLRI: %v", err)
+			continue
+		}
 
-			// Upload snapshot (replace with your snapshot path)
-			snapshotPath := "configs/snapshots"
-			snapshotName := "snapshot"
-			if err := bfClient.UploadSnapshot(snapshotPath, snapshotName); err != nil {
-				log.Fatalf("Failed to upload snapshot: %v", err)
-			}
+		// Create attributes
+		origin := &api.OriginAttribute{Origin: 0}
+		originAny, err := anypb.New(origin)
+		if err != nil {
+			logger.Printf("Failed to marshal origin: %v", err)
+			continue
+		}
 
-			// Run analysis (replace with your question)
-			result, err := bfClient.RunAnalysis(snapshotName, "bgpSessionStatus")
-			if err != nil {
-				log.Fatalf("Failed to run analysis: %v", err)
-			}
+		nextHop := &api.NextHopAttribute{NextHop: "192.168.1.1"}
+		nextHopAny, err := anypb.New(nextHop)
+		if err != nil {
+			logger.Printf("Failed to marshal next-hop: %v", err)
+			continue
+		}
 
-			// Display results in TUI
-			ui.DisplayResults(result)
+		// Add path
+		_, err = bgpServer.AddPath(ctx, &api.AddPathRequest{
+			TableType: api.TableType_GLOBAL,
+			Path: &api.Path{
+				Family: &api.Family{
+					Afi:  api.Family_AFI_IP,
+					Safi: api.Family_SAFI_UNICAST,
+				},
+				Nlri:   nlriAny,
+				Pattrs: []*anypb.Any{originAny, nextHopAny},
+			},
+		})
+
+		if err != nil {
+			logger.Printf("Attempt %d failed: %v", i+1, err)
+		} else {
+			logger.Printf("Attempt %d succeeded!", i+1)
+			break
 		}
 	}
+}
+
+func startTUI(bgpServer *server.BgpServer) {
+	logger.Println("Starting BGP monitoring TUI")
+	pterm.Info.Println("Starting BGP Monitoring TUI with debugging...")
+
+	for {
+		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgBlue)).WithMargin(10).Println("BGP Route Monitor")
+
+		// Fetch BGP routes with error handling
+		var routes []*api.Path
+		err := bgpServer.ListPath(context.Background(), &api.ListPathRequest{
+			TableType: api.TableType_GLOBAL,
+			Family:    &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
+		}, func(destination *api.Destination) {
+			routes = append(routes, destination.Paths...)
+			logger.Printf("Found destination: %s with %d paths", destination.Prefix, len(destination.Paths))
+		})
+
+		if err != nil {
+			pterm.Error.Printf("Failed to fetch routes: %v\n", err)
+			logger.Printf("ListPath error: %v", err)
+		} else {
+			logger.Printf("Found %d routes", len(routes))
+		}
+
+		// Display routes in TUI
+		tableData := pterm.TableData{
+			{"Prefix", "Next Hop", "Origin", "Status", "Debug Info"},
+		}
+
+		// Show warning if no routes found
+		if len(routes) == 0 {
+			pterm.Warning.Println("No routes found in BGP table!")
+			tableData = append(tableData, []string{
+				"N/A", "N/A", "N/A", "No Routes", "Check logs for errors",
+			})
+		}
+
+		for i, route := range routes {
+			prefix := "Unknown"
+			nextHop := "Unknown"
+			origin := "Unknown"
+			status := "Active"
+
+			// Get the prefix from the destination
+			if route.GetNlri() != nil {
+				if ipPrefix, err := getIPPrefixFromNLRI(route.GetNlri()); err == nil {
+					prefix = ipPrefix
+				} else {
+					prefix = "Error: " + err.Error()
+				}
+			}
+
+			// Extract attributes
+			for _, attr := range route.GetPattrs() {
+				// Extract next hop
+				if strings.Contains(attr.TypeUrl, "NextHop") {
+					nextHopAttr := &api.NextHopAttribute{}
+					if err := attr.UnmarshalTo(nextHopAttr); err == nil {
+						nextHop = nextHopAttr.GetNextHop()
+					}
+				}
+
+				// Extract origin
+				if strings.Contains(attr.TypeUrl, "Origin") {
+					originAttr := &api.OriginAttribute{}
+					if err := attr.UnmarshalTo(originAttr); err == nil {
+						switch originAttr.GetOrigin() {
+						case 0:
+							origin = "IGP"
+						case 1:
+							origin = "EGP"
+						case 2:
+							origin = "INCOMPLETE"
+						}
+					}
+				}
+			}
+
+			tableData = append(tableData, []string{
+				prefix,
+				nextHop,
+				origin,
+				status,
+				fmt.Sprintf("Path[%d]: Age: %ds", i, route.GetAge().GetSeconds()),
+			})
+		}
+
+		pterm.DefaultTable.WithHasHeader().WithData(tableData).Render()
+
+		// Display debug info
+		pterm.Println("\nBGP Server Information:")
+		pterm.Printf("- Routes found: %d\n", len(routes))
+		pterm.Printf("- ASN: 65001\n")
+		pterm.Printf("- Router ID: 1.1.1.1\n")
+		pterm.Println("\nPress Ctrl+C to exit. Refreshing data every 5 seconds...")
+
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func getIPPrefixFromNLRI(nlri *anypb.Any) (string, error) {
+	if strings.Contains(nlri.TypeUrl, "IPAddressPrefix") {
+		ipPrefix := &api.IPAddressPrefix{}
+		if err := nlri.UnmarshalTo(ipPrefix); err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s/%d", ipPrefix.GetPrefix(), ipPrefix.GetPrefixLen()), nil
+	}
+	return "", fmt.Errorf("unsupported NLRI type: %s", nlri.TypeUrl)
 }
