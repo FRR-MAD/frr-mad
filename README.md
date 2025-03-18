@@ -4,12 +4,12 @@
 
 - foobar
 
-## Setup Instructions
+## Setup Instructions for Batfish
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-username/your-repo.git
-    cd your-repo
+    git clone https://github.com/ba2025-ysmprc/frr-tui.git
+    cd frr-tui
     ```
 2. Start the setup script:
     ```bash
@@ -19,6 +19,23 @@
 3. Run the python script:
     ```bash
     ./run_tui.sh
+    ```
+
+## Setup Instructions for GoBGP
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/ba2025-ysmprc/frr-tui.git
+    cd frr-tui
+    ```
+2. Command for normal TUI
+    ```bash
+    go run cmd/frr-tui/main.go
+    ```
+
+3. Command for testing TUI
+    ```bash
+    go run cmd/frr-tui/main.go -test
     ```
 
 
