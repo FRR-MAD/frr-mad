@@ -124,7 +124,7 @@ def detect_bgp_anomalies():
     # Route advertisement issues
     if not pre_screen_results["missing_networks"].empty:
         anomalies["unused_structures"] = bf.q.unusedStructures().answer().frame()
-        anomalies["bgp_routes"] = bf.q.routes(protocols=["BGP"]).answer().frame()
+        anomalies["bgp_routes"] = bf.q.routes(protocols="BGP").answer().frame()
         
         # Check for BGP route reflection configuration
         anomalies["bgp_route_reflection"] = bf.q.bgpRib().answer().frame()
@@ -144,7 +144,7 @@ def detect_ospf_anomalies():
     
     # Route advertisement issues
     if not pre_screen_results["area_config"].empty:
-        anomalies["ospf_routes"] = bf.q.routes(protocols=["OSPF"]).answer().frame()
+        anomalies["ospf_routes"] = bf.q.routes(protocols="OSPF").answer().frame()
         anomalies["interface_properties"] = bf.q.interfaceProperties().answer().frame()
 
     return anomalies
