@@ -4,6 +4,23 @@
 
 - foobar
 
+## Setup Instructions
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/your-username/your-repo.git
+    cd your-repo
+    ```
+2. Start the setup script:
+    ```bash
+    ./scripts/setup.sh
+    ```
+
+3. Run the python script:
+    ```bash
+    python cmd/frr-tui/main.py
+    ```
+
 
 ## Project Structure
 

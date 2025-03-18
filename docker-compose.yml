@@ -3,7 +3,9 @@ services:
     image: batfish/batfish:latest
     container_name: batfish
     ports:
-      - "9997:9997"
+      - "9996:9996"
     volumes:
       - ./configs/snapshots:/batfish/snapshots
+    environment:
+      - BF_BIND_HOST=0.0.0.0
     restart: unless-stopped

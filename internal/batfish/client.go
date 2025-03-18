@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
 const (
-	batfishHost = "http://localhost:9997"
+	batfishHost = "http://localhost:9996"
 )
 
 type BatfishClient struct {
@@ -39,14 +40,37 @@ func (c *BatfishClient) UploadSnapshot(snapshotPath, snapshotName string) error 
 	}
 	defer file.Close()
 
+	// Create a new multipart writer
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Create a form file field
+	part, err := writer.CreateFormFile("fileUpload", filepath.Base(zipPath))
+	if err != nil {
+		return fmt.Errorf("failed to create form file: %v", err)
+	}
+
+	// Copy the file content to the form field
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content: %v", err)
+	}
+
+	// Close the multipart writer
+	err = writer.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close multipart writer: %v", err)
+	}
+
 	// Upload the snapshot
-	url := fmt.Sprintf("%s/v2/snapshots", batfishHost)
-	req, err := http.NewRequest("POST", url, file)
+	url := fmt.Sprintf("%s/api/upload_snapshot", batfishHost)
+	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/zip")
-	req.Header.Set("Snapshot-Name", snapshotName)
+
+	// Set the content type to the multipart form boundary
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -56,7 +80,7 @@ func (c *BatfishClient) UploadSnapshot(snapshotPath, snapshotName string) error 
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("failed to upload snapshot: %s", string(body))
+		return fmt.Errorf("failed to upload snapshot (status %d): %s", resp.StatusCode, string(body))
 	}
 
 	return nil
