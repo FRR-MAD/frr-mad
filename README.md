@@ -18,7 +18,7 @@
 
 3. Run the python script:
     ```bash
-    python cmd/frr-tui/main.py
+    ./run_tui.sh
     ```
 
 
