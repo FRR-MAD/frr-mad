@@ -9,7 +9,7 @@
 1. Clone the repository:
     ```bash
     git clone https://github.com/ba2025-ysmprc/frr-tui.git
-    cd frr-tui/batfish
+    cd frr-tui
     ```
 2. Start the setup script:
     ```bash
