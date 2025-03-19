@@ -117,6 +117,10 @@ def detect_bgp_anomalies():
 
     # Basic BGP session status
     anomalies["bgp_sessions"] = bf.q.bgpSessionStatus().answer().frame()
+
+    anomalies["bgp_session_compatibility"] = bf.q.bgpSessionCompatibility().answer().frame()
+
+    anomalies["bgp_edges"] = bf.q.bgpEdges().answer().frame()
     
     # Routing policy issues
     anomalies["undefined_references"] = bf.q.undefinedReferences().answer().frame()
@@ -135,6 +139,20 @@ def detect_ospf_anomalies():
     """Detect OSPF anomalies based on pre-screening results."""
     pre_screen_results = pre_screen_ospf()
     anomalies = {}
+    
+    # OSPF interface status
+    anomalies["ospf_interfaces"] = bf.q.ospfInterfaceConfiguration().answer().frame()
+
+    # OSPF area status
+    anomalies["ospf_areas"] = bf.q.ospfAreaConfiguration().answer().frame()
+
+    anomalies["ospf_process_config"] = bf.q.ospfProcessConfiguration().answer().frame()
+
+    # Maybe for later us
+    # result = bf.q.testRoutePolicies(policies='/as1_to_/', direction='in', inputRoutes=list([BgpRoute(network='10.0.0.0/24', originatorIp='4.4.4.4', originType='egp', protocol='bgp', asPath=[[64512, 64513], [64514]], communities=['64512:42', '64513:21'])])).answer().frame()
+    # result = bf.q.searchRoutePolicies(nodes='/^as1/', policies='/as1_to_/', inputConstraints=BgpRouteConstraints(prefix=["10.0.0.0/8:8-32", "172.16.0.0/28:28-32", "192.168.0.0/16:16-32"]), action='permit').answer().frame()
+
+    anomalies["ospf_edges"] = bf.q.ospfEdges().answer().frame()
 
     # OSPF session status
     anomalies["ospf_neighbors"] = bf.q.ospfSessionCompatibility().answer().frame()
@@ -145,6 +163,6 @@ def detect_ospf_anomalies():
     # Route advertisement issues
     if not pre_screen_results["area_config"].empty:
         anomalies["ospf_routes"] = bf.q.routes(protocols="OSPF").answer().frame()
-        anomalies["interface_properties"] = bf.q.interfaceProperties().answer().frame()
+        #anomalies["interface_properties"] = bf.q.interfaceProperties().answer().frame()
 
     return anomalies
