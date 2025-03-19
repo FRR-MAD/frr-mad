@@ -9,16 +9,16 @@
 1. Clone the repository:
     ```bash
     git clone https://github.com/ba2025-ysmprc/frr-tui.git
-    cd frr-tui
+    cd frr-tui/batfish
     ```
 2. Start the setup script:
     ```bash
-    ./scripts/setup.sh
+    ./batfish/scripts/setup.sh
     ```
 
 3. Run the python script:
     ```bash
-    ./run_tui.sh
+    ./batfish/run_tui.sh
     ```
 
 ## Setup Instructions for GoBGP
