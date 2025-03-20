@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -218,146 +220,184 @@ func startTUI(bgpServer *server.BgpServer) {
 		// Add more expected routes here
 	}
 
-	for {
-		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgBlue)).WithMargin(10).Println("BGP Route Monitor")
+	// Channel to signal when to refresh the TUI
+	refreshTUI := make(chan bool, 1)
 
-		// Fetch BGP routes with error handling
-		var routes []*api.Path
-		err := bgpServer.ListPath(context.Background(), &api.ListPathRequest{
-			TableType: api.TableType_GLOBAL,
-			Family:    &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
-		}, func(destination *api.Destination) {
-			routes = append(routes, destination.Paths...)
-			logger.Printf("Found destination: %s with %d paths", destination.Prefix, len(destination.Paths))
-		})
+	go func() {
+		for {
+			select {
+			case <-refreshTUI:
+				return
+			default:
+				pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgBlue)).WithMargin(10).Println("BGP Route Monitor")
 
-		if err != nil {
-			pterm.Error.Printf("Failed to fetch routes: %v\n", err)
-			logger.Printf("ListPath error: %v", err)
-		} else {
-			logger.Printf("Found %d routes", len(routes))
-		}
+				// Fetch BGP routes with error handling
+				var routes []*api.Path
+				err := bgpServer.ListPath(context.Background(), &api.ListPathRequest{
+					TableType: api.TableType_GLOBAL,
+					Family:    &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
+				}, func(destination *api.Destination) {
+					routes = append(routes, destination.Paths...)
+					logger.Printf("Found destination: %s with %d paths", destination.Prefix, len(destination.Paths))
+				})
 
-		// Validate routes
-		routeStatus := validateRoutes(routes, expectedRoutes)
-
-		// Display routes in TUI
-		tableData := pterm.TableData{
-			{"Prefix", "Next Hop", "Origin", "Status", "Alert"},
-		}
-
-		// Show warning if no routes found
-		if len(routes) == 0 {
-			pterm.Warning.Println("No routes found in BGP table!")
-			tableData = append(tableData, []string{
-				"N/A", "N/A", "N/A", "No Routes", "Check logs for errors",
-			})
-		}
-
-		// Display actual routes
-		for _, route := range routes {
-			prefix := "Unknown"
-			nextHop := "Unknown"
-			origin := "Unknown"
-			status := "ACTIVE"
-			alert := ""
-
-			// Get the prefix
-			if route.GetNlri() != nil {
-				if ipPrefix, err := getIPPrefixFromNLRI(route.GetNlri()); err == nil {
-					prefix = ipPrefix
-					// Get status from validation
-					if routeStat, ok := routeStatus[prefix]; ok {
-						status = routeStat.Status
-						alert = routeStat.Description
-					}
+				if err != nil {
+					pterm.Error.Printf("Failed to fetch routes: %v\n", err)
+					logger.Printf("ListPath error: %v", err)
 				} else {
-					prefix = "Error: " + err.Error()
+					logger.Printf("Found %d routes", len(routes))
 				}
-			}
 
-			// Extract attributes
-			for _, attr := range route.GetPattrs() {
-				// Extract next hop
-				if strings.Contains(attr.TypeUrl, "NextHop") {
-					nextHopAttr := &api.NextHopAttribute{}
-					if err := attr.UnmarshalTo(nextHopAttr); err == nil {
-						nextHop = nextHopAttr.GetNextHop()
+				// Validate routes
+				routeStatus := validateRoutes(routes, expectedRoutes)
+
+				// Display routes in TUI
+				tableData := pterm.TableData{
+					{"Prefix", "Next Hop", "Origin", "Status", "Alert"},
+				}
+
+				// Show warning if no routes found
+				if len(routes) == 0 {
+					pterm.Warning.Println("No routes found in BGP table!")
+					tableData = append(tableData, []string{
+						"N/A", "N/A", "N/A", "No Routes", "Check logs for errors",
+					})
+				}
+
+				// Display actual routes
+				for _, route := range routes {
+					prefix := "Unknown"
+					nextHop := "Unknown"
+					origin := "Unknown"
+					status := "ACTIVE"
+					alert := ""
+
+					// Get the prefix
+					if route.GetNlri() != nil {
+						if ipPrefix, err := getIPPrefixFromNLRI(route.GetNlri()); err == nil {
+							prefix = ipPrefix
+							// Get status from validation
+							if routeStat, ok := routeStatus[prefix]; ok {
+								status = routeStat.Status
+								alert = routeStat.Description
+							}
+						} else {
+							prefix = "Error: " + err.Error()
+						}
+					}
+
+					// Extract attributes
+					for _, attr := range route.GetPattrs() {
+						// Extract next hop
+						if strings.Contains(attr.TypeUrl, "NextHop") {
+							nextHopAttr := &api.NextHopAttribute{}
+							if err := attr.UnmarshalTo(nextHopAttr); err == nil {
+								nextHop = nextHopAttr.GetNextHop()
+							}
+						}
+
+						// Extract origin
+						if strings.Contains(attr.TypeUrl, "Origin") {
+							originAttr := &api.OriginAttribute{}
+							if err := attr.UnmarshalTo(originAttr); err == nil {
+								switch originAttr.GetOrigin() {
+								case 0:
+									origin = "IGP"
+								case 1:
+									origin = "EGP"
+								case 2:
+									origin = "INCOMPLETE"
+								}
+							}
+						}
+					}
+
+					tableData = append(tableData, []string{
+						prefix,
+						nextHop,
+						origin,
+						status,
+						alert,
+					})
+				}
+
+				// Display missing routes
+				for prefix, nextHop := range expectedRoutes {
+					if status, ok := routeStatus[prefix]; ok && status.Status == "MISSING" {
+						tableData = append(tableData, []string{
+							prefix,
+							nextHop,
+							"N/A",
+							"MISSING",
+							status.Description,
+						})
 					}
 				}
 
-				// Extract origin
-				if strings.Contains(attr.TypeUrl, "Origin") {
-					originAttr := &api.OriginAttribute{}
-					if err := attr.UnmarshalTo(originAttr); err == nil {
-						switch originAttr.GetOrigin() {
-						case 0:
-							origin = "IGP"
-						case 1:
-							origin = "EGP"
-						case 2:
-							origin = "INCOMPLETE"
+				// Render the table with colored status
+				table := pterm.DefaultTable.WithHasHeader().WithData(tableData)
+				table.Render()
+
+				// Display alert summary
+				pterm.Println("\nAlert Summary:")
+				hasAlerts := false
+				for prefix, status := range routeStatus {
+					if status.Status != "ACTIVE" {
+						hasAlerts = true
+						switch status.Severity {
+						case "error":
+							pterm.Error.Printf("Route %s: %s - %s\n", prefix, status.Status, status.Description)
+						case "warning":
+							pterm.Warning.Printf("Route %s: %s - %s\n", prefix, status.Status, status.Description)
+						default:
+							pterm.Info.Printf("Route %s: %s - %s\n", prefix, status.Status, status.Description)
 						}
 					}
 				}
-			}
 
-			tableData = append(tableData, []string{
-				prefix,
-				nextHop,
-				origin,
-				status,
-				alert,
-			})
-		}
-
-		// Display missing routes
-		for prefix, nextHop := range expectedRoutes {
-			if status, ok := routeStatus[prefix]; ok && status.Status == "MISSING" {
-				tableData = append(tableData, []string{
-					prefix,
-					nextHop,
-					"N/A",
-					"MISSING",
-					status.Description,
-				})
-			}
-		}
-
-		// Render the table with colored status
-		table := pterm.DefaultTable.WithHasHeader().WithData(tableData)
-		table.Render()
-
-		// Display alert summary
-		pterm.Println("\nAlert Summary:")
-		hasAlerts := false
-		for prefix, status := range routeStatus {
-			if status.Status != "ACTIVE" {
-				hasAlerts = true
-				switch status.Severity {
-				case "error":
-					pterm.Error.Printf("Route %s: %s - %s\n", prefix, status.Status, status.Description)
-				case "warning":
-					pterm.Warning.Printf("Route %s: %s - %s\n", prefix, status.Status, status.Description)
-				default:
-					pterm.Info.Printf("Route %s: %s - %s\n", prefix, status.Status, status.Description)
+				if !hasAlerts {
+					pterm.Success.Println("No issues detected with current routes.")
 				}
+
+				pterm.Println("\nBGP Server Information:")
+				pterm.Printf("- Routes found: %d\n", len(routes))
+				pterm.Printf("- Expected routes: %d\n", len(expectedRoutes))
+				pterm.Printf("- ASN: 65001\n")
+				pterm.Printf("- Router ID: 1.1.1.1\n")
+				pterm.Println("\nPress Ctrl+C to exit. Refreshing data every 5 seconds...")
+
+				time.Sleep(5 * time.Second)
 			}
 		}
+	}()
 
-		if !hasAlerts {
-			pterm.Success.Println("No issues detected with current routes.")
+	// Goroutine to handle manual GoBGP CLI commands
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		for {
+			pterm.Info.Print("Enter GoBGP CLI command: ")
+			command, _ := reader.ReadString('\n')
+			command = strings.TrimSpace(command)
+
+			if command == "" {
+				continue
+			}
+
+			// Execute the GoBGP CLI command
+			cmd := exec.Command("sh", "-c", command)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				pterm.Error.Printf("Command failed: %v\n", err)
+			}
+
+			// Display the command output
+			pterm.Println("\nCommand Output:")
+			pterm.Println(string(output))
 		}
+	}()
 
-		pterm.Println("\nBGP Server Information:")
-		pterm.Printf("- Routes found: %d\n", len(routes))
-		pterm.Printf("- Expected routes: %d\n", len(expectedRoutes))
-		pterm.Printf("- ASN: 65001\n")
-		pterm.Printf("- Router ID: 1.1.1.1\n")
-		pterm.Println("\nPress Ctrl+C to exit. Refreshing data every 5 seconds...")
-
-		time.Sleep(5 * time.Second)
-	}
+	// Wait for Ctrl+C to exit
+	<-make(chan struct{})
 }
 
 func runTests(bgpServer *server.BgpServer, expectedRoutes map[string]string) {
@@ -840,4 +880,24 @@ func getIPPrefixFromNLRI(nlri *anypb.Any) (string, error) {
 		return fmt.Sprintf("%s/%d", ipPrefix.GetPrefix(), ipPrefix.GetPrefixLen()), nil
 	}
 	return "", fmt.Errorf("unsupported NLRI type: %s", nlri.TypeUrl)
+}
+
+// not used yet
+func fetchRoutesWithCLI() []string {
+	logger.Println("Fetching routes using GoBGP CLI...")
+	cmd := exec.Command("gobgp", "global", "rib")
+	output, err := cmd.Output()
+	if err != nil {
+		logger.Printf("Failed to fetch routes using GoBGP CLI: %v", err)
+		return nil
+	}
+	// Parse CLI output
+	routes := strings.Split(string(output), "\n")
+	var filteredRoutes []string
+	for _, route := range routes {
+		if strings.Contains(route, "/") {
+			filteredRoutes = append(filteredRoutes, route)
+		}
+	}
+	return filteredRoutes
 }
