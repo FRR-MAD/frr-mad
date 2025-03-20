@@ -1,6 +1,6 @@
 #!/bin/bash
 
 # Set PYTHONPATH to the project root
-export PYTHONPATH=$(pwd)
+. export PYTHONPATH=$(pwd)
 
-python cmd/frr-tui/main.py
+python3 cmd/frr-tui/main.py

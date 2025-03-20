@@ -16,8 +16,9 @@
     . ./scripts/setup.sh
     ```
 
-3. Run the python script:
+3. Run the python script and start the docker container for batfish:
     ```bash
+    docker run --rm -it -p 9997:9997 batfish/batfish:latest
     ./run_tui.sh
     ```
 
