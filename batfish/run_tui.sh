@@ -1,6 +1,6 @@
 #!/bin/bash
 
 # Set PYTHONPATH to the project root
-export PYTHONPATH=$(pwd)/batfish
+export PYTHONPATH=$(pwd)
 
-python batfish/cmd/frr-tui/main.py
+python cmd/frr-tui/main.py

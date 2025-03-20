@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Navigate to the root directory (one level up from scripts/)
-cd ..
-
 # Create a virtual environment (if it doesn't already exist)
 if [ ! -d "venv" ]; then
     python -m venv venv

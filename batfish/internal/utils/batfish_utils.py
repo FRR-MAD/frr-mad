@@ -10,7 +10,7 @@ def setup_batfish():
     bf.set_network("my_network")  # Set a network name
     
     # Ensure the snapshot directory exists with proper structure
-    snapshot_path = "batfish/configs/snapshots/my_snapshot"
+    snapshot_path = "configs/snapshots/my_snapshot"
     ensure_snapshot_structure(snapshot_path)
     
     # Check if the configs directory is empty
@@ -21,14 +21,14 @@ def setup_batfish():
         # Find a sample configuration from another snapshot
         sample_found = False
         for sample_snapshot in ["bgp_duplicated", "ospf_duplicated"]:
-            sample_path = f"batfish/configs/snapshots/{sample_snapshot}/configs"
+            sample_path = f"configs/snapshots/{sample_snapshot}/configs"
             
             # Try with "configs" directory first (if you renamed them)
             if os.path.exists(sample_path) and os.listdir(sample_path):
                 sample_found = True
             else:
                 # Fall back to check "config" directory (if you haven't renamed them yet)
-                sample_path = f"batfish/configs/snapshots/{sample_snapshot}/config"
+                sample_path = f"configs/snapshots/{sample_snapshot}/config"
                 if os.path.exists(sample_path) and os.listdir(sample_path):
                     sample_found = True
             
@@ -91,7 +91,7 @@ def ensure_snapshot_structure(snapshot_path):
 
 def list_snapshots():
     """List available snapshots in the configs/snapshots/ directory."""
-    snapshots_dir = "batfish/configs/snapshots"
+    snapshots_dir = "configs/snapshots"
     if not os.path.exists(snapshots_dir):
         os.makedirs(snapshots_dir, exist_ok=True)
     return [name for name in os.listdir(snapshots_dir) if os.path.isdir(os.path.join(snapshots_dir, name))]

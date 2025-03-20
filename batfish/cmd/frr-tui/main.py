@@ -49,7 +49,7 @@ def display_results(results):
 def main():
     """Main TUI function."""
     # Setup basic directories if not present
-    os.makedirs("batfish/configs/snapshots", exist_ok=True)
+    os.makedirs("configs/snapshots", exist_ok=True)
 
     try:
         # Initialize Batfish
@@ -62,7 +62,7 @@ def main():
             # Create a default snapshot if none exists
             if not snapshots:
                 console.print("No snapshots found. Creating default snapshot directory.", style="yellow")
-                default_snapshot_path = "batfish/configs/snapshots/default"
+                default_snapshot_path = "configs/snapshots/default"
                 ensure_snapshot_structure(default_snapshot_path)
                 snapshots = ["default"]
                 console.print("Please add router configuration files to:", style="yellow")
@@ -84,7 +84,7 @@ def main():
             snapshot_name = snapshots[int(choice)-1]
 
             # Initialize the selected snapshot with proper path structure
-            snapshot_path = os.path.abspath(os.path.join("batfish/configs/snapshots", snapshot_name))
+            snapshot_path = os.path.abspath(os.path.join("configs/snapshots", snapshot_name))
             ensure_snapshot_structure(snapshot_path)  # Make sure it has the correct structure
             
             try:
@@ -118,7 +118,7 @@ def main():
     except Exception as e:
         console.print(f"Error initializing Batfish: {str(e)}", style="bold red")
         console.print("Please ensure you have valid router configurations in at least one snapshot.", style="yellow")
-        console.print("You can add .cfg or .conf files to the 'batfish/configs/snapshots/my_snapshot/configs' directory.", style="yellow")
+        console.print("You can add .cfg or .conf files to the 'configs/snapshots/my_snapshot/configs' directory.", style="yellow")
         if Prompt.ask("Would you like to continue without Batfish initialized?", choices=["y", "n"]) == "n":
             return
 
