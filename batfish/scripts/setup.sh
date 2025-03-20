@@ -2,7 +2,7 @@
 
 # Create a virtual environment (if it doesn't already exist)
 if [ ! -d "venv" ]; then
-    python -m venv venv
+    python3 -m venv venv
 fi
 
 # Activate the virtual environment

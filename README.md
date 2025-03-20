@@ -13,7 +13,7 @@
     ```
 2. Start the setup script:
     ```bash
-    ./scripts/setup.sh
+    . ./scripts/setup.sh
     ```
 
 3. Run the python script:
