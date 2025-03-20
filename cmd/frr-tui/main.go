@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/eiannone/keyboard"
 	"github.com/pterm/pterm"
 )
 
@@ -18,12 +20,6 @@ var (
 )
 
 func main() {
-	// Initialize keyboard input
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer keyboard.Close()
-
 	// Start the main loop
 	for {
 		if !inMonitoring {
@@ -62,7 +58,7 @@ func showTabSelection() {
 }
 
 func ospfMonitoring() {
-	pterm.Info.Println("OSPF Monitoring (Prototype)")
+	pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithMargin(10).Println("OSPF Monitoring")
 	pterm.Println("Press 'q+Enter' to go back to the tab selection.")
 
 	// Start a goroutine to listen for key presses
@@ -84,16 +80,14 @@ func ospfMonitoring() {
 			return
 		default:
 			// Fetch OSPF data
-			data := getOSPFData()
-			pterm.Println(data)
-
+			getOSPFData()
 			time.Sleep(2 * time.Second)
 		}
 	}
 }
 
 func bgpMonitoring() {
-	pterm.Info.Println("BGP Monitoring")
+	pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightGreen)).WithMargin(10).Println("BGP Monitoring")
 	pterm.Println("Press 'q+Enter' to go back to the tab selection.")
 
 	// Channel to signal quitting
@@ -118,9 +112,7 @@ func bgpMonitoring() {
 			return
 		default:
 			// Fetch BGP data
-			data := getBGPData()
-			pterm.Println(data)
-
+			getBGPData()
 			time.Sleep(2 * time.Second)
 		}
 	}
@@ -150,24 +142,91 @@ func customCommands() {
 	}
 }
 
-func getOSPFData() string {
-	// Fetch OSPF data (e.g., using vtysh)
+func getOSPFData() {
+	// Fetch OSPF neighbor data using vtysh
 	cmd := exec.Command("vtysh", "-c", "show ip ospf neighbor")
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Sprintf("Error: %v", err)
+		pterm.Error.Println("Error fetching OSPF neighbor data:", err)
+		return
 	}
-	return string(output)
+
+	// Query OSPF route metrics from Prometheus
+	prometheusURL := "http://mon:9090/api/v1/query"
+	routeQuery := "frr_ospf_route_metric"
+	routeData, err := queryPrometheus(prometheusURL, routeQuery)
+	if err != nil {
+		pterm.Error.Println("Error querying OSPF route metrics:", err)
+		return
+	}
+
+	// Display OSPF data with pterm
+	pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithMargin(10).Println("OSPF Monitoring")
+
+	// Display OSPF Neighbors
+	pterm.Info.Println("OSPF Neighbors:")
+	pterm.Println(string(output))
+
+	// Display OSPF Route Metrics
+	pterm.Info.Println("OSPF Route Metrics:")
+	pterm.Println(routeData)
 }
 
-func getBGPData() string {
-	// Fetch BGP data using gobgp
-	cmd := exec.Command("gobgp", "global", "rib", "-a", "ipv4")
+func getBGPData() {
+	// Fetch BGP neighbor data using vtysh
+	cmd := exec.Command("vtysh", "-c", "show ip bgp summary")
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Sprintf("Error: %v", err)
+		pterm.Error.Println("Error fetching BGP summary:", err)
+		return
 	}
-	return string(output)
+
+	// Query BGP route anomalies from Prometheus
+	prometheusURL := "http://mon:9090/api/v1/query"
+	routeQuery := "frr_bgp_route_announced"
+	routeData, err := queryPrometheus(prometheusURL, routeQuery)
+	if err != nil {
+		pterm.Error.Println("Error querying BGP route data:", err)
+		return
+	}
+
+	// Display BGP data with pterm
+	pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightGreen)).WithMargin(10).Println("BGP Monitoring")
+
+	// Display BGP Summary
+	pterm.Info.Println("BGP Summary:")
+	pterm.Println(string(output))
+
+	// Display BGP Route Data
+	pterm.Info.Println("BGP Route Data:")
+	pterm.Println(routeData)
+}
+
+// func getHostname() string {
+// 	hostname, err := os.Hostname()
+// 	if err != nil {
+// 		pterm.Error.Println("Failed to get hostname:", err)
+// 		return "localhost" // Fallback to localhost
+// 	}
+// 	return hostname
+// }
+
+func queryPrometheus(prometheusURL, query string) (string, error) {
+	params := url.Values{}
+	params.Add("query", query)
+
+	resp, err := http.Get(prometheusURL + "?" + params.Encode())
+	if err != nil {
+		return "", fmt.Errorf("error querying Prometheus: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
+
+	return string(body), nil
 }
 
 func runCommandWithTimeout(command string, timeout time.Duration) (string, error) {
