@@ -1,4 +1,4 @@
-package dashboard
+package ospfMonitoring
 
 import (
 	// "math/rand/v2"

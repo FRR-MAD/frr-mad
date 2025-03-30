@@ -1,4 +1,4 @@
-package dashboard
+package ospfMonitoring
 
 import tea "github.com/charmbracelet/bubbletea"
 
@@ -11,8 +11,8 @@ type Model struct {
 // New creates and returns a new dashboard Model.
 func New() Model {
 	return Model{
-		Title:   "Dashboard",
-		Metrics: []string{"Metric 1: 100", "Metric 2: 200", "Metric 3: 300"},
+		Title:   "OSPF Monitoring",
+		Metrics: []string{"Metric 1: 400", "Metric 2: 500", "Metric 3: 600"},
 	}
 }
 

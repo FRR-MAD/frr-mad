@@ -1,10 +1,12 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	// "log"
 	"os"
 
-	"github.com/ba2025-ysmprc/frr-tui/frontend/modules/dashboard"
+	"github.com/ba2025-ysmprc/frr-tui/internal/modules/dashboard"
+	"github.com/ba2025-ysmprc/frr-tui/internal/modules/ospfMonitoring"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -13,15 +15,18 @@ type AppState int
 
 const (
 	ViewDashboard AppState = iota
-	ViewBGP
-	ViewLogs
+	ViewOSPF
+	// ViewLogs
+	// add here new Views
+	totalViews
 )
 
 type AppModel struct {
 	currentView AppState
 	dashboard   dashboard.Model
-	bgp         bgp.Model
-	logs        logs.Model
+	ospf        ospfMonitoring.Model
+	// bgp         bgp.Model
+	// logs        logs.Model
 }
 
 func (m AppModel) Init() tea.Cmd {
@@ -37,9 +42,15 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "1":
 			m.currentView = ViewDashboard
 		case "2":
-			m.currentView = ViewBGP
-		case "3":
-			m.currentView = ViewLogs
+			m.currentView = ViewOSPF
+		// case "3":
+		// 	m.currentView = ViewLogs
+		case "right":
+			m.currentView = (m.currentView + 1) % totalViews
+		case "left":
+			m.currentView = (m.currentView + totalViews - 1) % totalViews
+		case "ctrl+c", "q", "esc":
+			return m, tea.Quit
 		}
 	}
 
@@ -47,13 +58,19 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch m.currentView {
 	case ViewDashboard:
-		m.dashboard, cmd = m.dashboard.Update(msg)
-	case ViewBGP:
-		m.bgp, cmd = m.bgp.Update(msg)
-	case ViewLogs:
-		m.logs, cmd = m.logs.Update(msg)
+		updatedModel, cmd := m.dashboard.Update(msg)
+		m.dashboard = updatedModel.(dashboard.Model)
+		return m, cmd
+	case ViewOSPF:
+		updatedModel, cmd := m.ospf.Update(msg)
+		m.ospf = updatedModel.(ospfMonitoring.Model)
+		return m, cmd
+		//	m.bgp, cmd = m.bgp.Update(msg)
+		//case ViewLogs:
+		//	m.logs, cmd = m.logs.Update(msg)
+	default:
+		panic("unhandled default case")
 	}
-
 	return m, cmd
 }
 
@@ -62,10 +79,10 @@ func (m AppModel) View() string {
 	switch m.currentView {
 	case ViewDashboard:
 		return m.dashboard.View()
-	case ViewBGP:
-		return m.bgp.View()
-	case ViewLogs:
-		return m.logs.View()
+	case ViewOSPF:
+		return m.ospf.View()
+	//case ViewLogs:
+	//	return m.logs.View()
 	default:
 		return "Unknown view"
 	}
@@ -75,11 +92,11 @@ func main() {
 	p := tea.NewProgram(AppModel{
 		currentView: ViewDashboard,
 		dashboard:   dashboard.New(), // assume each module has its own New() function
-		bgp:         bgp.New(),
-		logs:        logs.New(),
+		ospf:        ospfMonitoring.New(),
+		//logs:        logs.New(),
 	})
-	if err := p.Start(); err != nil {
-		log.Fatal(err)
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running program: %v\n", err)
 		os.Exit(1)
 	}
 }
