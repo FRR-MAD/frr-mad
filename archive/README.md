@@ -9,7 +9,7 @@
 1. Clone the repository:
     ```bash
     git clone https://github.com/ba2025-ysmprc/frr-tui.git
-    cd frr-tui/batfish
+    cd tui/batfish
     ```
 2. Start the setup script:
     ```bash
@@ -27,16 +27,16 @@
 1. Clone the repository:
     ```bash
     git clone https://github.com/ba2025-ysmprc/frr-tui.git
-    cd frr-tui
+    cd tui
     ```
 2. Command for normal TUI
     ```bash
-    go run cmd/frr-tui/main.go
+    go run cmd/tui/main.go
     ```
 
 3. Command for testing TUI
     ```bash
-    go run cmd/frr-tui/main.go -test
+    go run cmd/tui/main.go -test
     ```
 
 
