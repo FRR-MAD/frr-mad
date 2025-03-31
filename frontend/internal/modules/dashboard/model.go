@@ -1,6 +1,8 @@
 package dashboard
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 // Model defines the state for the dashboard module.
 type Model struct {
@@ -14,6 +16,10 @@ func New() Model {
 		Title:   "Dashboard",
 		Metrics: []string{"Metric 1: 100", "Metric 2: 200", "Metric 3: 300"},
 	}
+}
+
+func (m Model) GetTitle() string {
+	return m.Title
 }
 
 // Init returns the initial command (none in this case).

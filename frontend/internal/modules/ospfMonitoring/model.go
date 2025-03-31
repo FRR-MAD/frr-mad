@@ -16,6 +16,10 @@ func New() Model {
 	}
 }
 
+func (m Model) GetTitle() string {
+	return m.Title
+}
+
 // Init returns the initial command (none in this case).
 func (m Model) Init() tea.Cmd {
 	return nil
