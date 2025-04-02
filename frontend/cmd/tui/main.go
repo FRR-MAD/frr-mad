@@ -25,30 +25,43 @@ const (
 )
 
 type AppModel struct {
-	currentView AppState
-	dashboard   dashboard.Model
-	ospf        ospfMonitoring.Model
-	tabs        []string
-	width       int
-	height      int
+	currentView  AppState
+	tabs         []string
+	subTabs      []string
+	activeSubTab bool
+	dashboard    dashboard.Model
+	ospf         ospfMonitoring.Model
+	windowSize   *common.WindowSize
+	tabRowHeight int
+	//width        int
+	//height       int
 }
 
 func initModel() *AppModel {
+	windowSize := &common.WindowSize{Width: 80, Height: 24}
+
 	return &AppModel{
-		currentView: ViewDashboard,
-		dashboard:   dashboard.New(),
-		ospf:        ospfMonitoring.New(),
-		width:       80,
-		height:      24,
+		currentView:  ViewDashboard,
+		tabs:         []string{},
+		subTabs:      []string{},
+		activeSubTab: false,
+		dashboard:    dashboard.New(windowSize),
+		ospf:         ospfMonitoring.New(),
+		windowSize:   windowSize,
+		tabRowHeight: 5,
+		//width:        80,
+		//height:       24,
 	}
 }
 
 func (m *AppModel) Init() tea.Cmd {
-	m.Titles()
-	return nil
+	m.setTitles()
+	return tea.Batch(
+		m.dashboard.Init(),
+	)
 }
 
-func (m *AppModel) Titles() {
+func (m *AppModel) setTitles() {
 	modules := []common.TitledModule{
 		m.dashboard,
 		m.ospf,
@@ -61,12 +74,16 @@ func (m *AppModel) Titles() {
 func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// Example: switch view based on key presses
 		switch msg.String() {
 		case "1":
 			m.currentView = ViewDashboard
 		case "2":
 			m.currentView = ViewOSPF
+		case "r":
+			if m.currentView == ViewDashboard {
+				m.dashboard = dashboard.New(m.windowSize)
+				return m, m.dashboard.Init()
+			}
 		case "right":
 			m.currentView = (m.currentView + 1) % totalViews
 		case "left":
@@ -76,8 +93,8 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		m.width = msg.Width - 5
-		m.height = msg.Height - 5
+		m.windowSize.Width = msg.Width
+		m.windowSize.Height = msg.Height
 	}
 
 	// Delegate Update to active module
@@ -98,11 +115,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *AppModel) View() string {
-	// var tabs []string
-	//tabs = []string{"aaaa aaa", "bbb bbbb"}
-	// tabRowRendered = lipgloss.JoinHorizontal(lipgloss.Top, tabRow...)
-	// tabRow := components.GetTabRow(tabs, activeTab, hasSubMenu)
-	tabRow := components.CreateTabRow(m.tabs, 0, false)
+	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.activeSubTab)
 
 	var content string
 	switch m.currentView {
@@ -114,50 +127,10 @@ func (m *AppModel) View() string {
 		return "Unknown view"
 	}
 
-	//---------------------------------
-	// Table Layout Approach
-	//---------------------------------
-
-	//var (
-	//	purple = lipgloss.Color("99")
-	//	//gray      = lipgloss.Color("245")
-	//	//lightGray = lipgloss.Color("241")
-	//
-	//	headerStyle = lipgloss.NewStyle().Foreground(purple).Bold(true).Align(lipgloss.Center)
-	//	//cellStyle    = lipgloss.NewStyle().Padding(0, 1).Width(m.width - 5)
-	//	//oddRowStyle  = cellStyle.Foreground(gray)
-	//	//evenRowStyle = cellStyle.Foreground(lightGray)
-	//)
-	//
-	////rows := [][]string{
-	////	{content},
-	////}
-	//
-	//headers := []string{"Dashboard", "OSPF Monitor", "BGP Monitor", "Custom Command"}
-	//
-	//// Create a new table with borders, custom style function, headers, and rows.
-	//headerTable := table.New().
-	//	Border(lipgloss.NormalBorder()).
-	//	BorderStyle(lipgloss.NewStyle().Foreground(purple)).
-	//	StyleFunc(func(row, col int) lipgloss.Style {
-	//		// Only the header row is needed.
-	//		if row == table.HeaderRow {
-	//			return headerStyle
-	//		}
-	//		return lipgloss.NewStyle()
-	//	}).
-	//	Headers(headers...).
-	//	Rows() // No content rows.
-	//
-	//headerStr := headerTable.String()
-	//
-	//// Create a style for the merged content row.
-	//mergedStyle := lipgloss.NewStyle().Width(m.width).Align(lipgloss.Center)
-	//mergedContent := mergedStyle.Render(content)
-	//
-	//return lipgloss.JoinVertical(lipgloss.Left, headerStr, mergedContent)
-
-	return lipgloss.JoinVertical(lipgloss.Left, lipgloss.NewStyle().Width(m.width).Render(tabRow), styles.ContentStyle.Width(m.width).Render(content))
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.NewStyle().Width(m.windowSize.Width-4).Render(tabRow),
+		styles.ContentStyle.Width(m.windowSize.Width-4).Height(m.windowSize.Height-m.tabRowHeight).Render(content))
 }
 
 func main() {

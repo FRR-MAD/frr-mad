@@ -25,3 +25,7 @@ package main
 //	}
 //	return titles
 //}
+
+//func (m *AppModel) GetWindowSize() common.WindowSize {
+//	return m.windowSize
+//}

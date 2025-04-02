@@ -1,20 +1,22 @@
 package dashboard
 
 import (
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Model defines the state for the dashboard module.
 type Model struct {
-	Title   string
-	Metrics []string // Example: a list of metrics to display
+	Title         string
+	ospfAnomalies []string
+	windowSize    *common.WindowSize
 }
 
-// New creates and returns a new dashboard Model.
-func New() Model {
+func New(windowSize *common.WindowSize) Model {
 	return Model{
-		Title:   "Dashboard",
-		Metrics: []string{"Metric 1: 100", "Metric 2: 200", "Metric 3: 300"},
+		Title:         "Dashboard",
+		ospfAnomalies: []string{"Fetching OSPF data..."},
+		windowSize:    windowSize,
 	}
 }
 
@@ -22,7 +24,8 @@ func (m Model) GetTitle() string {
 	return m.Title
 }
 
-// Init returns the initial command (none in this case).
 func (m Model) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		common.FetchOSPFData(),
+	)
 }
