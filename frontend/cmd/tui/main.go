@@ -9,8 +9,8 @@ import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/modules/dashboard"
-	"github.com/ba2025-ysmprc/frr-tui/internal/modules/ospfMonitoring"
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/dashboard"
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/ospfMonitoring"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -24,11 +24,12 @@ const (
 	totalViews
 )
 
+var subTabsLength int
+
 type AppModel struct {
 	currentView  AppState
-	tabs         []string
-	subTabs      []string
-	activeSubTab bool
+	tabs         []common.Tab
+	activeSubTab *int
 	dashboard    *dashboard.Model
 	ospf         *ospfMonitoring.Model
 	windowSize   *common.WindowSize
@@ -42,13 +43,12 @@ func initModel() *AppModel {
 
 	return &AppModel{
 		currentView:  ViewDashboard,
-		tabs:         []string{},
-		subTabs:      []string{},
-		activeSubTab: false,
+		tabs:         []common.Tab{},
+		activeSubTab: nil,
 		dashboard:    dashboard.New(windowSize),
 		ospf:         ospfMonitoring.New(windowSize),
 		windowSize:   windowSize,
-		tabRowHeight: 5,
+		tabRowHeight: 6,
 		footer:       components.NewFooter("press 'esc' to quit"),
 		footerHeight: 1,
 	}
@@ -62,12 +62,12 @@ func (m *AppModel) Init() tea.Cmd {
 }
 
 func (m *AppModel) setTitles() {
-	modules := []common.TitledModule{
+	pages := []common.PageInterface{
 		m.dashboard,
 		m.ospf,
 	}
-	for _, mod := range modules {
-		m.tabs = append(m.tabs, mod.GetTitle())
+	for _, page := range pages {
+		m.tabs = append(m.tabs, page.GetTitle())
 	}
 }
 
@@ -85,13 +85,23 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		//		return m, m.dashboard.Init()
 		//	}
 		case "right":
-			m.currentView = (m.currentView + 1) % totalViews
+			if m.activeSubTab == nil {
+				m.currentView = (m.currentView + 1) % totalViews
+			} else {
+				*m.activeSubTab = (*m.activeSubTab + 1) % subTabsLength
+			}
 		case "left":
-			m.currentView = (m.currentView + totalViews - 1) % totalViews
+			if m.activeSubTab == nil {
+				m.currentView = (m.currentView + totalViews - 1) % totalViews
+			} else {
+				*m.activeSubTab = (*m.activeSubTab + subTabsLength - 1) % subTabsLength
+			}
+		case "down":
+			m.activeSubTab = intPtr(0)
+		case "up":
+			m.activeSubTab = nil
 		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
-		case "f":
-			m.footer.Append("press 'f' to append")
 		}
 
 	case tea.WindowSizeMsg:
@@ -122,11 +132,13 @@ func (m *AppModel) View() string {
 	switch m.currentView {
 	case ViewDashboard:
 		content = m.dashboard.View()
+		subTabsLength = m.dashboard.GetSubTabsLength()
 		m.footer.Clean()
 		m.footer.Append("press 'r' to refresh dashboard")
 		m.footer.Append("press 'e' to export everything")
 	case ViewOSPF:
 		content = m.ospf.View()
+		subTabsLength = m.ospf.GetSubTabsLength()
 		m.footer.Clean()
 		m.footer.Append("press 'r' to refresh OSPF monitoring")
 		m.footer.Append("press 'e' to export OSPF data")

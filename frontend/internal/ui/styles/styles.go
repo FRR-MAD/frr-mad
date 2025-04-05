@@ -55,6 +55,22 @@ var FooterBoxStyle = lipgloss.NewStyle().
 
 // If using characters for corner be aware of width deviation!
 
+var ContentBorder = lipgloss.Border{
+	Top:          " ",
+	Bottom:       "─",
+	Left:         "│",
+	Right:        "│",
+	TopLeft:      "",
+	TopRight:     "",
+	BottomLeft:   "╰",
+	BottomRight:  "╯",
+	MiddleLeft:   "├",
+	MiddleRight:  "┤",
+	Middle:       "┼",
+	MiddleTop:    "┬",
+	MiddleBottom: "┴",
+}
+
 var ActiveTabBorder = lipgloss.Border{
 	Top:          "─",
 	Bottom:       " ",
@@ -102,13 +118,12 @@ var ActiveTabBoxStyle = lipgloss.NewStyle().
 	Border(ActiveTabBorder).
 	BorderForeground(lipgloss.Color(BoxBorderBlue)).
 	Padding(0, 4).
-	Bold(true)
+	Bold(true).
+	Underline(true)
 
-var ActiveSubTabBoxStyle = lipgloss.NewStyle().
-	Border(ActiveTabBorder).
-	BorderForeground(lipgloss.Color(Grey)).
-	Padding(0, 4).
-	Bold(true)
+var ActiveTabBoxLockedStyle = ActiveTabBoxStyle.
+	Bold(false).
+	Underline(false)
 
 var InactiveTabBoxStyle = lipgloss.NewStyle().
 	Border(InactiveTabBorder).
@@ -123,6 +138,16 @@ var TabGap = lipgloss.NewStyle().
 	BorderTop(false).
 	BorderLeft(false).
 	BorderRight(false)
+
+var ActiveSubTabBoxStyle = lipgloss.NewStyle().
+	Padding(0, 4, 0, 0).
+	Bold(true).
+	Underline(true)
+
+var InactiveSubTabBoxStyle = lipgloss.NewStyle().
+	Padding(0, 4, 0, 0).
+	Bold(false).
+	Underline(false)
 
 	//var BoxWidthForOne = lipgloss.NewStyle().
 	//	Width(89)

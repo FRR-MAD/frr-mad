@@ -2,8 +2,9 @@ package common
 
 import tea "github.com/charmbracelet/bubbletea"
 
-// TitledModule defines a module that has a title.
-type TitledModule interface {
+// PageInterface defines a module that has a title.
+type PageInterface interface {
 	tea.Model
-	GetTitle() string
+	GetTitle() Tab
+	GetSubTabsLength() int
 }

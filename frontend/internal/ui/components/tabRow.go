@@ -7,17 +7,25 @@ import (
 	"strings"
 )
 
-func CreateTabRow(tabs []string, activeTab int, activeSubTab bool, windowSize *common.WindowSize) string {
+func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab *int, windowSize *common.WindowSize) string {
 	var renderedTabs []string
+	var renderedSubTabs []string
 	for i, tab := range tabs {
 		if i == activeTab {
-			if activeSubTab {
-				renderedTabs = append(renderedTabs, styles.ActiveSubTabBoxStyle.Render(tab))
+			if activeSubTab != nil {
+				renderedTabs = append(renderedTabs, styles.ActiveTabBoxLockedStyle.Render(tab.Title))
 			} else {
-				renderedTabs = append(renderedTabs, styles.ActiveTabBoxStyle.Render(tab))
+				renderedTabs = append(renderedTabs, styles.ActiveTabBoxStyle.Render(tab.Title))
+			}
+			for j, subTab := range tab.SubTabs {
+				if activeSubTab != nil && j == *activeSubTab {
+					renderedSubTabs = append(renderedSubTabs, styles.ActiveSubTabBoxStyle.Render(subTab))
+				} else {
+					renderedSubTabs = append(renderedSubTabs, styles.InactiveSubTabBoxStyle.Render(subTab))
+				}
 			}
 		} else {
-			renderedTabs = append(renderedTabs, styles.InactiveTabBoxStyle.Render(tab))
+			renderedTabs = append(renderedTabs, styles.InactiveTabBoxStyle.Render(tab.Title))
 		}
 	}
 
@@ -33,5 +41,11 @@ func CreateTabRow(tabs []string, activeTab int, activeSubTab bool, windowSize *c
 
 	renderedTabs = append(renderedTabs, gap)
 
-	return lipgloss.JoinHorizontal(lipgloss.Bottom, renderedTabs...)
+	horizontalTabs := lipgloss.JoinHorizontal(lipgloss.Bottom, renderedTabs...)
+
+	// subTabs := []string{"sub1", "sub2", "sub3"}
+
+	horizontalSubTabs := lipgloss.JoinHorizontal(lipgloss.Bottom, renderedSubTabs...)
+
+	return lipgloss.JoinVertical(lipgloss.Left, horizontalTabs, horizontalSubTabs)
 }

@@ -8,6 +8,7 @@ import (
 // Model defines the state for the dashboard module.
 type Model struct {
 	Title      string
+	SubTabs    []string
 	Metrics    []string
 	windowSize *common.WindowSize
 }
@@ -16,13 +17,21 @@ type Model struct {
 func New(windowSize *common.WindowSize) *Model {
 	return &Model{
 		Title:      "OSPF Monitoring",
+		SubTabs:    []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
 		Metrics:    []string{"Metric 1: 400", "Metric 2: 500", "Metric 3: 600"},
 		windowSize: windowSize,
 	}
 }
 
-func (m *Model) GetTitle() string {
-	return m.Title
+func (m *Model) GetTitle() common.Tab {
+	return common.Tab{
+		Title:   m.Title,
+		SubTabs: m.SubTabs,
+	}
+}
+
+func (m *Model) GetSubTabsLength() int {
+	return len(m.SubTabs)
 }
 
 // Init returns the initial command (none in this case).

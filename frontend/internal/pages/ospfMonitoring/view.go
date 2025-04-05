@@ -1,6 +1,7 @@
 package ospfMonitoring
 
 import (
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -12,13 +13,9 @@ func (m *Model) View() string {
 		boxWidthForFour = 20 // Minimum width to ensure readability
 	}
 
-	// Calculate remaining window height to align Infos always at the bottom of the terminal
-	//tabRowHeight := 5
-	//PaddingInfoBox := max(0, m.windowSize.Height-tabRowHeight-lipgloss.Height(infoBox))
-
 	ospfAnomalyOne := styles.GeneralBoxStyle.
 		Width(boxWidthForFour).
-		Render(styles.BoxTitleStyle.Render("OSPF Anomaly One") + "\n" + "Call Backend...☎\nEverything Good!")
+		Render(styles.BoxTitleStyle.Render("OSPF Anomaly One") + "\n" + "Call Backend...☎\nEverything Good! amount")
 
 	ospfAnomalyTwo := styles.GeneralBoxStyle.
 		Width(boxWidthForFour).
@@ -32,7 +29,42 @@ func (m *Model) View() string {
 		Width(boxWidthForFour).
 		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Four") + "\n" + "Call Backend...☎\nEverything Good!")
 
+	ospfAnomalies := []struct {
+		Title   string
+		Content string
+		Style   lipgloss.Style
+	}{
+		{
+			Title:   "OSPF Anomaly One",
+			Content: "Call Backend...☎\nVery Bad Anomaly Detected!\n\nReport...\nReport...\nReport...\nReport...\nReport...\n",
+			Style:   styles.BadBoxStyle,
+		},
+		{
+			Title:   "OSPF Anomaly Two",
+			Content: "Call Backend...☎\nEverything Good!",
+			Style:   styles.GeneralBoxStyle,
+		},
+		{
+			Title:   "OSPF Anomaly Three",
+			Content: "Call Backend...☎\nEverything Good!",
+			Style:   styles.GeneralBoxStyle,
+		},
+		{
+			Title:   "OSPF Anomaly Four",
+			Content: "Call Backend...☎\nEverything Good!",
+			Style:   styles.GeneralBoxStyle,
+		},
+	}
+
+	// Build anomaly boxes using the new component
+	var ospfAnomalyBoxes []string
+	for _, a := range ospfAnomalies {
+		box := components.NewAnomalyBox(a.Title, a.Content, a.Style, boxWidthForFour)
+		ospfAnomalyBoxes = append(ospfAnomalyBoxes, box.Render())
+	}
+
 	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyOne, ospfAnomalyTwo, ospfAnomalyThree, ospfAnomalyFour)
+	horizontalBoxes2 := lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyBoxes...)
 
 	//infoBox := styles.InfoTextStyle.
 	//	Width(m.windowSize.Width - 12).
@@ -40,5 +72,5 @@ func (m *Model) View() string {
 	//
 	//return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, infoBox)
 
-	return horizontalBoxes
+	return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, horizontalBoxes2)
 }
