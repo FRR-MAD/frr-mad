@@ -29,12 +29,12 @@ type AppModel struct {
 	tabs         []string
 	subTabs      []string
 	activeSubTab bool
-	dashboard    dashboard.Model
-	ospf         ospfMonitoring.Model
+	dashboard    *dashboard.Model
+	ospf         *ospfMonitoring.Model
 	windowSize   *common.WindowSize
 	tabRowHeight int
-	//width        int
-	//height       int
+	footer       *components.Footer
+	footerHeight int
 }
 
 func initModel() *AppModel {
@@ -46,11 +46,11 @@ func initModel() *AppModel {
 		subTabs:      []string{},
 		activeSubTab: false,
 		dashboard:    dashboard.New(windowSize),
-		ospf:         ospfMonitoring.New(),
+		ospf:         ospfMonitoring.New(windowSize),
 		windowSize:   windowSize,
 		tabRowHeight: 5,
-		//width:        80,
-		//height:       24,
+		footer:       components.NewFooter("press 'esc' to quit"),
+		footerHeight: 1,
 	}
 }
 
@@ -79,17 +79,19 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.currentView = ViewDashboard
 		case "2":
 			m.currentView = ViewOSPF
-		case "r":
-			if m.currentView == ViewDashboard {
-				m.dashboard = dashboard.New(m.windowSize)
-				return m, m.dashboard.Init()
-			}
+		//case "r":
+		//	if m.currentView == ViewDashboard {
+		//		m.dashboard = dashboard.New(m.windowSize)
+		//		return m, m.dashboard.Init()
+		//	}
 		case "right":
 			m.currentView = (m.currentView + 1) % totalViews
 		case "left":
 			m.currentView = (m.currentView + totalViews - 1) % totalViews
 		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
+		case "f":
+			m.footer.Append("press 'f' to append")
 		}
 
 	case tea.WindowSizeMsg:
@@ -102,11 +104,11 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.currentView {
 	case ViewDashboard:
 		updatedModel, cmd := m.dashboard.Update(msg)
-		m.dashboard = updatedModel.(dashboard.Model)
+		m.dashboard = updatedModel.(*dashboard.Model)
 		return m, cmd
 	case ViewOSPF:
 		updatedModel, cmd := m.ospf.Update(msg)
-		m.ospf = updatedModel.(ospfMonitoring.Model)
+		m.ospf = updatedModel.(*ospfMonitoring.Model)
 		return m, cmd
 	default:
 		panic("unhandled default case")
@@ -115,22 +117,33 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *AppModel) View() string {
-	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.activeSubTab)
 
 	var content string
 	switch m.currentView {
 	case ViewDashboard:
 		content = m.dashboard.View()
+		m.footer.Clean()
+		m.footer.Append("press 'r' to refresh dashboard")
+		m.footer.Append("press 'e' to export everything")
 	case ViewOSPF:
 		content = m.ospf.View()
+		m.footer.Clean()
+		m.footer.Append("press 'r' to refresh OSPF monitoring")
+		m.footer.Append("press 'e' to export OSPF data")
 	default:
 		return "Unknown view"
 	}
 
+	contentWidth := m.windowSize.Width - 4
+
+	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.activeSubTab, m.windowSize)
+	footer := m.footer.Get()
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		lipgloss.NewStyle().Width(m.windowSize.Width-4).Render(tabRow),
-		styles.ContentStyle.Width(m.windowSize.Width-4).Height(m.windowSize.Height-m.tabRowHeight).Render(content))
+		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
+		styles.ContentBoxStyle.Width(contentWidth).Height(m.windowSize.Height-m.tabRowHeight-m.footerHeight).Render(content),
+		styles.FooterBoxStyle.Width(contentWidth).Render(footer),
+	)
 }
 
 func main() {

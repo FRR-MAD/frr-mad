@@ -1,0 +1,40 @@
+package components
+
+import (
+	"strings"
+)
+
+// Footer represents a footer component with dynamic content.
+type Footer struct {
+	content []string
+}
+
+// NewFooter creates a new Footer with initial content.
+func NewFooter(defaultContent string) *Footer {
+	return &Footer{
+		content: []string{defaultContent},
+	}
+}
+
+// Append adds additional text to the footer.
+func (f *Footer) Append(s string) {
+	f.content = append(f.content, s)
+}
+
+// Clean removes all entries from the footer except for the first one.
+func (f *Footer) Clean() {
+	if len(f.content) > 1 {
+		f.content = f.content[:1]
+	}
+}
+
+// Set replaces the current footer content.
+func (f *Footer) Set(s string) {
+	f.content = []string{s}
+}
+
+// Get returns the footer string.
+func (f *Footer) Get() string {
+	combined := strings.Join(f.content, " | ")
+	return combined
+}

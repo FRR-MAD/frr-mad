@@ -12,19 +12,19 @@ type Model struct {
 	windowSize    *common.WindowSize
 }
 
-func New(windowSize *common.WindowSize) Model {
-	return Model{
+func New(windowSize *common.WindowSize) *Model {
+	return &Model{
 		Title:         "Dashboard",
 		ospfAnomalies: []string{"Fetching OSPF data..."},
 		windowSize:    windowSize,
 	}
 }
 
-func (m Model) GetTitle() string {
+func (m *Model) GetTitle() string {
 	return m.Title
 }
 
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		common.FetchOSPFData(),
 	)

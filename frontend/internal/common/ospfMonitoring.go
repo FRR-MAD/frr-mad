@@ -10,6 +10,7 @@ import (
 
 type OSPFMsg string
 
+// FetchOSPFData msg.type = msg.OSPFMsg --> triggers function in update
 func FetchOSPFData() tea.Cmd {
 	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
 		data, err := GetOSPFData()
