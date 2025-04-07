@@ -7,18 +7,18 @@ import (
 	"strings"
 )
 
-func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab *int, windowSize *common.WindowSize) string {
+func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize *common.WindowSize) string {
 	var renderedTabs []string
 	var renderedSubTabs []string
 	for i, tab := range tabs {
 		if i == activeTab {
-			if activeSubTab != nil {
+			if activeSubTab != -1 {
 				renderedTabs = append(renderedTabs, styles.ActiveTabBoxLockedStyle.Render(tab.Title))
 			} else {
 				renderedTabs = append(renderedTabs, styles.ActiveTabBoxStyle.Render(tab.Title))
 			}
 			for j, subTab := range tab.SubTabs {
-				if activeSubTab != nil && j == *activeSubTab {
+				if j == activeSubTab {
 					renderedSubTabs = append(renderedSubTabs, styles.ActiveSubTabBoxStyle.Render(subTab))
 				} else {
 					renderedSubTabs = append(renderedSubTabs, styles.InactiveSubTabBoxStyle.Render(subTab))

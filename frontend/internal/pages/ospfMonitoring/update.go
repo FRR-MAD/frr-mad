@@ -14,7 +14,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Pressing "r" refreshes metrics (for demonstration).
 		case "r":
 			// In a real application, you could fetch updated metrics here.
-			m.Metrics = append(m.Metrics, "New Metric: 400")
+
+			// these two cases don’t work properly because when key left/right is clicked on tabs then this also triggered so it doesnt match the actual active subtab.
+		case "right":
+			m.CurrentSubTab = (m.CurrentSubTab + 1) % 3
+		case "left":
+			m.CurrentSubTab = (m.CurrentSubTab + 3 - 1) % 3
 		}
 	}
 	return m, nil

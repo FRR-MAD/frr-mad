@@ -9,6 +9,7 @@ import (
 type Model struct {
 	Title         string
 	SubTabs       []string
+	ActiveSubTab  int
 	ospfAnomalies []string
 	windowSize    *common.WindowSize
 }
@@ -17,6 +18,7 @@ func New(windowSize *common.WindowSize) *Model {
 	return &Model{
 		Title:         "Dashboard",
 		SubTabs:       []string{"Dashboard 1", "Dashboard 2"},
+		ActiveSubTab:  0,
 		ospfAnomalies: []string{"Fetching OSPF data..."},
 		windowSize:    windowSize,
 	}

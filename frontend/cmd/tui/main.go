@@ -27,30 +27,30 @@ const (
 var subTabsLength int
 
 type AppModel struct {
-	currentView  AppState
-	tabs         []common.Tab
-	activeSubTab *int
-	dashboard    *dashboard.Model
-	ospf         *ospfMonitoring.Model
-	windowSize   *common.WindowSize
-	tabRowHeight int
-	footer       *components.Footer
-	footerHeight int
+	currentView   AppState
+	tabs          []common.Tab
+	currentSubTab int
+	dashboard     *dashboard.Model
+	ospf          *ospfMonitoring.Model
+	windowSize    *common.WindowSize
+	tabRowHeight  int
+	footer        *components.Footer
+	footerHeight  int
 }
 
 func initModel() *AppModel {
 	windowSize := &common.WindowSize{Width: 80, Height: 24}
 
 	return &AppModel{
-		currentView:  ViewDashboard,
-		tabs:         []common.Tab{},
-		activeSubTab: nil,
-		dashboard:    dashboard.New(windowSize),
-		ospf:         ospfMonitoring.New(windowSize),
-		windowSize:   windowSize,
-		tabRowHeight: 6,
-		footer:       components.NewFooter("press 'esc' to quit"),
-		footerHeight: 1,
+		currentView:   ViewDashboard,
+		tabs:          []common.Tab{},
+		currentSubTab: -1,
+		dashboard:     dashboard.New(windowSize),
+		ospf:          ospfMonitoring.New(windowSize),
+		windowSize:    windowSize,
+		tabRowHeight:  6,
+		footer:        components.NewFooter("press 'esc' to quit"),
+		footerHeight:  1,
 	}
 }
 
@@ -76,30 +76,36 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "1":
-			m.currentView = ViewDashboard
+			if m.currentSubTab == -1 {
+				m.currentView = ViewDashboard
+			}
 		case "2":
-			m.currentView = ViewOSPF
+			if m.currentSubTab == -1 {
+				m.currentView = ViewOSPF
+			}
 		//case "r":
 		//	if m.currentView == ViewDashboard {
 		//		m.dashboard = dashboard.New(m.windowSize)
 		//		return m, m.dashboard.Init()
 		//	}
 		case "right":
-			if m.activeSubTab == nil {
+			if m.currentSubTab == -1 {
 				m.currentView = (m.currentView + 1) % totalViews
+				m.currentSubTab = -1
 			} else {
-				*m.activeSubTab = (*m.activeSubTab + 1) % subTabsLength
+				m.currentSubTab = (m.currentSubTab + 1) % subTabsLength
 			}
 		case "left":
-			if m.activeSubTab == nil {
+			if m.currentSubTab == -1 {
 				m.currentView = (m.currentView + totalViews - 1) % totalViews
+				m.currentSubTab = -1
 			} else {
-				*m.activeSubTab = (*m.activeSubTab + subTabsLength - 1) % subTabsLength
+				m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
 			}
 		case "down":
-			m.activeSubTab = intPtr(0)
+			m.currentSubTab = 0
 		case "up":
-			m.activeSubTab = nil
+			m.currentSubTab = -1
 		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
 		}
@@ -137,7 +143,7 @@ func (m *AppModel) View() string {
 		m.footer.Append("press 'r' to refresh dashboard")
 		m.footer.Append("press 'e' to export everything")
 	case ViewOSPF:
-		content = m.ospf.View()
+		content = m.ospf.OSPFView(m.currentSubTab)
 		subTabsLength = m.ospf.GetSubTabsLength()
 		m.footer.Clean()
 		m.footer.Append("press 'r' to refresh OSPF monitoring")
@@ -148,7 +154,7 @@ func (m *AppModel) View() string {
 
 	contentWidth := m.windowSize.Width - 4
 
-	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.activeSubTab, m.windowSize)
+	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize)
 	footer := m.footer.Get()
 	return lipgloss.JoinVertical(
 		lipgloss.Left,

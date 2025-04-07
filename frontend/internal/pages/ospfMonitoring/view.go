@@ -6,7 +6,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+var currentSubTabLocal = -1
+
+func (m *Model) OSPFView(currentSubTab int) string {
+	currentSubTabLocal = currentSubTab
+	return m.View()
+}
+
 func (m *Model) View() string {
+	if currentSubTabLocal == 0 {
+		return m.RenderSubTab0()
+	} else if currentSubTabLocal == 1 {
+		return m.RenderSubTab1()
+	} else if currentSubTabLocal == 2 {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#ff00ff")).Render("OSPF Monitoring sub Tab 3")
+	}
+	return m.RenderSubTab0()
+}
+
+func (m *Model) RenderSubTab0() string {
 	// Calculate box width dynamically for four horizontal boxes based on terminal width
 	boxWidthForFour := (m.windowSize.Width - 16) / 4 // - 6 (padding+margin content) - 10 (for each border)
 	if boxWidthForFour < 20 {
@@ -73,4 +91,30 @@ func (m *Model) View() string {
 	//return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, infoBox)
 
 	return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, horizontalBoxes2)
+}
+
+func (m *Model) RenderSubTab1() string {
+	// Calculate box width dynamically for four horizontal boxes based on terminal width
+	boxWidthForFour := (m.windowSize.Width - 16) / 4 // - 6 (padding+margin content) - 10 (for each border)
+	if boxWidthForFour < 20 {
+		boxWidthForFour = 20 // Minimum width to ensure readability
+	}
+
+	ospfAnomalyOne := styles.GeneralBoxStyle.
+		Width(boxWidthForFour).
+		Render(styles.BoxTitleStyle.Render("OSPF Anomaly One") + "\n" + "Call Backend...☎\nEverything Good! amount")
+
+	ospfAnomalyTwo := styles.GeneralBoxStyle.
+		Width(boxWidthForFour).
+		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Two") + "\n" + "Call Backend...☎\nEverything Good!")
+
+	ospfAnomalyThree := styles.BadBoxStyle.
+		Width(boxWidthForFour).
+		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Three") + "\n" + "Call Backend...☎\nVery Bad Anomaly Detected!\n\nReport...\nReport...\nReport...\nReport...\nReport...\n")
+
+	ospfAnomalyFour := styles.GeneralBoxStyle.
+		Width(boxWidthForFour).
+		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Four") + "\n" + "Call Backend...☎\nEverything Good!")
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyThree, ospfAnomalyOne, ospfAnomalyTwo, ospfAnomalyFour)
 }
