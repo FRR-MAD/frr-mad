@@ -19,3 +19,11 @@ __pycache__/
 # Environment files
 .env
 .DS_Store
+
+# go files
+go.sum
+
+# folders
+binaries
+
+
