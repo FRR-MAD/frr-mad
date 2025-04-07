@@ -7,19 +7,17 @@ import (
 
 // Model defines the state for the dashboard module.
 type Model struct {
-	Title         string
-	SubTabs       []string
-	CurrentSubTab int
-	windowSize    *common.WindowSize
+	Title      string
+	SubTabs    []string
+	windowSize *common.WindowSize
 }
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize) *Model {
 	return &Model{
-		Title:         "OSPF Monitoring",
-		SubTabs:       []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
-		CurrentSubTab: 0,
-		windowSize:    windowSize,
+		Title:      "OSPF Monitoring",
+		SubTabs:    []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
+		windowSize: windowSize,
 	}
 }
 
