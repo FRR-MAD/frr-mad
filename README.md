@@ -20,6 +20,19 @@ root/
 └── README.md               # Project documentation
 ```
 
+### Backend Aggregator Structure
+
+```
+backend
+├──internal/
+│  └── aggregator/          # This is your collector
+│       ├── collector.go     # Main collection logic
+│       ├── fetcher.go       # HTTP metrics fetching
+│       ├── parser.go        # FRR config parsing
+│       ├── types.go         # DTO definitions
+│       └── converter.go     # Metrics to DTO conversion
+```
+
 1. **Separation by functionality**: UI, distro handling, and configuration are clearly separated
 2. **Easy extension**: Adding support for a new distro only requires adding a new handler in `internal/distro/handlers/`
 3. **Private vs public code**: `internal/` keeps implementation details hidden while `pkg/` exposes reusable components
