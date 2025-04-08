@@ -15,9 +15,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "0":
-			m.viewport.LineUp(2) // Scroll up by two lines.
+			m.viewport.LineUp(5) // Scroll up by two lines.
 		case "9":
-			m.viewport.LineDown(2) // Scroll down by one line.
+			m.viewport.LineDown(5) // Scroll down by one line.
 		case "backspace":
 			if currentSubTabLocal == 0 && len(m.BashInput) > 0 {
 				m.BashInput = m.BashInput[:len(m.BashInput)-1]
@@ -50,6 +50,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.VtyshInput += msg.String()
 			}
 		}
+	case tea.MouseMsg:
+		switch msg.Button {
+		case tea.MouseButtonWheelUp:
+			m.viewport.LineUp(1)
+		case tea.MouseButtonWheelDown:
+			m.viewport.LineDown(1)
+
+		}
 	}
+
 	return m, nil
 }

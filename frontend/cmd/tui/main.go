@@ -189,7 +189,7 @@ func (m *AppModel) View() string {
 
 func main() {
 	maybeUpdateTERM()
-	p := tea.NewProgram(initModel())
+	p := tea.NewProgram(initModel(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v\n", err)
 		os.Exit(1)
