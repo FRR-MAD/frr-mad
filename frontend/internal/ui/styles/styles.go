@@ -43,9 +43,10 @@ var GeneralBoxStyle = lipgloss.NewStyle().
 var BadBoxStyle = GeneralBoxStyle.
 	BorderForeground(lipgloss.Color(BadRed))
 
+var InactiveBoxStyle = GeneralBoxStyle.
+	BorderForeground(lipgloss.Color(Grey))
+
 var FooterBoxStyle = lipgloss.NewStyle().
-	//Border(FooterBoxBorder).
-	//BorderForeground(lipgloss.Color(Grey)).
 	Foreground(lipgloss.Color(Grey)).
 	Padding(0, 1)
 

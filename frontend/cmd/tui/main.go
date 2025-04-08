@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
+
 	// "log"
 	"os"
 
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/dashboard"
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/ospfMonitoring"
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/shell"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/pages/dashboard"
-	"github.com/ba2025-ysmprc/frr-tui/internal/pages/ospfMonitoring"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -20,6 +22,7 @@ type AppState int
 const (
 	ViewDashboard AppState = iota
 	ViewOSPF
+	ViewShell
 	// add here new Views
 	totalViews
 )
@@ -32,6 +35,7 @@ type AppModel struct {
 	currentSubTab int
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
+	shell         *shell.Model
 	windowSize    *common.WindowSize
 	tabRowHeight  int
 	footer        *components.Footer
@@ -45,10 +49,11 @@ func initModel() *AppModel {
 		currentView:   ViewDashboard,
 		tabs:          []common.Tab{},
 		currentSubTab: -1,
+		tabRowHeight:  6,
+		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize),
 		ospf:          ospfMonitoring.New(windowSize),
-		windowSize:    windowSize,
-		tabRowHeight:  6,
+		shell:         shell.New(windowSize),
 		footer:        components.NewFooter("press 'esc' to quit"),
 		footerHeight:  1,
 	}
@@ -65,6 +70,7 @@ func (m *AppModel) setTitles() {
 	pages := []common.PageInterface{
 		m.dashboard,
 		m.ospf,
+		m.shell,
 	}
 	for _, page := range pages {
 		m.tabs = append(m.tabs, page.GetTitle())
@@ -82,6 +88,10 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "2":
 			if m.currentSubTab == -1 {
 				m.currentView = ViewOSPF
+			}
+		case "3":
+			if m.currentSubTab == -1 {
+				m.currentView = ViewShell
 			}
 		//case "r":
 		//	if m.currentView == ViewDashboard {
@@ -102,11 +112,13 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
 			}
-		case "down":
-			m.currentSubTab = 0
+		case "down", "enter":
+			if m.currentSubTab == -1 {
+				m.currentSubTab = 0
+			}
 		case "up":
 			m.currentSubTab = -1
-		case "ctrl+c", "q", "esc":
+		case "ctrl+c", "esc":
 			return m, tea.Quit
 		}
 
@@ -126,8 +138,12 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.ospf.Update(msg)
 		m.ospf = updatedModel.(*ospfMonitoring.Model)
 		return m, cmd
-	default:
-		panic("unhandled default case")
+	case ViewShell:
+		updatedModel, cmd := m.shell.Update(msg)
+		m.shell = updatedModel.(*shell.Model)
+		return m, cmd
+		//default:
+		//	panic("unhandled default case")
 	}
 	return m, cmd
 }
@@ -148,6 +164,11 @@ func (m *AppModel) View() string {
 		m.footer.Clean()
 		m.footer.Append("press 'r' to refresh OSPF monitoring")
 		m.footer.Append("press 'e' to export OSPF data")
+	case ViewShell:
+		content = m.shell.ShellView(m.currentSubTab)
+		subTabsLength = m.shell.GetSubTabsLength()
+		m.footer.Clean()
+		m.footer.Append("press 'enter' to execute command")
 	default:
 		return "Unknown view"
 	}
@@ -165,6 +186,7 @@ func (m *AppModel) View() string {
 }
 
 func main() {
+	maybeUpdateTERM()
 	p := tea.NewProgram(initModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v\n", err)

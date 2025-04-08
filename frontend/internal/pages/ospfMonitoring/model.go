@@ -5,7 +5,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Model defines the state for the dashboard module.
+// Model defines the state for the dashboard page.
 type Model struct {
 	Title      string
 	SubTabs    []string

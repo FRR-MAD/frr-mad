@@ -1,5 +1,9 @@
 package main
 
+import (
+	"os"
+)
+
 func intPtr(i int) *int {
 	return &i
 }
@@ -33,3 +37,12 @@ func intPtr(i int) *int {
 //func (m *AppModel) GetWindowSize() common.WindowSize {
 //	return m.windowSize
 //}
+
+// maybeUpdateTERM updates the environment variable 'TERM' to 'xterm-256color' if necessary
+func maybeUpdateTERM() {
+	term := os.Getenv("TERM")
+	if term == "xterm" {
+		// fmt.Println("Detected TERM=xterm, updating to xterm-256color")
+		os.Setenv("TERM", "xterm-256color")
+	}
+}
