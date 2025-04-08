@@ -8,6 +8,7 @@ import (
 
 const tabRowHeight = 6
 const footerHeight = 1
+const inputHeight = 3
 
 var currentSubTabLocal = -1
 
@@ -31,8 +32,6 @@ func (m *Model) RenderSubTab0() string {
 	if boxWidthForOne < 20 {
 		boxWidthForOne = 20 // Minimum width to ensure readability
 	}
-
-	inputHeight := 3
 
 	outputMaxHeight := m.windowSize.Height - tabRowHeight - footerHeight - inputHeight - 2
 
@@ -65,8 +64,21 @@ func (m *Model) RenderSubTab1() string {
 		boxWidthForOne = 20 // Minimum width to ensure readability
 	}
 
+	outputMaxHeight := m.windowSize.Height - tabRowHeight - footerHeight - inputHeight - 2
+
+	// Update the viewport dimensions.
+	m.viewport.Width = boxWidthForOne
+	m.viewport.Height = outputMaxHeight
+
+	// Update the viewport content with the latest VtyshOutput.
+	m.viewport.SetContent(m.VtyshOutput)
+
 	input := "Type vtysh command: " + m.VtyshInput
 	input = styles.GeneralBoxStyle.Width(boxWidthForOne).Render(input)
 
-	return lipgloss.JoinVertical(lipgloss.Left, input, m.VtyshOutput)
+	//return lipgloss.JoinVertical(lipgloss.Left, input, m.VtyshOutput)
+
+	return lipgloss.JoinVertical(lipgloss.Left,
+		input,
+		styles.TextOutputStyle.Render(m.viewport.View()))
 }
