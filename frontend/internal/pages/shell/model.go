@@ -2,6 +2,7 @@ package shell
 
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -15,15 +16,27 @@ type Model struct {
 	BashOutput  string
 	VtyshInput  string
 	VtyshOutput string
+	viewport    viewport.Model
 }
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize) *Model {
+	boxWidthForOne := windowSize.Width - 10
+	if boxWidthForOne < 20 {
+		boxWidthForOne = 20
+	}
+	// For example: subtract tab row, footer, and input area heights.
+	outputHeight := windowSize.Height - 6 - 1 - 3 - 2
+
+	// Create the viewport with the desired dimensions.
+	vp := viewport.New(boxWidthForOne, outputHeight)
+
 	return &Model{
 		Title:       "Shell",
 		SubTabs:     []string{"bash", "vtysh"},
 		windowSize:  windowSize,
 		ActiveShell: "",
+		viewport:    vp,
 	}
 }
 

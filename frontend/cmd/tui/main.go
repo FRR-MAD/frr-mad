@@ -142,8 +142,8 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.shell.Update(msg)
 		m.shell = updatedModel.(*shell.Model)
 		return m, cmd
-		//default:
-		//	panic("unhandled default case")
+	default:
+		panic("unhandled default case")
 	}
 	return m, cmd
 }
@@ -168,7 +168,9 @@ func (m *AppModel) View() string {
 		content = m.shell.ShellView(m.currentSubTab)
 		subTabsLength = m.shell.GetSubTabsLength()
 		m.footer.Clean()
-		m.footer.Append("press 'enter' to execute command")
+		m.footer.Append("'enter': execute command")
+		m.footer.Append("'0': scroll up")
+		m.footer.Append("'9': scroll down")
 	default:
 		return "Unknown view"
 	}

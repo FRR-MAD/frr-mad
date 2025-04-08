@@ -38,46 +38,10 @@ func RunCommand(activeShell string, command string, timeout time.Duration) (stri
 
 	select {
 	case <-time.After(timeout):
-		cmd.Process.Kill()
-		return "", fmt.Errorf("command timed out")
-	case err := <-done:
+		err := cmd.Process.Kill()
 		if err != nil {
-			return "", fmt.Errorf("command error: %v\nOutput: %s", err, out.String())
+			return "", err
 		}
-		return out.String(), nil
-	}
-}
-
-func RunVtyshCommand(activeShell string, command string, timeout time.Duration) (string, error) {
-	var cmd *exec.Cmd
-
-	if activeShell == "vtysh" {
-		cmd = exec.Command("vtysh", "-c", command)
-	} else {
-		// For other shells, split the command string into arguments.
-		args := strings.Fields(command)
-		if len(args) == 0 {
-			return "", fmt.Errorf("no command provided")
-		}
-		cmd = exec.Command(args[0], args[1:]...)
-	}
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-
-	if err := cmd.Start(); err != nil {
-		return "", err
-	}
-
-	done := make(chan error, 1)
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	select {
-	case <-time.After(timeout):
-		cmd.Process.Kill()
 		return "", fmt.Errorf("command timed out")
 	case err := <-done:
 		if err != nil {

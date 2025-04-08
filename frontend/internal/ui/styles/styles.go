@@ -26,6 +26,9 @@ var BoxTitleStyle = lipgloss.NewStyle().
 	Bold(true).
 	Padding(0, 0, 1, 0)
 
+var TextOutputStyle = lipgloss.NewStyle().
+	Padding(1, 2)
+
 // ----------------------------
 // Box Styling
 // ----------------------------

@@ -14,6 +14,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "0":
+			m.viewport.LineUp(2) // Scroll up by two lines.
+		case "9":
+			m.viewport.LineDown(2) // Scroll down by one line.
 		case "backspace":
 			if currentSubTabLocal == 0 && len(m.BashInput) > 0 {
 				m.BashInput = m.BashInput[:len(m.BashInput)-1]
