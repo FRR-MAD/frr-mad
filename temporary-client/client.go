@@ -8,11 +8,16 @@ import (
 	"os"
 )
 
+/*
+Usage example:
+go run temporary-client/client.go -package exit
+*/
+
 func main() {
 	// Command line flags
 	pkg := flag.String("package", "bgp", "Package to send command to (bgp, ospf, exit)")
 	action := flag.String("action", "status", "Action to perform")
-	socketPath := flag.String("socket", "/tmp/unixsock.sock", "Path to the Unix socket")
+	socketPath := flag.String("socket", "/tmp/analyzer.sock", "Path to the Unix socket")
 	flag.Parse()
 
 	// Create the command
