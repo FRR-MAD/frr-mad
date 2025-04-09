@@ -12,16 +12,13 @@ import (
 
 func main() {
 
-	configs.LoadConfig()
+	config := configs.LoadConfig()
 
-	os.Exit(0)
-	sockServer := socket.NewSocket("/tmp/unixsock.sock")
+	sockServer := socket.NewSocket(config["UnixSocketLocation"])
 
-	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start the socket server in a goroutine
 	go func() {
 		if err := sockServer.Start(); err != nil {
 			fmt.Printf("Error starting socket server: %s\n", err)
@@ -29,11 +26,6 @@ func main() {
 		}
 	}()
 
-	fmt.Println("Socket server running. Press Ctrl+C to exit.")
-
-	// Wait for signal
 	<-sigChan
 	fmt.Println("\nShutting down...")
-	sockServer.Close()
-	fmt.Println("Server stopped.")
 }
