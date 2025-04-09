@@ -35,16 +35,12 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 		tabsWidth += lipgloss.Width(t)
 	}
 
-	// Build the gap at the right of the last tab
+	// Build the gap at the right of the last tab based on previous calculation
 	remainingWidth := max(0, windowSize.Width-tabsWidth-4)
 	gap := styles.TabGap.Render(strings.Repeat(" ", remainingWidth))
-
 	renderedTabs = append(renderedTabs, gap)
 
 	horizontalTabs := lipgloss.JoinHorizontal(lipgloss.Bottom, renderedTabs...)
-
-	// subTabs := []string{"sub1", "sub2", "sub3"}
-
 	horizontalSubTabs := lipgloss.JoinHorizontal(lipgloss.Bottom, renderedSubTabs...)
 
 	return lipgloss.JoinVertical(lipgloss.Left, horizontalTabs, horizontalSubTabs)

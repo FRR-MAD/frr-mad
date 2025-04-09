@@ -19,14 +19,14 @@ func (m *Model) ShellView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		return m.RenderSubTab0()
+		return m.renderShellTab0()
 	} else if currentSubTabLocal == 1 {
-		return m.RenderSubTab1()
+		return m.renderShellTab1()
 	}
-	return m.RenderSubTab0()
+	return m.renderShellTab0()
 }
 
-func (m *Model) RenderSubTab0() string {
+func (m *Model) renderShellTab0() string {
 	// Calculate box width dynamically for one horizontal box based on terminal width
 	boxWidthForOne := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
 	if boxWidthForOne < 20 {
@@ -39,25 +39,25 @@ func (m *Model) RenderSubTab0() string {
 	m.viewport.Width = boxWidthForOne
 	m.viewport.Height = outputMaxHeight
 
-	// Update the viewport content with the latest BashOutput.
-	m.viewport.SetContent(m.BashOutput)
+	// Update the viewport content with the latest bashOutput.
+	m.viewport.SetContent(m.bashOutput)
 
 	input := "Type bash command: "
 	if currentSubTabLocal == -1 {
 		input = styles.InactiveBoxStyle.Width(boxWidthForOne).Render(input)
 	} else if currentSubTabLocal == 0 {
-		input += m.BashInput
+		input += m.bashInput
 		input = styles.GeneralBoxStyle.Width(boxWidthForOne).Render(input)
 	}
 
-	// return lipgloss.JoinVertical(lipgloss.Left, input, styles.TextOutputStyle.Render(m.BashOutput))
+	// return lipgloss.JoinVertical(lipgloss.Left, input, styles.TextOutputStyle.Render(m.bashOutput))
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		input,
 		styles.TextOutputStyle.Render(m.viewport.View()))
 }
 
-func (m *Model) RenderSubTab1() string {
+func (m *Model) renderShellTab1() string {
 	// Calculate box width dynamically for one horizontal box based on terminal width
 	boxWidthForOne := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
 	if boxWidthForOne < 20 {
@@ -70,13 +70,13 @@ func (m *Model) RenderSubTab1() string {
 	m.viewport.Width = boxWidthForOne
 	m.viewport.Height = outputMaxHeight
 
-	// Update the viewport content with the latest VtyshOutput.
-	m.viewport.SetContent(m.VtyshOutput)
+	// Update the viewport content with the latest vtyshOutput.
+	m.viewport.SetContent(m.vtyshOutput)
 
-	input := "Type vtysh command: " + m.VtyshInput
+	input := "Type vtysh command: " + m.vtyshInput
 	input = styles.GeneralBoxStyle.Width(boxWidthForOne).Render(input)
 
-	//return lipgloss.JoinVertical(lipgloss.Left, input, m.VtyshOutput)
+	//return lipgloss.JoinVertical(lipgloss.Left, input, m.vtyshOutput)
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		input,

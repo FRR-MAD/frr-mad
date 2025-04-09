@@ -19,35 +19,35 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "down":
 			m.viewport.LineDown(10)
 		case "backspace":
-			if currentSubTabLocal == 0 && len(m.BashInput) > 0 {
-				m.BashInput = m.BashInput[:len(m.BashInput)-1]
-			} else if currentSubTabLocal == 1 && len(m.VtyshInput) > 0 {
-				m.VtyshInput = m.VtyshInput[:len(m.VtyshInput)-1]
+			if currentSubTabLocal == 0 && len(m.bashInput) > 0 {
+				m.bashInput = m.bashInput[:len(m.bashInput)-1]
+			} else if currentSubTabLocal == 1 && len(m.vtyshInput) > 0 {
+				m.vtyshInput = m.vtyshInput[:len(m.vtyshInput)-1]
 			}
 		case "left", "right":
 			m.ClearInput()
 			m.ClearOutput()
 		case "enter":
 			if currentSubTabLocal == 0 {
-				bashOutput, err := common.RunCommand("bash", m.BashInput, 5*time.Second)
+				bashOutput, err := common.RunCommand("bash", m.bashInput, 5*time.Second)
 				if err != nil {
-					m.BashOutput = fmt.Sprintf("Error: %v", err)
+					m.bashOutput = fmt.Sprintf("Error: %v", err)
 				} else {
-					m.BashOutput = bashOutput
+					m.bashOutput = bashOutput
 				}
 			} else if currentSubTabLocal == 1 {
-				vtyshOutput, err := common.RunCommand("vtysh", m.VtyshInput, 5*time.Second)
+				vtyshOutput, err := common.RunCommand("vtysh", m.vtyshInput, 5*time.Second)
 				if err != nil {
-					m.VtyshOutput = fmt.Sprintf("Error: %v", err)
+					m.vtyshOutput = fmt.Sprintf("Error: %v", err)
 				} else {
-					m.VtyshOutput = vtyshOutput
+					m.vtyshOutput = vtyshOutput
 				}
 			}
 		default:
 			if currentSubTabLocal == 0 {
-				m.BashInput += msg.String()
+				m.bashInput += msg.String()
 			} else if currentSubTabLocal == 1 {
-				m.VtyshInput += msg.String()
+				m.vtyshInput += msg.String()
 			}
 		}
 	case tea.MouseMsg:
@@ -56,6 +56,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineUp(1)
 		case tea.MouseButtonWheelDown:
 			m.viewport.LineDown(1)
+		default:
+			panic("unhandled default case")
 		}
 	}
 

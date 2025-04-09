@@ -15,16 +15,16 @@ func (m *Model) OSPFView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		return m.RenderSubTab0()
+		return m.renderOSPFTab0()
 	} else if currentSubTabLocal == 1 {
-		return m.RenderSubTab1()
+		return m.renderOSPFTab1()
 	} else if currentSubTabLocal == 2 {
 		return lipgloss.NewStyle().Foreground(lipgloss.Color("#ff00ff")).Render("OSPF Monitoring sub Tab 3")
 	}
-	return m.RenderSubTab0()
+	return m.renderOSPFTab0()
 }
 
-func (m *Model) RenderSubTab0() string {
+func (m *Model) renderOSPFTab0() string {
 	// Calculate box width dynamically for four horizontal boxes based on terminal width
 	boxWidthForFour := (m.windowSize.Width - 16) / 4 // - 6 (padding+margin content) - 10 (for each border)
 	if boxWidthForFour < 20 {
@@ -93,7 +93,7 @@ func (m *Model) RenderSubTab0() string {
 	return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, horizontalBoxes2)
 }
 
-func (m *Model) RenderSubTab1() string {
+func (m *Model) renderOSPFTab1() string {
 	// Calculate box width dynamically for four horizontal boxes based on terminal width
 	boxWidthForFour := (m.windowSize.Width - 16) / 4 // - 6 (padding+margin content) - 10 (for each border)
 	if boxWidthForFour < 20 {

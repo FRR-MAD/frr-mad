@@ -7,29 +7,29 @@ import (
 
 // Model defines the state for the dashboard page.
 type Model struct {
-	Title      string
-	SubTabs    []string
+	title      string
+	subTabs    []string
 	windowSize *common.WindowSize
 }
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize) *Model {
 	return &Model{
-		Title:      "OSPF Monitoring",
-		SubTabs:    []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
+		title:      "OSPF Monitoring",
+		subTabs:    []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
 		windowSize: windowSize,
 	}
 }
 
 func (m *Model) GetTitle() common.Tab {
 	return common.Tab{
-		Title:   m.Title,
-		SubTabs: m.SubTabs,
+		Title:   m.title,
+		SubTabs: m.subTabs,
 	}
 }
 
 func (m *Model) GetSubTabsLength() int {
-	return len(m.SubTabs)
+	return len(m.subTabs)
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
@@ -38,7 +38,7 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 		"'e': export OSPF data",
 	}
 	return common.FooterOption{
-		PageTitle:   m.Title,
+		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,
 	}
 }

@@ -33,11 +33,11 @@ type AppModel struct {
 	currentView   AppState
 	tabs          []common.Tab
 	currentSubTab int
+	tabRowHeight  int
+	windowSize    *common.WindowSize
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
 	shell         *shell.Model
-	windowSize    *common.WindowSize
-	tabRowHeight  int
 	footer        *components.Footer
 	footerOptions []common.FooterOption
 	footerHeight  int
@@ -67,27 +67,6 @@ func (m *AppModel) Init() tea.Cmd {
 	)
 }
 
-func (m *AppModel) setTitles() {
-	pages := []common.PageInterface{
-		m.dashboard,
-		m.ospf,
-		m.shell,
-	}
-	for _, page := range pages {
-		m.tabs = append(m.tabs, page.GetTitle())
-		m.footerOptions = append(m.footerOptions, page.GetFooterOptions())
-	}
-}
-
-func (m *AppModel) getCurrentFooterOptions() []string {
-	for _, opt := range m.footerOptions {
-		if opt.PageTitle == m.tabs[m.currentView].Title {
-			return opt.PageOptions
-		}
-	}
-	return nil
-}
-
 func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -104,11 +83,6 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.currentSubTab == -1 {
 				m.currentView = ViewShell
 			}
-		//case "r":
-		//	if m.currentView == ViewDashboard {
-		//		m.dashboard = dashboard.New(m.windowSize)
-		//		return m, m.dashboard.Init()
-		//	}
 		case "right":
 			if m.currentSubTab == -1 {
 				m.currentView = (m.currentView + 1) % totalViews
@@ -128,10 +102,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.currentSubTab = 0
 				m.footer.Clean()
 				m.footer.Append("'esc': exit sub tab")
-				// Get footer options for the current page
 				currentPageOptions := m.getCurrentFooterOptions()
-
-				// Append them to the footer
 				m.footer.AppendMultiple(currentPageOptions)
 			}
 		case "esc":
@@ -172,7 +143,7 @@ func (m *AppModel) View() string {
 	var content string
 	switch m.currentView {
 	case ViewDashboard:
-		content = m.dashboard.View()
+		content = m.dashboard.DashboardView(m.currentSubTab)
 		subTabsLength = m.dashboard.GetSubTabsLength()
 	case ViewOSPF:
 		content = m.ospf.OSPFView(m.currentSubTab)

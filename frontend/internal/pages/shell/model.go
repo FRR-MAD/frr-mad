@@ -8,14 +8,14 @@ import (
 
 // Model defines the state for the shell page.
 type Model struct {
-	Title       string
-	SubTabs     []string
+	title       string
+	subTabs     []string
 	windowSize  *common.WindowSize
-	ActiveShell string
-	BashInput   string
-	BashOutput  string
-	VtyshInput  string
-	VtyshOutput string
+	activeShell string
+	bashInput   string
+	bashOutput  string
+	vtyshInput  string
+	vtyshOutput string
 	viewport    viewport.Model
 }
 
@@ -32,33 +32,33 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		Title:       "Shell",
-		SubTabs:     []string{"bash", "vtysh"},
+		title:       "Shell",
+		subTabs:     []string{"bash", "vtysh"},
 		windowSize:  windowSize,
-		ActiveShell: "",
+		activeShell: "",
 		viewport:    vp,
 	}
 }
 
 func (m *Model) GetTitle() common.Tab {
 	return common.Tab{
-		Title:   m.Title,
-		SubTabs: m.SubTabs,
+		Title:   m.title,
+		SubTabs: m.subTabs,
 	}
 }
 
 func (m *Model) GetSubTabsLength() int {
-	return len(m.SubTabs)
+	return len(m.subTabs)
 }
 
 func (m *Model) ClearInput() {
-	m.BashInput = ""
-	m.VtyshInput = ""
+	m.bashInput = ""
+	m.vtyshInput = ""
 }
 
 func (m *Model) ClearOutput() {
-	m.BashOutput = ""
-	m.VtyshOutput = ""
+	m.bashOutput = ""
+	m.vtyshOutput = ""
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
@@ -68,7 +68,7 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 		"'down': scroll down",
 	}
 	return common.FooterOption{
-		PageTitle:   m.Title,
+		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,
 	}
 }
