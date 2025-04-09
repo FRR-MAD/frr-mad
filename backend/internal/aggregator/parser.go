@@ -32,14 +32,14 @@ func ParseConfig(path string) (*NetworkConfig, error) {
 			parts := strings.Fields(line)
 			currentIface = &OSPFInterfaceConfig{Name: parts[1]}
 
-		case currentIface != nil && strings.HasPrefix(line, " ip ospf area "):
+		case currentIface != nil && strings.HasPrefix(line, "ip ospf area "):
 			parts := strings.Fields(line)
 			currentIface.Area = parts[3]
 
-		case currentIface != nil && strings.HasPrefix(line, " ip ospf passive"):
+		case currentIface != nil && strings.HasPrefix(line, "ip ospf passive"):
 			currentIface.Passive = true
 
-		case currentIface != nil && strings.HasPrefix(line, " ip ospf cost "):
+		case currentIface != nil && strings.HasPrefix(line, "ip ospf cost "):
 			parts := strings.Fields(line)
 			fmt.Sscanf(parts[3], "%d", &currentIface.Cost)
 
@@ -63,11 +63,11 @@ func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *NetworkConfig) {
 		}
 
 		switch {
-		case strings.HasPrefix(line, " ospf router-id "):
+		case strings.HasPrefix(line, "ospf router-id "):
 			parts := strings.Fields(line)
 			config.RouterID = parts[2]
 
-		case strings.HasPrefix(line, " network "):
+		case strings.HasPrefix(line, "network "):
 			parts := strings.Fields(line)
 			network, area := parts[1], parts[3]
 			addNetworkToArea(config, network, area)
