@@ -1,7 +1,6 @@
 package aggregator_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
@@ -142,9 +141,4 @@ func TestMockFetcher(t *testing.T) {
 	if sysMetrics != nil {
 		t.Error("Expected nil system metrics when collection fails")
 	}
-}
-
-// Helper function to create test files
-func createTestFile(path, content string) error {
-	return os.WriteFile(path, []byte(content), 0644)
 }
