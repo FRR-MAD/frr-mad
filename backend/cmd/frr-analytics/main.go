@@ -6,10 +6,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ba2025-ysmprc/frr-tui/backend/configs"
 	socket "github.com/ba2025-ysmprc/frr-tui/backend/internal/comms/socket"
 )
 
 func main() {
+
+	configs.LoadConfig()
+
+	os.Exit(0)
 	sockServer := socket.NewSocket("/tmp/unixsock.sock")
 
 	// Handle graceful shutdown
