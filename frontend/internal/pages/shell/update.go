@@ -14,17 +14,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "0":
-			m.viewport.LineUp(5) // Scroll up by two lines.
-		case "9":
-			m.viewport.LineDown(5) // Scroll down by one line.
+		case "up":
+			m.viewport.LineUp(10)
+		case "down":
+			m.viewport.LineDown(10)
 		case "backspace":
 			if currentSubTabLocal == 0 && len(m.BashInput) > 0 {
 				m.BashInput = m.BashInput[:len(m.BashInput)-1]
 			} else if currentSubTabLocal == 1 && len(m.VtyshInput) > 0 {
 				m.VtyshInput = m.VtyshInput[:len(m.VtyshInput)-1]
 			}
-		case "left", "right", "up":
+		case "left", "right":
 			m.ClearInput()
 			m.ClearOutput()
 		case "enter":
@@ -56,7 +56,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineUp(1)
 		case tea.MouseButtonWheelDown:
 			m.viewport.LineDown(1)
-
 		}
 	}
 

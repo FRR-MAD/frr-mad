@@ -61,6 +61,18 @@ func (m *Model) ClearOutput() {
 	m.VtyshOutput = ""
 }
 
+func (m *Model) GetFooterOptions() common.FooterOption {
+	keyBoardOptions := []string{
+		"'enter': execute command",
+		"'up': scroll up",
+		"'down': scroll down",
+	}
+	return common.FooterOption{
+		PageTitle:   m.Title,
+		PageOptions: keyBoardOptions,
+	}
+}
+
 // Init returns the initial command (none in this case).
 func (m *Model) Init() tea.Cmd {
 	return nil

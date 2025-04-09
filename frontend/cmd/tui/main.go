@@ -39,6 +39,7 @@ type AppModel struct {
 	windowSize    *common.WindowSize
 	tabRowHeight  int
 	footer        *components.Footer
+	footerOptions []common.FooterOption
 	footerHeight  int
 }
 
@@ -54,7 +55,7 @@ func initModel() *AppModel {
 		dashboard:     dashboard.New(windowSize),
 		ospf:          ospfMonitoring.New(windowSize),
 		shell:         shell.New(windowSize),
-		footer:        components.NewFooter("press 'esc' to quit"),
+		footer:        components.NewFooter("'ctrl + c': exit FRR-MAD", "'enter': enter sub tabs"),
 		footerHeight:  1,
 	}
 }
@@ -74,7 +75,17 @@ func (m *AppModel) setTitles() {
 	}
 	for _, page := range pages {
 		m.tabs = append(m.tabs, page.GetTitle())
+		m.footerOptions = append(m.footerOptions, page.GetFooterOptions())
 	}
+}
+
+func (m *AppModel) getCurrentFooterOptions() []string {
+	for _, opt := range m.footerOptions {
+		if opt.PageTitle == m.tabs[m.currentView].Title {
+			return opt.PageOptions
+		}
+	}
+	return nil
 }
 
 func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -112,13 +123,21 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
 			}
-		case "down", "enter":
+		case "enter":
 			if m.currentSubTab == -1 {
 				m.currentSubTab = 0
+				m.footer.Clean()
+				m.footer.Append("'esc': exit sub tab")
+				// Get footer options for the current page
+				currentPageOptions := m.getCurrentFooterOptions()
+
+				// Append them to the footer
+				m.footer.AppendMultiple(currentPageOptions)
 			}
-		case "up":
+		case "esc":
 			m.currentSubTab = -1
-		case "ctrl+c", "esc":
+			m.footer.SetMainMenuOptions()
+		case "ctrl+c":
 			return m, tea.Quit
 		}
 
@@ -155,22 +174,12 @@ func (m *AppModel) View() string {
 	case ViewDashboard:
 		content = m.dashboard.View()
 		subTabsLength = m.dashboard.GetSubTabsLength()
-		m.footer.Clean()
-		m.footer.Append("press 'r' to refresh dashboard")
-		m.footer.Append("press 'e' to export everything")
 	case ViewOSPF:
 		content = m.ospf.OSPFView(m.currentSubTab)
 		subTabsLength = m.ospf.GetSubTabsLength()
-		m.footer.Clean()
-		m.footer.Append("press 'r' to refresh OSPF monitoring")
-		m.footer.Append("press 'e' to export OSPF data")
 	case ViewShell:
 		content = m.shell.ShellView(m.currentSubTab)
 		subTabsLength = m.shell.GetSubTabsLength()
-		m.footer.Clean()
-		m.footer.Append("'enter': execute command")
-		m.footer.Append("'0': scroll up")
-		m.footer.Append("'9': scroll down")
 	default:
 		return "Unknown view"
 	}
@@ -189,7 +198,8 @@ func (m *AppModel) View() string {
 
 func main() {
 	maybeUpdateTERM()
-	p := tea.NewProgram(initModel(), tea.WithMouseCellMotion())
+	p := tea.NewProgram(initModel())
+	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v\n", err)
 		os.Exit(1)

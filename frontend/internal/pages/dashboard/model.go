@@ -33,6 +33,17 @@ func (m *Model) GetSubTabsLength() int {
 	return len(m.SubTabs)
 }
 
+func (m *Model) GetFooterOptions() common.FooterOption {
+	keyBoardOptions := []string{
+		"'r': refresh dashboard",
+		"'e': export everything",
+	}
+	return common.FooterOption{
+		PageTitle:   m.Title,
+		PageOptions: keyBoardOptions,
+	}
+}
+
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		common.FetchOSPFData(),

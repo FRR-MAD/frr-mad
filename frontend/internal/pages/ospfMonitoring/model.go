@@ -32,6 +32,17 @@ func (m *Model) GetSubTabsLength() int {
 	return len(m.SubTabs)
 }
 
+func (m *Model) GetFooterOptions() common.FooterOption {
+	keyBoardOptions := []string{
+		"'r': refresh OSPF monitoring",
+		"'e': export OSPF data",
+	}
+	return common.FooterOption{
+		PageTitle:   m.Title,
+		PageOptions: keyBoardOptions,
+	}
+}
+
 // Init returns the initial command (none in this case).
 func (m *Model) Init() tea.Cmd {
 	return nil
