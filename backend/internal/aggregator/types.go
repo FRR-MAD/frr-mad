@@ -11,10 +11,11 @@ type CombinedState struct {
 
 // Maybe also has changes for route metrics
 type OSPFMetrics struct {
-	Neighbors  []OSPFNeighbor
-	Routes     []OSPFRoute
-	Interfaces []OSPFInterface
-	LSAs       []OSPFlsa
+	Neighbors       []OSPFNeighbor
+	Routes          []OSPFRoute
+	Interfaces      []OSPFInterface
+	LSAs            []OSPFlsa
+	HasRouteChanges bool `json:"hasRouteChanges"`
 }
 
 type OSPFNeighbor struct {
