@@ -23,6 +23,15 @@ func NewFetcher(metricsURL string) *Fetcher {
 }
 
 func (f *Fetcher) FetchOSPF() (*OSPFMetrics, error) {
+	rawData, err := f.fetchRawMetrics()
+	if err != nil {
+		return nil, err
+	}
+
+	return parseOSPFMetrics(rawData)
+}
+
+func (f *Fetcher) fetchRawMetrics() ([]byte, error) {
 	resp, err := f.client.Get(f.metricsURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metrics: %w", err)
@@ -33,16 +42,14 @@ func (f *Fetcher) FetchOSPF() (*OSPFMetrics, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	rawData, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
+	return io.ReadAll(resp.Body)
+}
 
+func parseOSPFMetrics(rawData []byte) (*OSPFMetrics, error) {
 	var metrics OSPFMetrics
 	if err := json.Unmarshal(rawData, &metrics); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal metrics: %w", err)
 	}
-
 	return &metrics, nil
 }
 

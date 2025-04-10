@@ -9,6 +9,7 @@ type CombinedState struct {
 	System    *SystemMetrics
 }
 
+// Maybe also has changes for route metrics
 type OSPFMetrics struct {
 	Neighbors  []OSPFNeighbor
 	Routes     []OSPFRoute
