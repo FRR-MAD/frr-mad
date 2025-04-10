@@ -1,8 +1,10 @@
 package socket
 
 import (
-	"encoding/json"
+	"fmt"
 	"time"
+
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/proto"
 )
 
 type Message struct {
@@ -23,50 +25,22 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func processCommand(message string) string {
-	var cmd Command
-	err := json.Unmarshal([]byte(message), &cmd)
-	if err != nil {
-		resp := Response{
-			Status:  "error",
-			Message: "Invalid JSON format: " + err.Error(),
-		}
-		respJSON, _ := json.Marshal(resp)
-		return string(respJSON)
-	}
+func processCommand(message *frrProto.Message) *frrProto.Response {
+	var response frrProto.Response
 
-	var result interface{}
-	var errMsg string
-
-	switch cmd.Package {
-	case "bgp":
-		result, err = processBGPCommand(cmd.Action, cmd.Params)
-	case "ospf":
-		result, err = processOSPFCommand(cmd.Action, cmd.Params)
+	switch message.Command {
 	case "exit":
-		result = map[string]string{"result": "Socket server shutting down..."}
+		response.Status = "success"
+		response.Message = "Shutting system down"
 		go func() {
 			time.Sleep(100 * time.Millisecond)
 			exitSocketServer()
 		}()
-
+		return &response
 	default:
-		errMsg = "Unknown package: " + cmd.Package
-	}
-	resp := Response{}
-
-	if err != nil || errMsg != "" {
-		resp.Status = "error"
-		if errMsg != "" {
-			resp.Message = errMsg
-		} else {
-			resp.Message = err.Error()
-		}
-	} else {
-		resp.Status = "success"
-		resp.Data = result
+		response.Status = "error"
+		response.Message = fmt.Sprintf("Unknown command: %s", message.Command)
+		return &response
 	}
 
-	respJSON, _ := json.MarshalIndent(resp, "", "  ")
-	return string(respJSON)
 }

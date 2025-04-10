@@ -1,10 +1,15 @@
 package socket
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"sync"
+
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var execMutex sync.Mutex
@@ -59,22 +64,58 @@ func (s *Socket) Start() error {
 func (s *Socket) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
+	sizeBuf := make([]byte, 4)
+	_, err := io.ReadFull(conn, sizeBuf)
 	if err != nil {
-		fmt.Printf("Error reading from connection: %s\n", err.Error())
+		fmt.Printf("Error reading message size :%s\n", err.Error())
 		return
 	}
 
-	message := string(buf[0:n])
-	fmt.Println("Received message:", message)
+	messageSize := binary.LittleEndian.Uint32(sizeBuf)
+
+	messageBuf := make([]byte, messageSize)
+	_, err = io.ReadFull(conn, messageBuf)
+	if err != nil {
+		fmt.Printf("Error reading message: %s\n", err.Error())
+		return
+	}
+
+	protoMessage := &frrProto.Message{}
+	err = proto.Unmarshal(messageBuf, protoMessage)
+	if err != nil {
+		fmt.Printf("Error unmarshaling message: %s\n", err.Error())
+		return
+	}
+
+	fmt.Printf("Received message: Command=%s, Package%s\n", protoMessage.Command, protoMessage.Package)
 
 	execMutex.Lock()
 	defer execMutex.Unlock()
 
-	response := processCommand(message)
+	protoResponse := processCommand(protoMessage)
 
-	_, err = conn.Write([]byte(response))
+	responseData, err := proto.Marshal(protoResponse)
+	if err != nil {
+		fmt.Printf("Error marshaling response: %s\n", err.Error())
+		return
+	}
+
+	responseSizeBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(responseSizeBuf, uint32(len(responseData)))
+
+	fmt.Printf("Server marshaled %d bytes: %v\n", len(responseData), responseData)
+
+	fmt.Printf("Server buf size %d raw: %v\n", len(responseSizeBuf), responseSizeBuf)
+
+	fmt.Println(responseData)
+
+	_, err = conn.Write(responseSizeBuf)
+	if err != nil {
+		fmt.Printf("Error sending response size: %s\n", err.Error())
+		return
+	}
+
+	_, err = conn.Write(responseData)
 	if err != nil {
 		fmt.Printf("Error sending response: %s\n", err.Error())
 		return

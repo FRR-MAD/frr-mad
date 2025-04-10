@@ -1,88 +1,173 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"time"
+
+	frrProto "temp/proto"
+
+	"google.golang.org/protobuf/proto"
 )
 
-/*
-Usage example:
-go run temporary-client/client.go -package exit
-*/
-
 func main() {
-	// Command line flags
-	pkg := flag.String("package", "bgp", "Package to send command to (bgp, ospf, exit)")
-	action := flag.String("action", "status", "Action to perform")
-	socketPath := flag.String("socket", "/tmp/analyzer.sock", "Path to the Unix socket")
-	flag.Parse()
-
-	// Create the command
-	cmd := map[string]interface{}{
-		"package": *pkg,
-		"action":  *action,
-	}
-
-	// Add parameters if any were provided as additional arguments
-	params := make(map[string]interface{})
-	args := flag.Args()
-	for i := 0; i < len(args); i += 2 {
-		if i+1 < len(args) {
-			// Try to parse as number if possible
-			var value interface{} = args[i+1]
-			if num, err := json.Number(args[i+1]).Float64(); err == nil {
-				value = num
-			}
-			params[args[i]] = value
-		}
-	}
-
-	// Only add params if there are any
-	if len(params) > 0 {
-		cmd["params"] = params
-	}
-
-	// Convert to JSON
-	jsonData, err := json.Marshal(cmd)
-	if err != nil {
-		fmt.Printf("Error creating JSON: %s\n", err.Error())
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: client <socket_path> [command] [package]")
 		os.Exit(1)
 	}
 
-	// Connect to the socket
-	conn, err := net.Dial("unix", *socketPath)
+	// socketPath := os.Args[1]
+	command := "PING"
+	packageName := "system"
+
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	if len(os.Args) > 2 {
+		packageName = os.Args[2]
+	}
+
+	// Connect to the Unix socket
+	conn, err := net.Dial("unix", "/tmp/analyzer.sock")
 	if err != nil {
-		fmt.Printf("Error connecting to socket: %s\n", err.Error())
+		fmt.Printf("Failed to connect to socket: %s\n", err)
 		os.Exit(1)
 	}
+
 	defer conn.Close()
 
-	// Send the command
-	_, err = conn.Write(jsonData)
+	// Create a Message
+	message := &frrProto.Message{
+		Command: command,
+		Package: packageName,
+		Params: map[string]*frrProto.Value{
+			"client_id": {
+				Kind: &frrProto.Value_StringValue{
+					StringValue: "example_client",
+				},
+			},
+		},
+	}
+
+	// Send the message
+	if err := sendMessage(conn, message); err != nil {
+		fmt.Printf("Failed to send message: %s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Sent %s command to package %s\n", command, packageName)
+
+	time.Sleep(100 * time.Millisecond)
+
+	// Receive the response
+	response, err := receiveResponse(conn)
 	if err != nil {
-		fmt.Printf("Error sending command: %s\n", err.Error())
+		fmt.Printf("Failed to receive response: %s\n", err)
 		os.Exit(1)
 	}
 
-	// Read the response
-	buf := make([]byte, 4096)
-	n, err := conn.Read(buf)
+	fmt.Printf("Raw response bytes: %x\n", response)
+
+	fmt.Printf("Received response: Status=%s, Message=%s\n", response.Status, response.Message)
+
+	// Print data if present
+	if response.Data != nil {
+		printResponseData(response.Data)
+	}
+}
+
+// Send a message to the server
+func sendMessage(conn net.Conn, message *frrProto.Message) error {
+	// Marshal the message
+	data, err := proto.Marshal(message)
 	if err != nil {
-		fmt.Printf("Error reading response: %s\n", err.Error())
-		os.Exit(1)
+		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
-	// Pretty print the response
-	var response map[string]interface{}
-	if err := json.Unmarshal(buf[:n], &response); err != nil {
-		fmt.Printf("Error parsing response: %s\n", err.Error())
-		fmt.Printf("Raw response: %s\n", string(buf[:n]))
-		os.Exit(1)
+	// Prepare size buffer (4 bytes, little-endian)
+	sizeBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(sizeBuf, uint32(len(data)))
+
+	// Send size followed by data
+	if _, err := conn.Write(sizeBuf); err != nil {
+		return fmt.Errorf("failed to send message size: %w", err)
 	}
 
-	prettyJSON, _ := json.MarshalIndent(response, "", "  ")
-	fmt.Println(string(prettyJSON))
+	if _, err := conn.Write(data); err != nil {
+		return fmt.Errorf("failed to send message data: %w", err)
+	}
+
+	return nil
+}
+
+// Receive a response from the server
+func receiveResponse(conn net.Conn) (*frrProto.Response, error) {
+	// Read message size (4 bytes)
+	sizeBuf := make([]byte, 4)
+	if _, err := io.ReadFull(conn, sizeBuf); err != nil {
+		return nil, fmt.Errorf("failed to read response size: %w", err)
+	}
+
+	// Convert bytes to uint32
+	messageSize := binary.LittleEndian.Uint32(sizeBuf)
+
+	// Sanity check
+	if messageSize > 10*1024*1024 { // 10MB limit
+		return nil, fmt.Errorf("response too large: %d bytes", messageSize)
+	}
+
+	// Read the response data
+	messageBuf := make([]byte, messageSize)
+	fmt.Printf("sizeBuf: %v\n", sizeBuf)
+	fmt.Printf("messageSize: %v\n", messageSize)
+
+	if _, err := io.ReadFull(conn, messageBuf); err != nil {
+		return nil, fmt.Errorf("failed to read response data: %w", err)
+	}
+
+	// Unmarshal the response
+	response := &frrProto.Response{}
+	if err := proto.Unmarshal(messageBuf, response); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return response, nil
+}
+
+// Helper function to print response data based on its type
+func printResponseData(data *frrProto.Value) {
+	if data == nil {
+		return
+	}
+
+	switch v := data.Kind.(type) {
+	case *frrProto.Value_StringValue:
+		fmt.Printf("Data (string): %s\n", v.StringValue)
+	case *frrProto.Value_IntValue:
+		fmt.Printf("Data (int): %d\n", v.IntValue)
+	case *frrProto.Value_DoubleValue:
+		fmt.Printf("Data (double): %f\n", v.DoubleValue)
+	case *frrProto.Value_BoolValue:
+		fmt.Printf("Data (bool): %t\n", v.BoolValue)
+	case *frrProto.Value_StructValue:
+		fmt.Println("Data (struct):")
+		for key, val := range v.StructValue.Fields {
+			fmt.Printf("  %s: ", key)
+			printResponseData(val)
+		}
+	case *frrProto.Value_ListValue:
+		fmt.Println("Data (list):")
+		for i, val := range v.ListValue.Values {
+			fmt.Printf("  [%d]: ", i)
+			printResponseData(val)
+		}
+	case *frrProto.Value_BytesValue:
+		fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
+	default:
+		fmt.Println("Data: <unknown type>")
+	}
 }
