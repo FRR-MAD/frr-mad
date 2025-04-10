@@ -66,7 +66,8 @@ func TestFetchOSPF(t *testing.T) {
 					"age": 3,
 					"area": "0.0.0.0"
 				}
-			]
+			],
+			"hasRouteChanges": true
 		}`))
 	}))
 	defer server.Close()
@@ -80,6 +81,10 @@ func TestFetchOSPF(t *testing.T) {
 
 	if metrics == nil {
 		t.Fatal("Expected non-nil metrics")
+	}
+
+	if !metrics.HasRouteChanges {
+		t.Error("Expected HasRouteChanges to be true")
 	}
 
 	if len(metrics.Neighbors) != 1 {
@@ -110,6 +115,31 @@ func TestFetchOSPF(t *testing.T) {
 
 	if len(metrics.Neighbors) != 0 {
 		t.Errorf("Expected 0 neighbors, got %d", len(metrics.Neighbors))
+	}
+}
+
+func TestFetchOSPFNoRouteChanges(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"neighbors": [],
+			"routes": [],
+			"interfaces": [],
+			"lsas": [],
+			"hasRouteChanges": false
+		}`))
+	}))
+	defer server.Close()
+
+	fetcher := aggregator.NewFetcher(server.URL)
+	metrics, err := fetcher.FetchOSPF()
+
+	if err != nil {
+		t.Fatalf("FetchOSPF failed: %v", err)
+	}
+
+	if metrics.HasRouteChanges {
+		t.Error("Expected HasRouteChanges to be false")
 	}
 }
 
