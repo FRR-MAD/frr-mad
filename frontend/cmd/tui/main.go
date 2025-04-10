@@ -22,6 +22,9 @@ type AppState int
 const (
 	ViewDashboard AppState = iota
 	ViewOSPF
+	// code for Presentation slides
+	//ViewOSPF2
+	//ViewOSPF3
 	ViewShell
 	// add here new Views
 	totalViews
@@ -37,6 +40,9 @@ type AppModel struct {
 	windowSize    *common.WindowSize
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
+	// code for Presentation slides
+	//ospf2         *ospfMonitoring.Model
+	//ospf3         *ospfMonitoring.Model
 	shell         *shell.Model
 	footer        *components.Footer
 	footerOptions []common.FooterOption
@@ -54,9 +60,12 @@ func initModel() *AppModel {
 		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize),
 		ospf:          ospfMonitoring.New(windowSize),
-		shell:         shell.New(windowSize),
-		footer:        components.NewFooter("'ctrl + c': exit FRR-MAD", "'enter': enter sub tabs"),
-		footerHeight:  1,
+		// code for Presentation slides
+		//ospf2:         ospfMonitoring.New(windowSize),
+		//ospf3:         ospfMonitoring.New(windowSize),
+		shell:        shell.New(windowSize),
+		footer:       components.NewFooter("'ctrl + c': exit FRR-MAD", "'enter': enter sub tabs"),
+		footerHeight: 1,
 	}
 }
 
@@ -83,6 +92,15 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.currentSubTab == -1 {
 				m.currentView = ViewShell
 			}
+		// code for Presentation slides
+		//case "4":
+		//	if m.currentSubTab == -1 {
+		//		m.currentView = ViewOSPF2
+		//	}
+		//case "5":
+		//	if m.currentSubTab == -1 {
+		//		m.currentView = ViewOSPF3
+		//	}
 		case "right":
 			if m.currentSubTab == -1 {
 				m.currentView = (m.currentView + 1) % totalViews
@@ -128,6 +146,15 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.ospf.Update(msg)
 		m.ospf = updatedModel.(*ospfMonitoring.Model)
 		return m, cmd
+	// code for Presentation slides
+	//case ViewOSPF2:
+	//	updatedModel, cmd := m.ospf.Update(msg)
+	//	m.ospf = updatedModel.(*ospfMonitoring.Model)
+	//	return m, cmd
+	//case ViewOSPF3:
+	//	updatedModel, cmd := m.ospf.Update(msg)
+	//	m.ospf = updatedModel.(*ospfMonitoring.Model)
+	//	return m, cmd
 	case ViewShell:
 		updatedModel, cmd := m.shell.Update(msg)
 		m.shell = updatedModel.(*shell.Model)
@@ -148,6 +175,13 @@ func (m *AppModel) View() string {
 	case ViewOSPF:
 		content = m.ospf.OSPFView(m.currentSubTab)
 		subTabsLength = m.ospf.GetSubTabsLength()
+	// code for Presentation slides
+	//case ViewOSPF2:
+	//	content = m.ospf.OSPFView(m.currentSubTab)
+	//	subTabsLength = m.ospf.GetSubTabsLength()
+	//case ViewOSPF3:
+	//	content = m.ospf.OSPFView(m.currentSubTab)
+	//	subTabsLength = m.ospf.GetSubTabsLength()
 	case ViewShell:
 		content = m.shell.ShellView(m.currentSubTab)
 		subTabsLength = m.shell.GetSubTabsLength()
@@ -159,6 +193,7 @@ func (m *AppModel) View() string {
 
 	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize)
 	footer := m.footer.Get()
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
