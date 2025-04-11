@@ -26,6 +26,9 @@ var BoxTitleStyle = lipgloss.NewStyle().
 	Bold(true).
 	Padding(0, 0, 1, 0)
 
+var TextOutputStyle = lipgloss.NewStyle().
+	Padding(1, 2)
+
 // ----------------------------
 // Box Styling
 // ----------------------------
@@ -43,9 +46,10 @@ var GeneralBoxStyle = lipgloss.NewStyle().
 var BadBoxStyle = GeneralBoxStyle.
 	BorderForeground(lipgloss.Color(BadRed))
 
+var InactiveBoxStyle = GeneralBoxStyle.
+	BorderForeground(lipgloss.Color(Grey))
+
 var FooterBoxStyle = lipgloss.NewStyle().
-	//Border(FooterBoxBorder).
-	//BorderForeground(lipgloss.Color(Grey)).
 	Foreground(lipgloss.Color(Grey)).
 	Padding(0, 1)
 

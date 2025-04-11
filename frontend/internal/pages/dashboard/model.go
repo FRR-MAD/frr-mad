@@ -7,16 +7,16 @@ import (
 )
 
 type Model struct {
-	Title         string
-	SubTabs       []string
+	title         string
+	subTabs       []string
 	ospfAnomalies []string
 	windowSize    *common.WindowSize
 }
 
 func New(windowSize *common.WindowSize) *Model {
 	return &Model{
-		Title:         "Dashboard",
-		SubTabs:       []string{"Dashboard 1", "Dashboard 2"},
+		title:         "Dashboard",
+		subTabs:       []string{"Dashboard 1", "Dashboard 2"},
 		ospfAnomalies: []string{"Fetching OSPF data..."},
 		windowSize:    windowSize,
 	}
@@ -24,13 +24,24 @@ func New(windowSize *common.WindowSize) *Model {
 
 func (m *Model) GetTitle() common.Tab {
 	return common.Tab{
-		Title:   m.Title,
-		SubTabs: m.SubTabs,
+		Title:   m.title,
+		SubTabs: m.subTabs,
 	}
 }
 
 func (m *Model) GetSubTabsLength() int {
-	return len(m.SubTabs)
+	return len(m.subTabs)
+}
+
+func (m *Model) GetFooterOptions() common.FooterOption {
+	keyBoardOptions := []string{
+		"'r': refresh dashboard",
+		"'e': export everything",
+	}
+	return common.FooterOption{
+		PageTitle:   m.title,
+		PageOptions: keyBoardOptions,
+	}
 }
 
 func (m *Model) Init() tea.Cmd {

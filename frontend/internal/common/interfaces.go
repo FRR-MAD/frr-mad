@@ -7,4 +7,5 @@ type PageInterface interface {
 	tea.Model
 	GetTitle() Tab
 	GetSubTabsLength() int
+	GetFooterOptions() FooterOption
 }
