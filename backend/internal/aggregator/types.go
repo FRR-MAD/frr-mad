@@ -63,10 +63,11 @@ type OSPFArea struct {
 }
 
 type OSPFInterfaceConfig struct {
-	Name    string
-	Area    string
-	Passive bool
-	Cost    int
+	Name      string
+	Area      string
+	Passive   bool
+	Cost      int
+	IpAddress string
 }
 
 type SystemMetrics struct {
