@@ -64,7 +64,7 @@ func initModel() *AppModel {
 		//ospf2:         ospfMonitoring.New(windowSize),
 		//ospf3:         ospfMonitoring.New(windowSize),
 		shell:        shell.New(windowSize),
-		footer:       components.NewFooter("'ctrl + c': exit FRR-MAD", "'enter': enter sub tabs"),
+		footer:       components.NewFooter("'ctrl' + 'c': exit FRR-MAD", "'enter': enter sub tabs"),
 		footerHeight: 1,
 	}
 }
