@@ -28,7 +28,15 @@ func main() {
 	}()
 
 	// stopAnalyzer := make(chan bool)
-	// go runAnalyzerProcess(config, stopAnalyzer)
+	// go runAnalyzerProcess(config["analyzer"], stopAnalyzer)
+
+	/*
+		Start up all the different applications
+		- aggregator
+		- exporter
+		- anlazyer
+		- logger
+	*/
 
 	<-sigChan
 	fmt.Println("\nShutting down...")

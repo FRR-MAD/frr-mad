@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/proto"
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 )
 
 type Message struct {

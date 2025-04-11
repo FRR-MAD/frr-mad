@@ -8,7 +8,7 @@ import (
 	"os"
 	"sync"
 
-	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/proto"
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 	"google.golang.org/protobuf/proto"
 )
 
