@@ -32,6 +32,10 @@ func ParseConfig(path string) (*NetworkConfig, error) {
 			parts := strings.Fields(line)
 			currentIface = &OSPFInterfaceConfig{Name: parts[1]}
 
+		case currentIface != nil && strings.HasPrefix(line, "ip address "):
+			parts := strings.Fields(line)
+			currentIface.IpAddress = parts[2]
+
 		case currentIface != nil && strings.HasPrefix(line, "ip ospf area "):
 			parts := strings.Fields(line)
 			currentIface.Area = parts[3]

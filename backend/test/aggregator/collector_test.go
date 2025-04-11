@@ -76,15 +76,16 @@ func TestCollect(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "ospf.conf")
 	configData := `
-interface eth0
- ip ospf area 0.0.0.0
- ip ospf cost 10
+					interface eth0
+						ip address 10.0.16.1/24
+						ip ospf area 0.0.0.0
+						ip ospf cost 10
 
-router ospf
- ospf router-id 192.168.1.1
- network 192.168.1.0/24 area 0.0.0.0
-exit
-`
+					router ospf
+						ospf router-id 192.168.1.1
+						network 192.168.1.0/24 area 0.0.0.0
+					exit
+				`
 	err := os.WriteFile(configPath, []byte(configData), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write test config file: %v", err)
@@ -118,6 +119,10 @@ exit
 
 	if state.Config == nil {
 		t.Fatal("Expected non-nil config")
+	}
+
+	if len(state.Config.Interfaces) != 1 {
+		t.Errorf("Expected 1 config, got %d", len(state.Config.Interfaces))
 	}
 
 	if state.Config.RouterID != "192.168.1.1" {
