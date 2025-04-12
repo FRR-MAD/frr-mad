@@ -25,7 +25,14 @@ build/all: build/frontend build/backend
 #	cd frontend && GOOS=linux GOARCH=amd64 go build -o  ../binaries
 
 build/backend/dev: binaries
-	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -o ../binaries/analyzer ./cmd/frr-analytics
+	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -tags=dev -o ../binaries/analyzer ./cmd/frr-analytics
 
 build/backend/prod: binaries
 	cd backend && GOOS=linux GOARCH=amd64 go build -o ../binaries/analyzer ./cmd/frr-analytics
+
+
+#.PHONY: translate/proto
+#translate/proto:
+#	protoc --go_out=. --go_opt=paths=source_relative \
+#		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+#		./proto/*.proto

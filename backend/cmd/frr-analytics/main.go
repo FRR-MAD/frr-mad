@@ -14,7 +14,11 @@ func main() {
 
 	config := configs.LoadConfig()
 
+	aggregatorConfig := config["aggregator"]
+	socketConfig := config["socket"]
+
 	sockServer := socket.NewSocket(config["socket"]["UnixSocketLocation"])
+	fmt.Println(config["socket"]["UnixSocketLocation"])
 	// sockServer := socket.NewSocket("config")
 
 	sigChan := make(chan os.Signal, 1)
@@ -26,16 +30,22 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+	runSocket(socketConfig)
+	runAggregator(aggregatorConfig)
 
 	// stopAnalyzer := make(chan bool)
 	// go runAnalyzerProcess(config["analyzer"], stopAnalyzer)
 
 	/*
-		Start up all the different applications
-		- aggregator
-		- exporter
-		- anlazyer
-		- logger
+				Start up all the different applica.
+		t
+
+
+			tions
+				- aggregator
+				- exporter
+				- anlazyer
+				- logger
 	*/
 
 	<-sigChan
@@ -95,3 +105,11 @@ func main() {
 // 	}
 // 	return defaultValue
 // }
+
+func runAggregator(config map[string]string) {
+	fmt.Println(config)
+}
+
+func runSocket(config map[string]string) {
+	fmt.Println(config)
+}

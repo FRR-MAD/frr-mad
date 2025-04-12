@@ -16,6 +16,8 @@ func LoadConfig() map[string]map[string]string {
 		panic(err)
 	}
 
+	fmt.Printf("Config file %v\n", dat)
+
 	config := make(map[string]map[string]string)
 	scanner := bufio.NewScanner(strings.NewReader(string(dat)))
 	var title string

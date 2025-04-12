@@ -92,6 +92,8 @@ func (s *Socket) handleConnection(conn net.Conn) {
 	execMutex.Lock()
 	defer execMutex.Unlock()
 
+	// TODO: Implement logging
+
 	protoResponse := processCommand(protoMessage)
 
 	responseData, err := proto.Marshal(protoResponse)

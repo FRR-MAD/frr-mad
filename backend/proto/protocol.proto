@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package aggregator;
+
+import "google/protobuf/timestamp.proto";
+option go_package = "github.com/ba2025-ysmprc/frr-tui/backend/pkg";
+	
+
+message CombinedState {
+  google.protobuf.Timestamp timestamp = 1;
+  OSPFMetrics ospf = 2;
+  NetworkConfig config = 3;
+  SystemMetrics system = 4;
+}
+
+message OSPFMetrics {
+  repeated OSPFNeighbor neighbors = 1;
+  repeated OSPFRoute routes = 2;
+  repeated OSPFInterface interfaces = 3;
+  repeated OSPFlsa lsas = 4;
+  bool has_route_changes = 5;
+}
+
+message OSPFNeighbor {
+  string id = 1;
+  string ip = 2;
+  string state = 3;
+  string interface = 4;
+  string area = 5;
+}
+
+message OSPFRoute {
+  string prefix = 1;
+  string next_hop = 2;
+  string interface = 3;
+  int32 cost = 4;
+  string type = 5;
+  string area = 6;
+}
+
+message OSPFInterface {
+  string name = 1;
+  string area = 2;
+  int32 nbr_count = 3;
+  int32 nbr_adj = 4;
+  bool passive = 5;
+}
+
+message OSPFlsa {
+  string type = 1;
+  string ls_id = 2;
+  string adv_router = 3;
+  int32 age = 4;
+  string area = 5;
+}
+
+message NetworkConfig {
+  string router_id = 1;
+  repeated OSPFArea areas = 2;
+  repeated OSPFInterfaceConfig interfaces = 3;
+}
+
+message OSPFArea {
+  string id = 1;
+  repeated string networks = 2;
+}
+
+message OSPFInterfaceConfig {
+  string name = 1;
+  string area = 2;
+  bool passive = 3;
+  int32 cost = 4;
+}
+
+message SystemMetrics {
+  double cpu_usage = 1;
+  double memory_usage = 2;
+  repeated InterfaceStats network_stats = 3;
+}
+
+message InterfaceStats {
+  string name = 1;
+  uint64 rx_bytes = 2;
+  uint64 tx_bytes = 3;
+  uint64 rx_errors = 4;
+  uint64 tx_errors = 5;
+  string oper_state = 6;
+}

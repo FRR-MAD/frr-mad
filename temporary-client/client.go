@@ -53,6 +53,21 @@ func main() {
 		},
 	}
 
+	/*
+		package: ospf
+		command: update
+		subpackage: lsa
+
+		package: ospf
+		command: read
+		subpackage: neighbor
+
+		package: ospf
+		command: update
+		subpackage: lsa
+
+	*/
+
 	// Send the message
 	if err := sendMessage(conn, message); err != nil {
 		fmt.Printf("Failed to send message: %s\n", err)
