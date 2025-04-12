@@ -1,9 +1,10 @@
 package dashboard
 
 import (
+	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
+	"github.com/charmbracelet/lipgloss/table"
 )
 
 var currentSubTabLocal = -1
@@ -16,29 +17,67 @@ func (m *Model) DashboardView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		return m.renderDashboardTab0()
+		return m.renderOSPFDashboard()
 	} else if currentSubTabLocal == 1 {
-		return m.renderDashboardTab0()
+		return ""
 	}
-	return m.renderDashboardTab0()
+	return m.renderOSPFDashboard()
 }
 
-func (m *Model) renderDashboardTab0() string {
+func (m *Model) renderOSPFDashboard() string {
 	// Calculate box width dynamically for two horizontal boxes based on terminal width
 	boxWidthForTwo := (m.windowSize.Width - 12) / 2 // - 6 (padding+border contentbox) - 5 (border + 1 gap)
 	if boxWidthForTwo < 20 {
 		boxWidthForTwo = 20 // Minimum width to ensure readability
 	}
 
-	ospfBox := styles.GeneralBoxStyle.
-		Width(boxWidthForTwo).
-		Render(styles.BoxTitleStyle.Render("OSPF Anomalies:") + "\n" + strings.Join(m.ospfAnomalies, "\n"))
+	boxWidthForOne := m.windowSize.Width - 8 // - 6 (padding+margin content) - 2 (for each border)
+	if boxWidthForOne < 20 {
+		boxWidthForOne = 20 // Minimum width to ensure readability
+	}
 
-	bgpBox := styles.BadBoxStyle.Width(boxWidthForTwo).Render(
-		"Helloooo...\n\nStatus:\nYour Router explodes in 15 minutes!!!\n\nRecommendation:\nShut down everything or leave the buildings.",
+	allGoodRows := backend.GetOSPFMetrics()
+	anomalyRows := backend.GetOSPFAnomalies()
+
+	ospfTable := table.New().
+		Border(lipgloss.RoundedBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(styles.NormalBeige))).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row == table.HeaderRow:
+				return styles.HeaderStyle
+			case row == 0:
+				return styles.FirstNormalRowCellStyle
+			default:
+				return styles.NormalCellStyle
+			}
+		}).
+		Width(boxWidthForOne).
+		Headers("Advertising Route", "LSA Type", "Status").
+		Rows(allGoodRows...)
+
+	ospfBadTable := table.New().
+		BorderRow(true).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(styles.BadRed))).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row == table.HeaderRow:
+				return styles.HeaderStyle
+			default:
+				return styles.BadCellStyle
+			}
+		}).
+		Width(boxWidthForOne).
+		Headers("Advertised Route", "Anomaly Type", "Details", "Troubleshot").
+		Rows(anomalyRows...)
+
+	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
+	verticalTables := lipgloss.JoinVertical(lipgloss.Left,
+		styles.BoxTitleStyle.Render("All OSPF Routes are advertised as Expected"),
+		ospfTable.Render(),
+		styles.BoxTitleStyle.Render("OSPF Anomaly Detected"),
+		ospfBadTable.Render(),
 	)
 
-	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top, ospfBox, bgpBox)
-
-	return horizontalBoxes
+	return verticalTables
 }
