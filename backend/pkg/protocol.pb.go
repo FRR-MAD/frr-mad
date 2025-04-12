@@ -625,8 +625,9 @@ type OSPFInterfaceConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Area          string                 `protobuf:"bytes,2,opt,name=area,proto3" json:"area,omitempty"`
-	Passive       bool                   `protobuf:"varint,3,opt,name=passive,proto3" json:"passive,omitempty"`
-	Cost          int32                  `protobuf:"varint,4,opt,name=cost,proto3" json:"cost,omitempty"`
+	IpAddress     string                 `protobuf:"bytes,3,opt,name=ipAddress,proto3" json:"ipAddress,omitempty"`
+	Passive       bool                   `protobuf:"varint,4,opt,name=passive,proto3" json:"passive,omitempty"`
+	Cost          int32                  `protobuf:"varint,5,opt,name=cost,proto3" json:"cost,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -671,6 +672,13 @@ func (x *OSPFInterfaceConfig) GetName() string {
 func (x *OSPFInterfaceConfig) GetArea() string {
 	if x != nil {
 		return x.Area
+	}
+	return ""
+}
+
+func (x *OSPFInterfaceConfig) GetIpAddress() string {
+	if x != nil {
+		return x.IpAddress
 	}
 	return ""
 }

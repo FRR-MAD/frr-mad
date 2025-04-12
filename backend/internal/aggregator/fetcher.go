@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 )
 
 type Fetcher struct {
@@ -22,7 +24,7 @@ func NewFetcher(metricsURL string) *Fetcher {
 	}
 }
 
-func (f *Fetcher) FetchOSPF() (*OSPFMetrics, error) {
+func (f *Fetcher) FetchOSPF() (*frrProto.OSPFMetrics, error) {
 	rawData, err := f.fetchRawMetrics()
 	if err != nil {
 		return nil, err
@@ -45,28 +47,28 @@ func (f *Fetcher) fetchRawMetrics() ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func parseOSPFMetrics(rawData []byte) (*OSPFMetrics, error) {
-	var metrics OSPFMetrics
+func parseOSPFMetrics(rawData []byte) (*frrProto.OSPFMetrics, error) {
+	var metrics frrProto.OSPFMetrics
 	if err := json.Unmarshal(rawData, &metrics); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal metrics: %w", err)
 	}
 	return &metrics, nil
 }
 
-func (f *Fetcher) CollectSystemMetrics() (*SystemMetrics, error) {
-	metrics := &SystemMetrics{}
+func (f *Fetcher) CollectSystemMetrics() (*frrProto.SystemMetrics, error) {
+	metrics := &frrProto.SystemMetrics{}
 
 	if cpu, err := getCPUUsage(); err == nil {
-		metrics.CPUUsage = cpu
+		metrics.CpuUsage = cpu
 	}
 
 	if mem, err := getMemoryUsage(); err == nil {
 		metrics.MemoryUsage = mem
 	}
 
-	if stats, err := getInterfaceStats(); err == nil {
-		metrics.NetworkStats = stats
-	}
+	// if stats, err := getInterfaceStats(); err == nil {
+	// 	metrics.NetworkStats = stats
+	// }
 
 	return metrics, nil
 }
@@ -102,10 +104,10 @@ func getMemoryUsage() (float64, error) {
 	return 0, nil
 }
 
-func getInterfaceStats() ([]InterfaceStats, error) {
-	// Maybe TODO
-	return nil, nil
-}
+// func getInterfaceStats() ([]frrProto.InterfaceStats, error) {
+// 	// Maybe TODO
+// 	return nil, nil
+// }
 
 // Functions for testing maybe remove later
 func (f *Fetcher) GetMetricURLForTesting() string {
