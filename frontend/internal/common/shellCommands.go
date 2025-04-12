@@ -14,7 +14,12 @@ func RunCommand(activeShell string, command string, timeout time.Duration) (stri
 	if activeShell == "vtysh" {
 		cmd = exec.Command("vtysh", "-c", command)
 	} else if activeShell == "bash" {
-		cmd = exec.Command(command)
+		// cmd = exec.Command(command)
+		args := strings.Fields(command)
+		if len(args) == 0 {
+			return "", fmt.Errorf("no command provided")
+		}
+		cmd = exec.Command(args[0], args[1:]...)
 	} else {
 		args := strings.Fields(command)
 		if len(args) == 0 {
