@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
-	"google.golang.org/protobuf/proto"
 )
 
 // TODO: import aggregator
@@ -14,17 +13,13 @@ import (
 func (m *messageList) updateOSPFMetrics() {
 	var OSPFMetrics *frrProto.OSPFMetrics
 
-	OSPFMetrics, err := aggregator.getOSPFMetrics()
-	if err != nil {
-		fmt.Println("Do magical error handling")
-	}
+	fmt.Println(OSPFMetrics)
 }
 
 func (m *messageList) getOSPFNeighbor() frrProto.OSPFNeighbor {
 	var retValue frrProto.OSPFNeighbor
 	retValue = *m.OSPFNeighbor
 	// Create a deep copy of the OSPFNeighbor struct
-	retValue = proto.Clone(&retValue).(frrProto.OSPFNeighbor)
 	return retValue
 }
 
