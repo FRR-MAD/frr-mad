@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/charmbracelet/bubbles/viewport"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -11,6 +12,7 @@ type Model struct {
 	subTabs       []string
 	ospfAnomalies []string
 	windowSize    *common.WindowSize
+	viewport      viewport.Model
 }
 
 func New(windowSize *common.WindowSize) *Model {

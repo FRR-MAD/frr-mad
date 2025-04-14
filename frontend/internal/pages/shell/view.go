@@ -6,8 +6,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const tabRowHeight = 6
-const footerHeight = 1
 const inputHeight = 3
 
 var currentSubTabLocal = -1
@@ -33,7 +31,7 @@ func (m *Model) renderShellTab0() string {
 		boxWidthForOne = 20 // Minimum width to ensure readability
 	}
 
-	outputMaxHeight := m.windowSize.Height - tabRowHeight - footerHeight - inputHeight - 2
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - inputHeight - 2
 
 	// Update the viewport dimensions.
 	m.viewport.Width = boxWidthForOne
@@ -64,7 +62,7 @@ func (m *Model) renderShellTab1() string {
 		boxWidthForOne = 20 // Minimum width to ensure readability
 	}
 
-	outputMaxHeight := m.windowSize.Height - tabRowHeight - footerHeight - inputHeight - 2
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - inputHeight - 2
 
 	// Update the viewport dimensions.
 	m.viewport.Width = boxWidthForOne

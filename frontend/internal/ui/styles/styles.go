@@ -5,6 +5,13 @@ import (
 )
 
 // ----------------------------
+// Fixed Sizes
+// ----------------------------
+
+const TabRowHeight = 6
+const FooterHeight = 1
+
+// ----------------------------
 // Colors
 // ----------------------------
 
@@ -30,10 +37,17 @@ var InfoTextStyle = lipgloss.NewStyle().
 
 var BoxTitleStyle = lipgloss.NewStyle().
 	Bold(true).
-	Padding(0, 0, 1, 0)
+	Border(lipgloss.NormalBorder()).
+	BorderTop(false).
+	BorderLeft(false).
+	BorderRight(false).
+	BorderBottom(true)
 
 var TextOutputStyle = lipgloss.NewStyle().
 	Padding(1, 2)
+
+var OSPFMonitoringTableTitleStyle = GeneralBoxStyle.
+	BorderBottom(false)
 
 // ----------------------------
 // Box Styling
@@ -136,6 +150,15 @@ var TableBorder = lipgloss.Border{
 	MiddleBottom: "┴",
 }
 
+var OSPFMonitoringTableTitleBorder = lipgloss.Border{
+	Top:      "─",
+	Bottom:   "",
+	Left:     "│",
+	Right:    "│",
+	TopLeft:  "╭",
+	TopRight: "╮",
+}
+
 // ----------------------------
 // Tab Styling
 // ----------------------------
@@ -185,7 +208,7 @@ var InactiveSubTabBoxStyle = lipgloss.NewStyle().
 var (
 	HeaderStyle             = lipgloss.NewStyle().Bold(true).Align(lipgloss.Center)
 	FirstNormalRowCellStyle = lipgloss.NewStyle().Padding(0, 1)
-	NormalCellStyle         = lipgloss.NewStyle().Padding(1, 1, 0)
+	NormalCellStyle         = lipgloss.NewStyle().Padding(0, 1)
 	BadCellStyle            = lipgloss.NewStyle().Padding(0, 1)
 )
 

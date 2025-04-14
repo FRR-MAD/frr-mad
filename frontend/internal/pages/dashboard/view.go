@@ -7,7 +7,9 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-var currentSubTabLocal = -1
+var (
+	currentSubTabLocal = -1
+)
 
 // DashboardView is the updated View function. This allows to call View with an argument.
 func (m *Model) DashboardView(currentSubTab int) string {
@@ -26,7 +28,7 @@ func (m *Model) View() string {
 
 func (m *Model) renderOSPFDashboard() string {
 	// Calculate box width dynamically for two horizontal boxes based on terminal width
-	boxWidthForTwo := (m.windowSize.Width - 12) / 2 // - 6 (padding+border contentbox) - 5 (border + 1 gap)
+	boxWidthForTwo := (m.windowSize.Width - 10) / 2 // - 6 (padding+border contentbox) - 5 (border + 1 gap)
 	if boxWidthForTwo < 20 {
 		boxWidthForTwo = 20 // Minimum width to ensure readability
 	}
@@ -36,24 +38,39 @@ func (m *Model) renderOSPFDashboard() string {
 		boxWidthForOne = 20 // Minimum width to ensure readability
 	}
 
+	boxWidthThreeFourth := boxWidthForTwo / 2 * 3
+	boxWidthOneFourth := boxWidthForTwo / 2
+
+	m.viewport.Width = boxWidthThreeFourth
+	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
+
+	gap := 3
+
 	allGoodRows := backend.GetOSPFMetrics()
 	anomalyRows := backend.GetOSPFAnomalies()
 
+	advertisingRouteTitle1 := styles.OSPFMonitoringTableTitleStyle.
+		Width(boxWidthThreeFourth - 2).
+		Render("Area 0.0.0.0, Router LSAs (Type 1)")
+
+	advertisingRouteTitle2 := styles.OSPFMonitoringTableTitleStyle.
+		Width(boxWidthThreeFourth - 2).
+		Render("Area 0.0.0.0, Autonomous System External LSAs (Type 5)")
+
 	ospfTable := table.New().
-		Border(lipgloss.RoundedBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(styles.NormalBeige))).
+		Border(lipgloss.HiddenBorder()).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			switch {
 			case row == table.HeaderRow:
 				return styles.HeaderStyle
-			case row == 0:
-				return styles.FirstNormalRowCellStyle
+			//case row == 0:
+			//	return styles.FirstNormalRowCellStyle
 			default:
 				return styles.NormalCellStyle
 			}
 		}).
-		Width(boxWidthForOne).
-		Headers("Advertising Route", "LSA Type", "Status").
+		Width(boxWidthThreeFourth).
+		//Headers("Advertising Route", "LSA Type", "Status").
 		Rows(allGoodRows...)
 
 	ospfBadTable := table.New().
@@ -67,17 +84,34 @@ func (m *Model) renderOSPFDashboard() string {
 				return styles.BadCellStyle
 			}
 		}).
-		Width(boxWidthForOne).
+		Width(boxWidthThreeFourth).
 		Headers("Advertised Route", "Anomaly Type", "Details", "Troubleshot").
 		Rows(anomalyRows...)
+
+	systemResources := lipgloss.JoinVertical(lipgloss.Left,
+		styles.BoxTitleStyle.Render("System Resources"),
+		styles.GeneralBoxStyle.Width(boxWidthOneFourth).Render("here\nsome\nresources: \n"),
+	)
 
 	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
 	verticalTables := lipgloss.JoinVertical(lipgloss.Left,
 		styles.BoxTitleStyle.Render("All OSPF Routes are advertised as Expected"),
+		advertisingRouteTitle1,
+		ospfTable.Render(),
+		advertisingRouteTitle2,
 		ospfTable.Render(),
 		styles.BoxTitleStyle.Render("OSPF Anomaly Detected"),
 		ospfBadTable.Render(),
 	)
 
-	return verticalTables
+	// Update the viewport content with...
+	m.viewport.SetContent(verticalTables)
+
+	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
+		m.viewport.View(),
+		lipgloss.NewStyle().Width(gap).Render(""),
+		systemResources,
+	)
+
+	return horizontalDashboard
 }

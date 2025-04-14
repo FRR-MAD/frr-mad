@@ -36,7 +36,6 @@ type AppModel struct {
 	currentView   AppState
 	tabs          []common.Tab
 	currentSubTab int
-	tabRowHeight  int
 	windowSize    *common.WindowSize
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
@@ -46,7 +45,6 @@ type AppModel struct {
 	shell         *shell.Model
 	footer        *components.Footer
 	footerOptions []common.FooterOption
-	footerHeight  int
 }
 
 func initModel() *AppModel {
@@ -56,16 +54,14 @@ func initModel() *AppModel {
 		currentView:   ViewDashboard,
 		tabs:          []common.Tab{},
 		currentSubTab: -1,
-		tabRowHeight:  6,
 		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize),
 		ospf:          ospfMonitoring.New(windowSize),
 		// code for Presentation slides
 		//ospf2:         ospfMonitoring.New(windowSize),
 		//ospf3:         ospfMonitoring.New(windowSize),
-		shell:        shell.New(windowSize),
-		footer:       components.NewFooter("'ctrl' + 'c': exit FRR-MAD", "'enter': enter sub tabs"),
-		footerHeight: 1,
+		shell:  shell.New(windowSize),
+		footer: components.NewFooter("'ctrl' + 'c': exit FRR-MAD", "'enter': enter sub tabs"),
 	}
 }
 
@@ -190,6 +186,7 @@ func (m *AppModel) View() string {
 	}
 
 	contentWidth := m.windowSize.Width - 4
+	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
 
 	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize)
 	footer := m.footer.Get()
@@ -197,7 +194,7 @@ func (m *AppModel) View() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
-		styles.ContentBoxStyle.Width(contentWidth).Height(m.windowSize.Height-m.tabRowHeight-m.footerHeight).Render(content),
+		styles.ContentBoxStyle.Width(contentWidth).Height(contentHeight).Render(content),
 		styles.FooterBoxStyle.Width(contentWidth).Render(footer),
 	)
 }
