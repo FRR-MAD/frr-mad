@@ -8,7 +8,7 @@ import (
 )
 
 // func processCommand(message *frrProto.Message) *frrProto.Response {
-func processCommand(message *frrProto.Message) *frrProto.Response {
+func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	var response frrProto.Response
 
 	switch message.Command {
@@ -36,6 +36,10 @@ func processCommand(message *frrProto.Message) *frrProto.Response {
 			return getInterfaceStats()
 		case "combinedState":
 			return getCombinedState()
+		case "testing":
+			return s.getTesting()
+		case "testing2":
+			return s.getTesting2()
 		}
 
 		response.Status = "success"

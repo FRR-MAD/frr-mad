@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 	"google.golang.org/protobuf/proto"
 )
@@ -20,12 +21,14 @@ type Socket struct {
 	socketPath string
 	listener   net.Listener
 	mutex      sync.Mutex
+	collector  *aggregator.Collector
 }
 
-func NewSocket(socketPath string) *Socket {
+func NewSocket(socketPath map[string]string, collector *aggregator.Collector) *Socket {
 	return &Socket{
-		socketPath: socketPath,
+		socketPath: socketPath["UnixSocketLocation"],
 		mutex:      sync.Mutex{},
+		collector:  collector,
 	}
 }
 
@@ -94,7 +97,7 @@ func (s *Socket) handleConnection(conn net.Conn) {
 
 	// TODO: Implement logging
 
-	protoResponse := processCommand(protoMessage)
+	protoResponse := s.processCommand(protoMessage)
 
 	responseData, err := proto.Marshal(protoResponse)
 	if err != nil {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -16,13 +15,21 @@ import (
 
 func main() {
 
+	// load config
 	config := configs.LoadConfig()
 
 	aggregatorConfig := config["aggregator"]
 	socketConfig := config["socket"]
 
-	sockServer := socket.NewSocket(socketConfig["UnixSocketLocation"])
-	// sockServer := socket.NewSocket("config")
+	// start collector
+	collector := aggregator.InitAggregator(aggregatorConfig)
+
+	// Start collection in a goroutine
+	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
+	aggregator.StartAggregator(collector, pollInterval)
+
+	// start socket
+	sockServer := socket.NewSocket(socketConfig, collector)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -33,24 +40,6 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	//fmt.Println(socketConfig)
-	// runSocket(socketConfig)
-	go runAggregator(aggregatorConfig)
-
-	// stopAnalyzer := make(chan bool)
-	// go runAnalyzerProcess(config["analyzer"], stopAnalyzer)
-
-	/*
-				Start up all the different applica.
-		t
-
-
-			tions
-				- aggregator
-				- exporter
-				- anlazyer
-				- logger
-	*/
 
 	<-sigChan
 	fmt.Println("\nShutting down...")
@@ -110,38 +99,42 @@ func main() {
 // 	return defaultValue
 // }
 
-func runAggregator(config map[string]string) {
-
-	metricsURL := config["FRRMetricsURL"]
-	configPath := config["FRRConfigPath"]
-	pollInterval := time.Duration(strToInt(config["PollInterval"])) * time.Second
-
-	// Collector init
-	collector := aggregator.NewCollector(metricsURL, configPath)
-
-	// Collector loop
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		//fmt.Println(aggregator.OSPFNeighborDummyData())
-		//_, _ = collector.Collect()
-		state, err := collector.Collect()
-		if err != nil {
-			log.Printf("Collection error: %v", err)
-			continue
-		}
-
-		// TMP logging
-		log.Printf("System metrics: %v", state.System.GetMemoryUsage())
-		log.Printf("System metrics: %v", state.System.GetNetworkStats())
-		//log.Printf("NetworkConfig %v", state.GetConfig())
-		log.Printf("Collected state at %v", state.Timestamp.AsTime())
-		log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
-		log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
-		log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
-	}
-}
+//func runAggregator(config map[string]string) *aggregator.Collector {
+//
+//	metricsURL := config["FRRMetricsURL"]
+//	configPath := config["FRRConfigPath"]
+//	pollInterval := time.Duration(strToInt(config["PollInterval"])) * time.Second
+//
+//	// Collector init
+//	collector := aggregator.NewCollector(metricsURL, configPath)
+//
+//	// Collector loop
+//	ticker := time.NewTicker(pollInterval)
+//	defer ticker.Stop()
+//
+//	for range ticker.C {
+//		//fmt.Println(aggregator.OSPFNeighborDummyData())
+//		//_, _ = collector.Collect()
+//		state, err := collector.Collect()
+//		if err != nil {
+//			log.Printf("Collection error: %v", err)
+//			continue
+//		}
+//
+//		// TMP logging
+//		log.Printf("System metrics: %v", state.System.GetMemoryUsage())
+//		log.Printf("System metrics: %v", state.System.GetNetworkStats())
+//		//log.Printf("NetworkConfig %v", state.GetConfig())
+//		log.Printf("Collected state at %v", state.Timestamp.AsTime())
+//		log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
+//		log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
+//		log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
+//	}
+//
+//	fmt.Println("Yes, it really works")
+//
+//	return collector
+//}
 
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {

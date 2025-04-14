@@ -1,6 +1,8 @@
 package socket
 
 import (
+	"log"
+
 	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
 	ospfAnalyzer "github.com/ba2025-ysmprc/frr-tui/backend/internal/analyzer/ospf"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
@@ -197,6 +199,44 @@ func getCombinedState() *frrProto.Response {
 	value := &frrProto.Value{
 		Kind: &frrProto.Value_CombinedState{
 			CombinedState: combinedState,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning combined state of host"
+	response.Data = value
+
+	return &response
+}
+
+func (s *Socket) getTesting() *frrProto.Response {
+	var response frrProto.Response
+
+	state, err := s.collector.Collect()
+	if err != nil {
+		log.Printf("Collection error: %v", err)
+	}
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_CombinedState{
+			CombinedState: state,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning combined state of host"
+	response.Data = value
+
+	return &response
+}
+
+func (s *Socket) getTesting2() *frrProto.Response {
+	var response frrProto.Response
+
+	state, err := s.collector.Collect()
+	if err != nil {
+		log.Printf("Collection error: %v", err)
+	}
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_OspfMetrics{
+			OspfMetrics: state.GetOspf(),
 		},
 	}
 	response.Status = "success"
