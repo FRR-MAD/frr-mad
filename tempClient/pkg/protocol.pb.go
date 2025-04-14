@@ -1020,8 +1020,9 @@ type OSPFlsa struct {
 	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
 	LsId          string                 `protobuf:"bytes,2,opt,name=ls_id,json=lsId,proto3" json:"ls_id,omitempty"`
 	AdvRouter     string                 `protobuf:"bytes,3,opt,name=adv_router,json=advRouter,proto3" json:"adv_router,omitempty"`
-	Age           int32                  `protobuf:"varint,4,opt,name=age,proto3" json:"age,omitempty"`
-	Area          string                 `protobuf:"bytes,5,opt,name=area,proto3" json:"area,omitempty"`
+	Sequence      string                 `protobuf:"bytes,4,opt,name=Sequence,proto3" json:"Sequence,omitempty"`
+	Age           int32                  `protobuf:"varint,5,opt,name=age,proto3" json:"age,omitempty"`
+	Area          string                 `protobuf:"bytes,6,opt,name=area,proto3" json:"area,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1073,6 +1074,13 @@ func (x *OSPFlsa) GetLsId() string {
 func (x *OSPFlsa) GetAdvRouter() string {
 	if x != nil {
 		return x.AdvRouter
+	}
+	return ""
+}
+
+func (x *OSPFlsa) GetSequence() string {
+	if x != nil {
+		return x.Sequence
 	}
 	return ""
 }
@@ -1509,14 +1517,15 @@ const file_protocol_proto_rawDesc = "" +
 	"\x04area\x18\x02 \x01(\tR\x04area\x12\x1b\n" +
 	"\tnbr_count\x18\x03 \x01(\x05R\bnbrCount\x12\x17\n" +
 	"\anbr_adj\x18\x04 \x01(\x05R\x06nbrAdj\x12\x18\n" +
-	"\apassive\x18\x05 \x01(\bR\apassive\"w\n" +
+	"\apassive\x18\x05 \x01(\bR\apassive\"\x93\x01\n" +
 	"\aOSPFlsa\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x13\n" +
 	"\x05ls_id\x18\x02 \x01(\tR\x04lsId\x12\x1d\n" +
 	"\n" +
-	"adv_router\x18\x03 \x01(\tR\tadvRouter\x12\x10\n" +
-	"\x03age\x18\x04 \x01(\x05R\x03age\x12\x12\n" +
-	"\x04area\x18\x05 \x01(\tR\x04area\"\x9f\x01\n" +
+	"adv_router\x18\x03 \x01(\tR\tadvRouter\x12\x1a\n" +
+	"\bSequence\x18\x04 \x01(\tR\bSequence\x12\x10\n" +
+	"\x03age\x18\x05 \x01(\x05R\x03age\x12\x12\n" +
+	"\x04area\x18\x06 \x01(\tR\x04area\"\x9f\x01\n" +
 	"\rNetworkConfig\x12\x1b\n" +
 	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12-\n" +
 	"\x05areas\x18\x02 \x03(\v2\x17.communication.OSPFAreaR\x05areas\x12B\n" +

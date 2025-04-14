@@ -109,8 +109,9 @@ message OSPFlsa {
   string type = 1;
   string ls_id = 2;
   string adv_router = 3;
-  int32 age = 4;
-  string area = 5;
+  string Sequence = 4;
+  int32 age = 5;
+  string area = 6;
 }
 
 message NetworkConfig {
