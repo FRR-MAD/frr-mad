@@ -71,12 +71,12 @@ func parseOSPFMetrics(rawData []byte) (*frrProto.OSPFMetrics, error) {
 	metrics.Lsas = OSPFlsa
 	metrics.HasRouteChanges = hasRouteChanges
 
-	fmt.Printf("Start: Resulting metrics\n")
-	fmt.Printf("metrics neighbors: \n%v\n\n", metrics.Neighbors)
-	fmt.Printf("metrics routes: \n%v\n\n", metrics.Routes)
-	fmt.Printf("metrics interfaces: \n%v\n\n", metrics.Interfaces)
+	//fmt.Printf("Start: Resulting metrics\n")
+	//fmt.Printf("metrics neighbors: \n%v\n\n", metrics.Neighbors)
+	//fmt.Printf("metrics routes: \n%v\n\n", metrics.Routes)
+	//fmt.Printf("metrics interfaces: \n%v\n\n", metrics.Interfaces)
 	fmt.Printf("metrics lsas: \n%v\n\n", metrics.Lsas)
-	fmt.Printf("End: Resulting metrics\n")
+	//fmt.Printf("End: Resulting metrics\n")
 	//if err := json.Unmarshal(rawData, &metrics); err != nil {
 	//	return nil, fmt.Errorf("failed to unmarshal metrics: %w", err)
 	//}

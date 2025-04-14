@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -111,32 +112,32 @@ func main() {
 
 func runAggregator(config map[string]string) {
 
-	//metricsURL := config["FRRMetricsURL"]
-	//configPath := config["FRRConfigPath"]
+	metricsURL := config["FRRMetricsURL"]
+	configPath := config["FRRConfigPath"]
 	pollInterval := time.Duration(strToInt(config["PollInterval"])) * time.Second
 
 	// Collector init
-	//collector := aggregator.NewCollector(metricsURL, configPath)
+	collector := aggregator.NewCollector(metricsURL, configPath)
 
 	// Collector loop
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		fmt.Println(aggregator.OSPFNeighborDummyData())
+		//fmt.Println(aggregator.OSPFNeighborDummyData())
 		//_, _ = collector.Collect()
-		//state, err := collector.Collect()
-		//if err != nil {
-		//	log.Printf("Collection error: %v", err)
-		//	continue
-		//}
+		state, err := collector.Collect()
+		if err != nil {
+			log.Printf("Collection error: %v", err)
+			continue
+		}
 
 		// TMP logging
 		//log.Printf("Collected state at %s", state.Timestamp.Format(time.RFC3339))
-		//log.Printf("Collected state at %v", state.Timestamp.AsTime())
-		//log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
-		//log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
-		//log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
+		log.Printf("Collected state at %v", state.Timestamp.AsTime())
+		log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
+		log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
+		log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
 	}
 }
 

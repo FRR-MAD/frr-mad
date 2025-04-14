@@ -13,18 +13,22 @@ func processCommand(message *frrProto.Message) *frrProto.Response {
 
 	switch message.Command {
 	case "ospf":
-		//var ospfMetrics frrProto.OSPFMetrics
-		//neighbors := aggregator.OSPFNeighborDummyData()
-		//ospfMetrics.Neighbors = neighbors
-		//// Create the Value with the OSPFMetrics field set
-		//value := &frrProto.Value{
-		//	Kind: &frrProto.Value_OspfMetrics{
-		//		OspfMetrics: &ospfMetrics,
-		//	},
-		//}
-
 		switch message.Package {
-		case "neighbors":
+		case "metrics":
+			return getOSPFMetrics()
+		case "neighbor":
+			return getOSPFNeighbor()
+		case "route":
+			return getOSPFRoute()
+		case "interface":
+			return getOSPFInterface()
+		case "lsa":
+			return getOSPFlsa()
+		case "networkConfig":
+		case "area":
+		case "interfaceConfig":
+		case "systemMetrics":
+		case "interfaceStats":
 
 		}
 
