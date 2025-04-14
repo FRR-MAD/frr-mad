@@ -63,18 +63,20 @@ func parseOSPFMetrics(rawData []byte) (*frrProto.OSPFMetrics, error) {
 	OSPFRoutes := getRoutes(parsedMetrics)
 	OSPFInterfaces := getInterfaces(parsedMetrics)
 	OSPFlsa := getLsas(parsedMetrics)
+	hasRouteChanges := getRouteChanges(parsedMetrics)
 
 	metrics.Neighbors = OSPFNeighbors
 	metrics.Routes = OSPFRoutes
 	metrics.Interfaces = OSPFInterfaces
 	metrics.Lsas = OSPFlsa
+	metrics.HasRouteChanges = hasRouteChanges
 
-	//fmt.Printf("Start: Resulting metrics\n")
-	//fmt.Printf("metrics neighbors: \n%v\n\n", metrics.Neighbors)
-	//fmt.Printf("metrics routes: \n%v\n\n", metrics.Routes)
-	//fmt.Printf("metrics interfaces: \n%v\n\n", metrics.Interfaces)
-	//fmt.Printf("metrics lsas: \n%v\n\n", metrics.Lsas)
-	//fmt.Printf("End: Resulting metrics\n")
+	fmt.Printf("Start: Resulting metrics\n")
+	fmt.Printf("metrics neighbors: \n%v\n\n", metrics.Neighbors)
+	fmt.Printf("metrics routes: \n%v\n\n", metrics.Routes)
+	fmt.Printf("metrics interfaces: \n%v\n\n", metrics.Interfaces)
+	fmt.Printf("metrics lsas: \n%v\n\n", metrics.Lsas)
+	fmt.Printf("End: Resulting metrics\n")
 	//if err := json.Unmarshal(rawData, &metrics); err != nil {
 	//	return nil, fmt.Errorf("failed to unmarshal metrics: %w", err)
 	//}
@@ -99,7 +101,7 @@ func getNeighbors(metrics map[string]*io_prometheus_client.MetricFamily) []*frrP
 	var neighbors []*frrProto.OSPFNeighbor
 
 	//fmt.Println(metrics["frr_ospf_neighbor_state"].GetMetric())
-	for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
+	/*for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
 		var neighbor frrProto.OSPFNeighbor
 
 		neighbor.Area = value.GetLabel()[0].GetValue()
@@ -107,13 +109,131 @@ func getNeighbors(metrics map[string]*io_prometheus_client.MetricFamily) []*frrP
 		neighbor.Id = value.GetLabel()[2].GetValue()
 		neighbor.Ip = value.GetLabel()[3].GetValue()
 		neighbors = append(neighbors, &neighbor)
+	}*/
+
+	neighborMetrics, exists := metrics["frr_ospf_neighbor_state"]
+	if !exists {
+		return neighbors
+	}
+
+	for _, metric := range neighborMetrics.GetMetric() {
+		var neighbor frrProto.OSPFNeighbor
+
+		for _, label := range metric.GetLabel() {
+			switch label.GetName() {
+			case "area":
+				neighbor.Area = label.GetValue()
+			case "iface":
+				neighbor.Interface = label.GetValue()
+			case "neighbor_id":
+				neighbor.Id = label.GetValue()
+			case "neighbor_ip":
+				neighbor.Ip = label.GetValue()
+			}
+		}
+
+		if metric.Gauge != nil {
+			neighbor.State = mapOSPFValueToState(int32(metric.GetGauge().GetValue()))
+		}
+
+		neighbors = append(neighbors, &neighbor)
 	}
 
 	return neighbors
 }
 
+func getLsas(metrics map[string]*io_prometheus_client.MetricFamily) []*frrProto.OSPFlsa {
+	var lsas []*frrProto.OSPFlsa
+
+	//fmt.Println(metrics["frr_ospf_neighbor_state"].GetMetric())
+	//for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
+	//	//var neighbor frrProto.OSPFInterface
+
+	//	neighbor.Area = value.GetLabel()[0].GetValue()
+	//	neighbor.Interface = value.GetLabel()[1].GetValue()
+	//	neighbor.Id = value.GetLabel()[2].GetValue()
+	//	neighbor.Ip = value.GetLabel()[3].GetValue()
+	//	neighbors = append(neighbors, &neighbor)
+	//}
+
+	lsaMetrics, exists := metrics["frr_ospf_lsa_detail"]
+	if !exists {
+		return lsas
+	}
+
+	for _, metric := range lsaMetrics.GetMetric() {
+		var lsa frrProto.OSPFlsa
+
+		for _, label := range metric.GetLabel() {
+			switch label.GetName() {
+			case "area":
+				lsa.Area = label.GetValue()
+			case "adv_router":
+				lsa.AdvRouter = label.GetValue()
+			case "lsa_id":
+				lsa.LsId = label.GetValue()
+			case "lsa_type":
+				lsa.Type = label.GetValue()
+			case "sequence":
+				lsa.Sequence = label.GetValue()
+			}
+		}
+
+		lsas = append(lsas, &lsa)
+	}
+
+	return lsas
+}
+
+func getRoutes(metrics map[string]*io_prometheus_client.MetricFamily) []*frrProto.OSPFRoute {
+	var routes []*frrProto.OSPFRoute
+
+	//fmt.Println(metrics["frr_ospf_neighbor_state"].GetMetric())
+	//for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
+	//	//var neighbor frrProto.OSPFInterface
+
+	//	neighbor.Area = value.GetLabel()[0].GetValue()
+	//	neighbor.Interface = value.GetLabel()[1].GetValue()
+	//	neighbor.Id = value.GetLabel()[2].GetValue()
+	//	neighbor.Ip = value.GetLabel()[3].GetValue()
+	//	neighbors = append(neighbors, &neighbor)
+	//}
+
+	routeMetrics, exists := metrics["frr_ospf_route_detail"]
+	if !exists {
+		return routes
+	}
+
+	for _, metric := range routeMetrics.GetMetric() {
+		var route frrProto.OSPFRoute
+
+		for _, label := range metric.GetLabel() {
+			switch label.GetName() {
+			case "area":
+				route.Area = label.GetValue()
+			case "interface":
+				route.Interface = label.GetValue()
+			case "next_hop":
+				route.NextHop = label.GetValue()
+			case "prefix":
+				route.Prefix = label.GetValue()
+			case "route_type":
+				route.Type = label.GetValue()
+			}
+		}
+
+		if metric.Gauge != nil {
+			route.Cost = int32(metric.GetGauge().GetValue())
+		}
+
+		routes = append(routes, &route)
+	}
+
+	return routes
+}
+
 func getInterfaces(metrics map[string]*io_prometheus_client.MetricFamily) []*frrProto.OSPFInterface {
-	var result []*frrProto.OSPFInterface
+	var interfaces []*frrProto.OSPFInterface
 	/*
 			  Name string
 		    Area string
@@ -123,7 +243,7 @@ func getInterfaces(metrics map[string]*io_prometheus_client.MetricFamily) []*frr
 		    Passive bool
 	*/
 	//fmt.Println(metrics["frr_ospf_neighbor_state"].GetMetric()[1].GetLabel()[1])
-	fmt.Println(metrics["frr_ospf_neighbor_state"])
+	//fmt.Println(metrics["frr_ospf_neighbor_state"])
 	//for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
 	//	//var tmp frrProto.OSPFInterface
 	//	tmp.Area = value.GetLabel()[0].GetValue()
@@ -133,41 +253,22 @@ func getInterfaces(metrics map[string]*io_prometheus_client.MetricFamily) []*frr
 	//	neighbors = append(neighbors, &neighbor)
 	//}
 
-	return result
+	return interfaces
 }
 
-func getLsas(metrics map[string]*io_prometheus_client.MetricFamily) []*frrProto.OSPFlsa {
-	var result []*frrProto.OSPFlsa
+func getRouteChanges(metrics map[string]*io_prometheus_client.MetricFamily) bool {
+	routeChangesMetrics, exists := metrics["frr_ospf_has_route_changes"]
+	if !exists {
+		return false
+	}
 
-	//fmt.Println(metrics["frr_ospf_neighbor_state"].GetMetric())
-	//for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
-	//	//var neighbor frrProto.OSPFInterface
+	for _, metric := range routeChangesMetrics.GetMetric() {
+		if metric.Gauge != nil && metric.GetGauge().GetValue() > 0 {
+			return true
+		}
+	}
 
-	//	neighbor.Area = value.GetLabel()[0].GetValue()
-	//	neighbor.Interface = value.GetLabel()[1].GetValue()
-	//	neighbor.Id = value.GetLabel()[2].GetValue()
-	//	neighbor.Ip = value.GetLabel()[3].GetValue()
-	//	neighbors = append(neighbors, &neighbor)
-	//}
-
-	return result
-}
-
-func getRoutes(metrics map[string]*io_prometheus_client.MetricFamily) []*frrProto.OSPFRoute {
-	var result []*frrProto.OSPFRoute
-
-	//fmt.Println(metrics["frr_ospf_neighbor_state"].GetMetric())
-	//for _, value := range metrics["frr_ospf_neighbor_state"].GetMetric() {
-	//	//var neighbor frrProto.OSPFInterface
-
-	//	neighbor.Area = value.GetLabel()[0].GetValue()
-	//	neighbor.Interface = value.GetLabel()[1].GetValue()
-	//	neighbor.Id = value.GetLabel()[2].GetValue()
-	//	neighbor.Ip = value.GetLabel()[3].GetValue()
-	//	neighbors = append(neighbors, &neighbor)
-	//}
-
-	return result
+	return false
 }
 
 func (f *Fetcher) CollectSystemMetrics() (*frrProto.SystemMetrics, error) {
@@ -231,4 +332,30 @@ func (f *Fetcher) GetMetricURLForTesting() string {
 
 func (f *Fetcher) GetClientForTesting() *http.Client {
 	return f.client
+}
+
+func mapOSPFValueToState(value int32) string {
+	var state string
+	switch int32(value) {
+	case 1:
+		state = "full"
+	case 2:
+		state = "down"
+	case 3:
+		state = "attempt"
+	case 4:
+		state = "init"
+	case 5:
+		state = "2way"
+	case 6:
+		state = "exstart"
+	case 7:
+		state = "exchange"
+	case 8:
+		state = "loading"
+	default:
+		state = "default"
+	}
+
+	return state
 }
