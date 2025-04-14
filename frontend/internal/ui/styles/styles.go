@@ -31,10 +31,6 @@ var NavyBlue = "#3a3a3a"
 // Text Styling
 // ----------------------------
 
-var InfoTextStyle = lipgloss.NewStyle().
-	Underline(true).
-	Foreground(lipgloss.Color(Grey))
-
 var BoxTitleStyle = lipgloss.NewStyle().
 	Bold(true).
 	Border(lipgloss.NormalBorder()).
