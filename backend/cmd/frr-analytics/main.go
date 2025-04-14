@@ -133,7 +133,9 @@ func runAggregator(config map[string]string) {
 		}
 
 		// TMP logging
-		//log.Printf("Collected state at %s", state.Timestamp.Format(time.RFC3339))
+		log.Printf("System metrics: %v", state.System.GetMemoryUsage())
+		log.Printf("System metrics: %v", state.System.GetNetworkStats())
+		//log.Printf("NetworkConfig %v", state.GetConfig())
 		log.Printf("Collected state at %v", state.Timestamp.AsTime())
 		log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
 		log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))

@@ -87,7 +87,7 @@ func (s *Socket) handleConnection(conn net.Conn) {
 		return
 	}
 
-	fmt.Printf("Received message: Command=%s, Package%s\n", protoMessage.Command, protoMessage.Package)
+	fmt.Printf("Received message: Command=%s, Package %s\n", protoMessage.Command, protoMessage.Package)
 
 	execMutex.Lock()
 	defer execMutex.Unlock()

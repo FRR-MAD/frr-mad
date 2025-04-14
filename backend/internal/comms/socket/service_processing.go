@@ -22,13 +22,10 @@ func processBGPCommand(action string, params map[string]interface{}) (interface{
 func getOSPFMetrics() *frrProto.Response {
 	var response frrProto.Response
 
-	var ospfMetrics frrProto.OSPFMetrics
-	neighbors := aggregator.OSPFNeighborDummyData()
-	ospfMetrics.Neighbors = neighbors
-	// Create the Value with the OSPFMetrics field set
+	ospfMetrics := aggregator.OSPFMetricsDummyData()
 	value := &frrProto.Value{
 		Kind: &frrProto.Value_OspfMetrics{
-			OspfMetrics: &ospfMetrics,
+			OspfMetrics: ospfMetrics,
 		},
 	}
 	response.Status = "success"
@@ -113,11 +110,11 @@ func getOSPFlsa() *frrProto.Response {
 func getNetworkConfig() *frrProto.Response {
 	var response frrProto.Response
 
-	var networkConfig frrProto.NetworkConfig
-	//networkConfig := aggregator.NetworkConfigDummyData()
+	var networkConfig *frrProto.NetworkConfig
+	networkConfig = aggregator.NetworkConfigDummyData()
 	value := &frrProto.Value{
 		Kind: &frrProto.Value_NetworkConfig{
-			NetworkConfig: &networkConfig,
+			NetworkConfig: networkConfig,
 		},
 	}
 	response.Status = "success"
@@ -127,8 +124,84 @@ func getNetworkConfig() *frrProto.Response {
 	return &response
 }
 
-func get() *frrProto.Response {
+func getOSPFArea() *frrProto.Response {
 	var response frrProto.Response
+
+	var networkConfig frrProto.NetworkConfig
+	networkConfig.Areas = aggregator.OSPFAreaDummyData()
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_NetworkConfig{
+			NetworkConfig: &networkConfig,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning ospf area of host"
+	response.Data = value
+
+	return &response
+}
+
+func getInterfaceConfig() *frrProto.Response {
+	var response frrProto.Response
+
+	var networkConfig frrProto.NetworkConfig
+	networkConfig.Interfaces = aggregator.OSPFInterfaceConfigDummyData()
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_NetworkConfig{
+			NetworkConfig: &networkConfig,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning ospf area of host"
+	response.Data = value
+
+	return &response
+}
+
+func getSystemMetrics() *frrProto.Response {
+	var response frrProto.Response
+
+	systemMetrics := aggregator.SystemMetricsDummyData()
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_SystemMetrics{
+			SystemMetrics: systemMetrics,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning system metrics of host"
+	response.Data = value
+
+	return &response
+}
+
+func getInterfaceStats() *frrProto.Response {
+	var response frrProto.Response
+
+	interfaceStats := aggregator.GetInterfaceStats()
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_InterfaceStats{
+			InterfaceStats: interfaceStats[0],
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning interface stat of host"
+	response.Data = value
+
+	return &response
+}
+
+func getCombinedState() *frrProto.Response {
+	var response frrProto.Response
+
+	combinedState := aggregator.GetCombinedState()
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_CombinedState{
+			CombinedState: combinedState,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning combined state of host"
+	response.Data = value
 
 	return &response
 }

@@ -27,10 +27,15 @@ func processCommand(message *frrProto.Message) *frrProto.Response {
 		case "networkConfig":
 			return getNetworkConfig()
 		case "area":
+			return getOSPFArea()
 		case "interfaceConfig":
+			return getInterfaceConfig()
 		case "systemMetrics":
+			return getSystemMetrics()
 		case "interfaceStats":
-
+			return getInterfaceStats()
+		case "combinedState":
+			return getCombinedState()
 		}
 
 		response.Status = "success"
