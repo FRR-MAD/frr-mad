@@ -1,4 +1,9 @@
 
+PROTO_SRC := protobufSource/protocol.proto
+BACKEND_DEST := backend/pkg
+TEMP_CLIENT_DEST := temporary-client/pkg
+FRONTEND_DEST := frontend/pkg
+
 .PHONY: run/backend run/backend/prod
 run/backend:
 	@cd backend && go mod tidy
@@ -31,8 +36,21 @@ build/backend/prod: binaries
 	cd backend && GOOS=linux GOARCH=amd64 go build -o ../binaries/analyzer ./cmd/frr-analytics
 
 
-#.PHONY: translate/proto
-#translate/proto:
-#	protoc --go_out=. --go_opt=paths=source_relative \
-#		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-#		./proto/*.proto
+.PHONY: protobuf protobuf/clean
+protobuf: protobuf/clean
+	@chmod +x proto-binary/bin/protoc
+#	protoc --proto_path=protobufSource --go_out=paths=source_relative:backend/pkg protobufSource/protocol.proto
+	./proto-binary/bin/protoc --proto_path=protobufSource --go_out=paths=source_relative:backend/pkg protobufSource/protocol.proto
+	./proto-binary/bin/protoc --proto_path=protobufSource --go_out=paths=source_relative:frontend/pkg protobufSource/protocol.proto
+	./proto-binary/bin/protoc --proto_path=protobufSource --go_out=paths=source_relative:tempClient/pkg protobufSource/protocol.proto
+#	protoc --proto_path=protobufSource \
+#		--go_out=paths=source_relative:$(TEMP_CLIENT_DEST) \
+#		$(PROTO_SRC)
+#	protoc --proto_path=protobufSource \
+#		--go_out=paths=source_relative:$(FRONTEND_DEST) \
+#		$(PROTO_SRC)
+
+protobuf/clean:
+	rm -f $(BACKEND_DEST)/protocol.pb.go
+	rm -f $(TEMP_CLIENT_DEST)/protocol.pb.go
+	rm -f $(FRONTEND_DEST)/protocol.pb.go

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 )
 
@@ -14,9 +13,26 @@ func processCommand(message *frrProto.Message) *frrProto.Response {
 
 	switch message.Command {
 	case "ospf":
+		//var ospfMetrics frrProto.OSPFMetrics
+		//neighbors := aggregator.OSPFNeighborDummyData()
+		//ospfMetrics.Neighbors = neighbors
+		//// Create the Value with the OSPFMetrics field set
+		//value := &frrProto.Value{
+		//	Kind: &frrProto.Value_OspfMetrics{
+		//		OspfMetrics: &ospfMetrics,
+		//	},
+		//}
+
+		switch message.Package {
+		case "neighbors":
+
+		}
+
 		response.Status = "success"
 		response.Message = "Returning magical ospf data"
-		return aggregator.OSPFNeighborDummyData()
+		//response.Data = value
+		// aggregator.OSPFNeighborDummyData()
+		return &response
 		// return &response
 	case "exit":
 		response.Status = "success"

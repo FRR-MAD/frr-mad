@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package communication;
+option go_package = "github.com/ba2025-ysmprc/frr-tui/backend/pkg;pkg";
+	
+
+import "google/protobuf/timestamp.proto";
+
+// Message represents the top-level message structure
+message Message {
+  string command = 1;
+  string package = 2;
+  map<string, Value> params = 3;
+}
+
+// Command represents a specific command
+message Command {
+  string package = 1;
+  string action = 2;
+  map<string, Value> params = 3;
+}
+
+// Response represents the server's response
+message Response {
+  string status = 1;
+  string message = 2;
+  Value data = 3;
+}
+
+// Value represents a dynamic value (similar to interface{} in Go)
+message Value {
+  oneof kind {
+    string string_value = 1;
+    int64 int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+    Struct struct_value = 5;
+    ListValue list_value = 6;
+    bytes bytes_value = 7;
+    
+    // Aggregator package message types
+    CombinedState combined_state = 8;
+    OSPFMetrics ospf_metrics = 9;
+    OSPFNeighbor ospf_neighbor = 10;
+    OSPFRoute ospf_route = 11;
+    OSPFInterface ospf_interface = 12;
+    OSPFlsa ospf_lsa = 13;
+    NetworkConfig network_config = 14;
+    OSPFArea ospf_area = 15;
+    OSPFInterfaceConfig ospf_interface_config = 16;
+    SystemMetrics system_metrics = 17;
+    InterfaceStats interface_stats = 18;
+  }
+}
+
+// Struct represents a map of string to Value (similar to map[string]interface{})
+message Struct {
+  map<string, Value> fields = 1;
+}
+
+// ListValue represents a list of Values (similar to []interface{})
+message ListValue {
+  repeated Value values = 1;
+}
+
+// ================ Aggregator Package Messages ================
+
+message CombinedState {
+  google.protobuf.Timestamp timestamp = 1;
+  OSPFMetrics ospf = 2;
+  NetworkConfig config = 3;
+  SystemMetrics system = 4;
+}
+
+message OSPFMetrics {
+  repeated OSPFNeighbor neighbors = 1;
+  repeated OSPFRoute routes = 2;
+  repeated OSPFInterface interfaces = 3;
+  repeated OSPFlsa lsas = 4;
+  bool has_route_changes = 5;
+}
+
+message OSPFNeighbor {
+  string id = 1;
+  string ip = 2;
+  string state = 3;
+  string interface = 4;
+  string area = 5;
+}
+
+message OSPFRoute {
+  string prefix = 1;
+  string next_hop = 2;
+  string interface = 3;
+  int32 cost = 4;
+  string type = 5;
+  string area = 6;
+}
+
+message OSPFInterface {
+  string name = 1;
+  string area = 2;
+  int32 nbr_count = 3;
+  int32 nbr_adj = 4;
+  bool passive = 5;
+}
+
+message OSPFlsa {
+  string type = 1;
+  string ls_id = 2;
+  string adv_router = 3;
+  int32 age = 4;
+  string area = 5;
+}
+
+message NetworkConfig {
+  string router_id = 1;
+  repeated OSPFArea areas = 2;
+  repeated OSPFInterfaceConfig interfaces = 3;
+}
+
+message OSPFArea {
+  string id = 1;
+  repeated string networks = 2;
+}
+
+message OSPFInterfaceConfig {
+  string name = 1;
+  string area = 2;
+  string IpAddress = 3;
+  bool passive = 4;
+  int32 cost = 5;
+}
+
+message SystemMetrics {
+  double cpu_usage = 1;
+  double memory_usage = 2;
+  repeated InterfaceStats network_stats = 3;
+}
+
+message InterfaceStats {
+  string name = 1;
+  uint64 rx_bytes = 2;
+  uint64 tx_bytes = 3;
+  uint64 rx_errors = 4;
+  uint64 tx_errors = 5;
+  string oper_state = 6;
+}

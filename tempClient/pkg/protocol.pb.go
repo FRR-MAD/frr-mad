@@ -1022,7 +1022,6 @@ type OSPFlsa struct {
 	AdvRouter     string                 `protobuf:"bytes,3,opt,name=adv_router,json=advRouter,proto3" json:"adv_router,omitempty"`
 	Age           int32                  `protobuf:"varint,4,opt,name=age,proto3" json:"age,omitempty"`
 	Area          string                 `protobuf:"bytes,5,opt,name=area,proto3" json:"area,omitempty"`
-	Sequence	  string				 `protobuf:"bytes,6,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1088,13 +1087,6 @@ func (x *OSPFlsa) GetAge() int32 {
 func (x *OSPFlsa) GetArea() string {
 	if x != nil {
 		return x.Area
-	}
-	return ""
-}
-
-func (x *OSPFlsa) GetASequence() string {
-	if x != nil {
-		return x.Sequence
 	}
 	return ""
 }

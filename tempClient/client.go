@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	frrProto "temp/proto"
+	frrProto "temp/pkg"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -74,8 +74,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Sent %s command to package %s\n", command, packageName)
-
 	time.Sleep(100 * time.Millisecond)
 
 	// Receive the response
@@ -84,10 +82,6 @@ func main() {
 		fmt.Printf("Failed to receive response: %s\n", err)
 		os.Exit(1)
 	}
-
-	fmt.Printf("Raw response bytes: %x\n", response)
-
-	fmt.Printf("Received response: Status=%s, Message=%s\n", response.Status, response.Message)
 
 	// Print data if present
 	if response.Data != nil {
@@ -137,8 +131,6 @@ func receiveResponse(conn net.Conn) (*frrProto.Response, error) {
 
 	// Read the response data
 	messageBuf := make([]byte, messageSize)
-	fmt.Printf("sizeBuf: %v\n", sizeBuf)
-	fmt.Printf("messageSize: %v\n", messageSize)
 
 	if _, err := io.ReadFull(conn, messageBuf); err != nil {
 		return nil, fmt.Errorf("failed to read response data: %w", err)
@@ -150,6 +142,8 @@ func receiveResponse(conn net.Conn) (*frrProto.Response, error) {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
+	fmt.Println(response)
+
 	return response, nil
 }
 
@@ -159,30 +153,31 @@ func printResponseData(data *frrProto.Value) {
 		return
 	}
 
-	switch v := data.Kind.(type) {
-	case *frrProto.Value_StringValue:
-		fmt.Printf("Data (string): %s\n", v.StringValue)
-	case *frrProto.Value_IntValue:
-		fmt.Printf("Data (int): %d\n", v.IntValue)
-	case *frrProto.Value_DoubleValue:
-		fmt.Printf("Data (double): %f\n", v.DoubleValue)
-	case *frrProto.Value_BoolValue:
-		fmt.Printf("Data (bool): %t\n", v.BoolValue)
-	case *frrProto.Value_StructValue:
-		fmt.Println("Data (struct):")
-		for key, val := range v.StructValue.Fields {
-			fmt.Printf("  %s: ", key)
-			printResponseData(val)
-		}
-	case *frrProto.Value_ListValue:
-		fmt.Println("Data (list):")
-		for i, val := range v.ListValue.Values {
-			fmt.Printf("  [%d]: ", i)
-			printResponseData(val)
-		}
-	case *frrProto.Value_BytesValue:
-		fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
-	default:
-		fmt.Println("Data: <unknown type>")
-	}
+	fmt.Println(data)
+	//switch v := data.Kind.(type) {
+	//case *frrProto.Value_StringValue:
+	//	fmt.Printf("Data (string): %s\n", v.StringValue)
+	//case *frrProto.Value_IntValue:
+	//	fmt.Printf("Data (int): %d\n", v.IntValue)
+	//case *frrProto.Value_DoubleValue:
+	//	fmt.Printf("Data (double): %f\n", v.DoubleValue)
+	//case *frrProto.Value_BoolValue:
+	//	fmt.Printf("Data (bool): %t\n", v.BoolValue)
+	//case *frrProto.Value_StructValue:
+	//	fmt.Println("Data (struct):")
+	//	for key, val := range v.StructValue.Fields {
+	//		fmt.Printf("  %s: ", key)
+	//		printResponseData(val)
+	//	}
+	//case *frrProto.Value_ListValue:
+	//	fmt.Println("Data (list):")
+	//	for i, val := range v.ListValue.Values {
+	//		fmt.Printf("  [%d]: ", i)
+	//		printResponseData(val)
+	//	}
+	//case *frrProto.Value_BytesValue:
+	//	fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
+	//default:
+	//	fmt.Println("Data: <unknown type>")
+	//}
 }
