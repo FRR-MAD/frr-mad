@@ -25,6 +25,7 @@ func processCommand(message *frrProto.Message) *frrProto.Response {
 		case "lsa":
 			return getOSPFlsa()
 		case "networkConfig":
+			return getNetworkConfig()
 		case "area":
 		case "interfaceConfig":
 		case "systemMetrics":

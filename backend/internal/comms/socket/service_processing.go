@@ -104,7 +104,24 @@ func getOSPFlsa() *frrProto.Response {
 		},
 	}
 	response.Status = "success"
-	response.Message = "Returning interfaces of host"
+	response.Message = "Returning lsa of host"
+	response.Data = value
+
+	return &response
+}
+
+func getNetworkConfig() *frrProto.Response {
+	var response frrProto.Response
+
+	var networkConfig frrProto.NetworkConfig
+	//networkConfig := aggregator.NetworkConfigDummyData()
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_NetworkConfig{
+			NetworkConfig: &networkConfig,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning network config of host"
 	response.Data = value
 
 	return &response

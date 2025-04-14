@@ -531,285 +531,400 @@ func OSPFInterfaceDummyData() []*frrProto.OSPFInterface {
 	return interfaces
 }
 
-
 func OSPFlsaDummyData() []*frrProto.OSPFlsa {
-	var interfaces []*frrProto.OSPFlsa
+	var lsas []*frrProto.OSPFlsa
 
-	type:"external"
-	ls_id:"10.20.0.0"
-	adv_router:"65.0.1.1"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"10.20.12.0"
-	adv_router:"65.0.1.1"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.1.0"
-	adv_router:"65.0.1.1"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.1"
-	adv_router:"65.0.1.1"
-	Sequence:"80000031"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.2.1"
-	adv_router:"65.0.1.1"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.12.2"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.1.0.0"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.1.12.0"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.1.21.0"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"10.30.0.0"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"10.30.12.0"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.2"
-	adv_router:"65.0.1.2"
-	Sequence:"80000015"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.3.1"
-	adv_router:"65.0.1.2"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.2.0.0"
-	adv_router:"65.0.1.22"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.2.12.0"
-	adv_router:"65.0.1.22"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.2.31.0"
-	adv_router:"65.0.1.22"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.3.0.0"
-	adv_router:"65.0.1.22"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.3.21.0"
-	adv_router:"65.0.1.22"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.22"
-	adv_router:"65.0.1.22"
-	Sequence:"80000011"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.13.3"
-	adv_router:"65.0.1.3"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.23.3"
-	adv_router:"65.0.1.3"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.2.0.0"
-	adv_router:"65.0.1.3"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.2.12.0"
-	adv_router:"65.0.1.3"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"summary"
-	ls_id:"10.2.31.0"
-	adv_router:"65.0.1.3"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.3"
-	adv_router:"65.0.1.3"
-	Sequence:"80000019"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.14.4"
-	adv_router:"65.0.1.4"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"172.20.20.0"
-	adv_router:"65.0.1.4"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.4.0"
-	adv_router:"65.0.1.4"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.1.4"
-	adv_router:"65.0.1.4"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.4"
-	adv_router:"65.0.1.4"
-	Sequence:"80000010"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.15.5"
-	adv_router:"65.0.1.5"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"172.20.20.0"
-	adv_router:"65.0.1.5"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.5.0"
-	adv_router:"65.0.1.5"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.1.5"
-	adv_router:"65.0.1.5"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.5"
-	adv_router:"65.0.1.5"
-	Sequence:"80000011"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.16.6"
-	adv_router:"65.0.1.6"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"172.20.20.0"
-	adv_router:"65.0.1.6"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.6.0"
-	adv_router:"65.0.1.6"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.1.6"
-	adv_router:"65.0.1.6"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.6"
-	adv_router:"65.0.1.6"
-	Sequence:"80000012"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.17.7"
-	adv_router:"65.0.1.7"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"172.20.20.0"
-	adv_router:"65.0.1.7"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.7.0"
-	adv_router:"65.0.1.7"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.1.7"
-	adv_router:"65.0.1.7"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.7"
-	adv_router:"65.0.1.7"
-	Sequence:"80000011"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.18.8"
-	adv_router:"65.0.1.8"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"172.20.20.0"
-	adv_router:"65.0.1.8"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.8.0"
-	adv_router:"65.0.1.8"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.1.8"
-	adv_router:"65.0.1.8"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.8"
-	adv_router:"65.0.1.8"
-	Sequence:"80000013"
-	area:"0.0.0.0"
-	type:"network"
-	ls_id:"10.0.19.9"
-	adv_router:"65.0.1.9"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"172.20.20.0"
-	adv_router:"65.0.1.9"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"192.168.9.0"
-	adv_router:"65.0.1.9"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"external"
-	ls_id:"65.0.1.9"
-	adv_router:"65.0.1.9"
-	Sequence:"0"
-	area:"0.0.0.0"
-	type:"router"
-	ls_id:"65.0.1.9"
-	adv_router:"65.0.1.9"
-	Sequence:"80000010"
-	area:"0.0.0.0"]
+	lsaList := []frrProto.OSPFlsa{
+		{
+			Type:      "external",
+			LsId:      "10.20.0.0",
+			AdvRouter: "65.0.1.1",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "10.20.12.0",
+			AdvRouter: "65.0.1.1",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.1.0",
+			AdvRouter: "65.0.1.1",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.1",
+			AdvRouter: "65.0.1.1",
+			Sequence:  "80000031",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.2.1",
+			AdvRouter: "65.0.1.1",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.12.2",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.1.0.0",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.1.12.0",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.1.21.0",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "10.30.0.0",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "10.30.12.0",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.2",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "80000015",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.3.1",
+			AdvRouter: "65.0.1.2",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.2.0.0",
+			AdvRouter: "65.0.1.22",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.2.12.0",
+			AdvRouter: "65.0.1.22",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.2.31.0",
+			AdvRouter: "65.0.1.22",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.3.0.0",
+			AdvRouter: "65.0.1.22",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.3.21.0",
+			AdvRouter: "65.0.1.22",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.22",
+			AdvRouter: "65.0.1.22",
+			Sequence:  "80000011",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.13.3",
+			AdvRouter: "65.0.1.3",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.23.3",
+			AdvRouter: "65.0.1.3",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.2.0.0",
+			AdvRouter: "65.0.1.3",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.2.12.0",
+			AdvRouter: "65.0.1.3",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "summary",
+			LsId:      "10.2.31.0",
+			AdvRouter: "65.0.1.3",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.3",
+			AdvRouter: "65.0.1.3",
+			Sequence:  "80000019",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.14.4",
+			AdvRouter: "65.0.1.4",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "172.20.20.0",
+			AdvRouter: "65.0.1.4",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.4.0",
+			AdvRouter: "65.0.1.4",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.1.4",
+			AdvRouter: "65.0.1.4",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.4",
+			AdvRouter: "65.0.1.4",
+			Sequence:  "80000010",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.15.5",
+			AdvRouter: "65.0.1.5",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "172.20.20.0",
+			AdvRouter: "65.0.1.5",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.5.0",
+			AdvRouter: "65.0.1.5",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.1.5",
+			AdvRouter: "65.0.1.5",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.5",
+			AdvRouter: "65.0.1.5",
+			Sequence:  "80000011",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.16.6",
+			AdvRouter: "65.0.1.6",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "172.20.20.0",
+			AdvRouter: "65.0.1.6",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.6.0",
+			AdvRouter: "65.0.1.6",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.1.6",
+			AdvRouter: "65.0.1.6",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.6",
+			AdvRouter: "65.0.1.6",
+			Sequence:  "80000012",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.17.7",
+			AdvRouter: "65.0.1.7",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "172.20.20.0",
+			AdvRouter: "65.0.1.7",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.7.0",
+			AdvRouter: "65.0.1.7",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.1.7",
+			AdvRouter: "65.0.1.7",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.7",
+			AdvRouter: "65.0.1.7",
+			Sequence:  "80000011",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.18.8",
+			AdvRouter: "65.0.1.8",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "172.20.20.0",
+			AdvRouter: "65.0.1.8",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.8.0",
+			AdvRouter: "65.0.1.8",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.1.8",
+			AdvRouter: "65.0.1.8",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.8",
+			AdvRouter: "65.0.1.8",
+			Sequence:  "80000013",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "network",
+			LsId:      "10.0.19.9",
+			AdvRouter: "65.0.1.9",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "172.20.20.0",
+			AdvRouter: "65.0.1.9",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "192.168.9.0",
+			AdvRouter: "65.0.1.9",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "external",
+			LsId:      "65.0.1.9",
+			AdvRouter: "65.0.1.9",
+			Sequence:  "0",
+			Area:      "0.0.0.0",
+		},
+		{
+			Type:      "router",
+			LsId:      "65.0.1.9",
+			AdvRouter: "65.0.1.9",
+			Sequence:  "80000010",
+			Area:      "0.0.0.0",
+		},
+	}
 
-	return interfaces
+	for _, lsa := range lsaList {
+		lsas = append(lsas, &lsa)
+	}
+
+	return lsas
 }
