@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/ba2025-ysmprc/frr-tui/backend/configs"
+	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
 	socket "github.com/ba2025-ysmprc/frr-tui/backend/internal/comms/socket"
 )
 
@@ -17,8 +21,7 @@ func main() {
 	aggregatorConfig := config["aggregator"]
 	socketConfig := config["socket"]
 
-	sockServer := socket.NewSocket(config["socket"]["UnixSocketLocation"])
-	fmt.Println(config["socket"]["UnixSocketLocation"])
+	sockServer := socket.NewSocket(socketConfig["UnixSocketLocation"])
 	// sockServer := socket.NewSocket("config")
 
 	sigChan := make(chan os.Signal, 1)
@@ -30,8 +33,9 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	runSocket(socketConfig)
-	runAggregator(aggregatorConfig)
+	//fmt.Println(socketConfig)
+	// runSocket(socketConfig)
+	go runAggregator(aggregatorConfig)
 
 	// stopAnalyzer := make(chan bool)
 	// go runAnalyzerProcess(config["analyzer"], stopAnalyzer)
@@ -107,9 +111,56 @@ func main() {
 // }
 
 func runAggregator(config map[string]string) {
-	fmt.Println(config)
+
+	metricsURL := config["FRRMetricsURL"]
+	configPath := config["FRRConfigPath"]
+	pollInterval := time.Duration(strToInt(config["PollInterval"])) * time.Second
+
+	// Collector init
+	collector := aggregator.NewCollector(metricsURL, configPath)
+
+	// Collector loop
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		state, err := collector.Collect()
+		if err != nil {
+			log.Printf("Collection error: %v", err)
+			continue
+		}
+
+		// TMP logging
+		//log.Printf("Collected state at %s", state.Timestamp.Format(time.RFC3339))
+		log.Printf("Collected state at %v", state.Timestamp.AsTime())
+		log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
+		log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
+		log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
+	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
+
+}
+
+func runAnalyzer(config map[string]string) {
+
 }
 
 func runSocket(config map[string]string) {
 	fmt.Println(config)
+}
+
+func strToInt(value string) int {
+	retValue, err := strconv.Atoi(value)
+	if err != nil {
+		// TODO: do proper error handling and get a solution in case it doesn't work
+		fmt.Println("Error turning string to int")
+	}
+
+	return retValue
 }
