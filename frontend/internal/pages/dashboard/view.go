@@ -44,7 +44,7 @@ func (m *Model) renderOSPFDashboard() string {
 	m.viewport.Width = boxWidthThreeFourth
 	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
 
-	gap := 3
+	gap := 2
 
 	allGoodRows := backend.GetOSPFMetrics()
 	anomalyRows := backend.GetOSPFAnomalies()
@@ -90,7 +90,7 @@ func (m *Model) renderOSPFDashboard() string {
 
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
 		styles.BoxTitleStyle.Render("System Resources"),
-		styles.GeneralBoxStyle.Width(boxWidthOneFourth).Render("here\nsome\nresources: \n"),
+		styles.GeneralBoxStyle.Width(boxWidthOneFourth-2).Render("here\nsome\nresources: \n"),
 	)
 
 	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
