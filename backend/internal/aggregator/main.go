@@ -9,8 +9,7 @@ func InitAggregator(config map[string]string) *Collector {
 	metricsURL := config["FRRMetricsURL"]
 	configPath := config["FRRConfigPath"]
 
-	collector := NewCollector(metricsURL, configPath)
-	return collector
+	return NewCollector(metricsURL, configPath)
 }
 
 func StartAggregator(collector *Collector, pollInterval time.Duration) {

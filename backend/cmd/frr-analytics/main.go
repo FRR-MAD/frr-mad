@@ -10,6 +10,7 @@ import (
 
 	"github.com/ba2025-ysmprc/frr-tui/backend/configs"
 	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
+	"github.com/ba2025-ysmprc/frr-tui/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-tui/backend/internal/comms/socket"
 )
 
@@ -20,6 +21,7 @@ func main() {
 
 	aggregatorConfig := config["aggregator"]
 	socketConfig := config["socket"]
+	analyzerConfig := config["analyzer"]
 
 	// start collector
 	collector := aggregator.InitAggregator(aggregatorConfig)
@@ -27,6 +29,11 @@ func main() {
 	// Start collection in a goroutine
 	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
 	aggregator.StartAggregator(collector, pollInterval)
+
+	// Start analyzer
+	anomalyDetection := analyzer.InitAnalyzer(analyzerConfig)
+
+	analyzer.StartAnalyzer(anomalyDetection, pollInterval)
 
 	// start socket
 	sockServer := socket.NewSocket(socketConfig, collector)
