@@ -93,3 +93,20 @@ func addNetworkToArea(config *frrProto.NetworkConfig, network, area string) {
 		Networks: []string{network},
 	})
 }
+
+func (c *Collector) ReadConfig() (string, error) {
+	file, err := os.Open(c.configPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open config file: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var staticConfig []string
+
+	for scanner.Scan() {
+		staticConfig = append(staticConfig, scanner.Text())
+	}
+
+	return strings.Join(staticConfig, "\n"), nil
+}

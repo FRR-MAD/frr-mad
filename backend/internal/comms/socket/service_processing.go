@@ -259,3 +259,24 @@ func (s *Socket) getTesting3() *frrProto.Response {
 
 	return &response
 }
+
+func (s *Socket) getTesting4() *frrProto.Response {
+	var response frrProto.Response
+
+	staticConfig, err := s.collector.ReadConfig()
+	if err != nil {
+		response.Status = "error"
+		response.Message = err.Error()
+		return &response
+	}
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_StringValue{
+			StringValue: staticConfig,
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning string config fileof host"
+	response.Data = value
+
+	return &response
+}

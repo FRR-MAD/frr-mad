@@ -4,10 +4,14 @@ BACKEND_DEST := backend/pkg
 TEMP_CLIENT_DEST := temporary-client/pkg
 FRONTEND_DEST := frontend/pkg
 
-.PHONY: run/backend run/backend/prod
+.PHONY: run/backend run/backend/local run/backend/prod
 run/backend:
 	@cd backend && go mod tidy
 	cd backend && go run -tags=dev cmd/frr-analytics/main.go
+
+run/backend/local:
+	@cd backend && go mod tidy
+	cd backend && go run -tags=local cmd/frr-analytics/main.go
 
 run/backend/prod:
 	@cd backend && go mod tidy
@@ -22,18 +26,18 @@ run/frontend:
 binaries:
 	mkdir -p binaries
 
-.PHONY: build/all build/frontend build/backend/dev build/backend/prod
+.PHONY: build/all build/frontend build/backend build/backend/prod
 build/all: build/frontend build/backend
 
 #.PHONY: build/frontend
 #build/frontend: binaries
 #	cd frontend && GOOS=linux GOARCH=amd64 go build -o  ../binaries
 
-build/backend/dev: binaries
-	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -tags=dev -o ../binaries/analyzer ./cmd/frr-analytics
+build/backend: binaries
+	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags='-extldflags=-static' -tags=dev -o ../binaries/analyzer ./cmd/frr-analytics
 
 build/backend/prod: binaries
-	cd backend && GOOS=linux GOARCH=amd64 go build -o ../binaries/analyzer ./cmd/frr-analytics
+	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -o ../binaries/analyzer ./cmd/frr-analytics
 
 
 .PHONY: protobuf protobuf/clean
@@ -47,3 +51,4 @@ protobuf/clean:
 	rm -f $(BACKEND_DEST)/protocol.pb.go
 	rm -f $(TEMP_CLIENT_DEST)/protocol.pb.go
 	rm -f $(FRONTEND_DEST)/protocol.pb.go
+
