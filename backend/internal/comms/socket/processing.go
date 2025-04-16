@@ -40,6 +40,8 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 			return s.getTesting()
 		case "testing2":
 			return s.getTesting2()
+		case "testing3":
+			return s.getTesting3()
 		}
 
 		response.Status = "success"

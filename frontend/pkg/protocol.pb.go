@@ -228,6 +228,7 @@ type Value struct {
 	//	*Value_OspfInterfaceConfig
 	//	*Value_SystemMetrics
 	//	*Value_InterfaceStats
+	//	*Value_Anomalies
 	Kind          isValue_Kind `protobuf_oneof:"kind"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -432,6 +433,15 @@ func (x *Value) GetInterfaceStats() *InterfaceStats {
 	return nil
 }
 
+func (x *Value) GetAnomalies() *Anomalies {
+	if x != nil {
+		if x, ok := x.Kind.(*Value_Anomalies); ok {
+			return x.Anomalies
+		}
+	}
+	return nil
+}
+
 type isValue_Kind interface {
 	isValue_Kind()
 }
@@ -509,6 +519,11 @@ type Value_InterfaceStats struct {
 	InterfaceStats *InterfaceStats `protobuf:"bytes,18,opt,name=interface_stats,json=interfaceStats,proto3,oneof"`
 }
 
+type Value_Anomalies struct {
+	// Analyzer package message types
+	Anomalies *Anomalies `protobuf:"bytes,19,opt,name=anomalies,proto3,oneof"`
+}
+
 func (*Value_StringValue) isValue_Kind() {}
 
 func (*Value_IntValue) isValue_Kind() {}
@@ -544,6 +559,8 @@ func (*Value_OspfInterfaceConfig) isValue_Kind() {}
 func (*Value_SystemMetrics) isValue_Kind() {}
 
 func (*Value_InterfaceStats) isValue_Kind() {}
+
+func (*Value_Anomalies) isValue_Kind() {}
 
 // Struct represents a map of string to Value (similar to map[string]interface{})
 type Struct struct {
@@ -1431,6 +1448,436 @@ func (x *InterfaceStats) GetOperState() string {
 	return ""
 }
 
+// Main message containing all anomaly types
+type Anomalies struct {
+	state                 protoimpl.MessageState         `protogen:"open.v1"`
+	OveradvertisedRoutes  []*AnomalyOveradvertisedRoute  `protobuf:"bytes,1,rep,name=overadvertised_routes,json=overadvertisedRoutes,proto3" json:"overadvertised_routes,omitempty"`
+	UnderadvertisedRoutes []*AnomalyUnderadvertisedRoute `protobuf:"bytes,2,rep,name=underadvertised_routes,json=underadvertisedRoutes,proto3" json:"underadvertised_routes,omitempty"`
+	DuplicateRoutes       []*AnomalyDuplicateRoute       `protobuf:"bytes,3,rep,name=duplicate_routes,json=duplicateRoutes,proto3" json:"duplicate_routes,omitempty"`
+	MisconfiguredRoutes   []*AnomalyMisconfiguredRoute   `protobuf:"bytes,4,rep,name=misconfigured_routes,json=misconfiguredRoutes,proto3" json:"misconfigured_routes,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *Anomalies) Reset() {
+	*x = Anomalies{}
+	mi := &file_protocol_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Anomalies) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Anomalies) ProtoMessage() {}
+
+func (x *Anomalies) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Anomalies.ProtoReflect.Descriptor instead.
+func (*Anomalies) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *Anomalies) GetOveradvertisedRoutes() []*AnomalyOveradvertisedRoute {
+	if x != nil {
+		return x.OveradvertisedRoutes
+	}
+	return nil
+}
+
+func (x *Anomalies) GetUnderadvertisedRoutes() []*AnomalyUnderadvertisedRoute {
+	if x != nil {
+		return x.UnderadvertisedRoutes
+	}
+	return nil
+}
+
+func (x *Anomalies) GetDuplicateRoutes() []*AnomalyDuplicateRoute {
+	if x != nil {
+		return x.DuplicateRoutes
+	}
+	return nil
+}
+
+func (x *Anomalies) GetMisconfiguredRoutes() []*AnomalyMisconfiguredRoute {
+	if x != nil {
+		return x.MisconfiguredRoutes
+	}
+	return nil
+}
+
+// Router information
+type RouterAttribute struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RouterName    string                 `protobuf:"bytes,1,opt,name=router_name,json=routerName,proto3" json:"router_name,omitempty"`
+	RouterId      string                 `protobuf:"bytes,2,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RouterAttribute) Reset() {
+	*x = RouterAttribute{}
+	mi := &file_protocol_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RouterAttribute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RouterAttribute) ProtoMessage() {}
+
+func (x *RouterAttribute) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RouterAttribute.ProtoReflect.Descriptor instead.
+func (*RouterAttribute) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *RouterAttribute) GetRouterName() string {
+	if x != nil {
+		return x.RouterName
+	}
+	return ""
+}
+
+func (x *RouterAttribute) GetRouterId() string {
+	if x != nil {
+		return x.RouterId
+	}
+	return ""
+}
+
+// Route is advertised but should not be
+type AnomalyOveradvertisedRoute struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Type             string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	IsAdvertised     string                 `protobuf:"bytes,3,opt,name=is_advertised,json=isAdvertised,proto3" json:"is_advertised,omitempty"`
+	ShouldAdvertised string                 `protobuf:"bytes,4,opt,name=should_advertised,json=shouldAdvertised,proto3" json:"should_advertised,omitempty"`
+	Router           *RouterAttribute       `protobuf:"bytes,5,opt,name=router,proto3" json:"router,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *AnomalyOveradvertisedRoute) Reset() {
+	*x = AnomalyOveradvertisedRoute{}
+	mi := &file_protocol_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AnomalyOveradvertisedRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnomalyOveradvertisedRoute) ProtoMessage() {}
+
+func (x *AnomalyOveradvertisedRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnomalyOveradvertisedRoute.ProtoReflect.Descriptor instead.
+func (*AnomalyOveradvertisedRoute) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AnomalyOveradvertisedRoute) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+func (x *AnomalyOveradvertisedRoute) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *AnomalyOveradvertisedRoute) GetIsAdvertised() string {
+	if x != nil {
+		return x.IsAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyOveradvertisedRoute) GetShouldAdvertised() string {
+	if x != nil {
+		return x.ShouldAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyOveradvertisedRoute) GetRouter() *RouterAttribute {
+	if x != nil {
+		return x.Router
+	}
+	return nil
+}
+
+// Route should be advertised but is not
+type AnomalyUnderadvertisedRoute struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Type             string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	IsAdvertised     string                 `protobuf:"bytes,3,opt,name=is_advertised,json=isAdvertised,proto3" json:"is_advertised,omitempty"`
+	ShouldAdvertised string                 `protobuf:"bytes,4,opt,name=should_advertised,json=shouldAdvertised,proto3" json:"should_advertised,omitempty"`
+	Router           *RouterAttribute       `protobuf:"bytes,5,opt,name=router,proto3" json:"router,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *AnomalyUnderadvertisedRoute) Reset() {
+	*x = AnomalyUnderadvertisedRoute{}
+	mi := &file_protocol_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AnomalyUnderadvertisedRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnomalyUnderadvertisedRoute) ProtoMessage() {}
+
+func (x *AnomalyUnderadvertisedRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnomalyUnderadvertisedRoute.ProtoReflect.Descriptor instead.
+func (*AnomalyUnderadvertisedRoute) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *AnomalyUnderadvertisedRoute) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+func (x *AnomalyUnderadvertisedRoute) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *AnomalyUnderadvertisedRoute) GetIsAdvertised() string {
+	if x != nil {
+		return x.IsAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyUnderadvertisedRoute) GetShouldAdvertised() string {
+	if x != nil {
+		return x.ShouldAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyUnderadvertisedRoute) GetRouter() *RouterAttribute {
+	if x != nil {
+		return x.Router
+	}
+	return nil
+}
+
+// Route is advertised multiple times when it should be advertised once
+type AnomalyDuplicateRoute struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Type             string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	IsAdvertised     string                 `protobuf:"bytes,3,opt,name=is_advertised,json=isAdvertised,proto3" json:"is_advertised,omitempty"`
+	ShouldAdvertised string                 `protobuf:"bytes,4,opt,name=should_advertised,json=shouldAdvertised,proto3" json:"should_advertised,omitempty"`
+	Router           *RouterAttribute       `protobuf:"bytes,5,opt,name=router,proto3" json:"router,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *AnomalyDuplicateRoute) Reset() {
+	*x = AnomalyDuplicateRoute{}
+	mi := &file_protocol_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AnomalyDuplicateRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnomalyDuplicateRoute) ProtoMessage() {}
+
+func (x *AnomalyDuplicateRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnomalyDuplicateRoute.ProtoReflect.Descriptor instead.
+func (*AnomalyDuplicateRoute) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *AnomalyDuplicateRoute) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+func (x *AnomalyDuplicateRoute) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *AnomalyDuplicateRoute) GetIsAdvertised() string {
+	if x != nil {
+		return x.IsAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyDuplicateRoute) GetShouldAdvertised() string {
+	if x != nil {
+		return x.ShouldAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyDuplicateRoute) GetRouter() *RouterAttribute {
+	if x != nil {
+		return x.Router
+	}
+	return nil
+}
+
+// Route is advertised with incorrect parameters
+type AnomalyMisconfiguredRoute struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Type             string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	IsAdvertised     string                 `protobuf:"bytes,3,opt,name=is_advertised,json=isAdvertised,proto3" json:"is_advertised,omitempty"`
+	ShouldAdvertised string                 `protobuf:"bytes,4,opt,name=should_advertised,json=shouldAdvertised,proto3" json:"should_advertised,omitempty"`
+	Router           *RouterAttribute       `protobuf:"bytes,5,opt,name=router,proto3" json:"router,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *AnomalyMisconfiguredRoute) Reset() {
+	*x = AnomalyMisconfiguredRoute{}
+	mi := &file_protocol_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AnomalyMisconfiguredRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnomalyMisconfiguredRoute) ProtoMessage() {}
+
+func (x *AnomalyMisconfiguredRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnomalyMisconfiguredRoute.ProtoReflect.Descriptor instead.
+func (*AnomalyMisconfiguredRoute) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *AnomalyMisconfiguredRoute) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+func (x *AnomalyMisconfiguredRoute) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *AnomalyMisconfiguredRoute) GetIsAdvertised() string {
+	if x != nil {
+		return x.IsAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyMisconfiguredRoute) GetShouldAdvertised() string {
+	if x != nil {
+		return x.ShouldAdvertised
+	}
+	return ""
+}
+
+func (x *AnomalyMisconfiguredRoute) GetRouter() *RouterAttribute {
+	if x != nil {
+		return x.Router
+	}
+	return nil
+}
+
 var File_protocol_proto protoreflect.FileDescriptor
 
 const file_protocol_proto_rawDesc = "" +
@@ -1453,7 +1900,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\bResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12(\n" +
-	"\x04data\x18\x03 \x01(\v2\x14.communication.ValueR\x04data\"\xa0\b\n" +
+	"\x04data\x18\x03 \x01(\v2\x14.communication.ValueR\x04data\"\xda\b\n" +
 	"\x05Value\x12#\n" +
 	"\fstring_value\x18\x01 \x01(\tH\x00R\vstringValue\x12\x1d\n" +
 	"\tint_value\x18\x02 \x01(\x03H\x00R\bintValue\x12#\n" +
@@ -1477,7 +1924,8 @@ const file_protocol_proto_rawDesc = "" +
 	"\tospf_area\x18\x0f \x01(\v2\x17.communication.OSPFAreaH\x00R\bospfArea\x12X\n" +
 	"\x15ospf_interface_config\x18\x10 \x01(\v2\".communication.OSPFInterfaceConfigH\x00R\x13ospfInterfaceConfig\x12E\n" +
 	"\x0esystem_metrics\x18\x11 \x01(\v2\x1c.communication.SystemMetricsH\x00R\rsystemMetrics\x12H\n" +
-	"\x0finterface_stats\x18\x12 \x01(\v2\x1d.communication.InterfaceStatsH\x00R\x0einterfaceStatsB\x06\n" +
+	"\x0finterface_stats\x18\x12 \x01(\v2\x1d.communication.InterfaceStatsH\x00R\x0einterfaceStats\x128\n" +
+	"\tanomalies\x18\x13 \x01(\v2\x18.communication.AnomaliesH\x00R\tanomaliesB\x06\n" +
 	"\x04kind\"\x94\x01\n" +
 	"\x06Struct\x129\n" +
 	"\x06fields\x18\x01 \x03(\v2!.communication.Struct.FieldsEntryR\x06fields\x1aO\n" +
@@ -1552,7 +2000,40 @@ const file_protocol_proto_rawDesc = "" +
 	"\trx_errors\x18\x04 \x01(\x04R\brxErrors\x12\x1b\n" +
 	"\ttx_errors\x18\x05 \x01(\x04R\btxErrors\x12\x1d\n" +
 	"\n" +
-	"oper_state\x18\x06 \x01(\tR\toperStateB2Z0github.com/ba2025-ysmprc/frr-tui/backend/pkg;pkgb\x06proto3"
+	"oper_state\x18\x06 \x01(\tR\toperState\"\xfc\x02\n" +
+	"\tAnomalies\x12^\n" +
+	"\x15overadvertised_routes\x18\x01 \x03(\v2).communication.AnomalyOveradvertisedRouteR\x14overadvertisedRoutes\x12a\n" +
+	"\x16underadvertised_routes\x18\x02 \x03(\v2*.communication.AnomalyUnderadvertisedRouteR\x15underadvertisedRoutes\x12O\n" +
+	"\x10duplicate_routes\x18\x03 \x03(\v2$.communication.AnomalyDuplicateRouteR\x0fduplicateRoutes\x12[\n" +
+	"\x14misconfigured_routes\x18\x04 \x03(\v2(.communication.AnomalyMisconfiguredRouteR\x13misconfiguredRoutes\"O\n" +
+	"\x0fRouterAttribute\x12\x1f\n" +
+	"\vrouter_name\x18\x01 \x01(\tR\n" +
+	"routerName\x12\x1b\n" +
+	"\trouter_id\x18\x02 \x01(\tR\brouterId\"\xf4\x01\n" +
+	"\x1aAnomalyOveradvertisedRoute\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12#\n" +
+	"\ris_advertised\x18\x03 \x01(\tR\fisAdvertised\x12+\n" +
+	"\x11should_advertised\x18\x04 \x01(\tR\x10shouldAdvertised\x126\n" +
+	"\x06router\x18\x05 \x01(\v2\x1e.communication.RouterAttributeR\x06router\"\xf5\x01\n" +
+	"\x1bAnomalyUnderadvertisedRoute\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12#\n" +
+	"\ris_advertised\x18\x03 \x01(\tR\fisAdvertised\x12+\n" +
+	"\x11should_advertised\x18\x04 \x01(\tR\x10shouldAdvertised\x126\n" +
+	"\x06router\x18\x05 \x01(\v2\x1e.communication.RouterAttributeR\x06router\"\xef\x01\n" +
+	"\x15AnomalyDuplicateRoute\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12#\n" +
+	"\ris_advertised\x18\x03 \x01(\tR\fisAdvertised\x12+\n" +
+	"\x11should_advertised\x18\x04 \x01(\tR\x10shouldAdvertised\x126\n" +
+	"\x06router\x18\x05 \x01(\v2\x1e.communication.RouterAttributeR\x06router\"\xf3\x01\n" +
+	"\x19AnomalyMisconfiguredRoute\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12#\n" +
+	"\ris_advertised\x18\x03 \x01(\tR\fisAdvertised\x12+\n" +
+	"\x11should_advertised\x18\x04 \x01(\tR\x10shouldAdvertised\x126\n" +
+	"\x06router\x18\x05 \x01(\v2\x1e.communication.RouterAttributeR\x06routerB2Z0github.com/ba2025-ysmprc/frr-tui/backend/pkg;pkgb\x06proto3"
 
 var (
 	file_protocol_proto_rawDescOnce sync.Once
@@ -1566,33 +2047,39 @@ func file_protocol_proto_rawDescGZIP() []byte {
 	return file_protocol_proto_rawDescData
 }
 
-var file_protocol_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_protocol_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_protocol_proto_goTypes = []any{
-	(*Message)(nil),               // 0: communication.Message
-	(*Command)(nil),               // 1: communication.Command
-	(*Response)(nil),              // 2: communication.Response
-	(*Value)(nil),                 // 3: communication.Value
-	(*Struct)(nil),                // 4: communication.Struct
-	(*ListValue)(nil),             // 5: communication.ListValue
-	(*CombinedState)(nil),         // 6: communication.CombinedState
-	(*OSPFMetrics)(nil),           // 7: communication.OSPFMetrics
-	(*OSPFNeighbor)(nil),          // 8: communication.OSPFNeighbor
-	(*OSPFRoute)(nil),             // 9: communication.OSPFRoute
-	(*OSPFInterface)(nil),         // 10: communication.OSPFInterface
-	(*OSPFlsa)(nil),               // 11: communication.OSPFlsa
-	(*NetworkConfig)(nil),         // 12: communication.NetworkConfig
-	(*OSPFArea)(nil),              // 13: communication.OSPFArea
-	(*OSPFInterfaceConfig)(nil),   // 14: communication.OSPFInterfaceConfig
-	(*SystemMetrics)(nil),         // 15: communication.SystemMetrics
-	(*InterfaceStats)(nil),        // 16: communication.InterfaceStats
-	nil,                           // 17: communication.Message.ParamsEntry
-	nil,                           // 18: communication.Command.ParamsEntry
-	nil,                           // 19: communication.Struct.FieldsEntry
-	(*timestamppb.Timestamp)(nil), // 20: google.protobuf.Timestamp
+	(*Message)(nil),                     // 0: communication.Message
+	(*Command)(nil),                     // 1: communication.Command
+	(*Response)(nil),                    // 2: communication.Response
+	(*Value)(nil),                       // 3: communication.Value
+	(*Struct)(nil),                      // 4: communication.Struct
+	(*ListValue)(nil),                   // 5: communication.ListValue
+	(*CombinedState)(nil),               // 6: communication.CombinedState
+	(*OSPFMetrics)(nil),                 // 7: communication.OSPFMetrics
+	(*OSPFNeighbor)(nil),                // 8: communication.OSPFNeighbor
+	(*OSPFRoute)(nil),                   // 9: communication.OSPFRoute
+	(*OSPFInterface)(nil),               // 10: communication.OSPFInterface
+	(*OSPFlsa)(nil),                     // 11: communication.OSPFlsa
+	(*NetworkConfig)(nil),               // 12: communication.NetworkConfig
+	(*OSPFArea)(nil),                    // 13: communication.OSPFArea
+	(*OSPFInterfaceConfig)(nil),         // 14: communication.OSPFInterfaceConfig
+	(*SystemMetrics)(nil),               // 15: communication.SystemMetrics
+	(*InterfaceStats)(nil),              // 16: communication.InterfaceStats
+	(*Anomalies)(nil),                   // 17: communication.Anomalies
+	(*RouterAttribute)(nil),             // 18: communication.RouterAttribute
+	(*AnomalyOveradvertisedRoute)(nil),  // 19: communication.AnomalyOveradvertisedRoute
+	(*AnomalyUnderadvertisedRoute)(nil), // 20: communication.AnomalyUnderadvertisedRoute
+	(*AnomalyDuplicateRoute)(nil),       // 21: communication.AnomalyDuplicateRoute
+	(*AnomalyMisconfiguredRoute)(nil),   // 22: communication.AnomalyMisconfiguredRoute
+	nil,                                 // 23: communication.Message.ParamsEntry
+	nil,                                 // 24: communication.Command.ParamsEntry
+	nil,                                 // 25: communication.Struct.FieldsEntry
+	(*timestamppb.Timestamp)(nil),       // 26: google.protobuf.Timestamp
 }
 var file_protocol_proto_depIdxs = []int32{
-	17, // 0: communication.Message.params:type_name -> communication.Message.ParamsEntry
-	18, // 1: communication.Command.params:type_name -> communication.Command.ParamsEntry
+	23, // 0: communication.Message.params:type_name -> communication.Message.ParamsEntry
+	24, // 1: communication.Command.params:type_name -> communication.Command.ParamsEntry
 	3,  // 2: communication.Response.data:type_name -> communication.Value
 	4,  // 3: communication.Value.struct_value:type_name -> communication.Struct
 	5,  // 4: communication.Value.list_value:type_name -> communication.ListValue
@@ -1607,27 +2094,40 @@ var file_protocol_proto_depIdxs = []int32{
 	14, // 13: communication.Value.ospf_interface_config:type_name -> communication.OSPFInterfaceConfig
 	15, // 14: communication.Value.system_metrics:type_name -> communication.SystemMetrics
 	16, // 15: communication.Value.interface_stats:type_name -> communication.InterfaceStats
-	19, // 16: communication.Struct.fields:type_name -> communication.Struct.FieldsEntry
-	3,  // 17: communication.ListValue.values:type_name -> communication.Value
-	20, // 18: communication.CombinedState.timestamp:type_name -> google.protobuf.Timestamp
-	7,  // 19: communication.CombinedState.ospf:type_name -> communication.OSPFMetrics
-	12, // 20: communication.CombinedState.config:type_name -> communication.NetworkConfig
-	15, // 21: communication.CombinedState.system:type_name -> communication.SystemMetrics
-	8,  // 22: communication.OSPFMetrics.neighbors:type_name -> communication.OSPFNeighbor
-	9,  // 23: communication.OSPFMetrics.routes:type_name -> communication.OSPFRoute
-	10, // 24: communication.OSPFMetrics.interfaces:type_name -> communication.OSPFInterface
-	11, // 25: communication.OSPFMetrics.lsas:type_name -> communication.OSPFlsa
-	13, // 26: communication.NetworkConfig.areas:type_name -> communication.OSPFArea
-	14, // 27: communication.NetworkConfig.interfaces:type_name -> communication.OSPFInterfaceConfig
-	16, // 28: communication.SystemMetrics.network_stats:type_name -> communication.InterfaceStats
-	3,  // 29: communication.Message.ParamsEntry.value:type_name -> communication.Value
-	3,  // 30: communication.Command.ParamsEntry.value:type_name -> communication.Value
-	3,  // 31: communication.Struct.FieldsEntry.value:type_name -> communication.Value
-	32, // [32:32] is the sub-list for method output_type
-	32, // [32:32] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	17, // 16: communication.Value.anomalies:type_name -> communication.Anomalies
+	25, // 17: communication.Struct.fields:type_name -> communication.Struct.FieldsEntry
+	3,  // 18: communication.ListValue.values:type_name -> communication.Value
+	26, // 19: communication.CombinedState.timestamp:type_name -> google.protobuf.Timestamp
+	7,  // 20: communication.CombinedState.ospf:type_name -> communication.OSPFMetrics
+	12, // 21: communication.CombinedState.config:type_name -> communication.NetworkConfig
+	15, // 22: communication.CombinedState.system:type_name -> communication.SystemMetrics
+	8,  // 23: communication.OSPFMetrics.neighbors:type_name -> communication.OSPFNeighbor
+	9,  // 24: communication.OSPFMetrics.routes:type_name -> communication.OSPFRoute
+	10, // 25: communication.OSPFMetrics.interfaces:type_name -> communication.OSPFInterface
+	11, // 26: communication.OSPFMetrics.lsas:type_name -> communication.OSPFlsa
+	13, // 27: communication.NetworkConfig.areas:type_name -> communication.OSPFArea
+	14, // 28: communication.NetworkConfig.interfaces:type_name -> communication.OSPFInterfaceConfig
+	16, // 29: communication.SystemMetrics.network_stats:type_name -> communication.InterfaceStats
+	19, // 30: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
+	20, // 31: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
+	21, // 32: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
+	22, // 33: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
+	26, // 34: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	18, // 35: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
+	26, // 36: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	18, // 37: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
+	26, // 38: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
+	18, // 39: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
+	26, // 40: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
+	18, // 41: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
+	3,  // 42: communication.Message.ParamsEntry.value:type_name -> communication.Value
+	3,  // 43: communication.Command.ParamsEntry.value:type_name -> communication.Value
+	3,  // 44: communication.Struct.FieldsEntry.value:type_name -> communication.Value
+	45, // [45:45] is the sub-list for method output_type
+	45, // [45:45] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_protocol_proto_init() }
@@ -1654,6 +2154,7 @@ func file_protocol_proto_init() {
 		(*Value_OspfInterfaceConfig)(nil),
 		(*Value_SystemMetrics)(nil),
 		(*Value_InterfaceStats)(nil),
+		(*Value_Anomalies)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1661,7 +2162,7 @@ func file_protocol_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protocol_proto_rawDesc), len(file_protocol_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

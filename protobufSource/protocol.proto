@@ -8,14 +8,14 @@ import "google/protobuf/timestamp.proto";
 
 // Message represents the top-level message structure
 message Message {
-  string command = 1;
-  string package = 2;
+  string service = 1;
+  string command = 2;
   map<string, Value> params = 3;
 }
 
 // Command represents a specific command
 message Command {
-  string package = 1;
+  string command = 1;
   string action = 2;
   map<string, Value> params = 3;
 }
@@ -38,7 +38,7 @@ message Value {
     ListValue list_value = 6;
     bytes bytes_value = 7;
     
-    // Aggregator package message types
+    // Aggregator service message types
     CombinedState combined_state = 8;
     OSPFMetrics ospf_metrics = 9;
     OSPFNeighbor ospf_neighbor = 10;
@@ -50,6 +50,10 @@ message Value {
     OSPFInterfaceConfig ospf_interface_config = 16;
     SystemMetrics system_metrics = 17;
     InterfaceStats interface_stats = 18;
+
+    // Analyzer command message types
+    Anomalies anomalies = 19;
+
   }
 }
 
@@ -63,7 +67,7 @@ message ListValue {
   repeated Value values = 1;
 }
 
-// ================ Aggregator Package Messages ================
+// ================ Aggregator payload Messages ================
 
 message CombinedState {
   google.protobuf.Timestamp timestamp = 1;
@@ -146,4 +150,63 @@ message InterfaceStats {
   uint64 rx_errors = 4;
   uint64 tx_errors = 5;
   string oper_state = 6;
+}
+
+// ================ Analyzer payload Messages ================
+
+// Main message containing all anomaly types
+message Anomalies {
+  repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
+  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
+  repeated AnomalyDuplicateRoute duplicate_routes = 3;
+  repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
+}
+
+message AnomalyState {
+  bool has_overadvertised_routes = 1;
+  bool has_underadvertised_routes = 2;
+  bool has_duplicate_routes = 3;
+  bool has_misconfigured_routes = 4;
+}
+
+// Router information
+message RouterAttribute {
+  string router_name = 1;
+  string router_id = 2;
+}
+
+// Route is advertised but should not be
+message AnomalyOveradvertisedRoute {
+  google.protobuf.Timestamp timestamp = 1;
+  string service = 2;
+  string is_advertised = 3;
+  string should_advertised = 4;
+  RouterAttribute router = 5;
+}
+
+// Route should be advertised but is not
+message AnomalyUnderadvertisedRoute {
+  google.protobuf.Timestamp timestamp = 1;
+  string service = 2;
+  string is_advertised = 3;
+  string should_advertised = 4;
+  RouterAttribute router = 5;
+}
+
+// Route is advertised multiple times when it should be advertised once
+message AnomalyDuplicateRoute {
+  google.protobuf.Timestamp timestamp = 1;
+  string service = 2;
+  string is_advertised = 3;
+  string should_advertised = 4;
+  RouterAttribute router = 5;
+}
+
+// Wrong advertisment, not fitting any above
+message AnomalyMisconfiguredRoute {
+  google.protobuf.Timestamp timestamp = 1;
+  string service = 2;
+  string is_advertised = 3;
+  string should_advertised = 4;
+  RouterAttribute router = 5;
 }

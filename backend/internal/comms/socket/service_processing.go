@@ -245,3 +245,17 @@ func (s *Socket) getTesting2() *frrProto.Response {
 
 	return &response
 }
+func (s *Socket) getTesting3() *frrProto.Response {
+	var response frrProto.Response
+
+	value := &frrProto.Value{
+		Kind: &frrProto.Value_StringValue{
+			StringValue: s.analyzer.Foobar(),
+		},
+	}
+	response.Status = "success"
+	response.Message = "Returning combined state of host"
+	response.Data = value
+
+	return &response
+}

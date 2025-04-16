@@ -12,3 +12,9 @@ type Analyzer struct {
 func newAnalyzer() *Analyzer {
 	return &Analyzer{}
 }
+
+// analyze the different ospf anomalies
+// call ospf functions
+func (c *Analyzer) analyzeAnomalies() {
+
+}

@@ -36,7 +36,7 @@ func main() {
 	analyzer.StartAnalyzer(anomalyDetection, pollInterval)
 
 	// start socket
-	sockServer := socket.NewSocket(socketConfig, collector)
+	sockServer := socket.NewSocket(socketConfig, collector, anomalyDetection)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
+	"github.com/ba2025-ysmprc/frr-tui/backend/internal/analyzer"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 	"google.golang.org/protobuf/proto"
 )
@@ -22,13 +23,15 @@ type Socket struct {
 	listener   net.Listener
 	mutex      sync.Mutex
 	collector  *aggregator.Collector
+	analyzer   *analyzer.Analyzer
 }
 
-func NewSocket(socketPath map[string]string, collector *aggregator.Collector) *Socket {
+func NewSocket(socketPath map[string]string, collector *aggregator.Collector, analyzer *analyzer.Analyzer) *Socket {
 	return &Socket{
 		socketPath: socketPath["UnixSocketLocation"],
 		mutex:      sync.Mutex{},
 		collector:  collector,
+		analyzer:   analyzer,
 	}
 }
 
