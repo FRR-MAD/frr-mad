@@ -1,39 +1,43 @@
 package socket
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"sync"
+
+	"github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator"
+	"github.com/ba2025-ysmprc/frr-tui/backend/internal/analyzer"
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
+	"google.golang.org/protobuf/proto"
 )
 
-// Global mutex to ensure synchronous execution
 var execMutex sync.Mutex
 
-// Global variable to track running state
 var isRunning bool = true
 
-// Socket represents a Unix socket server
 type Socket struct {
 	socketPath string
 	listener   net.Listener
 	mutex      sync.Mutex
+	collector  *aggregator.Collector
+	analyzer   *analyzer.Analyzer
 }
 
-// NewSocket creates a new Socket instance
-func NewSocket(socketPath string) *Socket {
+func NewSocket(socketPath map[string]string, collector *aggregator.Collector, analyzer *analyzer.Analyzer) *Socket {
 	return &Socket{
-		socketPath: socketPath,
+		socketPath: socketPath["UnixSocketLocation"],
 		mutex:      sync.Mutex{},
+		collector:  collector,
+		analyzer:   analyzer,
 	}
 }
 
-// Start begins listening on the Unix socket
 func (s *Socket) Start() error {
-	// Clean up any existing socket file
 	os.Remove(s.socketPath)
 
-	// Create and listen on the Unix socket
 	l, err := net.ListenUnix("unix", &net.UnixAddr{s.socketPath, "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)
@@ -41,16 +45,13 @@ func (s *Socket) Start() error {
 
 	s.listener = l
 
-	// Set global reference to listener for exit command
 	socketListener = s.listener
 
 	fmt.Printf("Listening on %s ...\n", s.socketPath)
 
-	// Accept connections while isRunning is true
 	for isRunning {
 		conn, err := l.Accept()
 		if err != nil {
-			// Check if we're shutting down
 			if !isRunning {
 				fmt.Println("Socket server shutting down...")
 				break
@@ -60,43 +61,75 @@ func (s *Socket) Start() error {
 		}
 
 		fmt.Println("New client connected")
-		// Handle connection
 		s.handleConnection(conn)
 	}
 
 	return nil
 }
 
-// handleConnection processes client connections
 func (s *Socket) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
+	sizeBuf := make([]byte, 4)
+	_, err := io.ReadFull(conn, sizeBuf)
 	if err != nil {
-		fmt.Printf("Error reading from connection: %s\n", err.Error())
+		fmt.Printf("Error reading message size :%s\n", err.Error())
 		return
 	}
 
-	message := string(buf[0:n])
-	fmt.Println("Received message:", message)
+	messageSize := binary.LittleEndian.Uint32(sizeBuf)
 
-	// Lock mutex to ensure synchronous processing
+	messageBuf := make([]byte, messageSize)
+	_, err = io.ReadFull(conn, messageBuf)
+	if err != nil {
+		fmt.Printf("Error reading message: %s\n", err.Error())
+		return
+	}
+
+	protoMessage := &frrProto.Message{}
+	err = proto.Unmarshal(messageBuf, protoMessage)
+	if err != nil {
+		fmt.Printf("Error unmarshaling message: %s\n", err.Error())
+		return
+	}
+
+	fmt.Printf("Received message: Command=%s, Package %s\n", protoMessage.Command, protoMessage.Package)
+
 	execMutex.Lock()
 	defer execMutex.Unlock()
 
-	// Process the command based on the message
-	response := processCommand(message)
+	// TODO: Implement logging
 
-	// Send the response back
-	_, err = conn.Write([]byte(response))
+	protoResponse := s.processCommand(protoMessage)
+
+	responseData, err := proto.Marshal(protoResponse)
+	if err != nil {
+		fmt.Printf("Error marshaling response: %s\n", err.Error())
+		return
+	}
+
+	responseSizeBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(responseSizeBuf, uint32(len(responseData)))
+
+	fmt.Printf("Server marshaled %d bytes: %v\n", len(responseData), responseData)
+
+	fmt.Printf("Server buf size %d raw: %v\n", len(responseSizeBuf), responseSizeBuf)
+
+	fmt.Println(responseData)
+
+	_, err = conn.Write(responseSizeBuf)
+	if err != nil {
+		fmt.Printf("Error sending response size: %s\n", err.Error())
+		return
+	}
+
+	_, err = conn.Write(responseData)
 	if err != nil {
 		fmt.Printf("Error sending response: %s\n", err.Error())
 		return
 	}
 }
 
-// Close shuts down the socket
 func (s *Socket) Close() {
 	if s.listener != nil {
 		s.listener.Close()
@@ -104,22 +137,15 @@ func (s *Socket) Close() {
 	}
 }
 
-// Global reference to the socket listener for the exit command
 var socketListener net.Listener
 
-// exitSocketServer gracefully shuts down the socket server
 func exitSocketServer() {
 	fmt.Println("Shutting down socket server...")
 	isRunning = false
 
-	// Close the listener to stop accepting new connections
 	if socketListener != nil {
 		socketListener.Close()
 	}
-
-	// Note: We don't need to call os.Exit(0) here because we want the main function
-	// to handle the clean shutdown. The main function already calls sockServer.Close()
-	// when it receives a signal to shut down.
 
 	fmt.Println("Socket server shut down completed")
 	os.Exit(0)

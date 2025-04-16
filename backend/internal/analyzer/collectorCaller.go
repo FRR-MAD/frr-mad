@@ -41,17 +41,17 @@ func main() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		state, err := collector.Collect()
+		_, err := collector.Collect()
 		if err != nil {
 			log.Printf("Collection error: %v", err)
 			continue
 		}
 
 		// TMP logging
-		log.Printf("Collected state at %s", state.Timestamp.Format(time.RFC3339))
-		log.Printf("OSPF Neighbors: %d", len(state.OSPF.Neighbors))
-		log.Printf("OSPF Routes: %d", len(state.OSPF.Routes))
-		log.Printf("System CPU: %.1f%%", state.System.CPUUsage)
+		//log.Printf("Collected state at %s", state.Timestamp.Format(time.RFC3339))
+		//log.Printf("OSPF Neighbors: %d", len(state.OSPF.Neighbors))
+		//log.Printf("OSPF Routes: %d", len(state.OSPF.Routes))
+		//log.Printf("System CPU: %.1f%%", state.System.CPUUsage)
 	}
 }
 

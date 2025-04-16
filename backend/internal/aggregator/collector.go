@@ -2,13 +2,15 @@ package aggregator
 
 import (
 	"fmt"
-	"time"
+
+	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Collector struct {
 	fetcher    *Fetcher
 	configPath string
-	cache      *CombinedState
+	cache      *frrProto.CombinedState
 }
 
 func NewCollector(metricsURL, configPath string) *Collector {
@@ -18,7 +20,7 @@ func NewCollector(metricsURL, configPath string) *Collector {
 	}
 }
 
-func (c *Collector) Collect() (*CombinedState, error) {
+func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 	ospfMetrics, err := c.fetcher.FetchOSPF()
 	if err != nil {
 		return nil, fmt.Errorf("OSPF fetch failed: %w", err)
@@ -34,9 +36,9 @@ func (c *Collector) Collect() (*CombinedState, error) {
 		return nil, fmt.Errorf("system metrics failed: %w", err)
 	}
 
-	state := &CombinedState{
-		Timestamp: time.Now(),
-		OSPF:      ospfMetrics,
+	state := &frrProto.CombinedState{
+		Timestamp: timestamppb.Now(),
+		Ospf:      ospfMetrics,
 		Config:    config,
 		System:    systemMetrics,
 	}
@@ -45,7 +47,7 @@ func (c *Collector) Collect() (*CombinedState, error) {
 	return state, nil
 }
 
-func (c *Collector) GetCache() *CombinedState {
+func (c *Collector) GetCache() *frrProto.CombinedState {
 	return c.cache
 }
 
@@ -58,6 +60,6 @@ func (c *Collector) GetConfigPathForTesting() string {
 	return c.configPath
 }
 
-func (c *Collector) GetCacheForTesting() *CombinedState {
+func (c *Collector) GetCacheForTesting() *frrProto.CombinedState {
 	return c.cache
 }
