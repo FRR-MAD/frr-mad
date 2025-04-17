@@ -26,7 +26,7 @@ run/frontend:
 binaries:
 	mkdir -p binaries
 
-.PHONY: build/all build/frontend build/backend build/backend/prod
+.PHONY: build/all build/frontend build/backend build/backend/prod build/local
 build/all: build/frontend build/backend
 
 #.PHONY: build/frontend
@@ -34,10 +34,17 @@ build/all: build/frontend build/backend
 #	cd frontend && GOOS=linux GOARCH=amd64 go build -o  ../binaries
 
 build/backend: binaries
-	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags='-extldflags=-static' -tags=dev -o ../binaries/analyzer ./cmd/frr-analytics
+	@cd backend && go mod tidy
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o ../binaries/analyzer_dev ./cmd/frr-analytics
+
+build/local: binaries
+	@cd backend && go mod tidy
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=local -o ../binaries/analyzer_dev ./cmd/frr-analytics
+
 
 build/backend/prod: binaries
-	cd backend && go mod tidy && GOOS=linux GOARCH=amd64 go build -o ../binaries/analyzer ./cmd/frr-analytics
+	@cd backend && go mod tidy
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o ../binaries/analyzer ./cmd/frr-analytics
 
 
 .PHONY: protobuf protobuf/clean
