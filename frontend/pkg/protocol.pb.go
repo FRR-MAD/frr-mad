@@ -653,21 +653,20 @@ func (x *ListValue) GetValues() []*Value {
 }
 
 type StaticFRRConfiguration struct {
-	state                        protoimpl.MessageState `protogen:"open.v1"`
-	Hostname                     string                 `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	FrrVersion                   string                 `protobuf:"bytes,2,opt,name=frr_version,json=frrVersion,proto3" json:"frr_version,omitempty"`
-	FrrDefaults                  string                 `protobuf:"bytes,3,opt,name=frr_defaults,json=frrDefaults,proto3" json:"frr_defaults,omitempty"`
-	Ipv6Forwarding               bool                   `protobuf:"varint,4,opt,name=ipv6_forwarding,json=ipv6Forwarding,proto3" json:"ipv6_forwarding,omitempty"`
-	Ipv4Forwarding               bool                   `protobuf:"varint,5,opt,name=ipv4_forwarding,json=ipv4Forwarding,proto3" json:"ipv4_forwarding,omitempty"`
-	ServiceAdvancedVty           bool                   `protobuf:"varint,6,opt,name=service_advanced_vty,json=serviceAdvancedVty,proto3" json:"service_advanced_vty,omitempty"`
-	ServiceIntegratedVtyshConfig bool                   `protobuf:"varint,7,opt,name=service_integrated_vtysh_config,json=serviceIntegratedVtyshConfig,proto3" json:"service_integrated_vtysh_config,omitempty"`
-	Interfaces                   []*Interface           `protobuf:"bytes,8,rep,name=interfaces,proto3" json:"interfaces,omitempty"`
-	StaticBlock                  []*StaticRoute         `protobuf:"bytes,9,rep,name=static_block,json=staticBlock,proto3" json:"static_block,omitempty"`
-	OspfConfig                   []*OSPFConfig          `protobuf:"bytes,10,rep,name=ospf_config,json=ospfConfig,proto3" json:"ospf_config,omitempty"`
-	RouteMap                     map[string]*RouteMap   `protobuf:"bytes,11,rep,name=route_map,json=routeMap,proto3" json:"route_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	AccessList                   map[string]*AccessList `protobuf:"bytes,12,rep,name=access_list,json=accessList,proto3" json:"access_list,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Hostname   string                 `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	FrrVersion string                 `protobuf:"bytes,2,opt,name=frr_version,json=frrVersion,proto3" json:"frr_version,omitempty"`
+	// string frr_defaults = 3;
+	Ipv6Forwarding     bool                   `protobuf:"varint,4,opt,name=ipv6_forwarding,json=ipv6Forwarding,proto3" json:"ipv6_forwarding,omitempty"`
+	Ipv4Forwarding     bool                   `protobuf:"varint,5,opt,name=ipv4_forwarding,json=ipv4Forwarding,proto3" json:"ipv4_forwarding,omitempty"`
+	ServiceAdvancedVty bool                   `protobuf:"varint,6,opt,name=service_advanced_vty,json=serviceAdvancedVty,proto3" json:"service_advanced_vty,omitempty"` // bool service_integrated_vtysh_config = 7;
+	Interfaces         []*Interface           `protobuf:"bytes,8,rep,name=interfaces,proto3" json:"interfaces,omitempty"`
+	StaticRoutes       []*StaticRoute         `protobuf:"bytes,9,rep,name=static_routes,json=staticRoutes,proto3" json:"static_routes,omitempty"`
+	OspfConfig         *OSPFConfig            `protobuf:"bytes,10,opt,name=ospf_config,json=ospfConfig,proto3" json:"ospf_config,omitempty"`
+	RouteMap           map[string]*RouteMap   `protobuf:"bytes,11,rep,name=route_map,json=routeMap,proto3" json:"route_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	AccessList         map[string]*AccessList `protobuf:"bytes,12,rep,name=access_list,json=accessList,proto3" json:"access_list,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *StaticFRRConfiguration) Reset() {
@@ -714,13 +713,6 @@ func (x *StaticFRRConfiguration) GetFrrVersion() string {
 	return ""
 }
 
-func (x *StaticFRRConfiguration) GetFrrDefaults() string {
-	if x != nil {
-		return x.FrrDefaults
-	}
-	return ""
-}
-
 func (x *StaticFRRConfiguration) GetIpv6Forwarding() bool {
 	if x != nil {
 		return x.Ipv6Forwarding
@@ -742,13 +734,6 @@ func (x *StaticFRRConfiguration) GetServiceAdvancedVty() bool {
 	return false
 }
 
-func (x *StaticFRRConfiguration) GetServiceIntegratedVtyshConfig() bool {
-	if x != nil {
-		return x.ServiceIntegratedVtyshConfig
-	}
-	return false
-}
-
 func (x *StaticFRRConfiguration) GetInterfaces() []*Interface {
 	if x != nil {
 		return x.Interfaces
@@ -756,14 +741,14 @@ func (x *StaticFRRConfiguration) GetInterfaces() []*Interface {
 	return nil
 }
 
-func (x *StaticFRRConfiguration) GetStaticBlock() []*StaticRoute {
+func (x *StaticFRRConfiguration) GetStaticRoutes() []*StaticRoute {
 	if x != nil {
-		return x.StaticBlock
+		return x.StaticRoutes
 	}
 	return nil
 }
 
-func (x *StaticFRRConfiguration) GetOspfConfig() []*OSPFConfig {
+func (x *StaticFRRConfiguration) GetOspfConfig() *OSPFConfig {
 	if x != nil {
 		return x.OspfConfig
 	}
@@ -2650,22 +2635,20 @@ const file_protocol_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
 	"\x05value\x18\x02 \x01(\v2\x14.communication.ValueR\x05value:\x028\x01\"9\n" +
 	"\tListValue\x12,\n" +
-	"\x06values\x18\x01 \x03(\v2\x14.communication.ValueR\x06values\"\xd2\x06\n" +
+	"\x06values\x18\x01 \x03(\v2\x14.communication.ValueR\x06values\"\xea\x05\n" +
 	"\x16StaticFRRConfiguration\x12\x1a\n" +
 	"\bhostname\x18\x01 \x01(\tR\bhostname\x12\x1f\n" +
 	"\vfrr_version\x18\x02 \x01(\tR\n" +
-	"frrVersion\x12!\n" +
-	"\ffrr_defaults\x18\x03 \x01(\tR\vfrrDefaults\x12'\n" +
+	"frrVersion\x12'\n" +
 	"\x0fipv6_forwarding\x18\x04 \x01(\bR\x0eipv6Forwarding\x12'\n" +
 	"\x0fipv4_forwarding\x18\x05 \x01(\bR\x0eipv4Forwarding\x120\n" +
-	"\x14service_advanced_vty\x18\x06 \x01(\bR\x12serviceAdvancedVty\x12E\n" +
-	"\x1fservice_integrated_vtysh_config\x18\a \x01(\bR\x1cserviceIntegratedVtyshConfig\x128\n" +
+	"\x14service_advanced_vty\x18\x06 \x01(\bR\x12serviceAdvancedVty\x128\n" +
 	"\n" +
 	"interfaces\x18\b \x03(\v2\x18.communication.InterfaceR\n" +
-	"interfaces\x12=\n" +
-	"\fstatic_block\x18\t \x03(\v2\x1a.communication.StaticRouteR\vstaticBlock\x12:\n" +
+	"interfaces\x12?\n" +
+	"\rstatic_routes\x18\t \x03(\v2\x1a.communication.StaticRouteR\fstaticRoutes\x12:\n" +
 	"\vospf_config\x18\n" +
-	" \x03(\v2\x19.communication.OSPFConfigR\n" +
+	" \x01(\v2\x19.communication.OSPFConfigR\n" +
 	"ospfConfig\x12P\n" +
 	"\troute_map\x18\v \x03(\v23.communication.StaticFRRConfiguration.RouteMapEntryR\brouteMap\x12V\n" +
 	"\vaccess_list\x18\f \x03(\v25.communication.StaticFRRConfiguration.AccessListEntryR\n" +
@@ -2896,7 +2879,7 @@ var file_protocol_proto_depIdxs = []int32{
 	36, // 17: communication.Struct.fields:type_name -> communication.Struct.FieldsEntry
 	3,  // 18: communication.ListValue.values:type_name -> communication.Value
 	7,  // 19: communication.StaticFRRConfiguration.interfaces:type_name -> communication.Interface
-	8,  // 20: communication.StaticFRRConfiguration.static_block:type_name -> communication.StaticRoute
+	8,  // 20: communication.StaticFRRConfiguration.static_routes:type_name -> communication.StaticRoute
 	9,  // 21: communication.StaticFRRConfiguration.ospf_config:type_name -> communication.OSPFConfig
 	37, // 22: communication.StaticFRRConfiguration.route_map:type_name -> communication.StaticFRRConfiguration.RouteMapEntry
 	38, // 23: communication.StaticFRRConfiguration.access_list:type_name -> communication.StaticFRRConfiguration.AccessListEntry

@@ -74,15 +74,15 @@ message ListValue {
 message StaticFRRConfiguration {
   string hostname = 1;
   string frr_version = 2;
-  string frr_defaults = 3;
+  // string frr_defaults = 3;
   bool ipv6_forwarding = 4;
   bool ipv4_forwarding = 5;
   bool service_advanced_vty = 6;
-  bool service_integrated_vtysh_config = 7;
+  // bool service_integrated_vtysh_config = 7;
 
   repeated Interface interfaces = 8;
-  repeated StaticRoute static_block = 9;
-  repeated OSPFConfig ospf_config = 10;
+  repeated StaticRoute static_routes = 9;
+  OSPFConfig ospf_config = 10;
   map<string, RouteMap> route_map = 11;
   map<string, AccessList> access_list = 12;
 }
