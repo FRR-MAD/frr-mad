@@ -47,8 +47,13 @@ build/backend/prod: binaries
 	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o ../binaries/analyzer ./cmd/frr-analytics
 
 
-.PHONY: protobuf protobuf/clean
+.PHONY: protobuf protobuf/mac protobuf/clean
 protobuf: protobuf/clean
+	protoc --proto_path=protobufSource --go_out=paths=source_relative:backend/pkg protobufSource/protocol.proto
+	protoc --proto_path=protobufSource --go_out=paths=source_relative:frontend/pkg protobufSource/protocol.proto
+	protoc --proto_path=protobufSource --go_out=paths=source_relative:tempClient/pkg protobufSource/protocol.proto
+
+protobuf/mac: protobuf/clean
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:backend/pkg protobufSource/protocol.proto
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:frontend/pkg protobufSource/protocol.proto
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:tempClient/pkg protobufSource/protocol.proto

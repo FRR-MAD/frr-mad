@@ -11,9 +11,9 @@ import (
 func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	var response frrProto.Response
 
-	switch message.Command {
+	switch message.Service {
 	case "ospf":
-		switch message.Package {
+		switch message.Command {
 		case "metrics":
 			return getOSPFMetrics()
 		case "neighbor":
