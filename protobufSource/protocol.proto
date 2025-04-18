@@ -69,6 +69,77 @@ message ListValue {
 
 // ================ Aggregator payload Messages ================
 
+// ================ NEW setup ================
+
+message StaticFRRConfiguration {
+  string hostname = 1;
+  string frr_version = 2;
+  string frr_defaults = 3;
+  bool ipv6_forwarding = 4;
+  bool ipv4_forwarding = 5;
+  bool service_advanced_vty = 6;
+  bool service_integrated_vtysh_config = 7;
+
+  repeated Interface interfaces = 8;
+  repeated StaticRoute static_block = 9;
+  repeated OSPFConfig ospf_config = 10;
+  map<string, RouteMap> route_map = 11;
+  map<string, AccessList> access_list = 12;
+}
+
+message Interface {
+  string name = 1;
+  repeated IPPrefix ip_address = 2;
+  string area = 3;
+  bool passive = 4;
+  // Optional: cost, dead-interval, hello-interval
+}
+
+message StaticRoute {
+  IPPrefix ip_prefix = 1;
+  string next_hop = 2;
+}
+
+message OSPFConfig {
+  string router_id = 1;
+  repeated Redistribution redistribution = 2;
+  repeated Area area = 3;
+}
+
+message Redistribution {
+  string type = 1;
+  uint32 metric = 2;
+  string route_map = 3;
+}
+
+message Area {
+  string name = 1;
+  string type = 2; // transit (virtual-link) is an area type because it’s not possible to be nssa/stub AND transit-area
+}
+
+message RouteMap {
+  uint32 permit = 1;
+  string match = 2;
+  string access_list = 3;
+}
+
+message AccessList {
+  string name = 1;
+  repeated AccessListItem item = 2;
+}
+
+message AccessListItem {
+  uint32 sequence = 1;
+  string access_control = 2;
+  string network = 3; // "any" or IP/CIDR
+}
+
+message IPPrefix {
+  string ip_address = 1;
+  uint32 prefix_length = 24;
+}
+
+// ================ OLD setup ================
 message CombinedState {
   google.protobuf.Timestamp timestamp = 1;
   OSPFMetrics ospf = 2;
