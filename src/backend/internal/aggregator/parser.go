@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -65,7 +67,11 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 			currentInterfacePointer = &frrProto.Interface{Name: parts[1]}
 		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip address "):
 			parts := strings.Fields(line)
-			ip, ipNet, _ := net.ParseCIDR(parts[2])
+			ip, ipNet, err := net.ParseCIDR(parts[2])
+			if err != nil || ipNet == nil {
+				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
+				break
+			}
 			prefixLength, _ := ipNet.Mask.Size()
 			currentInterfacePointer.IpAddress = append(currentInterfacePointer.IpAddress, &frrProto.IPPrefix{
 				IpAddress:    ip.String(),
@@ -83,6 +89,10 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 		case strings.HasPrefix(line, "ip route "):
 			parts := strings.Fields(line)
 			ip, ipNet, _ := net.ParseCIDR(parts[2])
+			if err != nil || ipNet == nil {
+				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
+				break
+			}
 			prefixLength, _ := ipNet.Mask.Size()
 			nextHopIP := parts[3]
 			config.StaticRoutes = append(config.StaticRoutes, &frrProto.StaticRoute{
@@ -95,6 +105,70 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 
 		case strings.HasPrefix(line, "router ospf"):
 			parseOSPFGlobalConfig(scanner, config)
+
+		case strings.HasPrefix(line, "access-list "):
+			if config.AccessList == nil {
+				config.AccessList = make(map[string]*frrProto.AccessList)
+			}
+			parts := strings.Fields(line)
+			accessListName := parts[1]
+			seq, _ := strconv.Atoi(parts[3])
+			action := parts[4]
+			ip, ipNet, _ := net.ParseCIDR(parts[5])
+			if err != nil || ipNet == nil {
+				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
+				break
+			}
+			prefixLength, _ := ipNet.Mask.Size()
+			accessListItem := &frrProto.AccessListItem{
+				Sequence:      uint32(seq),
+				AccessControl: action,
+				Destination: &frrProto.AccessListItem_IpPrefix{
+					IpPrefix: &frrProto.IPPrefix{
+						IpAddress:    ip.String(),
+						PrefixLength: uint32(prefixLength),
+					},
+				},
+			}
+
+			if _, exists := config.AccessList[accessListName]; !exists {
+				config.AccessList[accessListName] = &frrProto.AccessList{}
+			}
+			config.AccessList[accessListName].AccessListItems = append(config.AccessList[accessListName].AccessListItems, accessListItem)
+
+		case strings.HasPrefix(line, "route-map "):
+			if config.RouteMap == nil {
+				config.RouteMap = make(map[string]*frrProto.RouteMap)
+			}
+			parts := strings.Fields(line)
+			if len(parts) < 4 {
+				log.Printf("invalid route-map line: %q", line)
+				break
+			}
+			routeMapName := parts[1]
+			action := parts[2]
+			sequence := parts[3]
+			config.RouteMap[routeMapName] = &frrProto.RouteMap{
+				Permit:   action == "permit",
+				Sequence: sequence,
+			}
+		case strings.HasPrefix(line, "match ip address "):
+			parts := strings.Fields(line)
+			if len(parts) < 4 {
+				log.Printf("invalid match line in route-map: %q", line)
+				break
+			}
+			accessListName := parts[3]
+			if len(config.RouteMap) > 0 {
+				for _, rm := range config.RouteMap {
+					if rm.AccessList == "" {
+						rm.Match = "ip address"
+						rm.AccessList = accessListName
+						break
+					}
+				}
+			}
+
 		}
 	}
 
@@ -134,7 +208,7 @@ func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			redistributionMetric := ""
 			redistributionRouteMap := ""
 			for i, part := range parts {
-				if part == "redistribution" {
+				if part == "redistribute" {
 					redistributionType = parts[i+1]
 				}
 				if part == "metric-type" {
@@ -149,14 +223,18 @@ func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 				Metric:   redistributionMetric,
 				RouteMap: redistributionRouteMap,
 			})
+
 		case strings.HasPrefix(line, "area "):
 			if config.OspfConfig == nil {
 				config.OspfConfig = &frrProto.OSPFConfig{}
 			}
 			parts := strings.Fields(line)
-			config.OspfConfig.Area = append(config.OspfConfig.Area, &frrProto.Area{Name: parts[1]})
-			for _, part := range parts {
-				if part == "virtual-link" {
+			area := &frrProto.Area{Name: parts[1]}
+			config.OspfConfig.Area = append(config.OspfConfig.Area, area)
+			for i, part := range parts {
+				if part == "virtual-link" && i+1 < len(parts) {
+					area.Type = "transit"
+					config.OspfConfig.VirtualLinkNeighbor = parts[i+1]
 				}
 			}
 		}

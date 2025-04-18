@@ -107,6 +107,7 @@ message OSPFConfig {
   string router_id = 1;
   repeated Redistribution redistribution = 2;
   repeated Area area = 3;
+  string virtual_link_neighbor = 4;
 }
 
 message Redistribution {
@@ -121,20 +122,24 @@ message Area {
 }
 
 message RouteMap {
-  uint32 permit = 1;
-  string match = 2;
-  string access_list = 3;
+  bool permit = 1;
+  string sequence = 2;
+  string match = 3;
+  string access_list = 4;
 }
 
 message AccessList {
   string name = 1;
-  repeated AccessListItem item = 2;
+  repeated AccessListItem access_list_items = 2;
 }
 
 message AccessListItem {
   uint32 sequence = 1;
   string access_control = 2;
-  string network = 3; // "any" or IP/CIDR
+  oneof destination {
+    IPPrefix ip_prefix = 3;
+    bool any = 4; // if set to true, means "any"
+  }
 }
 
 message IPPrefix {
