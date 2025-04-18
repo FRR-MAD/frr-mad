@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
@@ -18,16 +19,21 @@ func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
 	return &response, nil
 }
 
-func ParseConfig(path string) (*frrProto.NetworkConfig, error) {
+func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		if closeErr := file.Close(); closeErr != nil {
+			// todo: this must be updated to write it to logger
+			err = fmt.Errorf("failed to close config file: %w", closeErr)
+		}
+	}(file)
 
-	config := &frrProto.NetworkConfig{}
+	config := &frrProto.StaticFRRConfiguration{}
 	scanner := bufio.NewScanner(file)
-	var currentIface *frrProto.OSPFInterfaceConfig
+	var currentInterfacePointer *frrProto.Interface
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -36,41 +42,70 @@ func ParseConfig(path string) (*frrProto.NetworkConfig, error) {
 		}
 
 		switch {
+		case strings.HasPrefix(line, "hostname"):
+			parts := strings.Fields(line)
+			config.Hostname = parts[1]
+		case strings.HasPrefix(line, "frr version"):
+			parts := strings.Fields(line)
+			config.FrrVersion = parts[2]
+		case strings.HasPrefix(line, "no ipv6 forwarding"):
+			config.Ipv6Forwarding = false
+			// todo: r101:~# cat /proc/sys/net/ipv6/conf/all/forwarding
+		case strings.HasPrefix(line, "no ipv4 forwarding"):
+			config.Ipv4Forwarding = false
+			// todo: r101:~# cat /proc/sys/net/ipv4/conf/all/forwarding
+		case strings.HasPrefix(line, "service advanced-vty"):
+			config.ServiceAdvancedVty = true
+
 		case strings.HasPrefix(line, "interface "):
-			if currentIface != nil {
-				config.Interfaces = append(config.Interfaces, currentIface)
+			if currentInterfacePointer != nil {
+				config.Interfaces = append(config.Interfaces, currentInterfacePointer)
 			}
 			parts := strings.Fields(line)
-			currentIface = &frrProto.OSPFInterfaceConfig{Name: parts[1]}
-
-		case currentIface != nil && strings.HasPrefix(line, "ip address "):
+			currentInterfacePointer = &frrProto.Interface{Name: parts[1]}
+		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip address "):
 			parts := strings.Fields(line)
-			currentIface.IpAddress = parts[2]
-
-		case currentIface != nil && strings.HasPrefix(line, "ip ospf area "):
+			ip, ipNet, _ := net.ParseCIDR(parts[2])
+			prefixLength, _ := ipNet.Mask.Size()
+			currentInterfacePointer.IpAddress = append(currentInterfacePointer.IpAddress, &frrProto.IPPrefix{
+				IpAddress:    ip.String(),
+				PrefixLength: uint32(prefixLength),
+			})
+		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip ospf area "):
 			parts := strings.Fields(line)
-			currentIface.Area = parts[3]
+			currentInterfacePointer.Area = parts[3]
+		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip ospf passive"):
+			currentInterfacePointer.Passive = true
+		//case currentInterfacePointer != nil && strings.HasPrefix(line, "ip ospf cost "):
+		//	parts := strings.Fields(line)
+		//	fmt.Sscanf(parts[3], "%d", &currentInterfacePointer.Cost)
 
-		case currentIface != nil && strings.HasPrefix(line, "ip ospf passive"):
-			currentIface.Passive = true
-
-		case currentIface != nil && strings.HasPrefix(line, "ip ospf cost "):
+		case strings.HasPrefix(line, "ip route "):
 			parts := strings.Fields(line)
-			fmt.Sscanf(parts[3], "%d", &currentIface.Cost)
+			ip, ipNet, _ := net.ParseCIDR(parts[2])
+			prefixLength, _ := ipNet.Mask.Size()
+			nextHopIP := parts[3]
+			config.StaticRoutes = append(config.StaticRoutes, &frrProto.StaticRoute{
+				IpPrefix: &frrProto.IPPrefix{
+					IpAddress:    ip.String(),
+					PrefixLength: uint32(prefixLength),
+				},
+				NextHop: nextHopIP,
+			})
 
 		case strings.HasPrefix(line, "router ospf"):
 			parseOSPFGlobalConfig(scanner, config)
 		}
 	}
 
-	if currentIface != nil {
-		config.Interfaces = append(config.Interfaces, currentIface)
+	if currentInterfacePointer != nil {
+		config.Interfaces = append(config.Interfaces, currentInterfacePointer)
 	}
 
 	return config, nil
 }
 
-func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.NetworkConfig) {
+func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRConfiguration) {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "exit" {
@@ -79,13 +114,51 @@ func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.NetworkConfi
 
 		switch {
 		case strings.HasPrefix(line, "ospf router-id "):
+			if config.OspfConfig == nil {
+				config.OspfConfig = &frrProto.OSPFConfig{}
+			}
 			parts := strings.Fields(line)
-			config.RouterId = parts[2]
+			config.OspfConfig.RouterId = parts[2]
 
-		case strings.HasPrefix(line, "network "):
+		//case strings.HasPrefix(line, "network "):
+		//	parts := strings.Fields(line)
+		//	network, area := parts[1], parts[3]
+		//	addNetworkToArea(config, network, area)
+
+		case strings.HasPrefix(line, "redistribute "):
+			if config.OspfConfig == nil {
+				config.OspfConfig = &frrProto.OSPFConfig{}
+			}
 			parts := strings.Fields(line)
-			network, area := parts[1], parts[3]
-			addNetworkToArea(config, network, area)
+			redistributionType := ""
+			redistributionMetric := ""
+			redistributionRouteMap := ""
+			for i, part := range parts {
+				if part == "redistribution" {
+					redistributionType = parts[i+1]
+				}
+				if part == "metric-type" {
+					redistributionMetric = parts[i+1]
+				}
+				if part == "route-map" {
+					redistributionRouteMap = parts[i+1]
+				}
+			}
+			config.OspfConfig.Redistribution = append(config.OspfConfig.Redistribution, &frrProto.Redistribution{
+				Type:     redistributionType,
+				Metric:   redistributionMetric,
+				RouteMap: redistributionRouteMap,
+			})
+		case strings.HasPrefix(line, "area "):
+			if config.OspfConfig == nil {
+				config.OspfConfig = &frrProto.OSPFConfig{}
+			}
+			parts := strings.Fields(line)
+			config.OspfConfig.Area = append(config.OspfConfig.Area, &frrProto.Area{Name: parts[1]})
+			for i, part := range parts {
+				if part == "virtual-link" {
+				}
+			}
 		}
 	}
 }

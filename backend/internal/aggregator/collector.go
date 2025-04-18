@@ -38,7 +38,7 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 
 	_, err := FetchOSPFRouterData(executor)
 
-	config, err := ParseConfig(c.configPath)
+	config, err := ParseStaticFRRConfig(c.configPath)
 	if err != nil {
 		return nil, fmt.Errorf("config parse failed: %w", err)
 	}

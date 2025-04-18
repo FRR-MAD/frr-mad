@@ -969,7 +969,7 @@ func (x *OSPFConfig) GetArea() []*Area {
 type Redistribution struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
-	Metric        uint32                 `protobuf:"varint,2,opt,name=metric,proto3" json:"metric,omitempty"`
+	Metric        string                 `protobuf:"bytes,2,opt,name=metric,proto3" json:"metric,omitempty"`
 	RouteMap      string                 `protobuf:"bytes,3,opt,name=route_map,json=routeMap,proto3" json:"route_map,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1012,11 +1012,11 @@ func (x *Redistribution) GetType() string {
 	return ""
 }
 
-func (x *Redistribution) GetMetric() uint32 {
+func (x *Redistribution) GetMetric() string {
 	if x != nil {
 		return x.Metric
 	}
-	return 0
+	return ""
 }
 
 func (x *Redistribution) GetRouteMap() string {
@@ -3021,7 +3021,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\x04area\x18\x03 \x03(\v2\x13.communication.AreaR\x04area\"Y\n" +
 	"\x0eRedistribution\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x16\n" +
-	"\x06metric\x18\x02 \x01(\rR\x06metric\x12\x1b\n" +
+	"\x06metric\x18\x02 \x01(\tR\x06metric\x12\x1b\n" +
 	"\troute_map\x18\x03 \x01(\tR\brouteMap\".\n" +
 	"\x04Area\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
