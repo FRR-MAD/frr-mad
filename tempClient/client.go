@@ -20,11 +20,11 @@ func main() {
 	}
 
 	// socketPath := os.Args[1]
-	command := "PING"
+	service := "PING"
 	packageName := "system"
 
 	if len(os.Args) > 1 {
-		command = os.Args[1]
+		service = os.Args[1]
 	}
 
 	if len(os.Args) > 2 {
@@ -42,8 +42,8 @@ func main() {
 
 	// Create a Message
 	message := &frrProto.Message{
-		Command: command,
-		Package: packageName,
+		Service: service,
+		Command: packageName,
 		Params: map[string]*frrProto.Value{
 			"client_id": {
 				Kind: &frrProto.Value_StringValue{
