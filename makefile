@@ -49,10 +49,9 @@ build/backend/prod: binaries
 
 .PHONY: protobuf protobuf/clean
 protobuf: protobuf/clean
-	@chmod +x proto-binary/bin/protoc
-	./proto-binary/bin/protoc --proto_path=protobufSource --go_out=paths=source_relative:backend/pkg protobufSource/protocol.proto
-	./proto-binary/bin/protoc --proto_path=protobufSource --go_out=paths=source_relative:frontend/pkg protobufSource/protocol.proto
-	./proto-binary/bin/protoc --proto_path=protobufSource --go_out=paths=source_relative:tempClient/pkg protobufSource/protocol.proto
+	protoc --proto_path=protobufSource --go_out=paths=source_relative:backend/pkg protobufSource/protocol.proto
+	protoc --proto_path=protobufSource --go_out=paths=source_relative:frontend/pkg protobufSource/protocol.proto
+	protoc --proto_path=protobufSource --go_out=paths=source_relative:tempClient/pkg protobufSource/protocol.proto
 
 protobuf/clean:
 	rm -f $(BACKEND_DEST)/protocol.pb.go

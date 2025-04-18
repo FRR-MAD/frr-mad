@@ -2,7 +2,9 @@ package aggregator
 
 import (
 	"fmt"
+	"time"
 
+	frrSocket "github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator/frrsockets"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -13,6 +15,13 @@ type Collector struct {
 	cache      *frrProto.CombinedState
 }
 
+func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.FRRCommandExecutor {
+	return &frrSocket.FRRCommandExecutor{
+		DirPath: socketDir,
+		Timeout: timeout,
+	}
+}
+
 func NewCollector(metricsURL, configPath string) *Collector {
 	return &Collector{
 		fetcher:    NewFetcher(metricsURL),
@@ -21,10 +30,13 @@ func NewCollector(metricsURL, configPath string) *Collector {
 }
 
 func (c *Collector) Collect() (*frrProto.CombinedState, error) {
-	ospfMetrics, err := c.fetcher.FetchOSPF()
-	if err != nil {
-		return nil, fmt.Errorf("OSPF fetch failed: %w", err)
-	}
+	// ospfMetrics, err := c.fetcher.FetchOSPF()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("OSPF fetch failed: %w", err)
+	// }
+	executor := NewFRRCommandExecutor("/var/run/frr", 2*time.Second)
+
+	_, err := FetchOSPFRouteData(executor)
 
 	config, err := ParseConfig(c.configPath)
 	if err != nil {
@@ -38,9 +50,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 
 	state := &frrProto.CombinedState{
 		Timestamp: timestamppb.Now(),
-		Ospf:      ospfMetrics,
-		Config:    config,
-		System:    systemMetrics,
+		//Ospf:      ospfMetrics,
+		Config: config,
+		System: systemMetrics,
 	}
 
 	c.cache = state

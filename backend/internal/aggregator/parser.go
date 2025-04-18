@@ -2,12 +2,21 @@ package aggregator
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 )
+
+func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
+	var response frrProto.OSPFRouterData
+	if err := json.Unmarshal(jsonData, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse OSPF router LSA json: %w", err)
+	}
+	return &response, nil
+}
 
 func ParseConfig(path string) (*frrProto.NetworkConfig, error) {
 	file, err := os.Open(path)
