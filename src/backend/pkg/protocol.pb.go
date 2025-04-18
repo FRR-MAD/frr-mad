@@ -2235,8 +2235,8 @@ func (x *InterfaceStats) GetOperState() string {
 
 type OSPFRouterData struct {
 	state         protoimpl.MessageState     `protogen:"open.v1"`
-	RouterId      string                     `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	RouterStates  map[string]*OSPFRouterArea `protobuf:"bytes,2,rep,name=router_states,json=routerStates,proto3" json:"router_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RouterId      string                     `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`                                                                                       // json:"routerId"
+	RouterStates  map[string]*OSPFRouterArea `protobuf:"bytes,2,rep,name=router_states,json=routerStates,proto3" json:"router_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"Router Link States"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2287,7 +2287,7 @@ func (x *OSPFRouterData) GetRouterStates() map[string]*OSPFRouterArea {
 
 type OSPFRouterArea struct {
 	state         protoimpl.MessageState    `protogen:"open.v1"`
-	LsaEntries    map[string]*OSPFRouterLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LsaEntries    map[string]*OSPFRouterLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json keys are linkStateId
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2331,19 +2331,19 @@ func (x *OSPFRouterArea) GetLsaEntries() map[string]*OSPFRouterLSA {
 
 type OSPFRouterLSA struct {
 	state             protoimpl.MessageState        `protogen:"open.v1"`
-	LsaAge            int32                         `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`
-	Options           string                        `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`
-	LsaFlags          int32                         `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`
-	Flags             int32                         `protobuf:"varint,4,opt,name=flags,proto3" json:"flags,omitempty"`
-	Asbr              bool                          `protobuf:"varint,5,opt,name=asbr,proto3" json:"asbr,omitempty"`
-	LsaType           string                        `protobuf:"bytes,6,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`
-	LinkStateId       string                        `protobuf:"bytes,7,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`
-	AdvertisingRouter string                        `protobuf:"bytes,8,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`
-	LsaSeqNumber      string                        `protobuf:"bytes,9,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`
-	Checksum          string                        `protobuf:"bytes,10,opt,name=checksum,proto3" json:"checksum,omitempty"`
-	Length            int32                         `protobuf:"varint,11,opt,name=length,proto3" json:"length,omitempty"`
-	NumOfLinks        int32                         `protobuf:"varint,12,opt,name=num_of_links,json=numOfLinks,proto3" json:"num_of_links,omitempty"`
-	RouterLinks       map[string]*OSPFRouterLSALink `protobuf:"bytes,13,rep,name=router_links,json=routerLinks,proto3" json:"router_links,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LsaAge            int32                         `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`                                                                                          // json:"lsaAge"
+	Options           string                        `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`                                                                                                       // json:"options"
+	LsaFlags          int32                         `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`                                                                                    // json:"lsaFlags"
+	Flags             int32                         `protobuf:"varint,4,opt,name=flags,proto3" json:"flags,omitempty"`                                                                                                          // json:"flags"
+	Asbr              bool                          `protobuf:"varint,5,opt,name=asbr,proto3" json:"asbr,omitempty"`                                                                                                            // json:"asbr"
+	LsaType           string                        `protobuf:"bytes,6,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`                                                                                        // json:"lsaType"
+	LinkStateId       string                        `protobuf:"bytes,7,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`                                                                          // json:"linkStateId"
+	AdvertisingRouter string                        `protobuf:"bytes,8,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`                                                          // json:"advertisingRouter"
+	LsaSeqNumber      string                        `protobuf:"bytes,9,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`                                                                       // json:"lsaSeqNumber"
+	Checksum          string                        `protobuf:"bytes,10,opt,name=checksum,proto3" json:"checksum,omitempty"`                                                                                                    // json:"checksum"
+	Length            int32                         `protobuf:"varint,11,opt,name=length,proto3" json:"length,omitempty"`                                                                                                       // json:"length"
+	NumOfLinks        int32                         `protobuf:"varint,12,opt,name=num_of_links,json=numOfLinks,proto3" json:"num_of_links,omitempty"`                                                                           // json:"numOfLinks"
+	RouterLinks       map[string]*OSPFRouterLSALink `protobuf:"bytes,13,rep,name=router_links,json=routerLinks,proto3" json:"router_links,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"routerLinks"
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -2471,13 +2471,13 @@ func (x *OSPFRouterLSA) GetRouterLinks() map[string]*OSPFRouterLSALink {
 
 type OSPFRouterLSALink struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
-	LinkType                string                 `protobuf:"bytes,1,opt,name=link_type,json=linkType,proto3" json:"link_type,omitempty"`
-	DesignatedRouterAddress string                 `protobuf:"bytes,2,opt,name=designated_router_address,json=designatedRouterAddress,proto3" json:"designated_router_address,omitempty"`
-	RouterInterfaceAddress  string                 `protobuf:"bytes,3,opt,name=router_interface_address,json=routerInterfaceAddress,proto3" json:"router_interface_address,omitempty"`
-	NetworkAddress          string                 `protobuf:"bytes,4,opt,name=network_address,json=networkAddress,proto3" json:"network_address,omitempty"`
-	NetworkMask             string                 `protobuf:"bytes,5,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
-	NumOfTosMetrics         int32                  `protobuf:"varint,6,opt,name=num_of_tos_metrics,json=numOfTosMetrics,proto3" json:"num_of_tos_metrics,omitempty"`
-	Tos0Metric              int32                  `protobuf:"varint,7,opt,name=tos0_metric,json=tos0Metric,proto3" json:"tos0_metric,omitempty"`
+	LinkType                string                 `protobuf:"bytes,1,opt,name=link_type,json=linkType,proto3" json:"link_type,omitempty"`                                                // json:"linkType"
+	DesignatedRouterAddress string                 `protobuf:"bytes,2,opt,name=designated_router_address,json=designatedRouterAddress,proto3" json:"designated_router_address,omitempty"` // json:"designatedRouterAddress"
+	RouterInterfaceAddress  string                 `protobuf:"bytes,3,opt,name=router_interface_address,json=routerInterfaceAddress,proto3" json:"router_interface_address,omitempty"`    // json:"routerInterfaceAddress"
+	NetworkAddress          string                 `protobuf:"bytes,4,opt,name=network_address,json=networkAddress,proto3" json:"network_address,omitempty"`                              // json:"networkAddress"
+	NetworkMask             string                 `protobuf:"bytes,5,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`                                       // json:"networkMask"
+	NumOfTosMetrics         int32                  `protobuf:"varint,6,opt,name=num_of_tos_metrics,json=numOfTosMetrics,proto3" json:"num_of_tos_metrics,omitempty"`                      // json:"numOfTosMetrics"
+	Tos0Metric              int32                  `protobuf:"varint,7,opt,name=tos0_metric,json=tos0Metric,proto3" json:"tos0_metric,omitempty"`                                         // json:"tos0Metric"
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
@@ -2563,8 +2563,8 @@ func (x *OSPFRouterLSALink) GetTos0Metric() int32 {
 
 type OSPFNetworkData struct {
 	state         protoimpl.MessageState   `protogen:"open.v1"`
-	RouterId      string                   `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	NetStates     map[string]*NetAreaState `protobuf:"bytes,2,rep,name=net_states,json=netStates,proto3" json:"net_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RouterId      string                   `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`                                                                              // json:"routerId"
+	NetStates     map[string]*NetAreaState `protobuf:"bytes,2,rep,name=net_states,json=netStates,proto3" json:"net_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"Net Link States"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2615,7 +2615,7 @@ func (x *OSPFNetworkData) GetNetStates() map[string]*NetAreaState {
 
 type NetAreaState struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LsaEntries    map[string]*NetworkLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LsaEntries    map[string]*NetworkLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json keys are linkStateId
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2659,17 +2659,17 @@ func (x *NetAreaState) GetLsaEntries() map[string]*NetworkLSA {
 
 type NetworkLSA struct {
 	state             protoimpl.MessageState     `protogen:"open.v1"`
-	LsaAge            int32                      `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`
-	Options           string                     `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`
-	LsaFlags          int32                      `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`
-	LsaType           string                     `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`
-	LinkStateId       string                     `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`
-	AdvertisingRouter string                     `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`
-	LsaSeqNumber      string                     `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`
-	Checksum          string                     `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`
-	Length            int32                      `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`
-	NetworkMask       int32                      `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
-	AttachedRouters   map[string]*AttachedRouter `protobuf:"bytes,11,rep,name=attached_routers,json=attachedRouters,proto3" json:"attached_routers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LsaAge            int32                      `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`                                                                                                      // json:"lsaAge"
+	Options           string                     `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`                                                                                                                   // json:"options"
+	LsaFlags          int32                      `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`                                                                                                // json:"lsaFlags"
+	LsaType           string                     `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`                                                                                                    // json:"lsaType"
+	LinkStateId       string                     `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`                                                                                      // json:"linkStateId"
+	AdvertisingRouter string                     `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`                                                                      // json:"advertisingRouter"
+	LsaSeqNumber      string                     `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`                                                                                   // json:"lsaSeqNumber"
+	Checksum          string                     `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`                                                                                                                 // json:"checksum"
+	Length            int32                      `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`                                                                                                                    // json:"length"
+	NetworkMask       int32                      `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`                                                                                      // json:"networkMask"
+	AttachedRouters   map[string]*AttachedRouter `protobuf:"bytes,11,rep,name=attached_routers,json=attachedRouters,proto3" json:"attached_routers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"attchedRouters"
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -2783,7 +2783,7 @@ func (x *NetworkLSA) GetAttachedRouters() map[string]*AttachedRouter {
 
 type AttachedRouter struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	AttachedRouterId string                 `protobuf:"bytes,1,opt,name=attached_router_id,json=attachedRouterId,proto3" json:"attached_router_id,omitempty"`
+	AttachedRouterId string                 `protobuf:"bytes,1,opt,name=attached_router_id,json=attachedRouterId,proto3" json:"attached_router_id,omitempty"` // json:"attachedRouterId"
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -2827,9 +2827,9 @@ func (x *AttachedRouter) GetAttachedRouterId() string {
 
 type OSPFSummaryData struct {
 	state         protoimpl.MessageState       `protogen:"open.v1"`
-	RouterId      string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	NetStates     map[string]*NetAreaState     `protobuf:"bytes,2,rep,name=net_states,json=netStates,proto3" json:"net_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	SummaryStates map[string]*SummaryAreaState `protobuf:"bytes,3,rep,name=summary_states,json=summaryStates,proto3" json:"summary_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RouterId      string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`                                                                                          // json:"routerId"
+	NetStates     map[string]*NetAreaState     `protobuf:"bytes,2,rep,name=net_states,json=netStates,proto3" json:"net_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`             // json:"Net Link States"
+	SummaryStates map[string]*SummaryAreaState `protobuf:"bytes,3,rep,name=summary_states,json=summaryStates,proto3" json:"summary_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"Summary Link States"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2887,7 +2887,7 @@ func (x *OSPFSummaryData) GetSummaryStates() map[string]*SummaryAreaState {
 
 type SummaryAreaState struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LsaEntries    map[string]*SummaryLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LsaEntries    map[string]*SummaryLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json keys are linkStateId
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2931,17 +2931,17 @@ func (x *SummaryAreaState) GetLsaEntries() map[string]*SummaryLSA {
 
 type SummaryLSA struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	LsaAge            int32                  `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`
-	Options           string                 `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`
-	LsaFlags          int32                  `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`
-	LsaType           string                 `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`
-	LinkStateId       string                 `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`
-	AdvertisingRouter string                 `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`
-	LsaSeqNumber      string                 `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`
-	Checksum          string                 `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`
-	Length            int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`
-	NetworkMask       int32                  `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
-	Tos0Metric        int32                  `protobuf:"varint,11,opt,name=tos0_metric,json=tos0Metric,proto3" json:"tos0_metric,omitempty"`
+	LsaAge            int32                  `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`                                 // json:"lsaAge"
+	Options           string                 `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`                                              // json:"options"
+	LsaFlags          int32                  `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`                           // json:"lsaFlags"
+	LsaType           string                 `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`                               // json:"lsaType"
+	LinkStateId       string                 `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`                 // json:"linkStateId"
+	AdvertisingRouter string                 `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"` // json:"advertisingRouter"
+	LsaSeqNumber      string                 `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`              // json:"lsaSeqNumber"
+	Checksum          string                 `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`                                            // json:"checksum"
+	Length            int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`                                               // json:"length"
+	NetworkMask       int32                  `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`                 // json:"networkMask"
+	Tos0Metric        int32                  `protobuf:"varint,11,opt,name=tos0_metric,json=tos0Metric,proto3" json:"tos0_metric,omitempty"`                    // json:"tos0Metric"
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -3055,8 +3055,8 @@ func (x *SummaryLSA) GetTos0Metric() int32 {
 
 type OSPFAsbrSummaryData struct {
 	state             protoimpl.MessageState       `protogen:"open.v1"`
-	RouterId          string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	AsbrSummaryStates map[string]*SummaryAreaState `protobuf:"bytes,2,rep,name=asbr_summary_states,json=asbrSummaryStates,proto3" json:"asbr_summary_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RouterId          string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`                                                                                                        // json:"routerId"
+	AsbrSummaryStates map[string]*SummaryAreaState `protobuf:"bytes,2,rep,name=asbr_summary_states,json=asbrSummaryStates,proto3" json:"asbr_summary_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"ASBR-Summary Link States"
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -3107,8 +3107,8 @@ func (x *OSPFAsbrSummaryData) GetAsbrSummaryStates() map[string]*SummaryAreaStat
 
 type OSPFExternalData struct {
 	state                protoimpl.MessageState  `protogen:"open.v1"`
-	RouterId             string                  `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	AsExternalLinkStates map[string]*ExternalLSA `protobuf:"bytes,2,rep,name=as_external_link_states,json=asExternalLinkStates,proto3" json:"as_external_link_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RouterId             string                  `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`                                                                                                                   // json:"routerId"
+	AsExternalLinkStates map[string]*ExternalLSA `protobuf:"bytes,2,rep,name=as_external_link_states,json=asExternalLinkStates,proto3" json:"as_external_link_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"AS External Link States"
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -3159,21 +3159,21 @@ func (x *OSPFExternalData) GetAsExternalLinkStates() map[string]*ExternalLSA {
 
 type ExternalLSA struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	LsaAge            int32                  `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`
-	Options           string                 `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`
-	LsaFlags          int32                  `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`
-	LsaType           string                 `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`
-	LinkStateId       string                 `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`
-	AdvertisingRouter string                 `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`
-	LsaSeqNumber      string                 `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`
-	Checksum          string                 `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`
-	Length            int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`
-	NetworkMask       int32                  `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
-	MetricType        string                 `protobuf:"bytes,11,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"` // "E1" or "E2"
-	Tos               int32                  `protobuf:"varint,12,opt,name=tos,proto3" json:"tos,omitempty"`
-	Metric            int32                  `protobuf:"varint,13,opt,name=metric,proto3" json:"metric,omitempty"`
-	ForwardAddress    string                 `protobuf:"bytes,14,opt,name=forward_address,json=forwardAddress,proto3" json:"forward_address,omitempty"`
-	ExternalRouteTag  int32                  `protobuf:"varint,15,opt,name=external_route_tag,json=externalRouteTag,proto3" json:"external_route_tag,omitempty"`
+	LsaAge            int32                  `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`                                  // json:"lsaAge"
+	Options           string                 `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`                                               // json:"options"
+	LsaFlags          int32                  `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`                            // json:"lsaFlags"
+	LsaType           string                 `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`                                // json:"lsaType"
+	LinkStateId       string                 `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`                  // json:"linkStateId"
+	AdvertisingRouter string                 `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`  // json:"advertisingRouter"
+	LsaSeqNumber      string                 `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`               // json:"lsaSeqNumber"
+	Checksum          string                 `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`                                             // json:"checksum"
+	Length            int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`                                                // json:"length"
+	NetworkMask       int32                  `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`                  // json:"networkMask"
+	MetricType        string                 `protobuf:"bytes,11,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"`                      // json:"metricType"
+	Tos               int32                  `protobuf:"varint,12,opt,name=tos,proto3" json:"tos,omitempty"`                                                     // json:"tos"
+	Metric            int32                  `protobuf:"varint,13,opt,name=metric,proto3" json:"metric,omitempty"`                                               // json:"metric"
+	ForwardAddress    string                 `protobuf:"bytes,14,opt,name=forward_address,json=forwardAddress,proto3" json:"forward_address,omitempty"`          // json:"forwardAddress"
+	ExternalRouteTag  int32                  `protobuf:"varint,15,opt,name=external_route_tag,json=externalRouteTag,proto3" json:"external_route_tag,omitempty"` // json:"externalRouteTag"
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -3315,8 +3315,8 @@ func (x *ExternalLSA) GetExternalRouteTag() int32 {
 
 type OSPFNssaExternalData struct {
 	state                  protoimpl.MessageState       `protogen:"open.v1"`
-	RouterId               string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	NssaExternalLinkStates map[string]*NssaExternalArea `protobuf:"bytes,2,rep,name=nssa_external_link_states,json=nssaExternalLinkStates,proto3" json:"nssa_external_link_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RouterId               string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`                                                                                                                         // json:"routerId"
+	NssaExternalLinkStates map[string]*NssaExternalArea `protobuf:"bytes,2,rep,name=nssa_external_link_states,json=nssaExternalLinkStates,proto3" json:"nssa_external_link_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json:"NSSA-External Link States"
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -3367,7 +3367,7 @@ func (x *OSPFNssaExternalData) GetNssaExternalLinkStates() map[string]*NssaExter
 
 type NssaExternalArea struct {
 	state         protoimpl.MessageState      `protogen:"open.v1"`
-	LsaEntries    map[string]*NssaExternalLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LsaEntries    map[string]*NssaExternalLSA `protobuf:"bytes,1,rep,name=lsa_entries,json=lsaEntries,proto3" json:"lsa_entries,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // json keys are linkStateId
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3411,21 +3411,21 @@ func (x *NssaExternalArea) GetLsaEntries() map[string]*NssaExternalLSA {
 
 type NssaExternalLSA struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	LsaAge             int32                  `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`
-	Options            string                 `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`
-	LsaFlags           int32                  `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`
-	LsaType            string                 `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`
-	LinkStateId        string                 `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`
-	AdvertisingRouter  string                 `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`
-	LsaSeqNumber       string                 `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`
-	Checksum           string                 `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`
-	Length             int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`
-	NetworkMask        int32                  `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
-	MetricType         string                 `protobuf:"bytes,11,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"` // "E1" or "E2"
-	Tos                int32                  `protobuf:"varint,12,opt,name=tos,proto3" json:"tos,omitempty"`
-	Metric             int32                  `protobuf:"varint,13,opt,name=metric,proto3" json:"metric,omitempty"`
-	NssaForwardAddress string                 `protobuf:"bytes,14,opt,name=nssa_forward_address,json=nssaForwardAddress,proto3" json:"nssa_forward_address,omitempty"`
-	ExternalRouteTag   int32                  `protobuf:"varint,15,opt,name=external_route_tag,json=externalRouteTag,proto3" json:"external_route_tag,omitempty"`
+	LsaAge             int32                  `protobuf:"varint,1,opt,name=lsa_age,json=lsaAge,proto3" json:"lsa_age,omitempty"`                                       // json:"lsaAge"
+	Options            string                 `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`                                                    // json:"options"
+	LsaFlags           int32                  `protobuf:"varint,3,opt,name=lsa_flags,json=lsaFlags,proto3" json:"lsa_flags,omitempty"`                                 // json:"lsaFlags"
+	LsaType            string                 `protobuf:"bytes,4,opt,name=lsa_type,json=lsaType,proto3" json:"lsa_type,omitempty"`                                     // json:"lsaType"
+	LinkStateId        string                 `protobuf:"bytes,5,opt,name=link_state_id,json=linkStateId,proto3" json:"link_state_id,omitempty"`                       // json:"linkStateId"
+	AdvertisingRouter  string                 `protobuf:"bytes,6,opt,name=advertising_router,json=advertisingRouter,proto3" json:"advertising_router,omitempty"`       // json:"advertisingRouter"
+	LsaSeqNumber       string                 `protobuf:"bytes,7,opt,name=lsa_seq_number,json=lsaSeqNumber,proto3" json:"lsa_seq_number,omitempty"`                    // json:"lsaSeqNumber"
+	Checksum           string                 `protobuf:"bytes,8,opt,name=checksum,proto3" json:"checksum,omitempty"`                                                  // json:"checksum"
+	Length             int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`                                                     // json:"length"
+	NetworkMask        int32                  `protobuf:"varint,10,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`                       // json:"networkMask"
+	MetricType         string                 `protobuf:"bytes,11,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"`                           // json:"metricType"
+	Tos                int32                  `protobuf:"varint,12,opt,name=tos,proto3" json:"tos,omitempty"`                                                          // json:"tos"
+	Metric             int32                  `protobuf:"varint,13,opt,name=metric,proto3" json:"metric,omitempty"`                                                    // json:"metric"
+	NssaForwardAddress string                 `protobuf:"bytes,14,opt,name=nssa_forward_address,json=nssaForwardAddress,proto3" json:"nssa_forward_address,omitempty"` // json:"nssaForwardAddress"
+	ExternalRouteTag   int32                  `protobuf:"varint,15,opt,name=external_route_tag,json=externalRouteTag,proto3" json:"external_route_tag,omitempty"`      // json:"externalRouteTag"
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
