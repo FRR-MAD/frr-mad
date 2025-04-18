@@ -36,7 +36,7 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 	// }
 	executor := NewFRRCommandExecutor("/var/run/frr", 2*time.Second)
 
-	_, err := FetchOSPFRouteData(executor)
+	_, err := FetchOSPFRouterData(executor)
 
 	config, err := ParseConfig(c.configPath)
 	if err != nil {

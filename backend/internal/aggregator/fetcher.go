@@ -27,7 +27,7 @@ func NewFetcher(metricsURL string) *Fetcher {
 	}
 }
 
-func FetchOSPFRouteData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {
+func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf data router self json")
 	if err != nil {
 		return nil, err
