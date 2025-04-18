@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	frrSocket "github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator/frrsockets"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/backend/pkg"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
@@ -24,6 +25,15 @@ func NewFetcher(metricsURL string) *Fetcher {
 		metricsURL: metricsURL,
 		client:     &http.Client{Timeout: 5 * time.Second},
 	}
+}
+
+func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data router self json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFRouterLSA(output)
 }
 
 func (f *Fetcher) FetchOSPF() (*frrProto.OSPFMetrics, error) {

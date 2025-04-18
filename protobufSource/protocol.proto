@@ -54,6 +54,9 @@ message Value {
     // Analyzer command message types
     Anomalies anomalies = 19;
 
+    // New Aggregator service message types
+    OSPFRouterData ospf_router_data = 20;
+
   }
 }
 
@@ -221,6 +224,43 @@ message InterfaceStats {
   uint64 rx_errors = 4;
   uint64 tx_errors = 5;
   string oper_state = 6;
+}
+
+// ================ Aggregator LSA Router ====================
+
+message OSPFRouterData {
+  string router_id = 1;
+  map<string, OSPFRouterArea> router_states = 2;
+}
+
+message OSPFRouterArea {
+  map<string, OSPFRouterLSA> lsa_entries = 1;
+}
+
+message OSPFRouterLSA {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  int32 flags = 4;
+  bool asbr = 5;
+  string lsa_type = 6;
+  string link_state_id = 7;
+  string advertising_router = 8;
+  string lsa_seq_number = 9;
+  string checksum = 10;
+  int32 length = 11;
+  int32 num_of_links = 12;
+  map<string, OSPFRouterLSALink> router_links = 13;
+}
+
+message OSPFRouterLSALink {
+  string link_type = 1;
+  string designated_router_address = 2;
+  string router_interface_address = 3;
+  string network_address = 4;
+  string network_mask = 5;
+  int32 num_of_tos_metrics = 6;
+  int32 tos0_metric = 7;
 }
 
 // ================ Analyzer payload Messages ================
