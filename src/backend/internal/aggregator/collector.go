@@ -6,6 +6,7 @@ import (
 	"time"
 
 	frrSocket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator/frrsockets"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -13,6 +14,7 @@ import (
 type Collector struct {
 	fetcher    *Fetcher
 	configPath string
+	logger     *logger.Logger
 	cache      *frrProto.CombinedState
 }
 
@@ -23,10 +25,11 @@ func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.F
 	}
 }
 
-func NewCollector(metricsURL, configPath string) *Collector {
+func NewCollector(metricsURL, configPath string, logger *logger.Logger) *Collector {
 	return &Collector{
 		fetcher:    NewFetcher(metricsURL),
 		configPath: configPath,
+		logger:     logger,
 	}
 }
 

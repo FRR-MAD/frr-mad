@@ -3,13 +3,15 @@ package aggregator
 import (
 	"log"
 	"time"
+
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 )
 
-func InitAggregator(config map[string]string) *Collector {
+func InitAggregator(config map[string]string, logger *logger.Logger) *Collector {
 	metricsURL := config["FRRMetricsURL"]
 	configPath := config["FRRConfigPath"]
 
-	return NewCollector(metricsURL, configPath)
+	return NewCollector(metricsURL, configPath, logger)
 }
 
 func StartAggregator(collector *Collector, pollInterval time.Duration) {

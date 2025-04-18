@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 )
 
 func main() {
@@ -23,8 +25,11 @@ func main() {
 	socketConfig := config["socket"]
 	analyzerConfig := config["analyzer"]
 
+	// start logger instances
+	aggregatorLogger := createNewLogger("aggregator", "/tmp/logs/aggregator.log")
+
 	// start collector
-	collector := aggregator.InitAggregator(aggregatorConfig)
+	collector := aggregator.InitAggregator(aggregatorConfig, aggregatorLogger)
 
 	// Start collection in a goroutine
 	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
@@ -151,14 +156,6 @@ func getEnv(key, defaultValue string) string {
 
 }
 
-func runAnalyzer(config map[string]string) {
-
-}
-
-func runSocket(config map[string]string) {
-	fmt.Println(config)
-}
-
 func strToInt(value string) int {
 	retValue, err := strconv.Atoi(value)
 	if err != nil {
@@ -167,4 +164,12 @@ func strToInt(value string) int {
 	}
 
 	return retValue
+}
+
+func createNewLogger(name, filePath string) *logger.Logger {
+	logger, err := logger.NewLogger(name, filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return logger
 }
