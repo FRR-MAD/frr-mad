@@ -4564,7 +4564,7 @@ var file_protocol_proto_depIdxs = []int32{
 	26, // 15: communication.Value.interface_stats:type_name -> communication.InterfaceStats
 	44, // 16: communication.Value.anomalies:type_name -> communication.Anomalies
 	27, // 17: communication.Value.ospf_router_data:type_name -> communication.OSPFRouterData
-<<<<<<< HEAD
+<<<<<<< HEAD:frontend/pkg/protocol.pb.go
 	31, // 18: communication.Value.ospf_network_data:type_name -> communication.OSPFNetworkData
 	35, // 19: communication.Value.ospf_summary_data:type_name -> communication.OSPFSummaryData
 	38, // 20: communication.Value.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
@@ -4694,7 +4694,7 @@ var file_protocol_proto_depIdxs = []int32{
 	65, // [65:65] is the sub-list for extension type_name
 	65, // [65:65] is the sub-list for extension extendee
 	0,  // [0:65] is the sub-list for field type_name
->>>>>>> 474123c3877bfdb79df6ec48c0c37e1ef8b73459
+>>>>>>> 474123c3877bfdb79df6ec48c0c37e1ef8b73459:src/frontend/pkg/protocol.pb.go
 }
 
 func init() { file_protocol_proto_init() }

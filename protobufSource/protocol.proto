@@ -82,15 +82,15 @@ message ListValue {
 message StaticFRRConfiguration {
   string hostname = 1;
   string frr_version = 2;
-  string frr_defaults = 3;
+  // string frr_defaults = 3;
   bool ipv6_forwarding = 4;
   bool ipv4_forwarding = 5;
   bool service_advanced_vty = 6;
-  bool service_integrated_vtysh_config = 7;
+  // bool service_integrated_vtysh_config = 7;
 
   repeated Interface interfaces = 8;
-  repeated StaticRoute static_block = 9;
-  repeated OSPFConfig ospf_config = 10;
+  repeated StaticRoute static_routes = 9;
+  OSPFConfig ospf_config = 10;
   map<string, RouteMap> route_map = 11;
   map<string, AccessList> access_list = 12;
 }
@@ -112,11 +112,12 @@ message OSPFConfig {
   string router_id = 1;
   repeated Redistribution redistribution = 2;
   repeated Area area = 3;
+  string virtual_link_neighbor = 4;
 }
 
 message Redistribution {
   string type = 1;
-  uint32 metric = 2;
+  string metric = 2;
   string route_map = 3;
 }
 
@@ -126,20 +127,24 @@ message Area {
 }
 
 message RouteMap {
-  uint32 permit = 1;
-  string match = 2;
-  string access_list = 3;
+  bool permit = 1;
+  string sequence = 2;
+  string match = 3;
+  string access_list = 4;
 }
 
 message AccessList {
   string name = 1;
-  repeated AccessListItem item = 2;
+  repeated AccessListItem access_list_items = 2;
 }
 
 message AccessListItem {
   uint32 sequence = 1;
   string access_control = 2;
-  string network = 3; // "any" or IP/CIDR
+  oneof destination {
+    IPPrefix ip_prefix = 3;
+    bool any = 4; // if set to true, means "any"
+  }
 }
 
 message IPPrefix {
