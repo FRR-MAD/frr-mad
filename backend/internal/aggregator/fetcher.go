@@ -36,6 +36,51 @@ func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPF
 	return ParseOSPFRouterLSA(output)
 }
 
+func FetchOSPFNetworkData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNetworkData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data network self json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFNetworkLSA(output)
+}
+
+func FetchOSPFSummaryData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFSummaryData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data summary self json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFSummaryLSA(output)
+}
+
+func FetchOSPFAsbrSummaryData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFAsbrSummaryData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data asbr-summary self json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFAsbrSummaryLSA(output)
+}
+
+func FetchOSPFExternalData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFExternalData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data external self json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFExternalLSA(output)
+}
+
+func FetchOSPFNssaExternalData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNssaExternalData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data nssa-external self json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFNssaExternalLSA(output)
+}
+
 func (f *Fetcher) FetchOSPF() (*frrProto.OSPFMetrics, error) {
 	rawData, err := f.fetchRawMetrics()
 	if err != nil {

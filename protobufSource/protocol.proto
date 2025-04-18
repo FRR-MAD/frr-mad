@@ -56,6 +56,11 @@ message Value {
 
     // New Aggregator service message types
     OSPFRouterData ospf_router_data = 20;
+    OSPFNetworkData ospf_network_data = 21;
+    OSPFSummaryData ospf_summary_data = 22;
+    OSPFAsbrSummaryData ospf_asbr_summary_data = 23;
+    OSPFExternalData ospf_external_data = 24;
+    OSPFNssaExternalData ospf_nssa_external_data = 25;
 
   }
 }
@@ -261,6 +266,122 @@ message OSPFRouterLSALink {
   string network_mask = 5;
   int32 num_of_tos_metrics = 6;
   int32 tos0_metric = 7;
+}
+
+// ================ Aggregator LSA Network ===================
+
+message OSPFNetworkData {
+  string router_id = 1;
+  map<string, NetAreaState> net_states = 2;
+}
+
+message NetAreaState {
+  map<string, NetworkLSA> lsa_entries = 1;
+}
+
+message NetworkLSA {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  string lsa_type = 4;
+  string link_state_id = 5;
+  string advertising_router = 6;
+  string lsa_seq_number = 7;
+  string checksum = 8;
+  int32 length = 9;
+  int32 network_mask = 10;
+  map<string, AttachedRouter> attached_routers = 11;
+}
+
+message AttachedRouter {
+  string attached_router_id = 1;
+}
+
+// ================ Aggregator LSA Summary ===================
+
+message OSPFSummaryData {
+  string router_id = 1;
+  map<string, NetAreaState> net_states = 2;
+  map<string, SummaryAreaState> summary_states = 3;
+}
+
+message SummaryAreaState {
+  map<string, SummaryLSA> lsa_entries = 1;
+}
+
+message SummaryLSA {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  string lsa_type = 4;
+  string link_state_id = 5;
+  string advertising_router = 6;
+  string lsa_seq_number = 7;
+  string checksum = 8;
+  int32 length = 9;
+  int32 network_mask = 10;
+  int32 tos0_metric = 11;
+}
+
+// ================ Aggregator LSA ASBR Summary ==============
+
+message OSPFAsbrSummaryData {
+  string router_id = 1;
+  map<string, SummaryAreaState> asbr_summary_states = 2;
+}
+
+// ================ Aggregator LSA External ==================
+
+message OSPFExternalData {
+  string router_id = 1;
+  map<string, ExternalLSA> as_external_link_states = 2; 
+}
+
+message ExternalLSA {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  string lsa_type = 4;
+  string link_state_id = 5;
+  string advertising_router = 6;
+  string lsa_seq_number = 7;
+  string checksum = 8;
+  int32 length = 9;
+  int32 network_mask = 10;
+  string metric_type = 11;  // "E1" or "E2"
+  int32 tos = 12;
+  int32 metric = 13;
+  string forward_address = 14;
+  int32 external_route_tag = 15;
+}
+
+// ================ Aggregator LSA NSSA External =============
+
+message OSPFNssaExternalData {
+  string router_id = 1;
+  map<string, NssaExternalArea> nssa_external_link_states = 2; 
+}
+
+message NssaExternalArea {
+  map<string, NssaExternalLSA> lsa_entries = 1;
+}
+
+message NssaExternalLSA {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  string lsa_type = 4;
+  string link_state_id = 5;
+  string advertising_router = 6;
+  string lsa_seq_number = 7;
+  string checksum = 8;
+  int32 length = 9;
+  int32 network_mask = 10;
+  string metric_type = 11;  // "E1" or "E2"
+  int32 tos = 12;
+  int32 metric = 13;
+  string nssa_forward_address = 14;
+  int32 external_route_tag = 15;
 }
 
 // ================ Analyzer payload Messages ================

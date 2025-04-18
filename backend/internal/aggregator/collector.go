@@ -1,7 +1,9 @@
 package aggregator
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	frrSocket "github.com/ba2025-ysmprc/frr-tui/backend/internal/aggregator/frrsockets"
@@ -36,7 +38,60 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 	// }
 	executor := NewFRRCommandExecutor("/var/run/frr", 2*time.Second)
 
-	_, err := FetchOSPFRouterData(executor)
+	ospfRouterData, err := FetchOSPFRouterData(executor)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+
+	data, err := json.MarshalIndent(ospfRouterData, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshaling struct:", err)
+	} else {
+		fmt.Println(string(data))
+	}
+
+	ospfNetworkData, err := FetchOSPFNetworkData(executor)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+
+	println(ospfNetworkData.String())
+
+	ospfSummaryData, err := FetchOSPFSummaryData(executor)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+
+	println(ospfSummaryData.String())
+
+	ospfAsbrSummaryData, err := FetchOSPFAsbrSummaryData(executor)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+
+	println(ospfAsbrSummaryData.String())
+
+	ospfExternalData, err := FetchOSPFExternalData(executor)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+
+	println(ospfExternalData.String())
+
+	ospfNssaExternalData, err := FetchOSPFNssaExternalData(executor)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+
+	println(ospfNssaExternalData.String())
+
+	os.Exit(0)
 
 	config, err := ParseConfig(c.configPath)
 	if err != nil {
