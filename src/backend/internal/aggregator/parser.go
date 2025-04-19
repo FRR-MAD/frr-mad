@@ -111,24 +111,40 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 				config.AccessList = make(map[string]*frrProto.AccessList)
 			}
 			parts := strings.Fields(line)
+			if len(parts) < 6 {
+				log.Printf("access-list line too short: %q", line)
+				break
+			}
 			accessListName := parts[1]
 			seq, _ := strconv.Atoi(parts[3])
 			action := parts[4]
-			ip, ipNet, _ := net.ParseCIDR(parts[5])
-			if err != nil || ipNet == nil {
-				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
-				break
-			}
-			prefixLength, _ := ipNet.Mask.Size()
-			accessListItem := &frrProto.AccessListItem{
-				Sequence:      uint32(seq),
-				AccessControl: action,
-				Destination: &frrProto.AccessListItem_IpPrefix{
-					IpPrefix: &frrProto.IPPrefix{
-						IpAddress:    ip.String(),
-						PrefixLength: uint32(prefixLength),
+			target := parts[5]
+
+			var accessListItem *frrProto.AccessListItem
+
+			if target == "any" {
+				accessListItem = &frrProto.AccessListItem{
+					Sequence:      uint32(seq),
+					AccessControl: action,
+					Destination:   &frrProto.AccessListItem_Any{Any: true},
+				}
+			} else {
+				ip, ipNet, err := net.ParseCIDR(target)
+				if err != nil || ipNet == nil {
+					log.Printf("invalid CIDR: %q on line: %q (err: %v)", target, line, err)
+					break
+				}
+				prefixLength, _ := ipNet.Mask.Size()
+				accessListItem = &frrProto.AccessListItem{
+					Sequence:      uint32(seq),
+					AccessControl: action,
+					Destination: &frrProto.AccessListItem_IpPrefix{
+						IpPrefix: &frrProto.IPPrefix{
+							IpAddress:    ip.String(),
+							PrefixLength: uint32(prefixLength),
+						},
 					},
-				},
+				}
 			}
 
 			if _, exists := config.AccessList[accessListName]; !exists {

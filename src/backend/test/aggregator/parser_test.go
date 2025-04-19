@@ -2,6 +2,7 @@ package aggregator_test
 
 import (
 	"fmt"
+	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,7 +20,7 @@ func TestParseStaticFRRConfig(t *testing.T) {
 
 	fmt.Printf("ParseStaticFRRConfig: %v\n", config)
 
-	// Validate the parsed Metadata
+	// v=========== METADATA TEST ==========v
 	if config.Hostname != "r101" {
 		t.Errorf("Expected Hostname to be 'r101', got '%s'", config.Hostname)
 	}
@@ -33,7 +34,9 @@ func TestParseStaticFRRConfig(t *testing.T) {
 	if len(config.Interfaces) != 12 {
 		t.Errorf("Expected 13 interfaces, got %d", len(config.Interfaces))
 	}
+	// ^=========== METADATA TEST ==========^
 
+	// v=========== INTERFACE TEST ==========v
 	eth1 := config.Interfaces[0]
 	if eth1.Name != "eth1" {
 		t.Errorf("Expected first interface name to be 'eth1', got '%s'", eth1.Name)
@@ -49,6 +52,7 @@ func TestParseStaticFRRConfig(t *testing.T) {
 		}
 	}
 
+	// eth2
 	eth2 := config.Interfaces[1]
 	if eth2.Name != "eth2" {
 		t.Errorf("Expected second interface name to be 'eth2', got '%s'", eth2.Name)
@@ -154,7 +158,9 @@ func TestParseStaticFRRConfig(t *testing.T) {
 	if !lo.Passive {
 		t.Error("Expected lo to be passive")
 	}
+	// ^=========== INTERFACE TEST ==========^
 
+	// v=========== STATIC ROUTE TEST ==========v
 	staticRoutes := config.StaticRoutes
 	if len(staticRoutes) != 1 {
 		t.Errorf("Expected 1 static route, got %d", len(staticRoutes))
@@ -168,7 +174,9 @@ func TestParseStaticFRRConfig(t *testing.T) {
 	if staticRoutes[0].NextHop != "192.168.100.91" {
 		t.Errorf("Expected Next Hop to be 192.168.100.91, got '%s'", staticRoutes[0].NextHop)
 	}
+	// ^=========== STATIC ROUTE TEST ==========^
 
+	// v=========== OSPF CONFIG TEST ==========v
 	ospfConfig := config.OspfConfig
 	if ospfConfig.RouterId != "65.0.1.1" {
 		t.Errorf("Expected ospf router id 65.0.1.1, got '%s'", ospfConfig.RouterId)
@@ -191,6 +199,82 @@ func TestParseStaticFRRConfig(t *testing.T) {
 	if ospfConfig.Redistribution[1].RouteMap != "" {
 		t.Errorf("Expected RouteMap to be empty, got '%s'", ospfConfig.Redistribution[1].RouteMap)
 	}
+	// ^=========== OSPF CONFIG TEST ==========^
+
+	// v=========== ACCESS LIST TEST ==========v
+	accessList := config.AccessList
+	if len(accessList) != 2 {
+		t.Errorf("Expected 2 access list, got %d", len(accessList))
+	}
+	termList, ok := config.AccessList["term"]
+	if !ok {
+		t.Fatalf("Access list 'term' not found")
+	}
+	if len(termList.AccessListItems) != 2 {
+		t.Errorf("Expected 2 items in access-list 'term', got %d", len(termList.AccessListItems))
+	}
+
+	termItem1 := termList.AccessListItems[0]
+	if termItem1.Sequence != 5 || termItem1.AccessControl != "permit" {
+		t.Errorf("Unexpected access-list term item 1: %+v", termItem1)
+	}
+	if prefix, ok := termItem1.Destination.(*frrProto.AccessListItem_IpPrefix); !ok {
+		t.Errorf("Expected term item 1 to be IP prefix, got: %+v", termItem1.Destination)
+	} else {
+		if prefix.IpPrefix.IpAddress != "127.0.0.1" || prefix.IpPrefix.PrefixLength != 32 {
+			t.Errorf("Expected 127.0.0.1/32, got %s/%d", prefix.IpPrefix.IpAddress, prefix.IpPrefix.PrefixLength)
+		}
+	}
+
+	termItem2 := termList.AccessListItems[1]
+	if termItem2.Sequence != 10 || termItem2.AccessControl != "deny" {
+		t.Errorf("Unexpected access-list term item 2: %+v", termItem2)
+	}
+	if _, ok := termItem2.Destination.(*frrProto.AccessListItem_Any); !ok {
+		t.Errorf("Expected term item 2 to be 'any', got: %+v", termItem2.Destination)
+	}
+
+	localsiteList, ok := config.AccessList["localsite"]
+	if !ok {
+		t.Fatalf("Access list 'localsite' not found")
+	}
+	if len(localsiteList.AccessListItems) != 1 {
+		t.Errorf("Expected 1 item in access-list 'localsite', got %d", len(localsiteList.AccessListItems))
+	}
+
+	localsiteItem := localsiteList.AccessListItems[0]
+	if localsiteItem.Sequence != 15 || localsiteItem.AccessControl != "permit" {
+		t.Errorf("Unexpected localsite item: %+v", localsiteItem)
+	}
+	if prefix, ok := localsiteItem.Destination.(*frrProto.AccessListItem_IpPrefix); !ok {
+		t.Errorf("Expected localsite item to be IP prefix, got: %+v", localsiteItem.Destination)
+	} else {
+		if prefix.IpPrefix.IpAddress != "192.168.1.0" || prefix.IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected 192.168.1.0/24, got %s/%d", prefix.IpPrefix.IpAddress, prefix.IpPrefix.PrefixLength)
+		}
+	}
+	// ^=========== ACCESS LIST TEST ==========^
+
+	// v=========== ROUTE MAP TEST ==========v
+	routeMap := config.RouteMap
+	if len(routeMap) != 1 {
+		t.Errorf("Expected 1 route map, got %d", len(routeMap))
+	}
+	rm, ok := routeMap["lanroutes"]
+	if !ok {
+		t.Errorf("Expected route map 'lanroutes' to exist")
+	}
+	if rm.Sequence != "10" {
+		t.Errorf("Expected route map sequence '10', got '%s'", rm.Sequence)
+	}
+	if !rm.Permit {
+		t.Error("Expected route map 'lanroutes' to be a permit rule")
+	}
+	if rm.Match != "ip address" || rm.AccessList != "localsite" {
+		t.Errorf("Expected match 'ip address' with access list 'localsite', got match '%s' and access list '%s'",
+			rm.Match, rm.AccessList)
+	}
+	// ^=========== ROUTE MAP TEST ==========^
 }
 
 //func TestParseConfig(t *testing.T) {
