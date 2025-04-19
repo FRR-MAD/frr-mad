@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -25,6 +26,29 @@ func NewFetcher(metricsURL string) *Fetcher {
 		metricsURL: metricsURL,
 		client:     &http.Client{Timeout: 5 * time.Second},
 	}
+}
+
+func FetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
+	cmd := exec.Command("vtysh", "-c", "show running-config")
+	output, err := cmd.Output()
+
+	tmp, err := os.CreateTemp("/tmp", "frr-config.conf")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
+	}
+
+	if _, err := tmp.Write(output); err != nil {
+		err := tmp.Close()
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("failed to write config to temp file: %w", err)
+	}
+
+	if err := tmp.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close temp file: %w", err)
+	}
+	return ParseStaticFRRConfig(tmp.Name())
 }
 
 func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*OSPFRouterData, error) {

@@ -184,6 +184,13 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 	// }
 	executor := NewFRRCommandExecutor("/var/run/frr", 2*time.Second)
 
+	staticFRRConfigParsed, err := FetchStaticFRRConfig()
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+	fmt.Printf("Response of FetchStaticFRRConfig(): \n%+v\n", staticFRRConfigParsed)
+
 	ospfRouterData, err := FetchOSPFRouterData(executor)
 	if err != nil {
 		fmt.Print(err)
