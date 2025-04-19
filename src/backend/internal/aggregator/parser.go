@@ -13,48 +13,48 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
-	var response frrProto.OSPFRouterData
+func ParseOSPFRouterLSA(jsonData []byte) (*OSPFRouterData, error) {
+	var response OSPFRouterData
 	if err := json.Unmarshal(jsonData, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse OSPF router LSA json: %w", err)
 	}
 	return &response, nil
 }
 
-func ParseOSPFNetworkLSA(jsonData []byte) (*frrProto.OSPFNetworkData, error) {
-	var response frrProto.OSPFNetworkData
+func ParseOSPFNetworkLSA(jsonData []byte) (*OSPFNetworkData, error) {
+	var response OSPFNetworkData
 	if err := json.Unmarshal(jsonData, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse OSPF network LSA json: %w", err)
 	}
 	return &response, nil
 }
 
-func ParseOSPFSummaryLSA(jsonData []byte) (*frrProto.OSPFSummaryData, error) {
-	var response frrProto.OSPFSummaryData
+func ParseOSPFSummaryLSA(jsonData []byte) (*OSPFSummaryData, error) {
+	var response OSPFSummaryData
 	if err := json.Unmarshal(jsonData, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse OSPF summary LSA json: %w", err)
 	}
 	return &response, nil
 }
 
-func ParseOSPFAsbrSummaryLSA(jsonData []byte) (*frrProto.OSPFAsbrSummaryData, error) {
-	var response frrProto.OSPFAsbrSummaryData
+func ParseOSPFAsbrSummaryLSA(jsonData []byte) (*OSPFAsbrSummaryData, error) {
+	var response OSPFAsbrSummaryData
 	if err := json.Unmarshal(jsonData, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse OSPF asbr summary LSA json: %w", err)
 	}
 	return &response, nil
 }
 
-func ParseOSPFExternalLSA(jsonData []byte) (*frrProto.OSPFExternalData, error) {
-	var response frrProto.OSPFExternalData
+func ParseOSPFExternalLSA(jsonData []byte) (*OSPFExternalData, error) {
+	var response OSPFExternalData
 	if err := json.Unmarshal(jsonData, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse OSPF external LSA json: %w", err)
 	}
 	return &response, nil
 }
 
-func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, error) {
-	var response frrProto.OSPFNssaExternalData
+func ParseOSPFNssaExternalLSA(jsonData []byte) (*OSPFNssaExternalData, error) {
+	var response OSPFNssaExternalData
 	if err := json.Unmarshal(jsonData, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse OSPF nssa external LSA json: %w", err)
 	}
