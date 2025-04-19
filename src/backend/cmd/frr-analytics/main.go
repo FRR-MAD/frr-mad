@@ -16,32 +16,91 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 )
 
+type MadService struct {
+	//AnalysisService  ServiceActivator
+	//ExportService    ServiceActivator
+	//AggregateService ServiceActivator
+	Analyzer   *analyzer.Analyzer
+	Aggregator *aggregator.Collector
+	Exporter   string
+}
+
+type ServiceActivator struct {
+	Name    string
+	Service ServiceSelector
+	Active  bool
+}
+
+type ServiceSelector struct {
+	Analyzer   *analyzer.Analyzer
+	Aggregator *aggregator.Collector
+	Exporter   string
+}
+
 func main() {
+
+	// possible start arguments
+	// serviceArgs := []string{"--aggregator", "--analyzer", "--exporter"}
 
 	// load config
 	config := configs.LoadConfig()
 
-	aggregatorConfig := config["aggregator"]
 	socketConfig := config["socket"]
+	aggregatorConfig := config["aggregator"]
 	analyzerConfig := config["analyzer"]
+	exporterConfig := config["exporter"]
 
 	// start logger instances
-	aggregatorLogger := createNewLogger("aggregator", "/tmp/logs/aggregator.log")
+	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
+
+	// service manager
+	var madService MadService
+	//madService := MadService{
+	//AggregateService: ServiceActivator{
+	//	Name:   "aggregator",
+	//	Active: false,
+	//},
+	//AnalysisService: ServiceActivator{
+	//	Name:   "analyzer",
+	//	Active: false,
+	//},
+	//ExportService: ServiceActivator{
+	//	Name:   "exporter",
+	//	Active: false,
+	//},
+	//}
+
+	for _, arg := range os.Args[1:] {
+		switch arg {
+		case "--aggregator":
+			//madService.AggregateService.Logger = createNewLogger("aggregator", "/tmp/aggregator.log")
+			//madService.AggregateService.Service.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+			aggregatorLogger := createNewLogger("aggregator", "/tmp/aggregator.log")
+			madService.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+		case "--analyzer":
+			//madService.AnalysisService.Logger = createNewLogger("analyzer", "/tmp/analyzer.log")
+			//madService.AnalysisService.Service.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
+			analyzerLogger := createNewLogger("analyzer", "/tmp/analyzer.log")
+			madService.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
+		case "--exporter":
+			//madService.ExportService.Logger = createNewLogger("exporter", "/tmp/exporter.log")
+			//madService.ExportService.Service.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
+			exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
+			madService.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
+			fmt.Println(exporterConfig)
+		}
+	}
 
 	// start collector
-	collector := aggregator.InitAggregator(aggregatorConfig, aggregatorLogger)
-
-	// Start collection in a goroutine
-	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
-	aggregator.StartAggregator(collector, pollInterval)
+	// aggregatorLogger := createNewLogger("aggregator", "/tmp/aggregator.log")
+	// collector := startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
 
 	// Start analyzer
-	anomalyDetection := analyzer.InitAnalyzer(analyzerConfig)
-
-	analyzer.StartAnalyzer(anomalyDetection, pollInterval)
+	// analyzerLogger := createNewLogger("analyzer", "/tmp/analyzer.log")
+	// anomalyDetection := startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
 
 	// start socket
-	sockServer := socket.NewSocket(socketConfig, collector, anomalyDetection)
+	sockServer := socket.NewSocket(socketConfig, madService.Aggregator, madService.Analyzer)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -58,95 +117,26 @@ func main() {
 
 }
 
-/* ---------------------------------------------------------------------------------------------------+
-| With default values																				  |
-| ./frr-analytics																					  |
-|																									  |
-| With custom configuration																			  |
-| ./frr-analytics -metrics-url http://192.168.0.5:9342/metrics -config-path /mnt/configs/frr.conf	  |
-|																									  |
-| Using environment variables																		  |
-| export FRR_METRICS_URL="http://10.0.0.5:9342/metrics"												  |
-| export FRR_CONFIG_PATH="/etc/frr/frr-prod.conf"													  |
-| ./frr-analytics																					  |
-+---------------------------------------------------------------------------------------------------- */
+func startAggregator(config map[string]string, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
+	collector := aggregator.InitAggregator(config, logging)
 
-// func main() {
-// 	// Defaults
-// 	defaultMetricsURL := getEnv("FRR_METRICS_URL", "http://localhost:9342/metrics")
-// 	defaultConfigPath := getEnv("FRR_CONFIG_PATH", "/etc/frr/frr.conf")
-//
-// 	// Flags
-// 	metricsURL := flag.String("metrics-url", defaultMetricsURL, "FRR exporter metrics endpoint")
-// 	configPath := flag.String("config-path", defaultConfigPath, "Path to FRR configuration")
-// 	pollInterval := flag.Duration("poll-interval", 30*time.Second, "Metrics collection interval")
-// 	flag.Parse()
-//
-// 	// Collector init
-// 	collector := aggregator.NewCollector(*metricsURL, *configPath)
-//
-// 	// Collector loop
-// 	ticker := time.NewTicker(*pollInterval)
-// 	defer ticker.Stop()
-//
-// 	for range ticker.C {
-// 		state, err := collector.Collect()
-// 		if err != nil {
-// 			log.Printf("Collection error: %v", err)
-// 			continue
-// 		}
-//
-// 		// TMP logging
-// 		log.Printf("Collected state at %s", state.Timestamp.Format(time.RFC3339))
-// 		log.Printf("OSPF Neighbors: %d", len(state.OSPF.Neighbors))
-// 		log.Printf("OSPF Routes: %d", len(state.OSPF.Routes))
-// 		log.Printf("System CPU: %.1f%%", state.System.CPUUsage)
-// 	}
-// }
-//
-// func getEnv(key, defaultValue string) string {
-// 	if value, exists := os.LookupEnv(key); exists {
-// 		return value
-// 	}
-// 	return defaultValue
-// }
+	aggregator.StartAggregator(collector, pollInterval)
 
-//func runAggregator(config map[string]string) *aggregator.Collector {
-//
-//	metricsURL := config["FRRMetricsURL"]
-//	configPath := config["FRRConfigPath"]
-//	pollInterval := time.Duration(strToInt(config["PollInterval"])) * time.Second
-//
-//	// Collector init
-//	collector := aggregator.NewCollector(metricsURL, configPath)
-//
-//	// Collector loop
-//	ticker := time.NewTicker(pollInterval)
-//	defer ticker.Stop()
-//
-//	for range ticker.C {
-//		//fmt.Println(aggregator.OSPFNeighborDummyData())
-//		//_, _ = collector.Collect()
-//		state, err := collector.Collect()
-//		if err != nil {
-//			log.Printf("Collection error: %v", err)
-//			continue
-//		}
-//
-//		// TMP logging
-//		log.Printf("System metrics: %v", state.System.GetMemoryUsage())
-//		log.Printf("System metrics: %v", state.System.GetNetworkStats())
-//		//log.Printf("NetworkConfig %v", state.GetConfig())
-//		log.Printf("Collected state at %v", state.Timestamp.AsTime())
-//		log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
-//		log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
-//		log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
-//	}
-//
-//	fmt.Println("Yes, it really works")
-//
-//	return collector
-//}
+	return collector
+}
+
+func startAnalyzer(config map[string]string, logging *logger.Logger, pollInterval time.Duration) *analyzer.Analyzer {
+	detection := analyzer.InitAnalyzer(config)
+	analyzer.StartAnalyzer(detection, pollInterval)
+	return detection
+}
+
+func startExporter(config map[string]string, logging *logger.Logger, pollInterval time.Duration) string {
+	// exporter := exporter.InitExporter(config, logging)
+	// exporter.StartExporter(exporter, pollInterval)
+	// return exporter
+	return "foobar"
+}
 
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
