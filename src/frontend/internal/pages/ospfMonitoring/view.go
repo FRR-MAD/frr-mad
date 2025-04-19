@@ -15,13 +15,21 @@ func (m *Model) OSPFView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		return m.renderOSPFTab0()
+		return m.renderAdvertisementTab()
 	} else if currentSubTabLocal == 1 {
-		return m.renderOSPFTab1()
+		return m.renderOSPFTab0()
 	} else if currentSubTabLocal == 2 {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#ff00ff")).Render("OSPF Monitoring sub Tab 3")
+		return m.renderOSPFTab1()
+	} else if currentSubTabLocal == 3 {
+		return m.renderRunningConfigTab()
 	}
 	return m.renderOSPFTab0()
+}
+
+func (m *Model) renderAdvertisementTab() string {
+
+	returnString := "Advertisement"
+	return lipgloss.NewStyle().Render(returnString)
 }
 
 func (m *Model) renderOSPFTab0() string {
@@ -117,4 +125,8 @@ func (m *Model) renderOSPFTab1() string {
 		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Four") + "\n" + "Call Backend...☎\nEverything Good!")
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyThree, ospfAnomalyOne, ospfAnomalyTwo, ospfAnomalyFour)
+}
+
+func (m *Model) renderRunningConfigTab() string {
+	return "Running Config"
 }

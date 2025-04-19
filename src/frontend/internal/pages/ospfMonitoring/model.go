@@ -15,8 +15,10 @@ type Model struct {
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize) *Model {
 	return &Model{
-		title:      "OSPF Monitoring",
-		subTabs:    []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
+		title: "2 - OSPF Monitoring",
+		// '9 - Running Config' has to remain last in the list
+		// because the key '9' is mapped to the last element of the list.
+		subTabs:    []string{"1 - Advertisement", "2 - TBD", "3 - TBD", "9 - Running Config"},
 		windowSize: windowSize,
 	}
 }

@@ -17,7 +17,7 @@ type Model struct {
 
 func New(windowSize *common.WindowSize) *Model {
 	return &Model{
-		title:         "Dashboard",
+		title:         "1 - Dashboard",
 		subTabs:       []string{"OSPF", "Dashboard 2"},
 		ospfAnomalies: []string{"Fetching OSPF data..."},
 		windowSize:    windowSize,

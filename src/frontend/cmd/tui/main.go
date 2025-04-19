@@ -79,14 +79,26 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "1":
 			if m.currentSubTab == -1 {
 				m.currentView = ViewDashboard
+			} else {
+				m.currentSubTab = 0
 			}
 		case "2":
 			if m.currentSubTab == -1 {
 				m.currentView = ViewOSPF
+			} else if subTabsLength >= 2 {
+				m.currentSubTab = 1
 			}
 		case "3":
 			if m.currentSubTab == -1 {
 				m.currentView = ViewShell
+			} else if subTabsLength >= 3 {
+				m.currentSubTab = 2
+			}
+		case "9":
+			if m.currentSubTab == -1 {
+				break
+			} else {
+				m.currentSubTab = subTabsLength - 1
 			}
 		// code for Presentation slides
 		//case "4":
