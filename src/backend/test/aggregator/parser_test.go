@@ -214,7 +214,7 @@ func testInterfaces(
 	if r103Eth1.Name != "eth1" {
 		t.Errorf("Expected first interface name to be 'r103Eth1', got '%s'", r103Eth1.Name)
 	}
-	if len(r103Eth1.IpAddress) == 3 {
+	if len(r103Eth1.IpAddress) != 3 {
 		t.Errorf("Expected r103Eth1 to have 3 IP address, got '%v'", len(r103Eth1.IpAddress))
 	} else {
 		if r103Eth1.IpAddress[0].IpAddress != "10.0.13.3" {
@@ -223,12 +223,12 @@ func testInterfaces(
 		if r103Eth1.IpAddress[0].PrefixLength != 24 {
 			t.Errorf("Expected r103Eth1 prefix length to be 24, got %d", r103Eth1.IpAddress[0].PrefixLength)
 		}
-		//if r103Eth1.IpAddress[1].IpAddress != "10.0.13.33" {
-		//	t.Errorf("Expected r103Eth1 IP2 to be 10.0.13.33, got '%s'", r103Eth1.IpAddress[1].IpAddress)
-		//}
-		//if r103Eth1.IpAddress[2].IpAddress != "10.0.13.30" {
-		//	t.Errorf("Expected r103Eth1 IP3 to be 10.0.13.30, got '%s'", r103Eth1.IpAddress[2].IpAddress)
-		//}
+		if r103Eth1.IpAddress[1].IpAddress != "10.0.13.33" {
+			t.Errorf("Expected r103Eth1 IP2 to be 10.0.13.33, got '%s'", r103Eth1.IpAddress[1].IpAddress)
+		}
+		if r103Eth1.IpAddress[2].IpAddress != "10.0.13.30" {
+			t.Errorf("Expected r103Eth1 IP3 to be 10.0.13.30, got '%s'", r103Eth1.IpAddress[2].IpAddress)
+		}
 	}
 	if r103Eth1.Area != "0.0.0.0" {
 		t.Errorf("Expected r103Eth1 to be in Area '0.0.0.0', got '%s'", r103Eth1.Area)
