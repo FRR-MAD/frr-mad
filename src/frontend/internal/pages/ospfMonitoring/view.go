@@ -4,6 +4,7 @@ import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 var currentSubTabLocal = -1
@@ -128,5 +129,19 @@ func (m *Model) renderOSPFTab1() string {
 }
 
 func (m *Model) renderRunningConfigTab() string {
-	return "Running Config"
+	// Calculate box width dynamically for one horizontal box based on terminal width
+	boxWidthForOne := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
+	if boxWidthForOne < 20 {
+		boxWidthForOne = 20 // Minimum width to ensure readability
+	}
+
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = boxWidthForOne
+	m.viewport.Height = outputMaxHeight
+
+	m.viewport.SetContent(strings.Join(m.runningConfig, "\n"))
+
+	runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
+
+	return runningConfigBox
 }

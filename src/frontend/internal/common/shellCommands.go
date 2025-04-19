@@ -3,12 +3,17 @@ package common
 import (
 	"bytes"
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"os/exec"
 	"strings"
 	"time"
 )
 
-func RunCommand(activeShell string, command string, timeout time.Duration) (string, error) {
+type OSPFMsg string
+
+type RunningConfigMsg string
+
+func RunCustomCommand(activeShell string, command string, timeout time.Duration) (string, error) {
 	var cmd *exec.Cmd
 
 	if activeShell == "vtysh" {
@@ -54,4 +59,58 @@ func RunCommand(activeShell string, command string, timeout time.Duration) (stri
 		}
 		return out.String(), nil
 	}
+}
+
+// FetchRunningConfig msg.type = msg.RunningConfigMsg --> triggers function in update
+func FetchRunningConfig() tea.Cmd {
+	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
+		data, err := GetRunningConfig()
+		if err != nil {
+			return RunningConfigMsg(fmt.Sprintf("Error: %v", err))
+		}
+		return RunningConfigMsg(data)
+	})
+}
+
+func GetRunningConfig() (string, error) {
+	vtyshOutput, err := exec.Command("vtysh", "-c", "show running-config").Output()
+	if err != nil {
+		return "", fmt.Errorf("error fetching OSPF neighbor data: %v", err)
+	}
+
+	return string(vtyshOutput), nil
+}
+
+func ShowRunningConfig(data string) []string {
+	if data == "" {
+		return []string{"No OSPF data received"}
+	}
+	return strings.Split(data, "\n")
+}
+
+// FetchOSPFData msg.type = msg.OSPFMsg --> triggers function in update
+func FetchOSPFData() tea.Cmd {
+	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
+		data, err := GetOSPFData()
+		if err != nil {
+			return OSPFMsg(fmt.Sprintf("Error: %v", err))
+		}
+		return OSPFMsg(data)
+	})
+}
+
+func GetOSPFData() (string, error) {
+	vtyshOutput, err := exec.Command("vtysh", "-c", "show ip ospf neighbor").Output()
+	if err != nil {
+		return "", fmt.Errorf("error fetching OSPF neighbor data: %v", err)
+	}
+
+	return fmt.Sprintf("OSPF Neighbors:\n%s", vtyshOutput), nil
+}
+
+func DetectOSPFAnomalies(data string) []string {
+	if data == "" {
+		return []string{"No OSPF data received"}
+	}
+	return strings.Split(data, "\n")
 }

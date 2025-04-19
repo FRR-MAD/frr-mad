@@ -3,6 +3,7 @@ package ospfMonitoring
 import (
 	// "math/rand/v2"
 
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -11,12 +12,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		// Pressing "r" refreshes metrics (for demonstration).
+		case "up":
+			m.viewport.LineUp(10)
+		case "down":
+			m.viewport.LineDown(10)
 		case "r":
-			// In a real application, you could fetch updated metrics here.
-
-			// these two cases don’t work properly because when key left/right is clicked on tabs then this also triggered so it doesnt match the actual active subtab.
+			m.runningConfig = []string{"Reloading..."}
+			return m, common.FetchRunningConfig()
+		case "enter":
+			return m, common.FetchRunningConfig()
 		}
+	case common.RunningConfigMsg:
+		m.runningConfig = common.ShowRunningConfig(string(msg))
 	}
 	return m, nil
 }
