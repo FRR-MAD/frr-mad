@@ -1,7 +1,6 @@
 package aggregator_test
 
 import (
-	"fmt"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"os"
 	"path/filepath"
@@ -11,202 +10,426 @@ import (
 )
 
 func TestParseStaticFRRConfig(t *testing.T) {
-	// Test valid config
-	configPath := "./mock-files/r101.conf"
-	config, err := aggregator.ParseStaticFRRConfig(configPath)
+	configPathR101 := "./mock-files/r101.conf"
+	configPathR103 := "./mock-files/r103.conf"
+	configPathR112 := "./mock-files/r112.conf"
+	configR101, err := aggregator.ParseStaticFRRConfig(configPathR101)
+	if err != nil {
+		t.Fatalf("ParseStaticFRRConfig failed: %v", err)
+	}
+	configR103, err := aggregator.ParseStaticFRRConfig(configPathR103)
+	if err != nil {
+		t.Fatalf("ParseStaticFRRConfig failed: %v", err)
+	}
+	configR112, err := aggregator.ParseStaticFRRConfig(configPathR112)
 	if err != nil {
 		t.Fatalf("ParseStaticFRRConfig failed: %v", err)
 	}
 
-	fmt.Printf("ParseStaticFRRConfig: %v\n", config)
+	t.Run("Metadata", func(t *testing.T) {
+		testMetadataR101(t, configR101, configR103, configR112)
+	})
+	t.Run("Interfaces", func(t *testing.T) {
+		testInterfaces(t, configR101, configR103, configR112)
+	})
+	t.Run("StaticRoutes", func(t *testing.T) {
+		testStaticRoutes(t, configR101, configR103, configR112)
+	})
+	t.Run("OSPFConfig", func(t *testing.T) {
+		testOSPFConfig(t, configR101, configR103, configR112)
+	})
+	t.Run("AccessList", func(t *testing.T) {
+		testAccessList(t, configR101, configR103, configR112)
+	})
+	t.Run("RouteMap", func(t *testing.T) {
+		testRouteMap(t, configR101, configR103, configR112)
+	})
+}
 
-	// v=========== METADATA TEST ==========v
-	if config.Hostname != "r101" {
-		t.Errorf("Expected Hostname to be 'r101', got '%s'", config.Hostname)
+// vvvvvvvvvv HELPERS FOR TestParseStaticFRRConfig vvvvvvvvvv
+func testMetadataR101(
+	t *testing.T,
+	configR101 *frrProto.StaticFRRConfiguration,
+	configR103 *frrProto.StaticFRRConfiguration,
+	configR112 *frrProto.StaticFRRConfiguration,
+) {
+	if configR101.Hostname != "r101" {
+		t.Errorf("Expected Hostname to be 'r101', got '%s'", configR101.Hostname)
 	}
-	if config.FrrVersion != "8.5.4_git" {
-		t.Errorf("Expected FrrVersion to be '8.5.4_git', got '%s'", config.FrrVersion)
+	if configR101.FrrVersion != "8.5.4_git" {
+		t.Errorf("Expected FrrVersion to be '8.5.4_git', got '%s'", configR101.FrrVersion)
 	}
-	if config.ServiceAdvancedVty != true {
+	if configR101.ServiceAdvancedVty != true {
 		t.Error("Expected ServiceAdvancedVty to be true")
 	}
-
-	if len(config.Interfaces) != 12 {
-		t.Errorf("Expected 13 interfaces, got %d", len(config.Interfaces))
+	if configR103.Hostname != "r103" {
+		t.Errorf("Expected Hostname to be 'r103', got '%s'", configR101.Hostname)
 	}
-	// ^=========== METADATA TEST ==========^
-
-	// v=========== INTERFACE TEST ==========v
-	eth1 := config.Interfaces[0]
-	if eth1.Name != "eth1" {
-		t.Errorf("Expected first interface name to be 'eth1', got '%s'", eth1.Name)
+	if configR112.Hostname != "r112" {
+		t.Errorf("Expected Hostname to be 'r112', got '%s'", configR101.Hostname)
 	}
-	if len(eth1.IpAddress) == 0 {
-		t.Error("Expected eth1 to have at least one IP address")
+}
+
+func testInterfaces(
+	t *testing.T,
+	configR101 *frrProto.StaticFRRConfiguration,
+	configR103 *frrProto.StaticFRRConfiguration,
+	configR112 *frrProto.StaticFRRConfiguration,
+) {
+	// ========== r101 ==========
+	if len(configR101.Interfaces) != 12 {
+		t.Errorf("Expected 12 interfaces, got %d", len(configR101.Interfaces))
+	}
+
+	//r101Eth1
+	r101Eth1 := configR101.Interfaces[0]
+	if r101Eth1.Name != "eth1" {
+		t.Errorf("Expected first interface name to be 'r101Eth1', got '%s'", r101Eth1.Name)
+	}
+	if len(r101Eth1.IpAddress) == 0 {
+		t.Error("Expected r101Eth1 to have at least one IP address")
 	} else {
-		if eth1.IpAddress[0].IpAddress != "172.22.1.1" {
-			t.Errorf("Expected eth1 IP to be 172.22.1.1, got '%s'", eth1.IpAddress[0].IpAddress)
+		if r101Eth1.IpAddress[0].IpAddress != "172.22.1.1" {
+			t.Errorf("Expected r101Eth1 IP to be 172.22.1.1, got '%s'", r101Eth1.IpAddress[0].IpAddress)
 		}
-		if eth1.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected eth1 prefix length to be 24, got %d", eth1.IpAddress[0].PrefixLength)
+		if r101Eth1.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r101Eth1 prefix length to be 24, got %d", r101Eth1.IpAddress[0].PrefixLength)
 		}
 	}
 
-	// eth2
-	eth2 := config.Interfaces[1]
-	if eth2.Name != "eth2" {
-		t.Errorf("Expected second interface name to be 'eth2', got '%s'", eth2.Name)
+	// r101Eth2
+	r101Eth2 := configR101.Interfaces[1]
+	if r101Eth2.Name != "eth2" {
+		t.Errorf("Expected second interface name to be 'r101Eth2', got '%s'", r101Eth2.Name)
 	}
-	if len(eth2.IpAddress) == 0 {
-		t.Error("Expected eth2 to have at least one IP address")
+	if len(r101Eth2.IpAddress) == 0 {
+		t.Error("Expected r101Eth2 to have at least one IP address")
 	} else {
-		if eth2.IpAddress[0].IpAddress != "10.0.12.1" {
-			t.Errorf("Expected eth2 IP to be 172.22.1.1, got '%s'", eth2.IpAddress[0].IpAddress)
+		if r101Eth2.IpAddress[0].IpAddress != "10.0.12.1" {
+			t.Errorf("Expected r101Eth2 IP to be 172.22.1.1, got '%s'", r101Eth2.IpAddress[0].IpAddress)
 		}
-		if eth2.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected eth2 prefix length to be 24, got %d", eth2.IpAddress[0].PrefixLength)
+		if r101Eth2.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r101Eth2 prefix length to be 24, got %d", r101Eth2.IpAddress[0].PrefixLength)
 		}
 	}
-	if eth2.Area != "0.0.0.0" {
-		t.Errorf("Expected eth2 to be in Area '0.0.0.0', got '%s'", eth2.Area)
+	if r101Eth2.Area != "0.0.0.0" {
+		t.Errorf("Expected r101Eth2 to be in Area '0.0.0.0', got '%s'", r101Eth2.Area)
 	}
-	if eth2.Passive {
-		t.Errorf("Expected eth2 to be in Passive 'false', got '%v'", eth2.Passive)
+	if r101Eth2.Passive {
+		t.Errorf("Expected r101Eth2 to be in Passive 'false', got '%v'", r101Eth2.Passive)
 	}
 
-	// eth3
-	eth3 := config.Interfaces[2]
-	if eth3.Name != "eth3" {
-		t.Errorf("Expected eth3 name to be 'eth3', got '%s'", eth3.Name)
+	// r101Eth3
+	r101Eth3 := configR101.Interfaces[2]
+	if r101Eth3.Name != "eth3" {
+		t.Errorf("Expected r101Eth3 name to be 'r101Eth3', got '%s'", r101Eth3.Name)
 	}
-	if len(eth3.IpAddress) == 0 {
-		t.Error("Expected eth3 to have at least one IP address")
+	if len(r101Eth3.IpAddress) == 0 {
+		t.Error("Expected r101Eth3 to have at least one IP address")
 	} else {
-		if eth3.IpAddress[0].IpAddress != "10.0.13.1" {
-			t.Errorf("Expected eth3 IP to be 10.0.13.1, got '%s'", eth3.IpAddress[0].IpAddress)
+		if r101Eth3.IpAddress[0].IpAddress != "10.0.13.1" {
+			t.Errorf("Expected r101Eth3 IP to be 10.0.13.1, got '%s'", r101Eth3.IpAddress[0].IpAddress)
 		}
-		if eth3.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected eth3 prefix length to be 24, got %d", eth3.IpAddress[0].PrefixLength)
+		if r101Eth3.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r101Eth3 prefix length to be 24, got %d", r101Eth3.IpAddress[0].PrefixLength)
 		}
 	}
-	if eth3.Area != "0.0.0.0" {
-		t.Errorf("Expected eth3 to be in Area '0.0.0.0', got '%s'", eth3.Area)
+	if r101Eth3.Area != "0.0.0.0" {
+		t.Errorf("Expected r101Eth3 to be in Area '0.0.0.0', got '%s'", r101Eth3.Area)
 	}
-	if eth3.Passive {
-		t.Error("Expected eth3 to be non-passive")
+	if r101Eth3.Passive {
+		t.Error("Expected r101Eth3 to be non-passive")
 	}
 
-	// eth4
-	eth4 := config.Interfaces[3]
-	if eth4.Name != "eth4" {
-		t.Errorf("Expected eth4 name to be 'eth4', got '%s'", eth4.Name)
+	// r101Eth4
+	r101Eth4 := configR101.Interfaces[3]
+	if r101Eth4.Name != "eth4" {
+		t.Errorf("Expected r101Eth4 name to be 'r101Eth4', got '%s'", r101Eth4.Name)
 	}
-	if len(eth4.IpAddress) == 0 {
-		t.Error("Expected eth4 to have at least one IP address")
+	if len(r101Eth4.IpAddress) == 0 {
+		t.Error("Expected r101Eth4 to have at least one IP address")
 	} else {
-		if eth4.IpAddress[0].IpAddress != "10.0.0.1" {
-			t.Errorf("Expected eth4 IP to be 10.0.0.1, got '%s'", eth4.IpAddress[0].IpAddress)
+		if r101Eth4.IpAddress[0].IpAddress != "10.0.0.1" {
+			t.Errorf("Expected r101Eth4 IP to be 10.0.0.1, got '%s'", r101Eth4.IpAddress[0].IpAddress)
 		}
-		if eth4.IpAddress[0].PrefixLength != 23 {
-			t.Errorf("Expected eth4 prefix length to be 23, got %d", eth4.IpAddress[0].PrefixLength)
+		if r101Eth4.IpAddress[0].PrefixLength != 23 {
+			t.Errorf("Expected r101Eth4 prefix length to be 23, got %d", r101Eth4.IpAddress[0].PrefixLength)
 		}
 	}
-	if eth4.Area != "0.0.0.0" {
-		t.Errorf("Expected eth4 to be in Area '0.0.0.0', got '%s'", eth4.Area)
+	if r101Eth4.Area != "0.0.0.0" {
+		t.Errorf("Expected r101Eth4 to be in Area '0.0.0.0', got '%s'", r101Eth4.Area)
 	}
-	if !eth4.Passive {
-		t.Error("Expected eth4 to be passive")
+	if !r101Eth4.Passive {
+		t.Error("Expected r101Eth4 to be passive")
 	}
 
-	// eth11
-	eth11 := config.Interfaces[10]
-	if eth11.Name != "eth11" {
-		t.Errorf("Expected eth11 name to be 'eth11', got '%s'", eth11.Name)
+	// r101Eth11
+	r101Eth11 := configR101.Interfaces[10]
+	if r101Eth11.Name != "eth11" {
+		t.Errorf("Expected r101Eth11 name to be 'r101Eth11', got '%s'", r101Eth11.Name)
 	}
-	if len(eth11.IpAddress) == 0 {
-		t.Error("Expected eth11 to have at least one IP address")
+	if len(r101Eth11.IpAddress) == 0 {
+		t.Error("Expected r101Eth11 to have at least one IP address")
 	} else {
-		if eth11.IpAddress[0].IpAddress != "10.0.19.1" {
-			t.Errorf("Expected eth11 IP to be 10.0.19.1, got '%s'", eth11.IpAddress[0].IpAddress)
+		if r101Eth11.IpAddress[0].IpAddress != "10.0.19.1" {
+			t.Errorf("Expected r101Eth11 IP to be 10.0.19.1, got '%s'", r101Eth11.IpAddress[0].IpAddress)
 		}
-		if eth11.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected eth11 prefix length to be 24, got %d", eth11.IpAddress[0].PrefixLength)
+		if r101Eth11.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r101Eth11 prefix length to be 24, got %d", r101Eth11.IpAddress[0].PrefixLength)
 		}
 	}
-	if eth11.Area != "0.0.0.0" {
-		t.Errorf("Expected eth11 to be in Area '0.0.0.0', got '%s'", eth11.Area)
+	if r101Eth11.Area != "0.0.0.0" {
+		t.Errorf("Expected r101Eth11 to be in Area '0.0.0.0', got '%s'", r101Eth11.Area)
 	}
-	if eth11.Passive {
-		t.Error("Expected eth11 to be non-passive")
+	if r101Eth11.Passive {
+		t.Error("Expected r101Eth11 to be non-passive")
 	}
 
 	// lo
-	lo := config.Interfaces[11]
-	if lo.Name != "lo" {
-		t.Errorf("Expected lo interface name to be 'lo', got '%s'", lo.Name)
+	r101Lo := configR101.Interfaces[11]
+	if r101Lo.Name != "lo" {
+		t.Errorf("Expected r101Lo interface name to be 'r101Lo', got '%s'", r101Lo.Name)
 	}
-	if len(lo.IpAddress) == 0 {
-		t.Error("Expected lo to have at least one IP address")
+	if len(r101Lo.IpAddress) == 0 {
+		t.Error("Expected r101Lo to have at least one IP address")
 	} else {
-		if lo.IpAddress[0].IpAddress != "65.0.1.1" {
-			t.Errorf("Expected lo IP to be 65.0.1.1, got '%s'", lo.IpAddress[0].IpAddress)
+		if r101Lo.IpAddress[0].IpAddress != "65.0.1.1" {
+			t.Errorf("Expected r101Lo IP to be 65.0.1.1, got '%s'", r101Lo.IpAddress[0].IpAddress)
 		}
-		if lo.IpAddress[0].PrefixLength != 32 {
-			t.Errorf("Expected lo prefix length to be 32, got %d", lo.IpAddress[0].PrefixLength)
+		if r101Lo.IpAddress[0].PrefixLength != 32 {
+			t.Errorf("Expected r101Lo prefix length to be 32, got %d", r101Lo.IpAddress[0].PrefixLength)
 		}
 	}
-	if !lo.Passive {
-		t.Error("Expected lo to be passive")
+	if !r101Lo.Passive {
+		t.Error("Expected r101Lo to be passive")
 	}
-	// ^=========== INTERFACE TEST ==========^
 
-	// v=========== STATIC ROUTE TEST ==========v
-	staticRoutes := config.StaticRoutes
-	if len(staticRoutes) != 1 {
-		t.Errorf("Expected 1 static route, got %d", len(staticRoutes))
+	// ========== r103 ==========
+	if len(configR103.Interfaces) != 4 {
+		t.Errorf("Expected 4 interfaces, got %d", len(configR103.Interfaces))
 	}
-	if staticRoutes[0].IpPrefix.IpAddress != "192.168.1.0" {
-		t.Errorf("Expected static route one to have 192.168.1.0, got '%s'", staticRoutes[0].IpPrefix)
-	}
-	if staticRoutes[0].IpPrefix.PrefixLength != 24 {
-		t.Errorf("Expected static route Prefix one to be 24, got %d", staticRoutes[0].IpPrefix.PrefixLength)
-	}
-	if staticRoutes[0].NextHop != "192.168.100.91" {
-		t.Errorf("Expected Next Hop to be 192.168.100.91, got '%s'", staticRoutes[0].NextHop)
-	}
-	// ^=========== STATIC ROUTE TEST ==========^
 
-	// v=========== OSPF CONFIG TEST ==========v
-	ospfConfig := config.OspfConfig
-	if ospfConfig.RouterId != "65.0.1.1" {
-		t.Errorf("Expected ospf router id 65.0.1.1, got '%s'", ospfConfig.RouterId)
+	// r103Eth1
+	r103Eth1 := configR103.Interfaces[0]
+	if r103Eth1.Name != "eth1" {
+		t.Errorf("Expected first interface name to be 'r103Eth1', got '%s'", r103Eth1.Name)
 	}
-	if ospfConfig.Redistribution[0].Type != "static" {
-		t.Errorf("Expected ospf redistribution type static, got '%s'", ospfConfig.Redistribution[0].Type)
+	if len(r103Eth1.IpAddress) == 3 {
+		t.Errorf("Expected r103Eth1 to have 3 IP address, got '%v'", len(r103Eth1.IpAddress))
+	} else {
+		if r103Eth1.IpAddress[0].IpAddress != "10.0.13.3" {
+			t.Errorf("Expected r103Eth1 IP1 to be 10.0.13.3, got '%s'", r103Eth1.IpAddress[0].IpAddress)
+		}
+		if r103Eth1.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r103Eth1 prefix length to be 24, got %d", r103Eth1.IpAddress[0].PrefixLength)
+		}
+		//if r103Eth1.IpAddress[1].IpAddress != "10.0.13.33" {
+		//	t.Errorf("Expected r103Eth1 IP2 to be 10.0.13.33, got '%s'", r103Eth1.IpAddress[1].IpAddress)
+		//}
+		//if r103Eth1.IpAddress[2].IpAddress != "10.0.13.30" {
+		//	t.Errorf("Expected r103Eth1 IP3 to be 10.0.13.30, got '%s'", r103Eth1.IpAddress[2].IpAddress)
+		//}
 	}
-	if ospfConfig.Redistribution[0].Metric != "1" {
-		t.Errorf("Expected Metric to be '1', got '%s'", ospfConfig.Redistribution[0].Metric)
+	if r103Eth1.Area != "0.0.0.0" {
+		t.Errorf("Expected r103Eth1 to be in Area '0.0.0.0', got '%s'", r103Eth1.Area)
 	}
-	if ospfConfig.Redistribution[0].RouteMap != "lanroutes" {
-		t.Errorf("Expected RouteMap to be 'lanroutes', got '%s'", ospfConfig.Redistribution[0].RouteMap)
+	if r103Eth1.Passive {
+		t.Error("Expected r103Eth1 to be non-passive")
 	}
-	if ospfConfig.Redistribution[1].Type != "bgp" {
-		t.Errorf("Expected Redistribution type bgp, got '%s'", ospfConfig.Redistribution[1].Type)
-	}
-	if ospfConfig.Redistribution[1].Metric != "1" {
-		t.Errorf("Expected Metric to be '1', got '%s'", ospfConfig.Redistribution[1].Metric)
-	}
-	if ospfConfig.Redistribution[1].RouteMap != "" {
-		t.Errorf("Expected RouteMap to be empty, got '%s'", ospfConfig.Redistribution[1].RouteMap)
-	}
-	// ^=========== OSPF CONFIG TEST ==========^
 
-	// v=========== ACCESS LIST TEST ==========v
-	accessList := config.AccessList
+	// r103Eth2
+	r103Eth2 := configR103.Interfaces[1]
+	if r103Eth2.Name != "eth2" {
+		t.Errorf("Expected second interface name to be 'eth2', got '%s'", r103Eth2.Name)
+	}
+	if len(r103Eth2.IpAddress) == 0 {
+		t.Error("Expected r103Eth2 to have at least one IP address")
+	} else {
+		if r103Eth2.IpAddress[0].IpAddress != "10.0.23.3" {
+			t.Errorf("Expected r103Eth2 IP to be 10.0.23.3, got '%s'", r103Eth2.IpAddress[0].IpAddress)
+		}
+		if r103Eth2.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r103Eth2 prefix length to be 24, got %d", r103Eth2.IpAddress[0].PrefixLength)
+		}
+	}
+	if r103Eth2.Area != "0.0.0.0" {
+		t.Errorf("Expected r103Eth2 to be in Area '0.0.0.0', got '%s'", r103Eth2.Area)
+	}
+	if r103Eth2.Passive {
+		t.Error("Expected r103Eth2 to be non-passive")
+	}
+
+	// r103Eth3
+	r103Eth3 := configR103.Interfaces[2]
+	if r103Eth3.Name != "eth3" {
+		t.Errorf("Expected second interface name to be 'eth3', got '%s'", r103Eth3.Name)
+	}
+	if len(r103Eth3.IpAddress) == 0 {
+		t.Error("Expected r103Eth3 to have at least one IP address")
+	} else {
+		if r103Eth3.IpAddress[0].IpAddress != "10.2.31.3" {
+			t.Errorf("Expected r103Eth3 IP to be 10.2.31.3, got '%s'", r103Eth3.IpAddress[0].IpAddress)
+		}
+		if r103Eth3.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r103Eth3 prefix length to be 24, got %d", r103Eth3.IpAddress[0].PrefixLength)
+		}
+	}
+	if r103Eth3.Area != "0.0.0.2" {
+		t.Errorf("Expected r103Eth3 to be in Area '0.0.0.0', got '%s'", r103Eth3.Area)
+	}
+	if r103Eth3.Passive {
+		t.Error("Expected r103Eth3 to be non-passive")
+	}
+
+	// ========== r112 ==========
+	if len(configR112.Interfaces) != 3 {
+		t.Errorf("Expected 3 interfaces, got %d", len(configR112.Interfaces))
+	}
+
+	// r112Eth1
+	r112Eth1 := configR112.Interfaces[0]
+	if r112Eth1.Name != "eth1" {
+		t.Errorf("Expected first interface name to be 'eth1', got '%s'", r112Eth1.Name)
+	}
+	if len(r112Eth1.IpAddress) != 1 {
+		t.Errorf("Expected r112Eth1 to have 1 IP address, got '%v'", len(r112Eth1.IpAddress))
+	} else {
+		if r112Eth1.IpAddress[0].IpAddress != "10.1.12.12" {
+			t.Errorf("Expected r112Eth1 IP1 to be 10.1.12.12, got '%s'", r112Eth1.IpAddress[0].IpAddress)
+		}
+		if r112Eth1.IpAddress[0].PrefixLength != 24 {
+			t.Errorf("Expected r112Eth1 prefix length to be 24, got %d", r112Eth1.IpAddress[0].PrefixLength)
+		}
+	}
+	if r112Eth1.Area != "0.0.0.1" {
+		t.Errorf("Expected r112Eth1 to be in Area '0.0.0.1', got '%s'", r112Eth1.Area)
+	}
+	if r112Eth1.Passive {
+		t.Error("Expected r112Eth1 to be non-passive")
+	}
+}
+
+func testStaticRoutes(
+	t *testing.T,
+	configR101 *frrProto.StaticFRRConfiguration,
+	configR103 *frrProto.StaticFRRConfiguration,
+	configR112 *frrProto.StaticFRRConfiguration,
+) {
+	// ========== r101 ==========
+	staticRoutesR101 := configR101.StaticRoutes
+	if len(staticRoutesR101) != 3 {
+		t.Errorf("Expected 1 static route, got %d", len(staticRoutesR101))
+	}
+	// static route one
+	if staticRoutesR101[0].IpPrefix.IpAddress != "192.168.1.0" {
+		t.Errorf("Expected static route one to have 192.168.1.0, got '%s'", staticRoutesR101[0].IpPrefix)
+	}
+	if staticRoutesR101[0].IpPrefix.PrefixLength != 24 {
+		t.Errorf("Expected static route Prefix one to be 24, got %d", staticRoutesR101[0].IpPrefix.PrefixLength)
+	}
+	if staticRoutesR101[0].NextHop != "192.168.100.91" {
+		t.Errorf("Expected Next Hop to be 192.168.100.91, got '%s'", staticRoutesR101[0].NextHop)
+	}
+	// static route two
+	if staticRoutesR101[1].IpPrefix.IpAddress != "192.168.2.0" {
+		t.Errorf("Expected static route one to have 192.168.2.0, got '%s'", staticRoutesR101[1].IpPrefix)
+	}
+	if staticRoutesR101[1].IpPrefix.PrefixLength != 23 {
+		t.Errorf("Expected static route Prefix one to be 23, got %d", staticRoutesR101[1].IpPrefix.PrefixLength)
+	}
+	if staticRoutesR101[1].NextHop != "192.168.102.91" {
+		t.Errorf("Expected Next Hop to be 192.168.102.91, got '%s'", staticRoutesR101[1].NextHop)
+	}
+	// static route three
+	if staticRoutesR101[2].IpPrefix.IpAddress != "192.168.4.0" {
+		t.Errorf("Expected static route one to have 192.168.4.0, got '%s'", staticRoutesR101[2].IpPrefix)
+	}
+	if staticRoutesR101[2].IpPrefix.PrefixLength != 22 {
+		t.Errorf("Expected static route Prefix one to be 22, got %d", staticRoutesR101[2].IpPrefix.PrefixLength)
+	}
+	if staticRoutesR101[2].NextHop != "192.168.104.91" {
+		t.Errorf("Expected Next Hop to be 192.168.104.91, got '%s'", staticRoutesR101[2].NextHop)
+	}
+}
+
+func testOSPFConfig(
+	t *testing.T,
+	configR101 *frrProto.StaticFRRConfiguration,
+	configR103 *frrProto.StaticFRRConfiguration,
+	configR112 *frrProto.StaticFRRConfiguration,
+) {
+	// ========== r101 ==========
+	ospfConfigR101 := configR101.OspfConfig
+	if ospfConfigR101.RouterId != "65.0.1.1" {
+		t.Errorf("Expected ospf router id 65.0.1.1, got '%s'", ospfConfigR101.RouterId)
+	}
+	if ospfConfigR101.Redistribution[0].Type != "static" {
+		t.Errorf("Expected ospf redistribution type static, got '%s'", ospfConfigR101.Redistribution[0].Type)
+	}
+	if ospfConfigR101.Redistribution[0].Metric != "1" {
+		t.Errorf("Expected Metric to be '1', got '%s'", ospfConfigR101.Redistribution[0].Metric)
+	}
+	if ospfConfigR101.Redistribution[0].RouteMap != "lanroutes" {
+		t.Errorf("Expected RouteMap to be 'lanroutes', got '%s'", ospfConfigR101.Redistribution[0].RouteMap)
+	}
+	if ospfConfigR101.Redistribution[1].Type != "bgp" {
+		t.Errorf("Expected Redistribution type bgp, got '%s'", ospfConfigR101.Redistribution[1].Type)
+	}
+	if ospfConfigR101.Redistribution[1].Metric != "1" {
+		t.Errorf("Expected Metric to be '1', got '%s'", ospfConfigR101.Redistribution[1].Metric)
+	}
+	if ospfConfigR101.Redistribution[1].RouteMap != "" {
+		t.Errorf("Expected RouteMap to be empty, got '%s'", ospfConfigR101.Redistribution[1].RouteMap)
+	}
+	// ========== r103 ==========
+	ospfConfigR103 := configR103.OspfConfig
+	if ospfConfigR103.RouterId != "65.0.1.3" {
+		t.Errorf("Expected ospf router id 65.0.1.3, got '%s'", ospfConfigR103.RouterId)
+	}
+	if ospfConfigR103.Area[0].Name != "0.0.0.2" {
+		t.Errorf("Expected ospf area type transit, got '%s'", ospfConfigR103.Area[0].Type)
+	}
+	if ospfConfigR103.Area[0].Type != "transit" {
+		t.Errorf("Expected ospf area type transit, got '%s'", ospfConfigR103.Area[0].Type)
+	}
+	if ospfConfigR103.VirtualLinkNeighbor != "65.0.1.22" {
+		t.Errorf("Expected ospf virtual link neighbor 65.0.1.22, got '%s'", ospfConfigR103.VirtualLinkNeighbor)
+	}
+
+	// ========== r112 ==========
+	ospfConfigR112 := configR112.OspfConfig
+	if ospfConfigR112.RouterId != "65.0.1.12" {
+		t.Errorf("Expected ospf router id 65.0.1.12, got '%s'", ospfConfigR112.RouterId)
+	}
+	if ospfConfigR112.Area[0].Name != "0.0.0.1" {
+		t.Errorf("Expected ospf area type transit, got '%s'", ospfConfigR112.Area[0].Type)
+	}
+	if ospfConfigR112.Area[0].Type != "nssa" {
+		t.Errorf("Expected ospf area type nssa, got '%s'", ospfConfigR112.Area[0].Type)
+	}
+	if ospfConfigR112.Redistribution[0].Type != "bgp" {
+		t.Errorf("Expected Redistribution type bgp, got '%s'", ospfConfigR112.Redistribution[0].Type)
+	}
+	if ospfConfigR112.Redistribution[0].Metric != "1" {
+		t.Errorf("Expected Metric to be '1', got '%s'", ospfConfigR112.Redistribution[0].Metric)
+	}
+	if ospfConfigR112.Redistribution[0].RouteMap != "" {
+		t.Errorf("Expected RouteMap to be empty, got '%s'", ospfConfigR112.Redistribution[0].RouteMap)
+	}
+}
+
+func testAccessList(
+	t *testing.T,
+	configR101 *frrProto.StaticFRRConfiguration,
+	configR103 *frrProto.StaticFRRConfiguration,
+	configR112 *frrProto.StaticFRRConfiguration,
+) {
+	// ========== r101 ==========
+	accessList := configR101.AccessList
 	if len(accessList) != 2 {
 		t.Errorf("Expected 2 access list, got %d", len(accessList))
 	}
-	termList, ok := config.AccessList["term"]
+	termList, ok := configR101.AccessList["term"]
 	if !ok {
 		t.Fatalf("Access list 'term' not found")
 	}
@@ -234,7 +457,7 @@ func TestParseStaticFRRConfig(t *testing.T) {
 		t.Errorf("Expected term item 2 to be 'any', got: %+v", termItem2.Destination)
 	}
 
-	localsiteList, ok := config.AccessList["localsite"]
+	localsiteList, ok := configR101.AccessList["localsite"]
 	if !ok {
 		t.Fatalf("Access list 'localsite' not found")
 	}
@@ -253,10 +476,15 @@ func TestParseStaticFRRConfig(t *testing.T) {
 			t.Errorf("Expected 192.168.1.0/24, got %s/%d", prefix.IpPrefix.IpAddress, prefix.IpPrefix.PrefixLength)
 		}
 	}
-	// ^=========== ACCESS LIST TEST ==========^
+}
 
-	// v=========== ROUTE MAP TEST ==========v
-	routeMap := config.RouteMap
+func testRouteMap(
+	t *testing.T,
+	configR101 *frrProto.StaticFRRConfiguration,
+	configR103 *frrProto.StaticFRRConfiguration,
+	configR112 *frrProto.StaticFRRConfiguration,
+) {
+	routeMap := configR101.RouteMap
 	if len(routeMap) != 1 {
 		t.Errorf("Expected 1 route map, got %d", len(routeMap))
 	}
@@ -274,8 +502,9 @@ func TestParseStaticFRRConfig(t *testing.T) {
 		t.Errorf("Expected match 'ip address' with access list 'localsite', got match '%s' and access list '%s'",
 			rm.Match, rm.AccessList)
 	}
-	// ^=========== ROUTE MAP TEST ==========^
 }
+
+// ^^^^^^^^^^ HELPERS FOR TestParseStaticFRRConfig ^^^^^^^^^^
 
 func TestParseConfigErrors(t *testing.T) {
 	// Test nonexistent file

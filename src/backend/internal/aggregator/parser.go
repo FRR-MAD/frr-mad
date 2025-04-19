@@ -139,10 +139,10 @@ func parseMetadataLine(config *frrProto.StaticFRRConfiguration, line string) boo
 	case strings.HasPrefix(line, "frr version "):
 		config.FrrVersion = parts[2]
 		return true
-	case line == "no ipv6 forwarding":
+	case line == "no ipv6 forwarding": // todo: add to tests
 		config.Ipv6Forwarding = false // todo: check if default value is true on router
 		return true
-	case line == "no ipv4 forwarding":
+	case line == "no ipv4 forwarding": // todo: add to tests
 		config.Ipv4Forwarding = false
 		return true
 	case line == "service advanced-vty":
@@ -334,13 +334,15 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			}
 			parts := strings.Fields(line)
 			area := &frrProto.Area{Name: parts[1]}
-			config.OspfConfig.Area = append(config.OspfConfig.Area, area)
+			area.Type = parts[2]
 			for i, part := range parts {
 				if part == "virtual-link" && i+1 < len(parts) {
 					area.Type = "transit"
 					config.OspfConfig.VirtualLinkNeighbor = parts[i+1]
+					break
 				}
 			}
+			config.OspfConfig.Area = append(config.OspfConfig.Area, area)
 		}
 	}
 }
