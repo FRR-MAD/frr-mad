@@ -2,22 +2,40 @@ package ospfMonitoring
 
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Model defines the state for the dashboard page.
 type Model struct {
-	title      string
-	subTabs    []string
-	windowSize *common.WindowSize
+	title         string
+	subTabs       []string
+	runningConfig []string
+	windowSize    *common.WindowSize
+	viewport      viewport.Model
 }
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize) *Model {
+	boxWidthForOne := windowSize.Width - 8
+	if boxWidthForOne < 20 {
+		boxWidthForOne = 20
+	}
+	// subtract tab row, footer, and border heights.
+	outputHeight := windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
+
+	// Create the viewport with the desired dimensions.
+	vp := viewport.New(boxWidthForOne, outputHeight)
+
 	return &Model{
-		title:      "OSPF Monitoring",
-		subTabs:    []string{"OSPF Tab 1", "OSPF Tab 2", "OSPF Tab 3"},
-		windowSize: windowSize,
+		title: "2 - OSPF Monitoring",
+		// '9 - Running Config' has to remain last in the list
+		// because the key '9' is mapped to the last element of the list.
+		subTabs:       []string{"1 - Advertisement", "2 - TBD", "3 - TBD", "9 - Running Config"},
+		runningConfig: []string{"Fetching running config..."},
+		windowSize:    windowSize,
+		viewport:      vp,
 	}
 }
 
@@ -34,7 +52,8 @@ func (m *Model) GetSubTabsLength() int {
 
 func (m *Model) GetFooterOptions() common.FooterOption {
 	keyBoardOptions := []string{
-		"'r': refresh OSPF monitoring",
+		"'r': refresh",
+		"'up' / 'down': scroll",
 		"'e': export OSPF data",
 	}
 	return common.FooterOption{
@@ -43,7 +62,8 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 	}
 }
 
-// Init returns the initial command (none in this case).
 func (m *Model) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		common.FetchRunningConfig(),
+	)
 }

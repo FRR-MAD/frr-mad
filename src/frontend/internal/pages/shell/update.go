@@ -29,14 +29,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ClearOutput()
 		case "enter":
 			if currentSubTabLocal == 0 {
-				bashOutput, err := common.RunCommand("bash", m.bashInput, 5*time.Second)
+				bashOutput, err := common.RunCustomCommand("bash", m.bashInput, 5*time.Second)
 				if err != nil {
 					m.bashOutput = fmt.Sprintf("Error: %v", err)
 				} else {
 					m.bashOutput = bashOutput
 				}
 			} else if currentSubTabLocal == 1 {
-				vtyshOutput, err := common.RunCommand("vtysh", m.vtyshInput, 5*time.Second)
+				vtyshOutput, err := common.RunCustomCommand("vtysh", m.vtyshInput, 5*time.Second)
 				if err != nil {
 					m.vtyshOutput = fmt.Sprintf("Error: %v", err)
 				} else {

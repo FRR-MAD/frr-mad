@@ -32,7 +32,7 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		title:       "Shell",
+		title:       "3 - Shell",
 		subTabs:     []string{"bash", "vtysh"},
 		windowSize:  windowSize,
 		activeShell: "",

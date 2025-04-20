@@ -303,6 +303,7 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 
 	config := &frrProto.StaticFRRConfiguration{}
 	scanner := bufio.NewScanner(file)
+
 	var currentInterfacePointer *frrProto.Interface
 
 	for scanner.Scan() {
@@ -311,135 +312,45 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 			continue
 		}
 
-		switch {
-		case strings.HasPrefix(line, "hostname"):
-			parts := strings.Fields(line)
-			config.Hostname = parts[1]
-		case strings.HasPrefix(line, "frr version"):
-			parts := strings.Fields(line)
-			config.FrrVersion = parts[2]
-		case strings.HasPrefix(line, "no ipv6 forwarding"):
-			config.Ipv6Forwarding = false
-			// todo: r101:~# cat /proc/sys/net/ipv6/conf/all/forwarding
-		case strings.HasPrefix(line, "no ipv4 forwarding"):
-			config.Ipv4Forwarding = false
-			// todo: r101:~# cat /proc/sys/net/ipv4/conf/all/forwarding
-		case strings.HasPrefix(line, "service advanced-vty"):
-			config.ServiceAdvancedVty = true
+		if handled := parseMetadataLine(config, line); handled {
+			continue
+		}
 
-		case strings.HasPrefix(line, "interface "):
+		if newInterface := parseInterfaceLine(line); newInterface != nil {
+			// start of a new block: flush previous
 			if currentInterfacePointer != nil {
 				config.Interfaces = append(config.Interfaces, currentInterfacePointer)
 			}
-			parts := strings.Fields(line)
-			currentInterfacePointer = &frrProto.Interface{Name: parts[1]}
-		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip address "):
-			parts := strings.Fields(line)
-			ip, ipNet, err := net.ParseCIDR(parts[2])
-			if err != nil || ipNet == nil {
-				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
-				break
-			}
-			prefixLength, _ := ipNet.Mask.Size()
-			currentInterfacePointer.IpAddress = append(currentInterfacePointer.IpAddress, &frrProto.IPPrefix{
-				IpAddress:    ip.String(),
-				PrefixLength: uint32(prefixLength),
-			})
-		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip ospf area "):
-			parts := strings.Fields(line)
-			currentInterfacePointer.Area = parts[3]
-		case currentInterfacePointer != nil && strings.HasPrefix(line, "ip ospf passive"):
-			currentInterfacePointer.Passive = true
-		//case currentInterfacePointer != nil && strings.HasPrefix(line, "ip ospf cost "):
-		//	parts := strings.Fields(line)
-		//	fmt.Sscanf(parts[3], "%d", &currentInterfacePointer.Cost)
+			currentInterfacePointer = newInterface
+			continue
+		}
+		if currentInterfacePointer != nil && parseInterfaceSubLine(currentInterfacePointer, line) {
+			continue
+		}
 
-		case strings.HasPrefix(line, "ip route "):
-			parts := strings.Fields(line)
-			ip, ipNet, _ := net.ParseCIDR(parts[2])
-			if err != nil || ipNet == nil {
-				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
-				break
-			}
-			prefixLength, _ := ipNet.Mask.Size()
-			nextHopIP := parts[3]
-			config.StaticRoutes = append(config.StaticRoutes, &frrProto.StaticRoute{
-				IpPrefix: &frrProto.IPPrefix{
-					IpAddress:    ip.String(),
-					PrefixLength: uint32(prefixLength),
-				},
-				NextHop: nextHopIP,
-			})
+		if handled := parseStaticRouteLine(config, line); handled {
+			continue
+		}
 
-		case strings.HasPrefix(line, "router ospf"):
-			parseOSPFGlobalConfig(scanner, config)
+		if strings.HasPrefix(line, "router ospf") {
+			parseRouterOSPFConfig(scanner, config)
+			continue
+		}
 
-		case strings.HasPrefix(line, "access-list "):
-			if config.AccessList == nil {
-				config.AccessList = make(map[string]*frrProto.AccessList)
-			}
-			parts := strings.Fields(line)
-			accessListName := parts[1]
-			seq, _ := strconv.Atoi(parts[3])
-			action := parts[4]
-			ip, ipNet, _ := net.ParseCIDR(parts[5])
-			if err != nil || ipNet == nil {
-				log.Printf("invalid CIDR: %q on line: %q (err: %v)", parts[2], line, err)
-				break
-			}
-			prefixLength, _ := ipNet.Mask.Size()
-			accessListItem := &frrProto.AccessListItem{
-				Sequence:      uint32(seq),
-				AccessControl: action,
-				Destination: &frrProto.AccessListItem_IpPrefix{
-					IpPrefix: &frrProto.IPPrefix{
-						IpAddress:    ip.String(),
-						PrefixLength: uint32(prefixLength),
-					},
-				},
-			}
+		if handled := parseAccessListLine(config, line); handled {
+			continue
+		}
 
-			if _, exists := config.AccessList[accessListName]; !exists {
-				config.AccessList[accessListName] = &frrProto.AccessList{}
-			}
-			config.AccessList[accessListName].AccessListItems = append(config.AccessList[accessListName].AccessListItems, accessListItem)
+		if handled := parseRouteMapLine(config, line); handled {
+			continue
+		}
 
-		case strings.HasPrefix(line, "route-map "):
-			if config.RouteMap == nil {
-				config.RouteMap = make(map[string]*frrProto.RouteMap)
-			}
-			parts := strings.Fields(line)
-			if len(parts) < 4 {
-				log.Printf("invalid route-map line: %q", line)
-				break
-			}
-			routeMapName := parts[1]
-			action := parts[2]
-			sequence := parts[3]
-			config.RouteMap[routeMapName] = &frrProto.RouteMap{
-				Permit:   action == "permit",
-				Sequence: sequence,
-			}
-		case strings.HasPrefix(line, "match ip address "):
-			parts := strings.Fields(line)
-			if len(parts) < 4 {
-				log.Printf("invalid match line in route-map: %q", line)
-				break
-			}
-			accessListName := parts[3]
-			if len(config.RouteMap) > 0 {
-				for _, rm := range config.RouteMap {
-					if rm.AccessList == "" {
-						rm.Match = "ip address"
-						rm.AccessList = accessListName
-						break
-					}
-				}
-			}
-
+		if handled := parseRouteMapMatchLine(config, line); handled {
+			continue
 		}
 	}
 
+	// flush last Interface block
 	if currentInterfacePointer != nil {
 		config.Interfaces = append(config.Interfaces, currentInterfacePointer)
 	}
@@ -447,7 +358,160 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 	return config, nil
 }
 
-func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRConfiguration) {
+func parseMetadataLine(config *frrProto.StaticFRRConfiguration, line string) bool {
+	parts := strings.Fields(line)
+	switch {
+	case strings.HasPrefix(line, "hostname "):
+		config.Hostname = parts[1]
+		return true
+	case strings.HasPrefix(line, "frr version "):
+		config.FrrVersion = parts[2]
+		return true
+	case line == "no ipv6 forwarding": // todo: add to tests
+		config.Ipv6Forwarding = false // todo: check if default value is true on router
+		return true
+	case line == "no ipv4 forwarding": // todo: add to tests
+		config.Ipv4Forwarding = false
+		return true
+	case line == "service advanced-vty":
+		config.ServiceAdvancedVty = true
+		return true
+	}
+	return false
+}
+
+func parseInterfaceLine(line string) *frrProto.Interface {
+	if !strings.HasPrefix(line, "interface ") {
+		return nil
+	}
+	parts := strings.Fields(line)
+	return &frrProto.Interface{Name: parts[1]}
+}
+
+func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line string) bool {
+	switch {
+	case strings.HasPrefix(line, "ip address "):
+		parts := strings.Fields(line)
+		ip, ipNet, err := net.ParseCIDR(parts[2])
+		if err != nil || ipNet == nil {
+			log.Printf("bad CIDR %q: %v", parts[2], err)
+			return true
+		}
+		prefixLength, _ := ipNet.Mask.Size()
+		currentInterfacePointer.IpAddress = append(currentInterfacePointer.IpAddress, &frrProto.IPPrefix{
+			IpAddress:    ip.String(),
+			PrefixLength: uint32(prefixLength),
+		})
+		return true
+	case strings.HasPrefix(line, "ip ospf area "):
+		currentInterfacePointer.Area = strings.Fields(line)[3]
+		return true
+	case line == "ip ospf passive":
+		currentInterfacePointer.Passive = true
+		return true
+	case line == "exit":
+		return true
+	}
+	return false
+}
+
+func parseStaticRouteLine(config *frrProto.StaticFRRConfiguration, line string) bool {
+	if !strings.HasPrefix(line, "ip route ") {
+		return false
+	}
+	parts := strings.Fields(line)
+	ip, ipNet, err := net.ParseCIDR(parts[2])
+	if err != nil || ipNet == nil {
+		log.Printf("bad static route CIDR %q", parts[2])
+		return true
+	}
+	prefixLength, _ := ipNet.Mask.Size()
+	config.StaticRoutes = append(config.StaticRoutes, &frrProto.StaticRoute{
+		IpPrefix: &frrProto.IPPrefix{
+			IpAddress:    ip.String(),
+			PrefixLength: uint32(prefixLength),
+		},
+		NextHop: parts[3],
+	})
+	return true
+}
+
+func parseAccessListLine(config *frrProto.StaticFRRConfiguration, line string) bool {
+	if !strings.HasPrefix(line, "access-list ") {
+		return false
+	}
+	parts := strings.Fields(line)
+	if len(parts) < 6 {
+		log.Printf("short access-list line: %q", line)
+		return true
+	}
+	name, sequence, action, target := parts[1], parts[3], parts[4], parts[5]
+	seq, _ := strconv.Atoi(sequence)
+
+	item := &frrProto.AccessListItem{
+		Sequence:      uint32(seq),
+		AccessControl: action,
+	}
+	if target == "any" {
+		item.Destination = &frrProto.AccessListItem_Any{Any: true}
+	} else if ip, ipnet, err := net.ParseCIDR(target); err == nil && ipnet != nil {
+		prefixLength, _ := ipnet.Mask.Size()
+		item.Destination = &frrProto.AccessListItem_IpPrefix{
+			IpPrefix: &frrProto.IPPrefix{IpAddress: ip.String(),
+				PrefixLength: uint32(prefixLength),
+			},
+		}
+	} else {
+		log.Printf("bad CIDR %q in ACL %q", target, line)
+	}
+
+	if config.AccessList == nil {
+		config.AccessList = make(map[string]*frrProto.AccessList)
+	}
+	if _, ok := config.AccessList[name]; !ok {
+		config.AccessList[name] = &frrProto.AccessList{}
+	}
+	config.AccessList[name].AccessListItems = append(config.AccessList[name].AccessListItems, item)
+	return true
+}
+
+func parseRouteMapLine(config *frrProto.StaticFRRConfiguration, line string) bool {
+	if !strings.HasPrefix(line, "route-map ") {
+		return false
+	}
+	parts := strings.Fields(line)
+	if len(parts) < 4 {
+		log.Printf("short route-map line: %q", line)
+		return true
+	}
+	name, action, sequence := parts[1], parts[2], parts[3]
+	if config.RouteMap == nil {
+		config.RouteMap = make(map[string]*frrProto.RouteMap)
+	}
+	config.RouteMap[name] = &frrProto.RouteMap{
+		Permit:   action == "permit",
+		Sequence: sequence,
+	}
+	return true
+}
+
+func parseRouteMapMatchLine(config *frrProto.StaticFRRConfiguration, line string) bool {
+	if !strings.HasPrefix(line, "match ip address ") {
+		return false
+	}
+	parts := strings.Fields(line)
+	accessListName := parts[3]
+	for _, rm := range config.RouteMap {
+		if rm.AccessList == "" {
+			rm.Match = "ip address"
+			rm.AccessList = accessListName
+			break
+		}
+	}
+	return true
+}
+
+func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRConfiguration) {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "exit" {
@@ -498,13 +562,15 @@ func parseOSPFGlobalConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			}
 			parts := strings.Fields(line)
 			area := &frrProto.Area{Name: parts[1]}
-			config.OspfConfig.Area = append(config.OspfConfig.Area, area)
+			area.Type = parts[2]
 			for i, part := range parts {
 				if part == "virtual-link" && i+1 < len(parts) {
 					area.Type = "transit"
 					config.OspfConfig.VirtualLinkNeighbor = parts[i+1]
+					break
 				}
 			}
+			config.OspfConfig.Area = append(config.OspfConfig.Area, area)
 		}
 	}
 }
