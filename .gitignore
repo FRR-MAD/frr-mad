@@ -26,6 +26,5 @@ go.sum
 # folders
 binaries
 proto-binary
-local
 logger
 
