@@ -11,54 +11,282 @@ import (
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
-func ParseOSPFRouterLSA(jsonData []byte) (*OSPFRouterData, error) {
-	var response OSPFRouterData
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse OSPF router LSA json: %w", err)
+// func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
+// 	var response frrProto.OSPFRouterData
+// 	unmarshaler := protojson.UnmarshalOptions{
+// 		DiscardUnknown: true,
+// 	}
+
+// 	if err := unmarshaler.Unmarshal(jsonData, &response); err != nil {
+// 		return nil, fmt.Errorf("failed to parse OSPF router LSA json: %w", err)
+// 	}
+
+// 	return &response, nil
+// }
+
+// func ParseOSPFNetworkLSA(jsonData []byte) (*frrProto.OSPFNetworkData, error) {
+// 	var response frrProto.OSPFNetworkData
+// 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+// 	if err := unmarshaler.Unmarshal(jsonData, &response); err != nil {
+// 		return nil, fmt.Errorf("failed to parse OSPF network LSA json: %w", err)
+// 	}
+// 	return &response, nil
+// }
+
+func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	// Transform the JSON to match protobuf field names
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	// Transform Router Link States
+	if routerLinkStates, ok := jsonMap["Router Link States"].(map[string]interface{}); ok {
+		transformedStates := make(map[string]interface{})
+		for areaID, areaData := range routerLinkStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+
+			for lsaID, lsaData := range areaDataMap {
+				transformedLSAs[lsaID] = transformRouterLSA(lsaData.(map[string]interface{}))
+			}
+
+			transformedStates[areaID] = map[string]interface{}{
+				"lsa_entries": transformedLSAs,
+			}
+		}
+		transformedMap["router_states"] = transformedStates
+	}
+
+	// Convert back to JSON for protobuf unmarshaling
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFRouterData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
-func ParseOSPFNetworkLSA(jsonData []byte) (*OSPFNetworkData, error) {
-	var response OSPFNetworkData
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse OSPF network LSA json: %w", err)
+func ParseOSPFNetworkLSA(jsonData []byte) (*frrProto.OSPFNetworkData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if netStates, ok := jsonMap["Net Link States"].(map[string]interface{}); ok {
+		transformedStates := make(map[string]interface{})
+		for areaID, areaData := range netStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+
+			for lsaID, lsaData := range areaDataMap {
+				transformedLSAs[lsaID] = transformNetworkLSA(lsaData.(map[string]interface{}))
+			}
+
+			transformedStates[areaID] = map[string]interface{}{
+				"lsa_entries": transformedLSAs,
+			}
+		}
+		transformedMap["net_states"] = transformedStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFNetworkData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
-func ParseOSPFSummaryLSA(jsonData []byte) (*OSPFSummaryData, error) {
-	var response OSPFSummaryData
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse OSPF summary LSA json: %w", err)
+func ParseOSPFSummaryLSA(jsonData []byte) (*frrProto.OSPFSummaryData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	// Handle Net States
+	if netStates, ok := jsonMap["Net Link States"].(map[string]interface{}); ok {
+		transformedNetStates := make(map[string]interface{})
+		for areaID, areaData := range netStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+
+			for lsaID, lsaData := range areaDataMap {
+				transformedLSAs[lsaID] = transformNetworkLSA(lsaData.(map[string]interface{}))
+			}
+
+			transformedNetStates[areaID] = map[string]interface{}{
+				"lsa_entries": transformedLSAs,
+			}
+		}
+		transformedMap["net_states"] = transformedNetStates
+	}
+
+	// Handle Summary States
+	if summaryStates, ok := jsonMap["Summary Link States"].(map[string]interface{}); ok {
+		transformedSummaryStates := make(map[string]interface{})
+		for areaID, areaData := range summaryStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+
+			for lsaID, lsaData := range areaDataMap {
+				transformedLSAs[lsaID] = transformSummaryLSA(lsaData.(map[string]interface{}))
+			}
+
+			transformedSummaryStates[areaID] = map[string]interface{}{
+				"lsa_entries": transformedLSAs,
+			}
+		}
+		transformedMap["summary_states"] = transformedSummaryStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFSummaryData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
-func ParseOSPFAsbrSummaryLSA(jsonData []byte) (*OSPFAsbrSummaryData, error) {
-	var response OSPFAsbrSummaryData
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse OSPF asbr summary LSA json: %w", err)
+func ParseOSPFAsbrSummaryLSA(jsonData []byte) (*frrProto.OSPFAsbrSummaryData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if asbrStates, ok := jsonMap["ASBR-Summary Link States"].(map[string]interface{}); ok {
+		transformedStates := make(map[string]interface{})
+		for areaID, areaData := range asbrStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+
+			for lsaID, lsaData := range areaDataMap {
+				transformedLSAs[lsaID] = transformSummaryLSA(lsaData.(map[string]interface{}))
+			}
+
+			transformedStates[areaID] = map[string]interface{}{
+				"lsa_entries": transformedLSAs,
+			}
+		}
+		transformedMap["asbr_summary_states"] = transformedStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFAsbrSummaryData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
-func ParseOSPFExternalLSA(jsonData []byte) (*OSPFExternalData, error) {
-	var response OSPFExternalData
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse OSPF external LSA json: %w", err)
+func ParseOSPFExternalLSA(jsonData []byte) (*frrProto.OSPFExternalData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if extStates, ok := jsonMap["AS External Link States"].(map[string]interface{}); ok {
+		transformedStates := make(map[string]interface{})
+		for lsaID, lsaData := range extStates {
+			transformedStates[lsaID] = transformExternalLSA(lsaData.(map[string]interface{}))
+		}
+		transformedMap["as_external_link_states"] = transformedStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFExternalData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
-func ParseOSPFNssaExternalLSA(jsonData []byte) (*OSPFNssaExternalData, error) {
-	var response OSPFNssaExternalData
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse OSPF nssa external LSA json: %w", err)
+func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if nssaStates, ok := jsonMap["NSSA External Link States"].(map[string]interface{}); ok {
+		transformedStates := make(map[string]interface{})
+		for areaID, areaData := range nssaStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+
+			for lsaID, lsaData := range areaDataMap {
+				transformedLSAs[lsaID] = transformNssaExternalLSA(lsaData.(map[string]interface{}))
+			}
+
+			transformedStates[areaID] = map[string]interface{}{
+				"data": transformedLSAs,
+			}
+		}
+		transformedMap["nssa_external_link_states"] = transformedStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFNssaExternalData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
 func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error) {
@@ -309,4 +537,193 @@ func (c *Collector) ReadConfig() (string, error) {
 	}
 
 	return strings.Join(staticConfig, "\n"), nil
+}
+
+func transformRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	// Map field names from camelCase to snake_case
+	fieldMapping := map[string]string{
+		"lsaAge":            "lsa_age",
+		"options":           "options",
+		"lsaFlags":          "lsa_flags",
+		"flags":             "flags",
+		"asbr":              "asbr",
+		"lsaType":           "lsa_type",
+		"linkStateId":       "link_state_id",
+		"advertisingRouter": "advertising_router",
+		"lsaSeqNumber":      "lsa_seq_number",
+		"checksum":          "checksum",
+		"length":            "length",
+		"numOfLinks":        "num_of_links",
+		"routerLinks":       "router_links",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := lsaData[origKey]; exists {
+			if origKey == "routerLinks" {
+				// Handle router links transformation
+				routerLinks := value.(map[string]interface{})
+				transformedLinks := make(map[string]interface{})
+
+				for linkID, linkData := range routerLinks {
+					transformedLinks[linkID] = transformRouterLink(linkData.(map[string]interface{}))
+				}
+
+				transformed[newKey] = transformedLinks
+			} else {
+				transformed[newKey] = value
+			}
+		}
+	}
+
+	return transformed
+}
+
+func transformRouterLink(linkData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"linkType":                "link_type",
+		"designatedRouterAddress": "designated_router_address",
+		"routerInterfaceAddress":  "router_interface_address",
+		"networkAddress":          "network_address",
+		"networkMask":             "network_mask",
+		"numOfTosMetrics":         "num_of_tos_metrics",
+		"tos0Metric":              "tos0_metric",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := linkData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
+}
+
+func transformNetworkLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"lsaAge":            "lsa_age",
+		"options":           "options",
+		"lsaFlags":          "lsa_flags",
+		"lsaType":           "lsa_type",
+		"linkStateId":       "link_state_id",
+		"advertisingRouter": "advertising_router",
+		"lsaSeqNumber":      "lsa_seq_number",
+		"checksum":          "checksum",
+		"length":            "length",
+		"networkMask":       "network_mask",
+		"attchedRouters":    "attached_routers",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := lsaData[origKey]; exists {
+			if origKey == "attchedRouters" {
+				// Handle attached routers transformation
+				routers := value.(map[string]interface{})
+				transformedRouters := make(map[string]interface{})
+
+				for routerID, routerData := range routers {
+					transformedRouters[routerID] = map[string]interface{}{
+						"attached_router_id": routerData.(map[string]interface{})["attachedRouterId"],
+					}
+				}
+
+				transformed[newKey] = transformedRouters
+			} else {
+				transformed[newKey] = value
+			}
+		}
+	}
+
+	return transformed
+}
+
+func transformSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"lsaAge":            "lsa_age",
+		"options":           "options",
+		"lsaFlags":          "lsa_flags",
+		"lsaType":           "lsa_type",
+		"linkStateId":       "link_state_id",
+		"advertisingRouter": "advertising_router",
+		"lsaSeqNumber":      "lsa_seq_number",
+		"checksum":          "checksum",
+		"length":            "length",
+		"networkMask":       "network_mask",
+		"tos0Metric":        "tos0_metric",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := lsaData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
+}
+
+func transformExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"lsaAge":            "lsa_age",
+		"options":           "options",
+		"lsaFlags":          "lsa_flags",
+		"lsaType":           "lsa_type",
+		"linkStateId":       "link_state_id",
+		"advertisingRouter": "advertising_router",
+		"lsaSeqNumber":      "lsa_seq_number",
+		"checksum":          "checksum",
+		"length":            "length",
+		"networkMask":       "network_mask",
+		"metricType":        "metric_type",
+		"tos":               "tos",
+		"metric":            "metric",
+		"forwardAddress":    "forward_address",
+		"externalRouteTag":  "external_route_tag",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := lsaData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
+}
+
+func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"lsaAge":             "lsa_age",
+		"options":            "options",
+		"lsaFlags":           "lsa_flags",
+		"lsaType":            "lsa_type",
+		"linkStateId":        "link_state_id",
+		"advertisingRouter":  "advertising_router",
+		"lsaSeqNumber":       "lsa_seq_number",
+		"checksum":           "checksum",
+		"length":             "length",
+		"networkMask":        "network_mask",
+		"metricType":         "metric_type",
+		"tos":                "tos",
+		"metric":             "metric",
+		"nssaForwardAddress": "nssa_forward_address",
+		"externalRouteTag":   "external_route_tag",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := lsaData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
 }

@@ -239,8 +239,8 @@ message InterfaceStats {
 // ================ Aggregator LSA Router ====================
 
 message OSPFRouterData {
-  string router_id = 1;  // json:"routerId"
-  map<string, OSPFRouterArea> router_states = 2;  // json:"Router Link States"
+  string router_id = 1 [json_name = "routerId"];
+  map<string, OSPFRouterArea> router_states = 2 [json_name = "Router Link States"];
 }
 
 message OSPFRouterArea {
@@ -248,36 +248,36 @@ message OSPFRouterArea {
 }
 
 message OSPFRouterLSA {
-  int32 lsa_age = 1;                   // json:"lsaAge"
-  string options = 2;                  // json:"options"
-  int32 lsa_flags = 3;                 // json:"lsaFlags"
-  int32 flags = 4;                     // json:"flags"
-  bool asbr = 5;                       // json:"asbr"
-  string lsa_type = 6;                 // json:"lsaType"
-  string link_state_id = 7;            // json:"linkStateId"
-  string advertising_router = 8;       // json:"advertisingRouter"
-  string lsa_seq_number = 9;           // json:"lsaSeqNumber"
-  string checksum = 10;                // json:"checksum"
-  int32 length = 11;                   // json:"length"
-  int32 num_of_links = 12;             // json:"numOfLinks"
-  map<string, OSPFRouterLSALink> router_links = 13;  // json:"routerLinks"
+  int32 lsa_age = 1 [json_name = "lsaAge"];
+  string options = 2 [json_name = "options"];
+  int32 lsa_flags = 3 [json_name = "lsaFlags"];
+  int32 flags = 4 [json_name = "flags"];
+  bool asbr = 5 [json_name = "asbr"];
+  string lsa_type = 6 [json_name = "lsaType"];
+  string link_state_id = 7 [json_name = "linkStateId"];
+  string advertising_router = 8 [json_name = "advertisingRouter"];
+  string lsa_seq_number = 9 [json_name = "lsaSeqNumber"];
+  string checksum = 10 [json_name = "checksum"];
+  int32 length = 11 [json_name = "length"];
+  int32 num_of_links = 12 [json_name = "numOfLinks"];
+  map<string, OSPFRouterLSALink> router_links = 13 [json_name = "routerLinks"];
 }
 
 message OSPFRouterLSALink {
-  string link_type = 1;                // json:"linkType"
-  string designated_router_address = 2; // json:"designatedRouterAddress"
-  string router_interface_address = 3;  // json:"routerInterfaceAddress"
-  string network_address = 4;           // json:"networkAddress"
-  string network_mask = 5;              // json:"networkMask"
-  int32 num_of_tos_metrics = 6;        // json:"numOfTosMetrics"
-  int32 tos0_metric = 7;               // json:"tos0Metric"
+  string link_type = 1 [json_name = "linkType"];
+  string designated_router_address = 2 [json_name = "designatedRouterAddress"];
+  string router_interface_address = 3 [json_name = "routerInterfaceAddress"];
+  string network_address = 4 [json_name = "networkAddress"];
+  string network_mask = 5 [json_name = "networkMask"];
+  int32 num_of_tos_metrics = 6 [json_name = "numOfTosMetrics"];
+  int32 tos0_metric = 7 [json_name = "tos0Metric"];
 }
 
 // ================ Aggregator LSA Network ===================
 
 message OSPFNetworkData {
-  string router_id = 1;  // json:"routerId"
-  map<string, NetAreaState> net_states = 2;  // json:"Net Link States"
+  string router_id = 1 [json_name = "routerId"];
+  map<string, NetAreaState> net_states = 2 [json_name = "Net Link States"];
 }
 
 message NetAreaState {
@@ -285,29 +285,29 @@ message NetAreaState {
 }
 
 message NetworkLSA {
-  int32 lsa_age = 1;                   // json:"lsaAge"
-  string options = 2;                  // json:"options"
-  int32 lsa_flags = 3;                 // json:"lsaFlags"
-  string lsa_type = 4;                 // json:"lsaType"
-  string link_state_id = 5;            // json:"linkStateId"
-  string advertising_router = 6;       // json:"advertisingRouter"
-  string lsa_seq_number = 7;           // json:"lsaSeqNumber"
-  string checksum = 8;                 // json:"checksum"
-  int32 length = 9;                    // json:"length"
-  int32 network_mask = 10;             // json:"networkMask"
-  map<string, AttachedRouter> attached_routers = 11;  // json:"attchedRouters"
+  int32 lsa_age = 1 [json_name = "lsaAge"];
+  string options = 2 [json_name = "options"];
+  int32 lsa_flags = 3 [json_name = "lsaFlags"];
+  string lsa_type = 4 [json_name = "lsaType"];
+  string link_state_id = 5 [json_name = "linkStateId"];
+  string advertising_router = 6 [json_name = "advertisingRouter"];
+  string lsa_seq_number = 7 [json_name = "lsaSeqNumber"];
+  string checksum = 8 [json_name = "checksum"];
+  int32 length = 9 [json_name = "length"];
+  int32 network_mask = 10 [json_name = "networkMask"];
+  map<string, AttachedRouter> attached_routers = 11 [json_name = "attchedRouters"];
 }
 
 message AttachedRouter {
-  string attached_router_id = 1;       // json:"attachedRouterId"
+  string attached_router_id = 1 [json_name = "attachedRouterId"];
 }
 
 // ================ Aggregator LSA Summary ===================
 
 message OSPFSummaryData {
-  string router_id = 1;  // json:"routerId"
-  map<string, NetAreaState> net_states = 2;  // json:"Net Link States"
-  map<string, SummaryAreaState> summary_states = 3;  // json:"Summary Link States"
+  string router_id = 1 [json_name = "routerId"];
+  map<string, NetAreaState> net_states = 2 [json_name = "Net Link States"];
+  map<string, SummaryAreaState> summary_states = 3 [json_name = "Summary Link States"];
 }
 
 message SummaryAreaState {
@@ -315,78 +315,78 @@ message SummaryAreaState {
 }
 
 message SummaryLSA {
-  int32 lsa_age = 1;                   // json:"lsaAge"
-  string options = 2;                  // json:"options"
-  int32 lsa_flags = 3;                 // json:"lsaFlags"
-  string lsa_type = 4;                 // json:"lsaType"
-  string link_state_id = 5;            // json:"linkStateId"
-  string advertising_router = 6;       // json:"advertisingRouter"
-  string lsa_seq_number = 7;           // json:"lsaSeqNumber"
-  string checksum = 8;                 // json:"checksum"
-  int32 length = 9;                    // json:"length"
-  int32 network_mask = 10;             // json:"networkMask"
-  int32 tos0_metric = 11;              // json:"tos0Metric"
+  int32 lsa_age = 1 [json_name = "lsaAge"];
+  string options = 2 [json_name = "options"];
+  int32 lsa_flags = 3 [json_name = "lsaFlags"];
+  string lsa_type = 4 [json_name = "lsaType"];
+  string link_state_id = 5 [json_name = "linkStateId"];
+  string advertising_router = 6 [json_name = "advertisingRouter"];
+  string lsa_seq_number = 7 [json_name = "lsaSeqNumber"];
+  string checksum = 8 [json_name = "checksum"];
+  int32 length = 9 [json_name = "length"];
+  int32 network_mask = 10 [json_name = "networkMask"];
+  int32 tos0_metric = 11 [json_name = "tos0Metric"];
 }
 
 // ================ Aggregator LSA ASBR Summary ==============
 
 message OSPFAsbrSummaryData {
-  string router_id = 1;  // json:"routerId"
-  map<string, SummaryAreaState> asbr_summary_states = 2;  // json:"ASBR-Summary Link States"
+  string router_id = 1 [json_name = "routerId"];
+  map<string, SummaryAreaState> asbr_summary_states = 2 [json_name = "ASBR-Summary Link States"];
 }
 
 // ================ Aggregator LSA External ==================
 
 message OSPFExternalData {
-  string router_id = 1;  // json:"routerId"
-  map<string, ExternalLSA> as_external_link_states = 2;  // json:"AS External Link States"
+  string router_id = 1 [json_name = "routerId"];
+  map<string, ExternalLSA> as_external_link_states = 2 [json_name = "AS External Link States"];
 }
 
 message ExternalLSA {
-  int32 lsa_age = 1;                   // json:"lsaAge"
-  string options = 2;                  // json:"options"
-  int32 lsa_flags = 3;                 // json:"lsaFlags"
-  string lsa_type = 4;                 // json:"lsaType"
-  string link_state_id = 5;            // json:"linkStateId"
-  string advertising_router = 6;       // json:"advertisingRouter"
-  string lsa_seq_number = 7;           // json:"lsaSeqNumber"
-  string checksum = 8;                 // json:"checksum"
-  int32 length = 9;                    // json:"length"
-  int32 network_mask = 10;             // json:"networkMask"
-  string metric_type = 11;             // json:"metricType"
-  int32 tos = 12;                      // json:"tos"
-  int32 metric = 13;                   // json:"metric"
-  string forward_address = 14;         // json:"forwardAddress"
-  int32 external_route_tag = 15;       // json:"externalRouteTag"
+  int32 lsa_age = 1 [json_name = "lsaAge"];
+  string options = 2 [json_name = "options"];
+  int32 lsa_flags = 3 [json_name = "lsaFlags"];
+  string lsa_type = 4 [json_name = "lsaType"];
+  string link_state_id = 5 [json_name = "linkStateId"];
+  string advertising_router = 6 [json_name = "advertisingRouter"];
+  string lsa_seq_number = 7 [json_name = "lsaSeqNumber"];
+  string checksum = 8 [json_name = "checksum"];
+  int32 length = 9 [json_name = "length"];
+  int32 network_mask = 10 [json_name = "networkMask"];
+  string metric_type = 11 [json_name = "metricType"];
+  int32 tos = 12 [json_name = "tos"];
+  int32 metric = 13 [json_name = "metric"];
+  string forward_address = 14 [json_name = "forwardAddress"];
+  int32 external_route_tag = 15 [json_name = "externalRouteTag"];
 }
 
 // ================ Aggregator LSA NSSA External =============
 
 message OSPFNssaExternalData {
-  string router_id = 1;  // json:"routerId"
-  map<string, NssaExternalArea> nssa_external_link_states = 2;  // json:"NSSA-External Link States"
+  string router_id = 1 [json_name = "routerId"];
+  map<string, NssaExternalArea> nssa_external_link_states = 2 [json_name = "NSSA-External Link States"];
 }
 
 message NssaExternalArea {
-  map<string, NssaExternalLSA> lsa_entries = 1;  // json keys are linkStateId
+  map<string, NssaExternalLSA> data = 1;  // json keys are linkStateId
 }
 
 message NssaExternalLSA {
-  int32 lsa_age = 1;                   // json:"lsaAge"
-  string options = 2;                  // json:"options"
-  int32 lsa_flags = 3;                 // json:"lsaFlags"
-  string lsa_type = 4;                 // json:"lsaType"
-  string link_state_id = 5;            // json:"linkStateId"
-  string advertising_router = 6;       // json:"advertisingRouter"
-  string lsa_seq_number = 7;           // json:"lsaSeqNumber"
-  string checksum = 8;                 // json:"checksum"
-  int32 length = 9;                    // json:"length"
-  int32 network_mask = 10;             // json:"networkMask"
-  string metric_type = 11;             // json:"metricType"
-  int32 tos = 12;                      // json:"tos"
-  int32 metric = 13;                   // json:"metric"
-  string nssa_forward_address = 14;    // json:"nssaForwardAddress"
-  int32 external_route_tag = 15;       // json:"externalRouteTag"
+  int32 lsa_age = 1 [json_name = "lsaAge"];
+  string options = 2 [json_name = "options"];
+  int32 lsa_flags = 3 [json_name = "lsaFlags"];
+  string lsa_type = 4 [json_name = "lsaType"];
+  string link_state_id = 5 [json_name = "linkStateId"];
+  string advertising_router = 6 [json_name = "advertisingRouter"];
+  string lsa_seq_number = 7 [json_name = "lsaSeqNumber"];
+  string checksum = 8 [json_name = "checksum"];
+  int32 length = 9 [json_name = "length"];
+  int32 network_mask = 10 [json_name = "networkMask"];
+  string metric_type = 11 [json_name = "metricType"];
+  int32 tos = 12 [json_name = "tos"];
+  int32 metric = 13 [json_name = "metric"];
+  string nssa_forward_address = 14 [json_name = "nssaForwardAddress"];
+  int32 external_route_tag = 15 [json_name = "externalRouteTag"];
 }
 
 // ================ Analyzer payload Messages ================
