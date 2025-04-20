@@ -447,3 +447,50 @@ message AnomalyMisconfiguredRoute {
   string should_advertised = 4;
   RouterAttribute router = 5;
 }
+
+
+
+
+// Main message containing the router information
+message OspfRouterInfo {
+  string router_id = 1;
+  map<string, AreaLinkStates> router_link_states = 2;
+}
+
+// Container for all link states in an area
+message AreaLinkStates {
+  map<string, RouterLSA> router_lsas = 1;
+}
+
+// Router Link State Advertisement
+message RouterLSA {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  int32 flags = 4;
+  bool asbr = 5;
+  string lsa_type = 6;
+  string link_state_id = 7;
+  string advertising_router = 8;
+  string lsa_seq_number = 9;
+  string checksum = 10;
+  int32 length = 11;
+  int32 num_of_links = 12;
+  map<string, RouterLink> router_links = 13;
+}
+
+// Individual router link
+message RouterLink {
+  string link_type = 1;
+  
+  // For transit networks
+  optional string designated_router_address = 2;
+  optional string router_interface_address = 3;
+  
+  // For stub networks
+  optional string network_address = 4;
+  optional string network_mask = 5;
+  
+  int32 num_of_tos_metrics = 6;
+  int32 tos0_metric = 7;
+}

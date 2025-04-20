@@ -57,7 +57,7 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 		response.Message = "Shutting system down"
 		go func() {
 			time.Sleep(100 * time.Millisecond)
-			exitSocketServer()
+			s.exitSocketServer()
 		}()
 		return &response
 	default:

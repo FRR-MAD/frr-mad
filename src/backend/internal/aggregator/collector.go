@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 type Collector struct {
 	fetcher    *Fetcher
 	configPath string
+	socketPath string
 	logger     *logger.Logger
 	cache      *frrProto.CombinedState
 }
@@ -25,10 +27,11 @@ func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.F
 	}
 }
 
-func NewCollector(metricsURL, configPath string, logger *logger.Logger) *Collector {
+func NewCollector(metricsURL, configPath, socketPath string, logger *logger.Logger) *Collector {
 	return &Collector{
 		fetcher:    NewFetcher(metricsURL),
 		configPath: configPath,
+		socketPath: socketPath,
 		logger:     logger,
 	}
 }
@@ -38,64 +41,74 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 	// if err != nil {
 	// 	return nil, fmt.Errorf("OSPF fetch failed: %w", err)
 	// }
-	executor := NewFRRCommandExecutor("/var/run/frr", 2*time.Second)
 
-	staticFRRConfigParsed, err := FetchStaticFRRConfig()
+	// Previously hard coded socket path to /var/run/frr
+	executor := NewFRRCommandExecutor(c.socketPath, 2*time.Second)
+
+	staticFRRConfigParsed, err := fetchStaticFRRConfig()
 	if err != nil {
-		fmt.Print(err)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		log.Panic(err)
 		os.Exit(1)
 	}
 	fmt.Printf("Response of FetchStaticFRRConfig(): \n%+v\n", staticFRRConfigParsed)
 
 	ospfRouterData, err := FetchOSPFRouterData(executor)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		//os.Exit(1)
 	}
 
 	fmt.Printf("Response: \n%+v\n", ospfRouterData)
 
 	ospfNetworkData, err := FetchOSPFNetworkData(executor)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		//os.Exit(1)
 	}
 
 	fmt.Printf("Response: \n%+v\n", ospfNetworkData)
 
 	ospfSummaryData, err := FetchOSPFSummaryData(executor)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		//os.Exit(1)
 	}
 
 	fmt.Printf("Response: \n%+v\n", ospfSummaryData)
 
 	ospfAsbrSummaryData, err := FetchOSPFAsbrSummaryData(executor)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		//os.Exit(1)
 	}
 
 	fmt.Printf("Response: \n%+v\n", ospfAsbrSummaryData)
 
 	ospfExternalData, err := FetchOSPFExternalData(executor)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		//os.Exit(1)
 	}
 
 	fmt.Printf("Response: \n%+v\n", ospfExternalData)
 
 	ospfNssaExternalData, err := FetchOSPFNssaExternalData(executor)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		//fmt.Print(err)
+		c.logger.Error(err.Error())
+		//os.Exit(1)
 	}
 
 	fmt.Printf("Response: \n%+v\n", ospfNssaExternalData)
 
-	os.Exit(0)
+	//os.Exit(0)
 
 	//config, err := ParseStaticFRRConfig(c.configPath)
 	if err != nil {

@@ -28,9 +28,12 @@ func NewFetcher(metricsURL string) *Fetcher {
 	}
 }
 
-func FetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
+func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
 	cmd := exec.Command("vtysh", "-c", "show running-config")
 	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("can not open file: %w", err)
+	}
 
 	tmp, err := os.CreateTemp("/tmp", "frr-config.conf")
 	if err != nil {

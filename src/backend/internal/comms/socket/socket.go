@@ -10,6 +10,7 @@ import (
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"google.golang.org/protobuf/proto"
 )
@@ -24,14 +25,16 @@ type Socket struct {
 	mutex      sync.Mutex
 	collector  *aggregator.Collector
 	analyzer   *analyzer.Analyzer
+	logger     *logger.Logger
 }
 
-func NewSocket(socketPath map[string]string, collector *aggregator.Collector, analyzer *analyzer.Analyzer) *Socket {
+func NewSocket(socketPath map[string]string, collector *aggregator.Collector, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
 	return &Socket{
 		socketPath: socketPath["UnixSocketLocation"],
 		mutex:      sync.Mutex{},
 		collector:  collector,
 		analyzer:   analyzer,
+		logger:     logger,
 	}
 }
 
@@ -41,26 +44,28 @@ func (s *Socket) Start() error {
 	l, err := net.ListenUnix("unix", &net.UnixAddr{s.socketPath, "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)
+		//s.logger.Error(fmt.Sprintf("Error listening on socket: %w", err))
 	}
 
 	s.listener = l
 
 	socketListener = s.listener
 
-	fmt.Printf("Listening on %s ...\n", s.socketPath)
+	s.logger.Info(fmt.Sprintf("Listening on %s", s.socketPath))
 
 	for isRunning {
 		conn, err := l.Accept()
 		if err != nil {
 			if !isRunning {
-				fmt.Println("Socket server shutting down...")
+				s.logger.Info("Socket server shutting down...")
 				break
 			}
-			fmt.Printf("Error accepting connection: %s\n", err.Error())
+			s.logger.Error(fmt.Sprintf("Error accepting connection: %s\n", err.Error()))
 			continue
 		}
 
-		fmt.Println("New client connected")
+		s.logger.Info(fmt.Sprintf("New client connected: %s", conn.RemoteAddr().String()))
+
 		s.handleConnection(conn)
 	}
 
@@ -82,18 +87,18 @@ func (s *Socket) handleConnection(conn net.Conn) {
 	messageBuf := make([]byte, messageSize)
 	_, err = io.ReadFull(conn, messageBuf)
 	if err != nil {
-		fmt.Printf("Error reading message: %s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error reading message: %s\n", err.Error()))
 		return
 	}
 
 	protoMessage := &frrProto.Message{}
 	err = proto.Unmarshal(messageBuf, protoMessage)
 	if err != nil {
-		fmt.Printf("Error unmarshaling message: %s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error unmarshaling message: %s\n", err.Error()))
 		return
 	}
 
-	fmt.Printf("Received message: Command=%s, Package %s\n", protoMessage.Service, protoMessage.Command)
+	//fmt.Printf("Received message: Command=%s, Package %s\n", protoMessage.Service, protoMessage.Command)
 
 	execMutex.Lock()
 	defer execMutex.Unlock()
@@ -105,27 +110,26 @@ func (s *Socket) handleConnection(conn net.Conn) {
 	responseData, err := proto.Marshal(protoResponse)
 	if err != nil {
 		fmt.Printf("Error marshaling response: %s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error marshaling response: %s\n", err.Error()))
 		return
 	}
 
 	responseSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(responseSizeBuf, uint32(len(responseData)))
 
-	fmt.Printf("Server marshaled %d bytes: %v\n", len(responseData), responseData)
-
-	fmt.Printf("Server buf size %d raw: %v\n", len(responseSizeBuf), responseSizeBuf)
-
-	fmt.Println(responseData)
+	//fmt.Printf("Server marshaled %d bytes: %v\n", len(responseData), responseData)
+	//fmt.Printf("Server buf size %d raw: %v\n", len(responseSizeBuf), responseSizeBuf)
+	//fmt.Println(responseData)
 
 	_, err = conn.Write(responseSizeBuf)
 	if err != nil {
-		fmt.Printf("Error sending response size: %s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error sending response size: %s\n", err.Error()))
 		return
 	}
 
 	_, err = conn.Write(responseData)
 	if err != nil {
-		fmt.Printf("Error sending response: %s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error sending response: %s\n", err.Error()))
 		return
 	}
 }
@@ -139,14 +143,14 @@ func (s *Socket) Close() {
 
 var socketListener net.Listener
 
-func exitSocketServer() {
-	fmt.Println("Shutting down socket server...")
+func (s *Socket) exitSocketServer() {
+	s.logger.Info("Shutting down socket server...")
 	isRunning = false
 
 	if socketListener != nil {
 		socketListener.Close()
 	}
 
-	fmt.Println("Socket server shut down completed")
+	s.logger.Info("Socket server shut down completed")
 	os.Exit(0)
 }

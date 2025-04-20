@@ -51,6 +51,9 @@ func main() {
 	exporterConfig := config["exporter"]
 
 	// start logger instances
+	applicationLogger := createNewLogger("frr_mad", "/tmp/frr_mad.log")
+
+	// poll interval
 	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
 
 	// service manager
@@ -70,21 +73,53 @@ func main() {
 	//},
 	//}
 
+	var serviceList []string
+
 	for _, arg := range os.Args[1:] {
 		switch arg {
 		case "--aggregator":
 			//madService.AggregateService.Logger = createNewLogger("aggregator", "/tmp/aggregator.log")
 			//madService.AggregateService.Service.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
-			aggregatorLogger := createNewLogger("aggregator", "/tmp/aggregator.log")
-			madService.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+
+			// simplified
+			//aggregatorLogger := createNewLogger("aggregator", "/tmp/aggregator.log")
+			//madService.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+			serviceList = append(serviceList, "aggregator")
 		case "--analyzer":
 			//madService.AnalysisService.Logger = createNewLogger("analyzer", "/tmp/analyzer.log")
 			//madService.AnalysisService.Service.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
-			analyzerLogger := createNewLogger("analyzer", "/tmp/analyzer.log")
-			madService.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
+
+			// simplified
+			//analyzerLogger := createNewLogger("analyzer", "/tmp/analyzer.log")
+			//madService.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
+			serviceList = append(serviceList, "analyzer")
 		case "--exporter":
 			//madService.ExportService.Logger = createNewLogger("exporter", "/tmp/exporter.log")
 			//madService.ExportService.Service.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
+
+			// simplified
+			//exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
+			//madService.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
+			//fmt.Println(exporterConfig)
+			serviceList = append(serviceList, "exporter")
+		}
+	}
+
+	if len(serviceList) == 0 {
+		serviceList = append(serviceList, "analyzer")
+		serviceList = append(serviceList, "aggregator")
+	}
+
+	for _, service := range serviceList {
+		if service == "analyzer" {
+			analyzerLogger := createNewLogger("analyzer", "/tmp/analyzer.log")
+			madService.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
+		}
+		if service == "aggregator" {
+			aggregatorLogger := createNewLogger("aggregator", "/tmp/aggregator.log")
+			madService.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+		}
+		if service == "exporter" {
 			exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
 			madService.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
 			fmt.Println(exporterConfig)
@@ -100,26 +135,26 @@ func main() {
 	// anomalyDetection := startAnalyzer(analyzerConfig, analyzerLogger, pollInterval)
 
 	// start socket
-	sockServer := socket.NewSocket(socketConfig, madService.Aggregator, madService.Analyzer)
+	sockServer := socket.NewSocket(socketConfig, madService.Aggregator, madService.Analyzer, applicationLogger)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		if err := sockServer.Start(); err != nil {
-			fmt.Printf("Error starting socket server: %s\n", err)
+			applicationLogger.Error(fmt.Sprintf("Error starting socket server: %s\n", err))
+			//fmt.Printf("Error starting socket server: %s\n", err)
 			os.Exit(1)
 		}
 	}()
 
 	<-sigChan
-	fmt.Println("\nShutting down...")
+	applicationLogger.Info("Shutting down...")
 
 }
 
 func startAggregator(config map[string]string, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
 	collector := aggregator.InitAggregator(config, logging)
-
 	aggregator.StartAggregator(collector, pollInterval)
 
 	return collector
