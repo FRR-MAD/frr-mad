@@ -1,0 +1,77 @@
+all:
+  vars:
+    # The generated inventory is assumed to be used from the clab host.
+    # Hence no http proxy should be used. Therefore we make sure the http
+    # module does not attempt using any global http proxy.
+    ansible_httpapi_use_proxy: false
+  children:
+    linux:
+      hosts:
+        clab-frr01-cpc104:
+          ansible_host: 172.20.20.7
+        clab-frr01-cpc105:
+          ansible_host: 172.20.20.6
+        clab-frr01-cpc106:
+          ansible_host: 172.20.20.24
+        clab-frr01-cpc107:
+          ansible_host: 172.20.20.32
+        clab-frr01-cpc108:
+          ansible_host: 172.20.20.2
+        clab-frr01-cpc109:
+          ansible_host: 172.20.20.15
+        clab-frr01-cr104:
+          ansible_host: 172.20.20.18
+        clab-frr01-cr105:
+          ansible_host: 172.20.20.31
+        clab-frr01-cr106:
+          ansible_host: 172.20.20.8
+        clab-frr01-cr107:
+          ansible_host: 172.20.20.12
+        clab-frr01-cr108:
+          ansible_host: 
+        clab-frr01-cr109:
+          ansible_host: 172.20.20.21
+        clab-frr01-pc101:
+          ansible_host: 172.20.20.26
+        clab-frr01-pc111:
+          ansible_host: 172.20.20.13
+        clab-frr01-pc121:
+          ansible_host: 172.20.20.20
+        clab-frr01-pc131:
+          ansible_host: 172.20.20.29
+        clab-frr01-pc191:
+          ansible_host: 172.20.20.33
+        clab-frr01-pc201:
+          ansible_host: 172.20.20.10
+        clab-frr01-pc301:
+          ansible_host: 172.20.20.4
+        clab-frr01-pc391:
+          ansible_host: 172.20.20.22
+        clab-frr01-r101:
+          ansible_host: 172.20.20.30
+        clab-frr01-r102:
+          ansible_host: 172.20.20.17
+        clab-frr01-r103:
+          ansible_host: 172.20.20.25
+        clab-frr01-r111:
+          ansible_host: 172.20.20.23
+        clab-frr01-r112:
+          ansible_host: 172.20.20.16
+        clab-frr01-r121:
+          ansible_host: 172.20.20.14
+        clab-frr01-r122:
+          ansible_host: 172.20.20.19
+        clab-frr01-r131:
+          ansible_host: 172.20.20.9
+        clab-frr01-r191:
+          ansible_host: 172.20.20.27
+        clab-frr01-r201:
+          ansible_host: 172.20.20.34
+        clab-frr01-r202:
+          ansible_host: 172.20.20.28
+        clab-frr01-r301:
+          ansible_host: 172.20.20.5
+        clab-frr01-r302:
+          ansible_host: 172.20.20.3
+        clab-frr01-r391:
+          ansible_host: 172.20.20.11

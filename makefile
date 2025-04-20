@@ -66,3 +66,19 @@ protobuf/clean:
 	rm -f $(PROTO_FRONTEND_DEST)/protocol.pb.go
 	rm -f $(PROTO_TEMPCLIENT_DEST)/protocol.pb.go
 
+
+#### Hot Module Reloading ####
+
+.PHONY: hmr/docker hmr/start hmr/stop
+hmr/docker:
+	docker build -t frr-854-dev -f dockerfile/frr-dev.dockerfile .
+	docker build -t frr-854 -f dockerfile/frr.dockerfile .
+
+hmr/start:
+	cd containerlab && chmod +x scripts/
+	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
+	cd containerlab && sh scripts/pc-interfaces.sh
+	cd containerlab && sh scripts/remove-default-route.sh
+
+hmr/stop: 
+	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
