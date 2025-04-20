@@ -1,4 +1,4 @@
-FROM quay.io/frrouting/frr:8.5.4
+FROM --platform=linux/amd64 quay.io/frrouting/frr:8.5.4
 
 RUN apk update && apk add --no-cache \
     wget \
