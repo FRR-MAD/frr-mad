@@ -38,11 +38,12 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 		switch message.Command {
 		case "allResources":
 			return s.getSystemResources()
-		}
-		response.Status = "success"
-		response.Message = "Returning magical system data"
 
-		return &response
+		default:
+			response.Status = "error"
+			response.Message = "There was an error getting system resources"
+			return &response
+		}
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", message.Command)
