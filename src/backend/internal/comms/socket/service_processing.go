@@ -21,12 +21,12 @@ func (s *Socket) ospfDummyData() *frrProto.Response {
 func (s *Socket) getSystemResources() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_SystemMetrics{
-			SystemMetrics: s.metrics.SystemMetrics,
+			SystemMetrics: s.metrics.GetSystemMetrics(),
 		},
 	}
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returning magical ospf data",
+		Message: "Returning magical system data",
 		Data:    value,
 	}
 }
