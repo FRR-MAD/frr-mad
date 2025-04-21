@@ -37,6 +37,7 @@ func (s *Socket) getOspfDatabase() *frrProto.Response {
 			OspfDatabase: s.metrics.GetOspfDatabase(),
 		},
 	}
+
 	return &frrProto.Response{
 		Status:  "success",
 		Message: "Returning OSPF database",

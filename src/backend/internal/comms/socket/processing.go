@@ -25,24 +25,41 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 			return s.getOspfRouterData()
 		case "network":
 			return s.getOspfNetworkData()
+		case "summary":
+			return s.getOspfSummaryData()
+		case "asbrSummary":
+			return s.getOspfAsbrSummaryData()
+		case "externalData":
+			return s.getOspfExternalData()
+		case "nssaExternalData":
+			return s.getOspfNssaExternalData()
+		case "duplicates":
+			return s.getOspfDuplicates()
+		case "neighbors":
+			return s.getOspfNeighbors()
+		case "interfaces":
+			return s.getInterfaces()
+		case "routes":
+			return s.getRoutes()
+		case "staticConfig":
+			return s.getStaticFrrConfiguration()
 		default:
 			response.Status = "error"
 			response.Message = "There was an error"
 			return &response
 		}
-	case "exit":
-		response.Status = "success"
-		response.Message = "Shutting system down"
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			s.exitSocketServer()
-		}()
-		return &response
 	case "system":
 		switch message.Command {
 		case "allResources":
 			return s.getSystemResources()
-
+		case "exit":
+			response.Status = "success"
+			response.Message = "Shutting system down"
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				s.exitSocketServer()
+			}()
+			return &response
 		default:
 			response.Status = "error"
 			response.Message = "There was an error getting system resources"

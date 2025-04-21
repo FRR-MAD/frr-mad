@@ -66,6 +66,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	//fmt.Printf("Response: \n%+v\n", ospfRouterData)
 	c.FullFrrData.OspfRouterData = ospfRouterData
 	c.logger.Debug("Response of FetchOSPFRouterData(): " + ospfRouterData.String())
+	c.logger.Debug(fmt.Sprintf("Response of FetchOSPFRouterData() Address: %p\n", ospfRouterData))
 
 	ospfNetworkData, err := FetchOSPFNetworkData(executor)
 	if err != nil {
@@ -110,6 +111,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	//fmt.Printf("Response: \n%+v\n", ospfExternalData)
 	c.FullFrrData.OspfExternalData = ospfExternalData
 	c.logger.Debug("Response of FetchOSPFExternalData(): " + ospfExternalData.String())
+	c.logger.Debug(fmt.Sprintf("Response of FetchOSPFExternalData() Address: %p\n", ospfExternalData))
 
 	ospfNssaExternalData, err := FetchOSPFNssaExternalData(executor)
 	if err != nil {
@@ -130,6 +132,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	fmt.Printf("Response FetchFullOSPFDatabase: \n%+v\n", out1)
+	c.logger.Debug("Response of FetchFullOSPFDatabase(): " + out1.String())
 
 	out2, err := FetchOSPFDuplicateCandidates(executor)
 	if err != nil {
@@ -139,6 +142,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	fmt.Printf("Response FetchOSPFDuplicateCandidates: \n%+v\n", out2)
+	c.logger.Debug("Response of FetchOSPFDuplicateCandidates(): " + out2.String())
 
 	out3, err := FetchOSPFNeighbors(executor)
 	if err != nil {
@@ -148,6 +152,8 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	fmt.Printf("Response FetchOSPFNeighbors: \n%+v\n", out3)
+	c.logger.Debug("Response of FetchOSPFNeighbors(): " + out3.String())
+	c.logger.Debug(fmt.Sprintf("Response of FetchOSPFNeighbors() Address: %p", out3))
 
 	out4, err := FetchInterfaceStatus(executor)
 	if err != nil {
