@@ -7,7 +7,7 @@ import (
 func (s *Socket) ospfDummyData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_StaticFrrConfiguration{
-			StaticFrrConfiguration: s.metrics.StaticFRRConfiguration,
+			StaticFrrConfiguration: s.metrics.StaticFrrConfiguration,
 		},
 	}
 

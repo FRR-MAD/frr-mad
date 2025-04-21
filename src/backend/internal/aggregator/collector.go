@@ -220,11 +220,11 @@ import (
 // ------------------------------------------------------------------------------------------------------------------------------------
 
 type Collector struct {
-	fetcher        *Fetcher
-	configPath     string
-	socketPath     string
-	logger         *logger.Logger
-	TempFrrMetrics *frrProto.FullFRRData
+	fetcher     *Fetcher
+	configPath  string
+	socketPath  string
+	logger      *logger.Logger
+	FullFrrData *frrProto.FullFRRData
 }
 
 func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.FRRCommandExecutor {
@@ -236,11 +236,11 @@ func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.F
 
 func NewCollector(metricsURL, configPath, socketPath string, logger *logger.Logger) *Collector {
 	return &Collector{
-		fetcher:        NewFetcher(metricsURL),
-		configPath:     configPath,
-		socketPath:     socketPath,
-		logger:         logger,
-		TempFrrMetrics: &frrProto.FullFRRData{},
+		fetcher:     NewFetcher(metricsURL),
+		configPath:  configPath,
+		socketPath:  socketPath,
+		logger:      logger,
+		FullFrrData: &frrProto.FullFRRData{},
 	}
 }
 
@@ -261,7 +261,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		os.Exit(1)
 	}
 
-	c.TempFrrMetrics.StaticFrrConfiguration = staticFRRConfigParsed
+	c.FullFrrData.StaticFrrConfiguration = staticFRRConfigParsed
 	//fmt.Printf("Response of FetchStaticFRRConfig(): \n%+v\n", staticFRRConfigParsed)
 	c.logger.Debug("Response of FetchStaticFRRConfig(): " + staticFRRConfigParsed.String())
 
@@ -273,7 +273,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	//fmt.Printf("Response: \n%+v\n", ospfRouterData)
-	c.TempFrrMetrics.OspfRouterData = ospfRouterData
+	c.FullFrrData.OspfRouterData = ospfRouterData
 	c.logger.Debug("Response of FetchOSPFRouterData(): " + ospfRouterData.String())
 
 	ospfNetworkData, err := FetchOSPFNetworkData(executor)
@@ -284,7 +284,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	//fmt.Printf("Response: \n%+v\n", ospfNetworkData)
-	c.TempFrrMetrics.OspfNetworkData = ospfNetworkData
+	c.FullFrrData.OspfNetworkData = ospfNetworkData
 	c.logger.Debug("Response of FetchOSPFNetworkData(): " + ospfNetworkData.String())
 
 	ospfSummaryData, err := FetchOSPFSummaryData(executor)
@@ -295,7 +295,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	//fmt.Printf("Response: \n%+v\n", ospfSummaryData)
-	c.TempFrrMetrics.OspfSummaryData = ospfSummaryData
+	c.FullFrrData.OspfSummaryData = ospfSummaryData
 	c.logger.Debug("Response of FetchOSPFSummaryData(): " + ospfSummaryData.String())
 
 	ospfAsbrSummaryData, err := FetchOSPFAsbrSummaryData(executor)
@@ -306,7 +306,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	//fmt.Printf("Response: \n%+v\n", ospfAsbrSummaryData)
-	c.TempFrrMetrics.OspfAsbrSummaryData = ospfAsbrSummaryData
+	c.FullFrrData.OspfAsbrSummaryData = ospfAsbrSummaryData
 	c.logger.Debug("Response of FetchOSPFAsbrSummaryData(): " + ospfAsbrSummaryData.String())
 
 	ospfExternalData, err := FetchOSPFExternalData(executor)
@@ -317,7 +317,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	//fmt.Printf("Response: \n%+v\n", ospfExternalData)
-	c.TempFrrMetrics.OspfExternalData = ospfExternalData
+	c.FullFrrData.OspfExternalData = ospfExternalData
 	c.logger.Debug("Response of FetchOSPFExternalData(): " + ospfExternalData.String())
 
 	ospfNssaExternalData, err := FetchOSPFNssaExternalData(executor)
@@ -328,7 +328,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 	}
 
 	//fmt.Printf("Response: \n%+v\n", ospfNssaExternalData)
-	c.TempFrrMetrics.OspfNssaExternalData = ospfNssaExternalData
+	c.FullFrrData.OspfNssaExternalData = ospfNssaExternalData
 	c.logger.Debug("Response of FetchOSPFNssaExternalData(): " + ospfNssaExternalData.String())
 
 	out1, err := FetchFullOSPFDatabase(executor)
@@ -388,7 +388,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		return nil, fmt.Errorf("system metrics failed: %w", err)
 	}
 
-	c.TempFrrMetrics.SystemMetrics = systemMetrics
+	c.FullFrrData.SystemMetrics = systemMetrics
 
 	state := &frrProto.FullFRRData{
 		//Ospf:      ospfMetrics,
