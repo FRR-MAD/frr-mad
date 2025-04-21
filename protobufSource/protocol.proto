@@ -62,7 +62,7 @@ message ResponseValue {
     OSPFAsbrSummaryData ospf_asbr_summary_data = 23;
     OSPFExternalData ospf_external_data = 24;
     OSPFNssaExternalData ospf_nssa_external_data = 25;
-
+    StaticFRRConfiguration static_frr_configuration = 26;
   }
 }
 

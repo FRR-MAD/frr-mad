@@ -158,30 +158,32 @@ func printResponseData(data *frrProto.ResponseValue) {
 		return
 	}
 
-	switch v := data.Kind.(type) {
-	case *frrProto.ResponseValue_StringValue:
-		fmt.Printf("Data (string): %s\n", v.StringValue)
-	case *frrProto.ResponseValue_IntValue:
-		fmt.Printf("Data (int): %d\n", v.IntValue)
-	case *frrProto.ResponseValue_DoubleValue:
-		fmt.Printf("Data (double): %f\n", v.DoubleValue)
-	case *frrProto.ResponseValue_BoolValue:
-		fmt.Printf("Data (bool): %t\n", v.BoolValue)
-	case *frrProto.ResponseValue_StructValue:
-		fmt.Println("Data (struct):")
-		for key, val := range v.StructValue.Fields {
-			fmt.Printf("  %s: ", key)
-			printResponseData(val)
-		}
-	case *frrProto.ResponseValue_ListValue:
-		fmt.Println("Data (list):")
-		for i, val := range v.ListValue.Values {
-			fmt.Printf("  [%d]: ", i)
-			printResponseData(val)
-		}
-	case *frrProto.ResponseValue_BytesValue:
-		fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
-	default:
-		fmt.Println("Data: <unknown type>")
-	}
+	fmt.Printf("Data: %v\n", data)
+
+	// switch v := data.Kind.(type) {
+	// case *frrProto.Value_StringValue:
+	// 	fmt.Printf("Data (string): %s\n", v.StringValue)
+	// case *frrProto.Value_IntValue:
+	// 	fmt.Printf("Data (int): %d\n", v.IntValue)
+	// case *frrProto.Value_DoubleValue:
+	// 	fmt.Printf("Data (double): %f\n", v.DoubleValue)
+	// case *frrProto.Value_BoolValue:
+	// 	fmt.Printf("Data (bool): %t\n", v.BoolValue)
+	// case *frrProto.Value_StructValue:
+	// 	fmt.Println("Data (struct):")
+	// 	for key, val := range v.StructValue.Fields {
+	// 		fmt.Printf("  %s: ", key)
+	// 		printResponseData(val)
+	// 	}
+	// case *frrProto.Value_ListValue:
+	// 	fmt.Println("Data (list):")
+	// 	for i, val := range v.ListValue.Values {
+	// 		fmt.Printf("  [%d]: ", i)
+	// 		printResponseData(val)
+	// 	}
+	// case *frrProto.Value_BytesValue:
+	// 	fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
+	// default:
+	// 	fmt.Println("Data: <unknown type>")
+	// }
 }
