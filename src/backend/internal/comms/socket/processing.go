@@ -14,44 +14,18 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	switch message.Service {
 	case "ospf":
 		switch message.Command {
-		case "metrics":
-			return getOSPFMetrics()
-		case "neighbor":
-			return getOSPFNeighbor()
-		case "route":
-			return getOSPFRoute()
-		case "interface":
-			return getOSPFInterface()
-		case "lsa":
-			return getOSPFlsa()
-		case "networkConfig":
-			return getNetworkConfig()
-		case "area":
-			return getOSPFArea()
-		case "interfaceConfig":
-			return getInterfaceConfig()
-		case "systemMetrics":
-			return getSystemMetrics()
-		case "interfaceStats":
-			return getInterfaceStats()
-		case "combinedState":
-			return getCombinedState()
-		case "testing":
-			return s.getTesting()
-		case "testing2":
-			return s.getTesting2()
-		case "analyzer":
-			return s.getTesting3()
-		case "collector":
-			return s.getTesting4()
-		}
+		case "dummy":
+			//return s.ospfDummyData()
 
-		response.Status = "success"
-		response.Message = "Returning magical ospf data"
-		//response.Data = value
-		// aggregator.OSPFNeighborDummyData()
-		return &response
-		// return &response
+			response.Status = "success"
+			response.Message = "Returning magical ospf dummy data"
+
+			return &response
+		default:
+			response.Status = "error"
+			response.Message = "There was an error"
+			return &response
+		}
 	case "exit":
 		response.Status = "success"
 		response.Message = "Shutting system down"
@@ -63,7 +37,7 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	case "system":
 		switch message.Command {
 		case "allResources":
-			return s.getTesting3()
+			return s.getSystemResources()
 		}
 		response.Status = "success"
 		response.Message = "Returning magical system data"
@@ -74,5 +48,4 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 		response.Message = fmt.Sprintf("Unknown command: %s", message.Command)
 		return &response
 	}
-
 }
