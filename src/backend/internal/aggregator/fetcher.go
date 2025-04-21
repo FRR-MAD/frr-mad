@@ -35,7 +35,7 @@ func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
 		return nil, fmt.Errorf("can not open file: %w", err)
 	}
 
-	tmp, err := os.CreateTemp("/tmp", "frr-config.conf")
+	tmp, err := os.Create("/tmp/frr-config.conf")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
@@ -51,7 +51,12 @@ func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
 	if err := tmp.Close(); err != nil {
 		return nil, fmt.Errorf("failed to close temp file: %w", err)
 	}
-	return ParseStaticFRRConfig(tmp.Name())
+	parsedStaticFRRConfig, err := ParseStaticFRRConfig(tmp.Name())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse static FRR config: %w", err)
+	}
+
+	return parsedStaticFRRConfig, nil
 }
 
 func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {

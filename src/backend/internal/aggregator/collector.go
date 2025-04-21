@@ -13,11 +13,23 @@ import (
 )
 
 type Collector struct {
-	fetcher    *Fetcher
-	configPath string
-	socketPath string
-	logger     *logger.Logger
-	cache      *frrProto.CombinedState
+	fetcher        *Fetcher
+	configPath     string
+	socketPath     string
+	logger         *logger.Logger
+	cache          *frrProto.CombinedState
+	TempFrrMetrics *TempFRRMetrics
+}
+
+type TempFRRMetrics struct {
+	StaticFRRConfiguration *frrProto.StaticFRRConfiguration
+	OspfRouterData         *frrProto.OSPFRouterData
+	OspfNetworkData        *frrProto.OSPFNetworkData
+	OspfSummaryData        *frrProto.OSPFSummaryData
+	OspfAsbrSummaryData    *frrProto.OSPFAsbrSummaryData
+	OspfExternalData       *frrProto.OSPFExternalData
+	OspfNssaExternalData   *frrProto.OSPFNssaExternalData
+	SystemMetrics          *frrProto.SystemMetrics
 }
 
 func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.FRRCommandExecutor {
@@ -29,10 +41,11 @@ func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.F
 
 func NewCollector(metricsURL, configPath, socketPath string, logger *logger.Logger) *Collector {
 	return &Collector{
-		fetcher:    NewFetcher(metricsURL),
-		configPath: configPath,
-		socketPath: socketPath,
-		logger:     logger,
+		fetcher:        NewFetcher(metricsURL),
+		configPath:     configPath,
+		socketPath:     socketPath,
+		logger:         logger,
+		TempFrrMetrics: &TempFRRMetrics{},
 	}
 }
 
@@ -52,7 +65,10 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		log.Panic(err)
 		os.Exit(1)
 	}
-	fmt.Printf("Response of FetchStaticFRRConfig(): \n%+v\n", staticFRRConfigParsed)
+
+	c.TempFrrMetrics.StaticFRRConfiguration = staticFRRConfigParsed
+	//fmt.Printf("Response of FetchStaticFRRConfig(): \n%+v\n", staticFRRConfigParsed)
+	c.logger.Debug("Response of FetchStaticFRRConfig(): " + staticFRRConfigParsed.String())
 
 	ospfRouterData, err := FetchOSPFRouterData(executor)
 	if err != nil {
@@ -61,7 +77,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", ospfRouterData)
+	//fmt.Printf("Response: \n%+v\n", ospfRouterData)
+	c.TempFrrMetrics.OspfRouterData = ospfRouterData
+	c.logger.Debug("Response of FetchOSPFRouterData(): " + ospfRouterData.String())
 
 	ospfNetworkData, err := FetchOSPFNetworkData(executor)
 	if err != nil {
@@ -70,7 +88,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", ospfNetworkData)
+	//fmt.Printf("Response: \n%+v\n", ospfNetworkData)
+	c.TempFrrMetrics.OspfNetworkData = ospfNetworkData
+	c.logger.Debug("Response of FetchOSPFNetworkData(): " + ospfNetworkData.String())
 
 	ospfSummaryData, err := FetchOSPFSummaryData(executor)
 	if err != nil {
@@ -79,7 +99,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", ospfSummaryData)
+	//fmt.Printf("Response: \n%+v\n", ospfSummaryData)
+	c.TempFrrMetrics.OspfSummaryData = ospfSummaryData
+	c.logger.Debug("Response of FetchOSPFSummaryData(): " + ospfSummaryData.String())
 
 	ospfAsbrSummaryData, err := FetchOSPFAsbrSummaryData(executor)
 	if err != nil {
@@ -88,7 +110,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", ospfAsbrSummaryData)
+	//fmt.Printf("Response: \n%+v\n", ospfAsbrSummaryData)
+	c.TempFrrMetrics.OspfAsbrSummaryData = ospfAsbrSummaryData
+	c.logger.Debug("Response of FetchOSPFAsbrSummaryData(): " + ospfAsbrSummaryData.String())
 
 	ospfExternalData, err := FetchOSPFExternalData(executor)
 	if err != nil {
@@ -97,7 +121,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", ospfExternalData)
+	//fmt.Printf("Response: \n%+v\n", ospfExternalData)
+	c.TempFrrMetrics.OspfExternalData = ospfExternalData
+	c.logger.Debug("Response of FetchOSPFExternalData(): " + ospfExternalData.String())
 
 	ospfNssaExternalData, err := FetchOSPFNssaExternalData(executor)
 	if err != nil {
@@ -106,7 +132,9 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", ospfNssaExternalData)
+	//fmt.Printf("Response: \n%+v\n", ospfNssaExternalData)
+	c.TempFrrMetrics.OspfNssaExternalData = ospfNssaExternalData
+	c.logger.Debug("Response of FetchOSPFNssaExternalData(): " + ospfNssaExternalData.String())
 
 	//os.Exit(0)
 
@@ -119,6 +147,8 @@ func (c *Collector) Collect() (*frrProto.CombinedState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("system metrics failed: %w", err)
 	}
+
+	c.TempFrrMetrics.SystemMetrics = systemMetrics
 
 	state := &frrProto.CombinedState{
 		Timestamp: timestamppb.Now(),
