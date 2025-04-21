@@ -1,0 +1,1890 @@
+{
+  "name": "frr01",
+  "type": "clab",
+  "clab": {
+    "config": {
+      "prefix": "clab",
+      "mgmt": {
+        "network": "clab",
+        "bridge": "br-eb9358ca403a",
+        "ipv4-subnet": "172.20.20.0/24",
+        "ipv4-gw": "172.20.20.1",
+        "ipv6-subnet": "3fff:172:20:20::/64",
+        "ipv6-gw": "3fff:172:20:20::1",
+        "mtu": 1500,
+        "external-access": true
+      }
+    }
+  },
+  "ssh-pub-keys": ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCmibMivv1IyKRbxyVPJB8GO5LaDPmLRl0vHZAw+PGeENTsjdeY1NF9S1px6eCzUnHqq3mIy2I8vPVCRx88bi25EpkKZwNUjUo5bVYoEoi5oGFRxtejq7AEPPmk4FnD6yfEVcbuxdU2UiesyBjzbCUmACMwlHygzrlRFkPNtMlAEe39khtozM0wwb5phAGliGC+BW60/2HpKwmN35RxFwUi7nQruaJMuQR3Dr4/Dk+0OpVWBO8yWXG95GNotyZnqirNVfzaTAbK1eeC11TCKbsf7pKHyVOSGzJPPARZIX/ShlKXwTqhqK+xAa4ScpAjHi6ERVSgftAgpstL56UJSyQ6INwgXR+hJX7i9Ci7NfAKUiYRJN8gNsY1iyj0AdQnDxTnDeHSEpCXGVwpObhmWuWv+KRvlaRCCQYun63Uh0/xl2gqvG5ZSHDZPJOiP6q86j64CbcaAamYV2p7PQUTNULk2QPJziGVzp9fYbq/jyYZe+Mo1zjyRemBSn7oGneCLYWLn43xhRr/PdkGo8C8vxIkdOJD/jYxVDzBPIO4uxFIZPKDs+IctpMX9i/NzDYbqlJF7TZ9LbBDWUwm6FogYOQoAgONXOd6pwp5JP0L18pCmH+4ZTUrlQE4b3wff/at6cJQ0La4DDsjWBTEkVDDqCW3PTeF4H/xC6Kkl6WZgUL89w=="],
+  "nodes": {
+    "cpc104": {
+      "index": "0",
+      "shortname": "cpc104",
+      "longname": "clab-frr01-cpc104",
+      "fqdn": "cpc104.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc104",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.7",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::7",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc104",
+        "clab-node-longname": "clab-frr01-cpc104",
+        "clab-node-name": "cpc104",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "cpc105": {
+      "index": "1",
+      "shortname": "cpc105",
+      "longname": "clab-frr01-cpc105",
+      "fqdn": "cpc105.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc105",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.6",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::6",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc105",
+        "clab-node-longname": "clab-frr01-cpc105",
+        "clab-node-name": "cpc105",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "cpc106": {
+      "index": "2",
+      "shortname": "cpc106",
+      "longname": "clab-frr01-cpc106",
+      "fqdn": "cpc106.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc106",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.24",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::18",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc106",
+        "clab-node-longname": "clab-frr01-cpc106",
+        "clab-node-name": "cpc106",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "cpc107": {
+      "index": "3",
+      "shortname": "cpc107",
+      "longname": "clab-frr01-cpc107",
+      "fqdn": "cpc107.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc107",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.32",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::20",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc107",
+        "clab-node-longname": "clab-frr01-cpc107",
+        "clab-node-name": "cpc107",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "cpc108": {
+      "index": "4",
+      "shortname": "cpc108",
+      "longname": "clab-frr01-cpc108",
+      "fqdn": "cpc108.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc108",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.2",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::2",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc108",
+        "clab-node-longname": "clab-frr01-cpc108",
+        "clab-node-name": "cpc108",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "cpc109": {
+      "index": "5",
+      "shortname": "cpc109",
+      "longname": "clab-frr01-cpc109",
+      "fqdn": "cpc109.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc109",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.15",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::f",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cpc109",
+        "clab-node-longname": "clab-frr01-cpc109",
+        "clab-node-name": "cpc109",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "cr104": {
+      "index": "6",
+      "shortname": "cr104",
+      "longname": "clab-frr01-cr104",
+      "fqdn": "cr104.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr104",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.18",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::12",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr104",
+        "clab-node-longname": "clab-frr01-cr104",
+        "clab-node-name": "cr104",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "cr105": {
+      "index": "7",
+      "shortname": "cr105",
+      "longname": "clab-frr01-cr105",
+      "fqdn": "cr105.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr105",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.31",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::1f",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr105",
+        "clab-node-longname": "clab-frr01-cr105",
+        "clab-node-name": "cr105",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "cr106": {
+      "index": "8",
+      "shortname": "cr106",
+      "longname": "clab-frr01-cr106",
+      "fqdn": "cr106.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr106",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.8",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::8",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr106",
+        "clab-node-longname": "clab-frr01-cr106",
+        "clab-node-name": "cr106",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "cr107": {
+      "index": "9",
+      "shortname": "cr107",
+      "longname": "clab-frr01-cr107",
+      "fqdn": "cr107.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr107",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.12",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::c",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr107",
+        "clab-node-longname": "clab-frr01-cr107",
+        "clab-node-name": "cr107",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "cr108": {
+      "index": "10",
+      "shortname": "cr108",
+      "longname": "clab-frr01-cr108",
+      "fqdn": "cr108.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr108",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "",
+      "mgmt-ipv4-prefix-length": 0,
+      "mgmt-ipv6-address": "",
+      "mgmt-ipv6-prefix-length": 0,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr108",
+        "clab-node-longname": "clab-frr01-cr108",
+        "clab-node-name": "cr108",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "cr109": {
+      "index": "11",
+      "shortname": "cr109",
+      "longname": "clab-frr01-cr109",
+      "fqdn": "cr109.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr109",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.21",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::15",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/cr109",
+        "clab-node-longname": "clab-frr01-cr109",
+        "clab-node-name": "cr109",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "pc101": {
+      "index": "12",
+      "shortname": "pc101",
+      "longname": "clab-frr01-pc101",
+      "fqdn": "pc101.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc101",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.26",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::1a",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc101",
+        "clab-node-longname": "clab-frr01-pc101",
+        "clab-node-name": "pc101",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc111": {
+      "index": "13",
+      "shortname": "pc111",
+      "longname": "clab-frr01-pc111",
+      "fqdn": "pc111.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc111",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.13",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::d",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc111",
+        "clab-node-longname": "clab-frr01-pc111",
+        "clab-node-name": "pc111",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc121": {
+      "index": "14",
+      "shortname": "pc121",
+      "longname": "clab-frr01-pc121",
+      "fqdn": "pc121.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc121",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.20",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::14",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc121",
+        "clab-node-longname": "clab-frr01-pc121",
+        "clab-node-name": "pc121",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc131": {
+      "index": "15",
+      "shortname": "pc131",
+      "longname": "clab-frr01-pc131",
+      "fqdn": "pc131.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc131",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.29",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::1d",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc131",
+        "clab-node-longname": "clab-frr01-pc131",
+        "clab-node-name": "pc131",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc191": {
+      "index": "16",
+      "shortname": "pc191",
+      "longname": "clab-frr01-pc191",
+      "fqdn": "pc191.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc191",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.33",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::21",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc191",
+        "clab-node-longname": "clab-frr01-pc191",
+        "clab-node-name": "pc191",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc201": {
+      "index": "17",
+      "shortname": "pc201",
+      "longname": "clab-frr01-pc201",
+      "fqdn": "pc201.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc201",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.10",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::a",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc201",
+        "clab-node-longname": "clab-frr01-pc201",
+        "clab-node-name": "pc201",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc301": {
+      "index": "18",
+      "shortname": "pc301",
+      "longname": "clab-frr01-pc301",
+      "fqdn": "pc301.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc301",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.4",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::4",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc301",
+        "clab-node-longname": "clab-frr01-pc301",
+        "clab-node-name": "pc301",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "pc391": {
+      "index": "19",
+      "shortname": "pc391",
+      "longname": "clab-frr01-pc391",
+      "fqdn": "pc391.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc391",
+      "kind": "linux",
+      "image": "praqma/network-multitool:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.22",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::16",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/pc391",
+        "clab-node-longname": "clab-frr01-pc391",
+        "clab-node-name": "pc391",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 11443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 1180,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "r101": {
+      "index": "20",
+      "shortname": "r101",
+      "longname": "clab-frr01-r101",
+      "fqdn": "r101.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r101",
+      "kind": "linux",
+      "image": "frr-854-dev",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.30",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::1e",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r101",
+        "clab-node-longname": "clab-frr01-r101",
+        "clab-node-name": "r101",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r102": {
+      "index": "21",
+      "shortname": "r102",
+      "longname": "clab-frr01-r102",
+      "fqdn": "r102.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r102",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.17",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::11",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r102",
+        "clab-node-longname": "clab-frr01-r102",
+        "clab-node-name": "r102",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r103": {
+      "index": "22",
+      "shortname": "r103",
+      "longname": "clab-frr01-r103",
+      "fqdn": "r103.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r103",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.25",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::19",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r103",
+        "clab-node-longname": "clab-frr01-r103",
+        "clab-node-name": "r103",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r111": {
+      "index": "23",
+      "shortname": "r111",
+      "longname": "clab-frr01-r111",
+      "fqdn": "r111.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r111",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.23",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::17",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r111",
+        "clab-node-longname": "clab-frr01-r111",
+        "clab-node-name": "r111",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r112": {
+      "index": "24",
+      "shortname": "r112",
+      "longname": "clab-frr01-r112",
+      "fqdn": "r112.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r112",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.16",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::10",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r112",
+        "clab-node-longname": "clab-frr01-r112",
+        "clab-node-name": "r112",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r121": {
+      "index": "25",
+      "shortname": "r121",
+      "longname": "clab-frr01-r121",
+      "fqdn": "r121.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r121",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.14",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::e",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r121",
+        "clab-node-longname": "clab-frr01-r121",
+        "clab-node-name": "r121",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r122": {
+      "index": "26",
+      "shortname": "r122",
+      "longname": "clab-frr01-r122",
+      "fqdn": "r122.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r122",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.19",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::13",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r122",
+        "clab-node-longname": "clab-frr01-r122",
+        "clab-node-name": "r122",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r131": {
+      "index": "27",
+      "shortname": "r131",
+      "longname": "clab-frr01-r131",
+      "fqdn": "r131.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r131",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.9",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::9",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r131",
+        "clab-node-longname": "clab-frr01-r131",
+        "clab-node-name": "r131",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r191": {
+      "index": "28",
+      "shortname": "r191",
+      "longname": "clab-frr01-r191",
+      "fqdn": "r191.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r191",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.27",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::1b",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r191",
+        "clab-node-longname": "clab-frr01-r191",
+        "clab-node-name": "r191",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r201": {
+      "index": "29",
+      "shortname": "r201",
+      "longname": "clab-frr01-r201",
+      "fqdn": "r201.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r201",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.34",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::22",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r201",
+        "clab-node-longname": "clab-frr01-r201",
+        "clab-node-name": "r201",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r202": {
+      "index": "30",
+      "shortname": "r202",
+      "longname": "clab-frr01-r202",
+      "fqdn": "r202.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r202",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.28",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::1c",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r202",
+        "clab-node-longname": "clab-frr01-r202",
+        "clab-node-name": "r202",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r301": {
+      "index": "31",
+      "shortname": "r301",
+      "longname": "clab-frr01-r301",
+      "fqdn": "r301.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r301",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.5",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::5",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r301",
+        "clab-node-longname": "clab-frr01-r301",
+        "clab-node-name": "r301",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r302": {
+      "index": "32",
+      "shortname": "r302",
+      "longname": "clab-frr01-r302",
+      "fqdn": "r302.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r302",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.3",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::3",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r302",
+        "clab-node-longname": "clab-frr01-r302",
+        "clab-node-name": "r302",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r391": {
+      "index": "33",
+      "shortname": "r391",
+      "longname": "clab-frr01-r391",
+      "fqdn": "r391.frr01.io",
+      "group": "",
+      "labdir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r391",
+      "kind": "linux",
+      "image": "frr-854",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.11",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::b",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-eb9358ca403a",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/clab-frr01/r391",
+        "clab-node-longname": "clab-frr01-r391",
+        "clab-node-name": "r391",
+        "clab-node-type": "",
+        "clab-owner": "rcvijano",
+        "clab-topo-file": "/home/rcvijano/Repos/public/github/frr-mad/containerlab/frr01-dev.clab.yml",
+        "containerlab": "frr01"
+      },
+      "port-bindings": [
+      ]
+    }
+  },
+  "links": [
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:90:df:be",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r201",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:e3:61:26",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:07:7f:bf",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r102",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:65:d4:36",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth3",
+        "mac": "aa:c1:ab:bd:64:1c",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r103",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:5b:98:9e",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth4",
+        "mac": "aa:c1:ab:ad:cc:f0",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc101",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:3b:6b:c1",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth5",
+        "mac": "aa:c1:ab:98:40:e1",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r191",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:c4:3f:11",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth6",
+        "mac": "aa:c1:ab:d8:4d:bf",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cr104",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:66:54:47",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth7",
+        "mac": "aa:c1:ab:62:9b:4f",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cr105",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:cf:e6:4f",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth8",
+        "mac": "aa:c1:ab:d6:19:78",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cr106",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:ee:d4:fd",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth9",
+        "mac": "aa:c1:ab:45:a2:8e",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cr107",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:cf:19:e2",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth10",
+        "mac": "aa:c1:ab:7c:e7:fe",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cr108",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:2b:a7:7a",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r101",
+        "interface": "eth11",
+        "mac": "aa:c1:ab:04:0e:0d",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cr109",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:0f:d8:fc",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r102",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:c6:b6:19",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r103",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:53:a3:32",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r102",
+        "interface": "eth3",
+        "mac": "aa:c1:ab:06:8a:62",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r111",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:75:66:aa",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "cr104",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:96:0f:56",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cpc104",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:3e:36:e3",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "cr105",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:24:08:a3",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cpc105",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:d4:7c:ff",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "cr106",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:ab:d3:4a",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cpc106",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:22:01:58",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "cr107",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:87:64:a7",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cpc107",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:6b:69:30",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "cr108",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:10:2d:fb",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cpc108",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:47:12:07",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "cr109",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:ca:33:da",
+        "peer": "z"
+      },
+      "z": {
+        "node": "cpc109",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:1b:78:ac",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r111",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:2d:c1:e9",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc111",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:4a:ec:10",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r111",
+        "interface": "eth3",
+        "mac": "aa:c1:ab:d8:5e:de",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r112",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:5d:56:00",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r112",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:ed:d4:2d",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r301",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:bb:83:37",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r103",
+        "interface": "eth3",
+        "mac": "aa:c1:ab:33:45:dc",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r121",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:99:21:a9",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r121",
+        "interface": "eth3",
+        "mac": "aa:c1:ab:67:0e:f6",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc121",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:67:ff:83",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r121",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:9e:5e:13",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r122",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:db:6e:2a",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r122",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:ab:e4:f4",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r131",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:b7:d9:04",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r131",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:37:bd:b2",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc131",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:41:88:53",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r191",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:ae:6a:e6",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc191",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:68:81:4f",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r201",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:f0:d1:10",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r202",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:af:e9:e1",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r202",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:33:43:5c",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc201",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:36:2b:c0",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r301",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:db:ba:cd",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r302",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:4a:25:53",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r301",
+        "interface": "eth3",
+        "mac": "aa:c1:ab:e1:33:b1",
+        "peer": "z"
+      },
+      "z": {
+        "node": "r391",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:9b:2c:62",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r302",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:56:d5:1e",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc301",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:fe:a8:65",
+        "peer": "a"
+      }
+    },
+    {
+      "a": {
+        "node": "r391",
+        "interface": "eth2",
+        "mac": "aa:c1:ab:2c:78:3f",
+        "peer": "z"
+      },
+      "z": {
+        "node": "pc391",
+        "interface": "eth1",
+        "mac": "aa:c1:ab:aa:70:d6",
+        "peer": "a"
+      }
+    }
+  ]
+}
