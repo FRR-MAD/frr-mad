@@ -24,14 +24,56 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 3 {
 		return m.renderRunningConfigTab()
 	}
-	return m.renderOSPFTab0()
+	return m.renderAdvertisementTab()
 }
 
 func (m *Model) renderAdvertisementTab() string {
 	// on this view:
 	// show three advertisement boxes: based on vtysh LSA queries / based on file analysis / based on FIB analysis
-	returnString := "Advertisement"
-	return lipgloss.NewStyle().Render(returnString)
+
+	boxWidthForTwo := (m.windowSize.Width - 10) / 2 // - 6 (padding+margin content) - 2 (for gap) - 2 (for border)
+	if boxWidthForTwo < 20 {
+		boxWidthForTwo = 20 // Minimum width to ensure readability
+	}
+
+	shouldAdvertisedTitle := styles.BoxTitleStyle.Render("Should be Advertised")
+
+	shouldAdvertisedContent := "Area 0.0.0.0: \n"
+
+	shouldAdvertisedRouterLSA := styles.ActiveContentStyle.
+		Width(boxWidthForTwo - 2).
+		Render("Area 0.0.0.0, Router LSAs (Type 1)")
+	shouldAdvertisedContent += shouldAdvertisedRouterLSA
+
+	shouldAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, shouldAdvertisedTitle, shouldAdvertisedContent)
+	shouldAdvertisedBox := lipgloss.NewStyle().Render(shouldAdvertisedVerticalStyle)
+
+	// ----------------------------------------------------
+	gap := 2
+	// ----------------------------------------------------
+
+	isAdvertisedTitle := styles.BoxTitleStyle.Render("Is Advertised")
+
+	isAdvertisedContent := "Area 0.0.0.0: \n"
+
+	// for each area create area box --> need length of areas
+
+	isAdvertisedRouterLSA := styles.ActiveContentStyle.
+		Width(boxWidthForTwo - 2).
+		Render("Area 0.0.0.0, Router LSAs (Type 1)")
+	isAdvertisedContent += isAdvertisedRouterLSA
+
+	isAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, isAdvertisedTitle, isAdvertisedContent)
+	isAdvertisedBox := lipgloss.NewStyle().Render(isAdvertisedVerticalStyle)
+	// returnString := "Advertisement"
+
+	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top,
+		isAdvertisedBox,
+		lipgloss.NewStyle().Width(gap).Render(""),
+		shouldAdvertisedBox,
+	)
+
+	return horizontalBoxes
 }
 
 func (m *Model) renderOSPFTab0() string {

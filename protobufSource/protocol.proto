@@ -131,8 +131,9 @@ message IPPrefix {
 }
 
 message SystemMetrics {
-  double cpu_usage = 1;
-  double memory_usage = 2;
+  int64 cpu_amount = 1;
+  double cpu_usage = 2;
+  double memory_usage = 3;
 }
 
 // ================ OLD setup ================

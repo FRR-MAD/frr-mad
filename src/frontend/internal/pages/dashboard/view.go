@@ -4,7 +4,6 @@ import (
 	"fmt"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
-	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
@@ -51,11 +50,11 @@ func (m *Model) renderOSPFDashboard() string {
 	allGoodRows := backend.GetOSPFMetrics()
 	anomalyRows := backend.GetOSPFAnomalies()
 
-	advertisingRouteTitle1 := styles.OSPFMonitoringTableTitleStyle.
+	advertisingRouteTitle1 := styles.ActiveContentStyle.
 		Width(boxWidthThreeFourth - 2).
 		Render("Area 0.0.0.0, Router LSAs (Type 1)")
 
-	advertisingRouteTitle2 := styles.OSPFMonitoringTableTitleStyle.
+	advertisingRouteTitle2 := styles.ActiveContentStyle.
 		Width(boxWidthThreeFourth - 2).
 		Render("Area 0.0.0.0, Autonomous System External LSAs (Type 5)")
 
@@ -90,11 +89,28 @@ func (m *Model) renderOSPFDashboard() string {
 		Headers("Advertised Route", "Anomaly Type", "Details", "Troubleshot").
 		Rows(anomalyRows...)
 
-	systemResourcesBackend, _ := getSystemResources()
+	cpuAmount, cpuUsage, memoryUsage, err := getSystemResources()
+	var cpuAmountString, cpuUsageString, memoryString string
+	if err != nil {
+		cpuAmountString = "N/A"
+		cpuUsageString = "N/A"
+		memoryString = "N/A"
+	} else {
+		cpuAmountString = fmt.Sprintf("%v", cpuAmount)
+		cpuUsageString = fmt.Sprintf("%.2f%%", cpuUsage*100)
+		memoryString = fmt.Sprintf("%.2f%%", memoryUsage*100)
+	}
+
+	// Convert 0.0–1.0 → percentage and clamp to [0,100]
+	//cpuPct := clamp(cpuUsage*100, 0, 100)
+	// memPct := clamp(memoryUsage*100, 0, 100)
 
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
 		styles.BoxTitleStyle.Render("System Resources"),
-		styles.GeneralBoxStyle.Width(boxWidthOneFourth-2).Render("here\nsome\nresources: \n"),
+		styles.GeneralBoxStyle.Width(boxWidthOneFourth-2).
+			Render("CPU Usage:\n"+cpuUsageString+
+				"\nCores:\n"+cpuAmountString+
+				"\n\nMemory Usage:\n"+memoryString),
 	)
 
 	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
@@ -106,8 +122,6 @@ func (m *Model) renderOSPFDashboard() string {
 		ospfTable.Render(),
 		styles.BoxTitleStyle.Render("OSPF Anomaly Detected"),
 		ospfBadTable.Render(),
-		styles.BoxTitleStyle.Render("Original Backend Call"),
-		systemResourcesBackend,
 	)
 
 	// Update the viewport content with...
@@ -122,24 +136,33 @@ func (m *Model) renderOSPFDashboard() string {
 	return horizontalDashboard
 }
 
-func getSystemResources() (string, error) {
-	params := map[string]*frrProto.ResponseValue{
-		"client_id": &frrProto.ResponseValue{
-			Kind: &frrProto.ResponseValue_StringValue{
-				StringValue: "example_client",
-			},
-		},
-	}
+func getSystemResources() (int64, float64, float64, error) {
 
-	response, err := backend.SendMessage("system", "allResources", params)
+	response, err := backend.SendMessage("system", "allResources", nil)
 	if err != nil {
-		return "err occurred in getSystemResources()", fmt.Errorf("rpc error: %w", err)
+		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
 	}
 	if response.Status != "success" {
-		return "response.Status was no success", fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
+		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
 	}
 
-	stringValue := response.Data.GetStringValue()
+	systemMetrics := response.Data.GetSystemMetrics()
 
-	return stringValue, nil
+	cores := systemMetrics.CpuAmount
+	cpuUsage := systemMetrics.CpuUsage
+	memoryUsage := systemMetrics.MemoryUsage
+
+	return cores, cpuUsage, memoryUsage, nil
+}
+
+// clamp returns x clamped to the [min,max] interval.
+func clamp(x, min, max float64) float64 {
+	switch {
+	case x < min:
+		return min
+	case x > max:
+		return max
+	default:
+		return x
+	}
 }

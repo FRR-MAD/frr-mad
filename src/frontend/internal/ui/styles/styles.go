@@ -42,7 +42,7 @@ var BoxTitleStyle = lipgloss.NewStyle().
 var TextOutputStyle = lipgloss.NewStyle().
 	Padding(1, 2)
 
-var OSPFMonitoringTableTitleStyle = GeneralBoxStyle.
+var ActiveContentStyle = GeneralBoxStyle.
 	BorderBottom(false)
 
 // ----------------------------

@@ -1188,8 +1188,9 @@ func (x *IPPrefix) GetPrefixLength() uint32 {
 
 type SystemMetrics struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CpuUsage      float64                `protobuf:"fixed64,1,opt,name=cpu_usage,json=cpuUsage,proto3" json:"cpu_usage,omitempty"`
-	MemoryUsage   float64                `protobuf:"fixed64,2,opt,name=memory_usage,json=memoryUsage,proto3" json:"memory_usage,omitempty"`
+	CpuAmount     int64                  `protobuf:"varint,1,opt,name=cpu_amount,json=cpuAmount,proto3" json:"cpu_amount,omitempty"`
+	CpuUsage      float64                `protobuf:"fixed64,2,opt,name=cpu_usage,json=cpuUsage,proto3" json:"cpu_usage,omitempty"`
+	MemoryUsage   float64                `protobuf:"fixed64,3,opt,name=memory_usage,json=memoryUsage,proto3" json:"memory_usage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1222,6 +1223,13 @@ func (x *SystemMetrics) ProtoReflect() protoreflect.Message {
 // Deprecated: Use SystemMetrics.ProtoReflect.Descriptor instead.
 func (*SystemMetrics) Descriptor() ([]byte, []int) {
 	return file_protocol_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SystemMetrics) GetCpuAmount() int64 {
+	if x != nil {
+		return x.CpuAmount
+	}
+	return 0
 }
 
 func (x *SystemMetrics) GetCpuUsage() float64 {
@@ -5783,10 +5791,12 @@ const file_protocol_proto_rawDesc = "" +
 	"\bIPPrefix\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\x12#\n" +
-	"\rprefix_length\x18\x18 \x01(\rR\fprefixLength\"O\n" +
-	"\rSystemMetrics\x12\x1b\n" +
-	"\tcpu_usage\x18\x01 \x01(\x01R\bcpuUsage\x12!\n" +
-	"\fmemory_usage\x18\x02 \x01(\x01R\vmemoryUsage\"\x9f\x01\n" +
+	"\rprefix_length\x18\x18 \x01(\rR\fprefixLength\"n\n" +
+	"\rSystemMetrics\x12\x1d\n" +
+	"\n" +
+	"cpu_amount\x18\x01 \x01(\x03R\tcpuAmount\x12\x1b\n" +
+	"\tcpu_usage\x18\x02 \x01(\x01R\bcpuUsage\x12!\n" +
+	"\fmemory_usage\x18\x03 \x01(\x01R\vmemoryUsage\"\x9f\x01\n" +
 	"\rNetworkConfig\x12\x1b\n" +
 	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12-\n" +
 	"\x05areas\x18\x02 \x03(\v2\x17.communication.OSPFAreaR\x05areas\x12B\n" +
