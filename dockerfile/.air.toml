@@ -1,5 +1,5 @@
 # Root directory
-root = "/app/src/backend"
+root = "/app/src"
 # Temporary directory for builds
 tmp_dir = "/app/tmp"
 

@@ -23,16 +23,16 @@ type Socket struct {
 	socketPath string
 	listener   net.Listener
 	mutex      sync.Mutex
-	collector  *aggregator.Collector
+	metrics    *aggregator.TempFRRMetrics
 	analyzer   *analyzer.Analyzer
 	logger     *logger.Logger
 }
 
-func NewSocket(socketPath map[string]string, collector *aggregator.Collector, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
+func NewSocket(socketPath map[string]string, metrics *aggregator.TempFRRMetrics, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
 	return &Socket{
 		socketPath: socketPath["UnixSocketLocation"],
 		mutex:      sync.Mutex{},
-		collector:  collector,
+		metrics:    metrics,
 		analyzer:   analyzer,
 		logger:     logger,
 	}

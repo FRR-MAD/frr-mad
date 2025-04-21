@@ -50,7 +50,6 @@ message ResponseValue {
     RouteList routes = 13;
     StaticFRRConfiguration static_frr_configuration = 14;
     SystemMetrics system_metrics = 15;
-
   }
 }
 

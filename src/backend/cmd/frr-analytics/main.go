@@ -108,7 +108,7 @@ func main() {
 	}
 
 	// start socket
-	sockServer := socket.NewSocket(socketConfig, madService.Aggregator, madService.Analyzer, applicationLogger)
+	sockServer := socket.NewSocket(socketConfig, madService.Aggregator.TempFrrMetrics, madService.Analyzer, applicationLogger)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
