@@ -15,12 +15,16 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	case "ospf":
 		switch message.Command {
 		case "dummy":
-			//return s.ospfDummyData()
-
 			response.Status = "success"
 			response.Message = "Returning magical ospf dummy data"
 
 			return &response
+		case "database":
+			return s.getOspfDatabase()
+		case "router":
+			return s.getOspfRouterData()
+		case "network":
+			return s.getOspfNetworkData()
 		default:
 			response.Status = "error"
 			response.Message = "There was an error"
