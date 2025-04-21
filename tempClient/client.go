@@ -158,7 +158,7 @@ func printResponseData(data *frrProto.ResponseValue) {
 		return
 	}
 
-	fmt.Printf("Data: %v\n", data)
+	fmt.Printf("Data: %v\n", data.String())
 
 	// switch v := data.Kind.(type) {
 	// case *frrProto.Value_StringValue:
