@@ -289,6 +289,46 @@ func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, 
 	return &result, nil
 }
 
+func ParseFullOSPFDatabase(jsonData []byte) (*OSPFDatabase, error) {
+	var response OSPFDatabase
+	if err := json.Unmarshal(jsonData, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse: %w", err)
+	}
+	return &response, nil
+}
+
+func ParseOSPFDuplicates(jsonData []byte) (*OSPFDuplicates, error) {
+	var response OSPFDuplicates
+	if err := json.Unmarshal(jsonData, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse: %w", err)
+	}
+	return &response, nil
+}
+
+func ParseOSPFNeighbors(jsonData []byte) (*OSPFNeighbors, error) {
+	var response OSPFNeighbors
+	if err := json.Unmarshal(jsonData, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse: %w", err)
+	}
+	return &response, nil
+}
+
+func ParseInterfaceStatus(jsonData []byte) (*InterfaceList, error) {
+	var response InterfaceList
+	if err := json.Unmarshal(jsonData, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse: %w", err)
+	}
+	return &response, nil
+}
+
+func ParseRouteList(jsonData []byte) (*RouteList, error) {
+	var response RouteList
+	if err := json.Unmarshal(jsonData, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse: %w", err)
+	}
+	return &response, nil
+}
+
 func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error) {
 	file, err := os.Open(path)
 	if err != nil {
