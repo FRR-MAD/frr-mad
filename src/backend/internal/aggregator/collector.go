@@ -11,214 +11,6 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// type OSPFDatabase struct {
-// 	RouterID             string                      `json:"routerId"`
-// 	Areas                map[string]OSPFDatabaseArea `json:"areas"`
-// 	ASExternalLinkStates []ASExternalLSA             `json:"asExternalLinkStates"`
-// 	ASExternalCount      int                         `json:"asExternalLinkStatesCount"`
-// }
-
-// type OSPFDatabaseArea struct {
-// 	RouterLinkStates           []RouterLSA      `json:"routerLinkStates"`
-// 	RouterLinkStatesCount      int              `json:"routerLinkStatesCount"`
-// 	NetworkLinkStates          []NetworkLSA     `json:"networkLinkStates"`
-// 	NetworkLinkStatesCount     int              `json:"networkLinkStatesCount"`
-// 	SummaryLinkStates          []SummaryLSA     `json:"summaryLinkStates"`
-// 	SummaryLinkStatesCount     int              `json:"summaryLinkStatesCount"`
-// 	ASBRSummaryLinkStates      []ASBRSummaryLSA `json:"asbrSummaryLinkStates"`
-// 	ASBRSummaryLinkStatesCount int              `json:"asbrSummaryLinkStatesCount"`
-// }
-
-// type BaseLSA struct {
-// 	LSID             string `json:"lsId"`
-// 	AdvertisedRouter string `json:"advertisedRouter"`
-// 	LSAAge           int    `json:"lsaAge"`
-// 	SequenceNumber   string `json:"sequenceNumber"`
-// 	Checksum         string `json:"checksum"`
-// }
-
-// type RouterLSA struct {
-// 	BaseLSA
-// 	NumOfRouterLinks int `json:"numOfRouterLinks"`
-// }
-
-// type NetworkLSA struct {
-// 	BaseLSA
-// }
-
-// type SummaryLSA struct {
-// 	BaseLSA
-// 	SummaryAddress string `json:"summaryAddress"`
-// }
-
-// type ASBRSummaryLSA struct {
-// 	BaseLSA
-// }
-
-// type ASExternalLSA struct {
-// 	BaseLSA
-// 	MetricType string `json:"metricType"` // E1 or E2
-// 	Route      string `json:"route"`      // Prefix with mask
-// 	Tag        int    `json:"tag"`
-// }
-
-// // ------------------------------------------------------------------------------------------------------------------------------------
-
-// type OSPFDuplicates struct {
-// 	RouterID             string                `json:"routerId"`
-// 	ASExternalLinkStates []ASExternalLinkState `json:"asExternalLinkStates"`
-// }
-
-// type ASExternalLinkState struct {
-// 	LSAAge            int    `json:"lsaAge"`
-// 	Options           string `json:"options"`
-// 	LSAFlags          int    `json:"lsaFlags"`
-// 	LSAType           string `json:"lsaType"`
-// 	LinkStateID       string `json:"linkStateId"`
-// 	AdvertisingRouter string `json:"advertisingRouter"`
-// 	LSASeqNumber      string `json:"lsaSeqNumber"`
-// 	Checksum          string `json:"checksum"`
-// 	Length            int    `json:"length"`
-// 	NetworkMask       int    `json:"networkMask"`
-// 	MetricType        string `json:"metricType"`
-// 	TOS               int    `json:"tos"`
-// 	Metric            int    `json:"metric"`
-// 	ForwardAddress    string `json:"forwardAddress"`
-// 	ExternalRouteTag  int    `json:"externalRouteTag"`
-// }
-
-// // ------------------------------------------------------------------------------------------------------------------------------------
-
-// type OSPFNeighbors struct {
-// 	Neighbors map[string][]Neighbor `json:"neighbors"`
-// }
-// type Neighbor struct {
-// 	Priority                           int    `json:"priority"`
-// 	State                              string `json:"state"`
-// 	NbrPriority                        int    `json:"nbrPriority"`
-// 	NbrState                           string `json:"nbrState"`
-// 	Converged                          string `json:"converged"`
-// 	Role                               string `json:"role"`
-// 	UpTimeInMsec                       int64  `json:"upTimeInMsec"`
-// 	DeadTimeMsecs                      int    `json:"deadTimeMsecs"`
-// 	RouterDeadIntervalTimerDueMsec     int    `json:"routerDeadIntervalTimerDueMsec"`
-// 	UpTime                             string `json:"upTime"`
-// 	DeadTime                           string `json:"deadTime"`
-// 	Address                            string `json:"address"`
-// 	IfaceAddress                       string `json:"ifaceAddress"`
-// 	IfaceName                          string `json:"ifaceName"`
-// 	RetransmitCounter                  int    `json:"retransmitCounter"`
-// 	LinkStateRetransmissionListCounter int    `json:"linkStateRetransmissionListCounter"`
-// 	RequestCounter                     int    `json:"requestCounter"`
-// 	LinkStateRequestListCounter        int    `json:"linkStateRequestListCounter"`
-// 	DbSummaryCounter                   int    `json:"dbSummaryCounter"`
-// 	DatabaseSummaryListCounter         int    `json:"databaseSummaryListCounter"`
-// }
-
-// // ------------------------------------------------------------------------------------------------------------------------------------
-
-// type InterfaceList map[string]SingleInterface
-
-// type SingleInterface struct {
-// 	AdministrativeStatus string      `json:"administrativeStatus"`
-// 	OperationalStatus    string      `json:"operationalStatus"`
-// 	LinkDetection        bool        `json:"linkDetection"`
-// 	LinkUps              int         `json:"linkUps"`
-// 	LinkDowns            int         `json:"linkDowns"`
-// 	LastLinkUp           string      `json:"lastLinkUp,omitempty"`
-// 	LastLinkDown         string      `json:"lastLinkDown,omitempty"`
-// 	VrfName              string      `json:"vrfName"`
-// 	MplsEnabled          bool        `json:"mplsEnabled"`
-// 	LinkDown             bool        `json:"linkDown"`
-// 	LinkDownV6           bool        `json:"linkDownV6"`
-// 	McForwardingV4       bool        `json:"mcForwardingV4"`
-// 	McForwardingV6       bool        `json:"mcForwardingV6"`
-// 	PseudoInterface      bool        `json:"pseudoInterface"`
-// 	Index                int         `json:"index"`
-// 	Metric               int         `json:"metric"`
-// 	Mtu                  int         `json:"mtu"`
-// 	Speed                int         `json:"speed"`
-// 	Flags                string      `json:"flags"`
-// 	Type                 string      `json:"type"`
-// 	HardwareAddress      string      `json:"hardwareAddress,omitempty"`
-// 	IpAddresses          []IpAddress `json:"ipAddresses"`
-// 	InterfaceType        string      `json:"interfaceType"`
-// 	InterfaceSlaveType   string      `json:"interfaceSlaveType"`
-// 	LacpBypass           bool        `json:"lacpBypass"`
-// 	EvpnMh               EvpnMh      `json:"evpnMh"`
-// 	Protodown            string      `json:"protodown"`
-// 	ParentIfindex        int         `json:"parentIfindex,omitempty"`
-// }
-
-// type IpAddress struct {
-// 	Address    string `json:"address"`
-// 	Secondary  bool   `json:"secondary"`
-// 	Unnumbered bool   `json:"unnumbered"`
-// }
-
-// type EvpnMh struct {
-// 	EthernetSegmentID string `json:"ethernetSegmentId,omitempty"`
-// 	ESI               string `json:"esi,omitempty"`
-// 	DFPreference      int    `json:"dfPreference,omitempty"`
-// 	DFAlgorithm       string `json:"dfAlgorithm,omitempty"`
-// 	DFStatus          string `json:"dfStatus,omitempty"`
-// 	MultiHomingMode   string `json:"multihomingMode,omitempty"`
-// 	ActiveMode        bool   `json:"activeMode,omitempty"`
-// 	BypassMode        bool   `json:"bypassMode,omitempty"`
-// 	LocalBias         bool   `json:"localBias,omitempty"`
-// 	FastFailover      bool   `json:"fastFailover,omitempty"`
-// 	UpTime            string `json:"upTime,omitempty"`
-// 	BGPStatus         string `json:"bgpStatus,omitempty"`
-// 	ProtocolStatus    string `json:"protocolStatus,omitempty"`
-// 	ProtocolDown      bool   `json:"protocolDown,omitempty"`
-// 	MacCount          int    `json:"macCount,omitempty"`
-// 	LocalIfindex      int    `json:"localIfindex,omitempty"`
-// 	NetworkCount      int    `json:"networkCount,omitempty"`
-// 	JoinCount         int    `json:"joinCount,omitempty"`
-// 	LeaveCount        int    `json:"leaveCount,omitempty"`
-// }
-
-// // ------------------------------------------------------------------------------------------------------------------------------------
-
-// type RouteList map[string][]Route
-
-// type Route struct {
-// 	Prefix                   string    `json:"prefix"`
-// 	PrefixLen                int       `json:"prefixLen"`
-// 	Protocol                 string    `json:"protocol"`
-// 	VrfID                    int       `json:"vrfId"`
-// 	VrfName                  string    `json:"vrfName"`
-// 	Selected                 bool      `json:"selected,omitempty"`
-// 	DestSelected             bool      `json:"destSelected,omitempty"`
-// 	Distance                 int       `json:"distance"`
-// 	Metric                   int       `json:"metric"`
-// 	Installed                bool      `json:"installed,omitempty"`
-// 	Table                    int       `json:"table"`
-// 	InternalStatus           int       `json:"internalStatus"`
-// 	InternalFlags            int       `json:"internalFlags"`
-// 	InternalNextHopNum       int       `json:"internalNextHopNum"`
-// 	InternalNextHopActiveNum int       `json:"internalNextHopActiveNum"`
-// 	NexthopGroupID           int       `json:"nexthopGroupId"`
-// 	InstalledNexthopGroupID  int       `json:"installedNexthopGroupId,omitempty"`
-// 	Uptime                   string    `json:"uptime"`
-// 	Nexthops                 []Nexthop `json:"nexthops"`
-// }
-
-// type Nexthop struct {
-// 	Flags             int    `json:"flags"`
-// 	Fib               bool   `json:"fib,omitempty"`
-// 	DirectlyConnected bool   `json:"directlyConnected,omitempty"`
-// 	Duplicate         bool   `json:"duplicate,omitempty"`
-// 	IP                string `json:"ip,omitempty"`
-// 	Afi               string `json:"afi,omitempty"`
-// 	InterfaceIndex    int    `json:"interfaceIndex"`
-// 	InterfaceName     string `json:"interfaceName"`
-// 	Active            bool   `json:"active"`
-// 	Weight            int    `json:"weight,omitempty"`
-// }
-
-// ------------------------------------------------------------------------------------------------------------------------------------
-
 type Collector struct {
 	fetcher     *Fetcher
 	configPath  string
@@ -338,7 +130,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", out1)
+	fmt.Printf("Response FetchFullOSPFDatabase: \n%+v\n", out1)
 
 	out2, err := FetchOSPFDuplicateCandidates(executor)
 	if err != nil {
@@ -347,16 +139,16 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", out2)
+	fmt.Printf("Response FetchOSPFDuplicateCandidates: \n%+v\n", out2)
 
 	out3, err := FetchOSPFNeighbors(executor)
 	if err != nil {
-		//fmt.Print(err)
+		fmt.Print(err)
 		c.logger.Error(err.Error())
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", out3)
+	fmt.Printf("Response FetchOSPFNeighbors: \n%+v\n", out3)
 
 	out4, err := FetchInterfaceStatus(executor)
 	if err != nil {
@@ -365,7 +157,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", out4)
+	fmt.Printf("Response FetchInterfaceStatus: \n%+v\n", out4)
 
 	out5, err := FetchExpectedRoutes(executor)
 	if err != nil {
@@ -374,9 +166,9 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		//os.Exit(1)
 	}
 
-	fmt.Printf("Response: \n%+v\n", out5)
+	fmt.Printf("Response FetchExpectedRoutes: \n%+v\n", out5)
 
-	//os.Exit(0)
+	os.Exit(0)
 
 	//config, err := ParseStaticFRRConfig(c.configPath)
 	if err != nil {

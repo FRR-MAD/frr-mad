@@ -290,43 +290,326 @@ func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, 
 }
 
 func ParseFullOSPFDatabase(jsonData []byte) (*frrProto.OSPFDatabase, error) {
-	var response frrProto.OSPFDatabase
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse: %w", err)
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if areas, ok := jsonMap["areas"].(map[string]interface{}); ok {
+		transformedAreas := make(map[string]interface{})
+		for areaID, areaData := range areas {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedArea := make(map[string]interface{})
+
+			if routerLSAs, ok := areaDataMap["routerLinkStates"].([]interface{}); ok {
+				transformedRouterLSAs := make([]interface{}, len(routerLSAs))
+				for i, lsa := range routerLSAs {
+					transformedRouterLSAs[i] = transformDatabaseRouterLSA(lsa.(map[string]interface{}))
+				}
+				transformedArea["router_link_states"] = transformedRouterLSAs
+				transformedArea["router_link_states_count"] = areaDataMap["routerLinkStatesCount"]
+			}
+
+			// Transform Network Link States
+			if networkLSAs, ok := areaDataMap["networkLinkStates"].([]interface{}); ok {
+				transformedNetworkLSAs := make([]interface{}, len(networkLSAs))
+				for i, lsa := range networkLSAs {
+					transformedNetworkLSAs[i] = transformDatabaseNetworkLSA(lsa.(map[string]interface{}))
+				}
+				transformedArea["network_link_states"] = transformedNetworkLSAs
+				transformedArea["network_link_states_count"] = areaDataMap["networkLinkStatesCount"]
+			}
+
+			// Transform Summary Link States
+			if summaryLSAs, ok := areaDataMap["summaryLinkStates"].([]interface{}); ok {
+				transformedSummaryLSAs := make([]interface{}, len(summaryLSAs))
+				for i, lsa := range summaryLSAs {
+					transformedSummaryLSAs[i] = transformDatabaseSummaryLSA(lsa.(map[string]interface{}))
+				}
+				transformedArea["summary_link_states"] = transformedSummaryLSAs
+				transformedArea["summary_link_states_count"] = areaDataMap["summaryLinkStatesCount"]
+			}
+
+			// Transform ASBR Summary Link States
+			if asbrSummaryLSAs, ok := areaDataMap["asbrSummaryLinkStates"].([]interface{}); ok {
+				transformedASBRLSAs := make([]interface{}, len(asbrSummaryLSAs))
+				for i, lsa := range asbrSummaryLSAs {
+					transformedASBRLSAs[i] = transformDatabaseASBRSummaryLSA(lsa.(map[string]interface{}))
+				}
+				transformedArea["asbr_summary_link_states"] = transformedASBRLSAs
+				transformedArea["asbr_summary_link_states_count"] = areaDataMap["asbrSummaryLinkStatesCount"]
+			}
+
+			transformedAreas[areaID] = transformedArea
+		}
+		transformedMap["areas"] = transformedAreas
+	}
+
+	// Transform AS External Link States
+	if extLSAs, ok := jsonMap["asExternalLinkStates"].([]interface{}); ok {
+		transformedExtLSAs := make([]interface{}, len(extLSAs))
+		for i, lsa := range extLSAs {
+			transformedExtLSAs[i] = transformDatabaseExternalLSA(lsa.(map[string]interface{}))
+		}
+		transformedMap["as_external_link_states"] = transformedExtLSAs
+		transformedMap["as_external_count"] = jsonMap["asExternalLinkStatesCount"]
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFDatabase
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
 func ParseOSPFDuplicates(jsonData []byte) (*frrProto.OSPFDuplicates, error) {
-	var response frrProto.OSPFDuplicates
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse: %w", err)
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if extLSAs, ok := jsonMap["asExternalLinkStates"].([]interface{}); ok {
+		transformedExtLSAs := make([]interface{}, len(extLSAs))
+		for i, lsa := range extLSAs {
+			transformedExtLSAs[i] = transformExternalLinkState(lsa.(map[string]interface{}))
+		}
+		transformedMap["as_external_link_states"] = transformedExtLSAs
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFDuplicates
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
 func ParseOSPFNeighbors(jsonData []byte) (*frrProto.OSPFNeighbors, error) {
-	var response frrProto.OSPFNeighbors
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse: %w", err)
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	transformedMap := make(map[string]interface{})
+	if neighbors, ok := jsonMap["neighbors"].(map[string]interface{}); ok {
+		transformedNeighbors := make(map[string]interface{})
+		for iface, neighborList := range neighbors {
+			neighborsSlice := neighborList.([]interface{})
+			transformedNeighborList := make([]interface{}, len(neighborsSlice))
+
+			for i, neighbor := range neighborsSlice {
+				transformedNeighborList[i] = transformNeighbor(neighbor.(map[string]interface{}))
+			}
+
+			transformedNeighbors[iface] = map[string]interface{}{
+				"neighbors": transformedNeighborList,
+			}
+		}
+		transformedMap["neighbors"] = transformedNeighbors
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFNeighbors
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
 }
 
 func ParseInterfaceStatus(jsonData []byte) (*frrProto.InterfaceList, error) {
-	var response frrProto.InterfaceList
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse: %w", err)
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal(jsonData, &rawResponse); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	result := &frrProto.InterfaceList{
+		Interfaces: make(map[string]*frrProto.SingleInterface),
+	}
+
+	for ifaceName, ifaceData := range rawResponse {
+		ifaceMap, ok := ifaceData.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		singleIface := &frrProto.SingleInterface{
+			IpAddresses: make([]*frrProto.IpAddress, 0),
+		}
+
+		// Map all simple fields
+		singleIface.AdministrativeStatus = getString(ifaceMap, "administrativeStatus")
+		singleIface.OperationalStatus = getString(ifaceMap, "operationalStatus")
+		singleIface.LinkDetection = getBool(ifaceMap, "linkDetection")
+		singleIface.LinkUps = int32(getFloat(ifaceMap, "linkUps"))
+		singleIface.LinkDowns = int32(getFloat(ifaceMap, "linkDowns"))
+		singleIface.LastLinkUp = getString(ifaceMap, "lastLinkUp")
+		singleIface.LastLinkDown = getString(ifaceMap, "lastLinkDown")
+		singleIface.VrfName = getString(ifaceMap, "vrfName")
+		singleIface.MplsEnabled = getBool(ifaceMap, "mplsEnabled")
+		singleIface.LinkDown = getBool(ifaceMap, "linkDown")
+		singleIface.LinkDownV6 = getBool(ifaceMap, "linkDownV6")
+		singleIface.McForwardingV4 = getBool(ifaceMap, "mcForwardingV4")
+		singleIface.McForwardingV6 = getBool(ifaceMap, "mcForwardingV6")
+		singleIface.PseudoInterface = getBool(ifaceMap, "pseudoInterface")
+		singleIface.Index = int32(getFloat(ifaceMap, "index"))
+		singleIface.Metric = int32(getFloat(ifaceMap, "metric"))
+		singleIface.Mtu = int32(getFloat(ifaceMap, "mtu"))
+		singleIface.Speed = int32(getFloat(ifaceMap, "speed"))
+		singleIface.Flags = getString(ifaceMap, "flags")
+		singleIface.Type = getString(ifaceMap, "type")
+		singleIface.HardwareAddress = getString(ifaceMap, "hardwareAddress")
+		singleIface.InterfaceType = getString(ifaceMap, "interfaceType")
+		singleIface.InterfaceSlaveType = getString(ifaceMap, "interfaceSlaveType")
+		singleIface.LacpBypass = getBool(ifaceMap, "lacpBypass")
+		singleIface.Protodown = getString(ifaceMap, "protodown")
+		singleIface.ParentIfindex = int32(getFloat(ifaceMap, "parentIfindex"))
+
+		// Handle IP addresses
+		if ipAddrs, ok := ifaceMap["ipAddresses"].([]interface{}); ok {
+			for _, ipAddr := range ipAddrs {
+				if ipMap, ok := ipAddr.(map[string]interface{}); ok {
+					ip := &frrProto.IpAddress{
+						Address:    getString(ipMap, "address"),
+						Secondary:  getBool(ipMap, "secondary"),
+						Unnumbered: getBool(ipMap, "unnumbered"),
+					}
+					singleIface.IpAddresses = append(singleIface.IpAddresses, ip)
+				}
+			}
+		}
+
+		// Handle EVPN MH
+		if evpnData, ok := ifaceMap["evpnMh"].(map[string]interface{}); ok {
+			singleIface.EvpnMh = &frrProto.EvpnMh{
+				EthernetSegmentId: getString(evpnData, "ethernetSegmentId"),
+				Esi:               getString(evpnData, "esi"),
+				DfPreference:      int32(getFloat(evpnData, "dfPreference")),
+				DfAlgorithm:       getString(evpnData, "dfAlgorithm"),
+				DfStatus:          getString(evpnData, "dfStatus"),
+				MultiHomingMode:   getString(evpnData, "multihomingMode"),
+				ActiveMode:        getBool(evpnData, "activeMode"),
+				BypassMode:        getBool(evpnData, "bypassMode"),
+				LocalBias:         getBool(evpnData, "localBias"),
+				FastFailover:      getBool(evpnData, "fastFailover"),
+				UpTime:            getString(evpnData, "upTime"),
+				BgpStatus:         getString(evpnData, "bgpStatus"),
+				ProtocolStatus:    getString(evpnData, "protocolStatus"),
+				ProtocolDown:      getBool(evpnData, "protocolDown"),
+				MacCount:          int32(getFloat(evpnData, "macCount")),
+				LocalIfindex:      int32(getFloat(evpnData, "localIfindex")),
+				NetworkCount:      int32(getFloat(evpnData, "networkCount")),
+				JoinCount:         int32(getFloat(evpnData, "joinCount")),
+				LeaveCount:        int32(getFloat(evpnData, "leaveCount")),
+			}
+		}
+
+		result.Interfaces[ifaceName] = singleIface
+	}
+
+	return result, nil
 }
 
 func ParseRouteList(jsonData []byte) (*frrProto.RouteList, error) {
-	var response frrProto.RouteList
-	if err := json.Unmarshal(jsonData, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse: %w", err)
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal(jsonData, &rawResponse); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return &response, nil
+
+	result := &frrProto.RouteList{
+		Routes: make(map[string]*frrProto.RouteEntry),
+	}
+
+	for prefix, routeData := range rawResponse {
+		routeSlice, ok := routeData.([]interface{})
+		if !ok {
+			continue
+		}
+
+		routeEntry := &frrProto.RouteEntry{
+			Routes: make([]*frrProto.Route, 0, len(routeSlice)),
+		}
+
+		for _, r := range routeSlice {
+			routeMap, ok := r.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			route := &frrProto.Route{
+				Prefix:                   getString(routeMap, "prefix"),
+				PrefixLen:                int32(getFloat(routeMap, "prefixLen")),
+				Protocol:                 getString(routeMap, "protocol"),
+				VrfId:                    int32(getFloat(routeMap, "vrfId")),
+				VrfName:                  getString(routeMap, "vrfName"),
+				Selected:                 getBool(routeMap, "selected"),
+				DestSelected:             getBool(routeMap, "destSelected"),
+				Distance:                 int32(getFloat(routeMap, "distance")),
+				Metric:                   int32(getFloat(routeMap, "metric")),
+				Installed:                getBool(routeMap, "installed"),
+				Table:                    int32(getFloat(routeMap, "table")),
+				InternalStatus:           int32(getFloat(routeMap, "internalStatus")),
+				InternalFlags:            int32(getFloat(routeMap, "internalFlags")),
+				InternalNextHopNum:       int32(getFloat(routeMap, "internalNextHopNum")),
+				InternalNextHopActiveNum: int32(getFloat(routeMap, "internalNextHopActiveNum")),
+				NexthopGroupId:           int32(getFloat(routeMap, "nexthopGroupId")),
+				InstalledNexthopGroupId:  int32(getFloat(routeMap, "installedNexthopGroupId")),
+				Uptime:                   getString(routeMap, "uptime"),
+				Nexthops:                 make([]*frrProto.Nexthop, 0),
+			}
+
+			// Handle nexthops
+			if nexthops, ok := routeMap["nexthops"].([]interface{}); ok {
+				for _, nh := range nexthops {
+					if nhMap, ok := nh.(map[string]interface{}); ok {
+						nexthop := &frrProto.Nexthop{
+							Flags:             int32(getFloat(nhMap, "flags")),
+							Fib:               getBool(nhMap, "fib"),
+							DirectlyConnected: getBool(nhMap, "directlyConnected"),
+							Duplicate:         getBool(nhMap, "duplicate"),
+							Ip:                getString(nhMap, "ip"),
+							Afi:               getString(nhMap, "afi"),
+							InterfaceIndex:    int32(getFloat(nhMap, "interfaceIndex")),
+							InterfaceName:     getString(nhMap, "interfaceName"),
+							Active:            getBool(nhMap, "active"),
+							Weight:            int32(getFloat(nhMap, "weight")),
+						}
+						route.Nexthops = append(route.Nexthops, nexthop)
+					}
+				}
+			}
+
+			routeEntry.Routes = append(routeEntry.Routes, route)
+		}
+
+		result.Routes[prefix] = routeEntry
+	}
+
+	return result, nil
 }
 
 func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error) {
@@ -832,4 +1115,328 @@ func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interfa
 	}
 
 	return transformed
+}
+
+func transformDatabaseRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	// BaseLSA fields
+	if base, ok := lsaData["base"].(map[string]interface{}); ok {
+		transformed["base"] = map[string]interface{}{
+			"ls_id":             base["lsId"],
+			"advertised_router": base["advertisedRouter"],
+			"lsa_age":           base["lsaAge"],
+			"sequence_number":   base["sequenceNumber"],
+			"checksum":          base["checksum"],
+		}
+	}
+
+	transformed["num_of_router_links"] = lsaData["numOfRouterLinks"]
+
+	return transformed
+}
+
+func transformDatabaseNetworkLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	// BaseLSA fields
+	if base, ok := lsaData["base"].(map[string]interface{}); ok {
+		transformed["base"] = map[string]interface{}{
+			"ls_id":             base["lsId"],
+			"advertised_router": base["advertisedRouter"],
+			"lsa_age":           base["lsaAge"],
+			"sequence_number":   base["sequenceNumber"],
+			"checksum":          base["checksum"],
+		}
+	}
+
+	return transformed
+}
+
+func transformDatabaseSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	// BaseLSA fields
+	if base, ok := lsaData["base"].(map[string]interface{}); ok {
+		transformed["base"] = map[string]interface{}{
+			"ls_id":             base["lsId"],
+			"advertised_router": base["advertisedRouter"],
+			"lsa_age":           base["lsaAge"],
+			"sequence_number":   base["sequenceNumber"],
+			"checksum":          base["checksum"],
+		}
+	}
+
+	transformed["summary_address"] = lsaData["summaryAddress"]
+
+	return transformed
+}
+
+func transformDatabaseASBRSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	// BaseLSA fields
+	if base, ok := lsaData["base"].(map[string]interface{}); ok {
+		transformed["base"] = map[string]interface{}{
+			"ls_id":             base["lsId"],
+			"advertised_router": base["advertisedRouter"],
+			"lsa_age":           base["lsaAge"],
+			"sequence_number":   base["sequenceNumber"],
+			"checksum":          base["checksum"],
+		}
+	}
+
+	return transformed
+}
+
+func transformDatabaseExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	// BaseLSA fields
+	if base, ok := lsaData["base"].(map[string]interface{}); ok {
+		transformed["base"] = map[string]interface{}{
+			"ls_id":             base["lsId"],
+			"advertised_router": base["advertisedRouter"],
+			"lsa_age":           base["lsaAge"],
+			"sequence_number":   base["sequenceNumber"],
+			"checksum":          base["checksum"],
+		}
+	}
+
+	transformed["metric_type"] = lsaData["metricType"]
+	transformed["route"] = lsaData["route"]
+	transformed["tag"] = lsaData["tag"]
+
+	return transformed
+}
+
+func transformExternalLinkState(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"lsaAge":            "lsa_age",
+		"options":           "options",
+		"lsaFlags":          "lsa_flags",
+		"lsaType":           "lsa_type",
+		"linkStateId":       "link_state_id",
+		"advertisingRouter": "advertising_router",
+		"lsaSeqNumber":      "lsa_seq_number",
+		"checksum":          "checksum",
+		"length":            "length",
+		"networkMask":       "network_mask",
+		"metricType":        "metric_type",
+		"tos":               "tos",
+		"metric":            "metric",
+		"forwardAddress":    "forward_address",
+		"externalRouteTag":  "external_route_tag",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := lsaData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
+}
+
+func transformNeighbor(neighborData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"priority":                           "priority",
+		"state":                              "state",
+		"nbrPriority":                        "nbr_priority",
+		"nbrState":                           "nbr_state",
+		"converged":                          "converged",
+		"role":                               "role",
+		"upTimeInMsec":                       "up_time_in_msec",
+		"deadTimeMsecs":                      "dead_time_msecs",
+		"routerDeadIntervalTimerDueMsec":     "router_dead_interval_timer_due_msec",
+		"upTime":                             "up_time",
+		"deadTime":                           "dead_time",
+		"address":                            "address",
+		"ifaceAddress":                       "iface_address",
+		"ifaceName":                          "iface_name",
+		"retransmitCounter":                  "retransmit_counter",
+		"linkStateRetransmissionListCounter": "link_state_retransmission_list_counter",
+		"requestCounter":                     "request_counter",
+		"linkStateRequestListCounter":        "link_state_request_list_counter",
+		"dbSummaryCounter":                   "db_summary_counter",
+		"databaseSummaryListCounter":         "database_summary_list_counter",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := neighborData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
+}
+
+func transformSingleInterface(ifaceData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"administrativeStatus": "administrative_status",
+		"operationalStatus":    "operational_status",
+		"linkDetection":        "link_detection",
+		"linkUps":              "link_ups",
+		"linkDowns":            "link_downs",
+		"lastLinkUp":           "last_link_up",
+		"lastLinkDown":         "last_link_down",
+		"vrfName":              "vrf_name",
+		"mplsEnabled":          "mpls_enabled",
+		"linkDown":             "link_down",
+		"linkDownV6":           "link_down_v6",
+		"mcForwardingV4":       "mc_forwarding_v4",
+		"mcForwardingV6":       "mc_forwarding_v6",
+		"pseudoInterface":      "pseudo_interface",
+		"index":                "index",
+		"metric":               "metric",
+		"mtu":                  "mtu",
+		"speed":                "speed",
+		"flags":                "flags",
+		"type":                 "type",
+		"hardwareAddress":      "hardware_address",
+		"interfaceType":        "interface_type",
+		"interfaceSlaveType":   "interface_slave_type",
+		"lacpBypass":           "lacp_bypass",
+		"protodown":            "protodown",
+		"parentIfindex":        "parent_ifindex",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := ifaceData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	if ipAddrs, ok := ifaceData["ipAddresses"].([]interface{}); ok {
+		transformedIps := make([]interface{}, len(ipAddrs))
+		for i, ip := range ipAddrs {
+			ipMap := ip.(map[string]interface{})
+			transformedIps[i] = map[string]interface{}{
+				"address":    ipMap["address"],
+				"secondary":  ipMap["secondary"],
+				"unnumbered": ipMap["unnumbered"],
+			}
+		}
+		transformed["ip_addresses"] = transformedIps
+	}
+
+	if evpnMh, ok := ifaceData["evpnMh"].(map[string]interface{}); ok {
+		transformed["evpn_mh"] = transformEvpnMh(evpnMh)
+	}
+
+	return transformed
+}
+
+func transformEvpnMh(evpnData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"ethernetSegmentId": "ethernet_segment_id",
+		"esi":               "esi",
+		"dfPreference":      "df_preference",
+		"dfAlgorithm":       "df_algorithm",
+		"dfStatus":          "df_status",
+		"multihomingMode":   "multihoming_mode",
+		"activeMode":        "active_mode",
+		"bypassMode":        "bypass_mode",
+		"localBias":         "local_bias",
+		"fastFailover":      "fast_failover",
+		"upTime":            "up_time",
+		"bgpStatus":         "bgp_status",
+		"protocolStatus":    "protocol_status",
+		"protocolDown":      "protocol_down",
+		"macCount":          "mac_count",
+		"localIfindex":      "local_ifindex",
+		"networkCount":      "network_count",
+		"joinCount":         "join_count",
+		"leaveCount":        "leave_count",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := evpnData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	return transformed
+}
+
+func transformRoute(routeData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+
+	fieldMapping := map[string]string{
+		"prefix":                   "prefix",
+		"prefixLen":                "prefix_len",
+		"protocol":                 "protocol",
+		"vrfId":                    "vrf_id",
+		"vrfName":                  "vrf_name",
+		"selected":                 "selected",
+		"destSelected":             "dest_selected",
+		"distance":                 "distance",
+		"metric":                   "metric",
+		"installed":                "installed",
+		"table":                    "table",
+		"internalStatus":           "internal_status",
+		"internalFlags":            "internal_flags",
+		"internalNextHopNum":       "internal_next_hop_num",
+		"internalNextHopActiveNum": "internal_next_hop_active_num",
+		"nexthopGroupID":           "nexthop_group_id",
+		"installedNexthopGroupID":  "installed_nexthop_group_id",
+		"uptime":                   "uptime",
+	}
+
+	for origKey, newKey := range fieldMapping {
+		if value, exists := routeData[origKey]; exists {
+			transformed[newKey] = value
+		}
+	}
+
+	if nexthops, ok := routeData["nexthops"].([]interface{}); ok {
+		transformedNexthops := make([]interface{}, len(nexthops))
+		for i, nh := range nexthops {
+			nhMap := nh.(map[string]interface{})
+			transformedNexthops[i] = map[string]interface{}{
+				"flags":              nhMap["flags"],
+				"fib":                nhMap["fib"],
+				"directly_connected": nhMap["directlyConnected"],
+				"duplicate":          nhMap["duplicate"],
+				"ip":                 nhMap["ip"],
+				"afi":                nhMap["afi"],
+				"interface_index":    nhMap["interfaceIndex"],
+				"interface_name":     nhMap["interfaceName"],
+				"active":             nhMap["active"],
+				"weight":             nhMap["weight"],
+			}
+		}
+		transformed["nexthops"] = transformedNexthops
+	}
+
+	return transformed
+}
+
+func getString(m map[string]interface{}, key string) string {
+	if val, ok := m[key].(string); ok {
+		return val
+	}
+	return ""
+}
+
+func getBool(m map[string]interface{}, key string) bool {
+	if val, ok := m[key].(bool); ok {
+		return val
+	}
+	return false
+}
+
+func getFloat(m map[string]interface{}, key string) float64 {
+	if val, ok := m[key].(float64); ok {
+		return val
+	}
+	return 0
 }
