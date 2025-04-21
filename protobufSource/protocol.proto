@@ -10,69 +10,48 @@ import "google/protobuf/timestamp.proto";
 message Message {
   string service = 1;
   string command = 2;
-  map<string, Value> params = 3;
+  map<string, ResponseValue> params = 3;
 }
 
 // Command represents a specific command
 message Command {
   string command = 1;
   string action = 2;
-  map<string, Value> params = 3;
+  map<string, ResponseValue> params = 3;
 }
 
 // Response represents the server's response
 message Response {
   string status = 1;
   string message = 2;
-  Value data = 3;
+  ResponseValue data = 3;
 }
 
-// Value represents a dynamic value (similar to interface{} in Go)
-message Value {
+// ResponseValue represents a dynamic value (similar to interface{} in Go)
+message ResponseValue {
   oneof kind {
+    // For testing
     string string_value = 1;
-    int64 int_value = 2;
-    double double_value = 3;
-    bool bool_value = 4;
-    Struct struct_value = 5;
-    ListValue list_value = 6;
-    bytes bytes_value = 7;
-    
-    // Aggregator service message types
-    CombinedState combined_state = 8;
-    OSPFMetrics ospf_metrics = 9;
-    OSPFNeighbor ospf_neighbor = 10;
-    OSPFRoute ospf_route = 11;
-    OSPFInterface ospf_interface = 12;
-    OSPFlsa ospf_lsa = 13;
-    NetworkConfig network_config = 14;
-    OSPFArea ospf_area = 15;
-    OSPFInterfaceConfig ospf_interface_config = 16;
-    SystemMetrics system_metrics = 17;
-    InterfaceStats interface_stats = 18;
 
     // Analyzer command message types
-    Anomalies anomalies = 19;
+    Anomalies anomalies = 2;
 
     // New Aggregator service message types
-    OSPFRouterData ospf_router_data = 20;
-    OSPFNetworkData ospf_network_data = 21;
-    OSPFSummaryData ospf_summary_data = 22;
-    OSPFAsbrSummaryData ospf_asbr_summary_data = 23;
-    OSPFExternalData ospf_external_data = 24;
-    OSPFNssaExternalData ospf_nssa_external_data = 25;
+    OSPFDatabase ospf_database = 3;
+    OSPFRouterData ospf_router_data = 4;
+    OSPFNetworkData ospf_network_data = 5;
+    OSPFSummaryData ospf_summary_data = 6;
+    OSPFAsbrSummaryData ospf_asbr_summary_data = 7;
+    OSPFExternalData ospf_external_data = 8;
+    OSPFNssaExternalData ospf_nssa_external_data = 9;
+    OSPFDuplicates ospf_duplicates = 10;
+    OSPFNeighbors ospf_neighbors = 11;
+    InterfaceList interfaces = 12;
+    RouteList routes = 13;
+    StaticFRRConfiguration static_frr_configuration = 14;
+    SystemMetrics system_metrics = 15;
 
   }
-}
-
-// Struct represents a map of string to Value (similar to map[string]interface{})
-message Struct {
-  map<string, Value> fields = 1;
-}
-
-// ListValue represents a list of Values (similar to []interface{})
-message ListValue {
-  repeated Value values = 1;
 }
 
 // ================ Aggregator payload Messages ================
@@ -152,55 +131,12 @@ message IPPrefix {
   uint32 prefix_length = 24;
 }
 
+message SystemMetrics {
+  double cpu_usage = 1;
+  double memory_usage = 2;
+}
+
 // ================ OLD setup ================
-message CombinedState {
-  google.protobuf.Timestamp timestamp = 1;
-  OSPFMetrics ospf = 2;
-  NetworkConfig config = 3;
-  SystemMetrics system = 4;
-}
-
-message OSPFMetrics {
-  repeated OSPFNeighbor neighbors = 1;
-  repeated OSPFRoute routes = 2;
-  repeated OSPFInterface interfaces = 3;
-  repeated OSPFlsa lsas = 4;
-  bool has_route_changes = 5;
-}
-
-message OSPFNeighbor {
-  string id = 1;
-  string ip = 2;
-  string state = 3;
-  string interface = 4;
-  string area = 5;
-}
-
-message OSPFRoute {
-  string prefix = 1;
-  string next_hop = 2;
-  string interface = 3;
-  int32 cost = 4;
-  string type = 5;
-  string area = 6;
-}
-
-message OSPFInterface {
-  string name = 1;
-  string area = 2;
-  int32 nbr_count = 3;
-  int32 nbr_adj = 4;
-  bool passive = 5;
-}
-
-message OSPFlsa {
-  string type = 1;
-  string ls_id = 2;
-  string adv_router = 3;
-  string Sequence = 4;
-  int32 age = 5;
-  string area = 6;
-}
 
 message NetworkConfig {
   string router_id = 1;
@@ -221,19 +157,21 @@ message OSPFInterfaceConfig {
   int32 cost = 5;
 }
 
-message SystemMetrics {
-  double cpu_usage = 1;
-  double memory_usage = 2;
-  repeated InterfaceStats network_stats = 3;
-}
-
-message InterfaceStats {
-  string name = 1;
-  uint64 rx_bytes = 2;
-  uint64 tx_bytes = 3;
-  uint64 rx_errors = 4;
-  uint64 tx_errors = 5;
-  string oper_state = 6;
+// ================ Main Aggregated Message ================
+message FullFRRData {
+  OSPFDatabase ospf_database = 1;
+  OSPFRouterData ospf_router_data = 2;
+  OSPFNetworkData ospf_network_data = 3;
+  OSPFSummaryData ospf_summary_data = 4;
+  OSPFAsbrSummaryData ospf_asbr_summary_data = 5;
+  OSPFExternalData ospf_external_data = 6;
+  OSPFNssaExternalData ospf_nssa_external_data = 7;
+  OSPFDuplicates ospf_duplicates = 8;
+  OSPFNeighbors ospf_neighbors = 9;
+  InterfaceList interfaces = 10;
+  RouteList routes = 11;
+  StaticFRRConfiguration static_frr_configuration = 12;
+  SystemMetrics system_metrics = 13;
 }
 
 // ================ Aggregator LSA Router ====================
@@ -387,6 +325,222 @@ message NssaExternalLSA {
   int32 metric = 13 [json_name = "metric"];
   string nssa_forward_address = 14 [json_name = "nssaForwardAddress"];
   int32 external_route_tag = 15 [json_name = "externalRouteTag"];
+}
+
+// ================ OSPF Database ================
+message OSPFDatabase {
+  string router_id = 1;
+  map<string, OSPFDatabaseArea> areas = 2;
+  repeated ASExternalLSA as_external_link_states = 3;
+  int32 as_external_count = 4;
+}
+
+message OSPFDatabaseArea {
+  repeated RouterDataLSA router_link_states = 1;
+  int32 router_link_states_count = 2;
+  repeated NetworkDataLSA network_link_states = 3;
+  int32 network_link_states_count = 4;
+  repeated SummaryDataLSA summary_link_states = 5;
+  int32 summary_link_states_count = 6;
+  repeated ASBRSummaryLSA asbr_summary_link_states = 7;
+  int32 asbr_summary_link_states_count = 8;
+}
+
+message BaseLSA {
+  string ls_id = 1;
+  string advertised_router = 2;
+  int32 lsa_age = 3;
+  string sequence_number = 4;
+  string checksum = 5;
+}
+
+message RouterDataLSA {
+  BaseLSA base = 1;
+  int32 num_of_router_links = 2;
+}
+
+message NetworkDataLSA {
+  BaseLSA base = 1;
+}
+
+message SummaryDataLSA {
+  BaseLSA base = 1;
+  string summary_address = 2;
+}
+
+message ASBRSummaryLSA {
+  BaseLSA base = 1;
+}
+
+message ASExternalLSA {
+  BaseLSA base = 1;
+  string metric_type = 2; // E1 or E2
+  string route = 3;      // Prefix with mask
+  int32 tag = 4;
+}
+
+// ================ OSPF Duplicates ================
+message OSPFDuplicates {
+  string router_id = 1;
+  repeated ASExternalLinkState as_external_link_states = 2;
+}
+
+message ASExternalLinkState {
+  int32 lsa_age = 1;
+  string options = 2;
+  int32 lsa_flags = 3;
+  string lsa_type = 4;
+  string link_state_id = 5;
+  string advertising_router = 6;
+  string lsa_seq_number = 7;
+  string checksum = 8;
+  int32 length = 9;
+  int32 network_mask = 10;
+  string metric_type = 11;
+  int32 tos = 12;
+  int32 metric = 13;
+  string forward_address = 14;
+  int32 external_route_tag = 15;
+}
+
+// ================ OSPF Neighbors ================
+message OSPFNeighbors {
+  map<string, NeighborList> neighbors = 1;
+}
+
+message NeighborList {
+  repeated Neighbor neighbors = 1;
+}
+
+message Neighbor {
+  int32 priority = 1;
+  string state = 2;
+  int32 nbr_priority = 3;
+  string nbr_state = 4;
+  string converged = 5;
+  string role = 6;
+  int64 up_time_in_msec = 7;
+  int32 dead_time_msecs = 8;
+  int32 router_dead_interval_timer_due_msec = 9;
+  string up_time = 10;
+  string dead_time = 11;
+  string address = 12;
+  string iface_address = 13;
+  string iface_name = 14;
+  int32 retransmit_counter = 15;
+  int32 link_state_retransmission_list_counter = 16;
+  int32 request_counter = 17;
+  int32 link_state_request_list_counter = 18;
+  int32 db_summary_counter = 19;
+  int32 database_summary_list_counter = 20;
+}
+
+// ================ Interfaces ================
+message InterfaceList {
+  map<string, SingleInterface> interfaces = 1;
+}
+
+message SingleInterface {
+  string administrative_status = 1;
+  string operational_status = 2;
+  bool link_detection = 3;
+  int32 link_ups = 4;
+  int32 link_downs = 5;
+  string last_link_up = 6;
+  string last_link_down = 7;
+  string vrf_name = 8;
+  bool mpls_enabled = 9;
+  bool link_down = 10;
+  bool link_down_v6 = 11;
+  bool mc_forwarding_v4 = 12;
+  bool mc_forwarding_v6 = 13;
+  bool pseudo_interface = 14;
+  int32 index = 15;
+  int32 metric = 16;
+  int32 mtu = 17;
+  int32 speed = 18;
+  string flags = 19;
+  string type = 20;
+  string hardware_address = 21;
+  repeated IpAddress ip_addresses = 22;
+  string interface_type = 23;
+  string interface_slave_type = 24;
+  bool lacp_bypass = 25;
+  EvpnMh evpn_mh = 26;
+  string protodown = 27;
+  int32 parent_ifindex = 28;
+}
+
+message IpAddress {
+  string address = 1;
+  bool secondary = 2;
+  bool unnumbered = 3;
+}
+
+message EvpnMh {
+  string ethernet_segment_id = 1;
+  string esi = 2;
+  int32 df_preference = 3;
+  string df_algorithm = 4;
+  string df_status = 5;
+  string multi_homing_mode = 6;
+  bool active_mode = 7;
+  bool bypass_mode = 8;
+  bool local_bias = 9;
+  bool fast_failover = 10;
+  string up_time = 11;
+  string bgp_status = 12;
+  string protocol_status = 13;
+  bool protocol_down = 14;
+  int32 mac_count = 15;
+  int32 local_ifindex = 16;
+  int32 network_count = 17;
+  int32 join_count = 18;
+  int32 leave_count = 19;
+}
+
+// ================ Routes ================
+message RouteList {
+  map<string, RouteEntry> routes = 1;
+}
+
+message RouteEntry {
+  repeated Route routes = 1;
+}
+
+message Route {
+  string prefix = 1;
+  int32 prefix_len = 2;
+  string protocol = 3;
+  int32 vrf_id = 4;
+  string vrf_name = 5;
+  bool selected = 6;
+  bool dest_selected = 7;
+  int32 distance = 8;
+  int32 metric = 9;
+  bool installed = 10;
+  int32 table = 11;
+  int32 internal_status = 12;
+  int32 internal_flags = 13;
+  int32 internal_next_hop_num = 14;
+  int32 internal_next_hop_active_num = 15;
+  int32 nexthop_group_id = 16;
+  int32 installed_nexthop_group_id = 17;
+  string uptime = 18;
+  repeated Nexthop nexthops = 19;
+}
+
+message Nexthop {
+  int32 flags = 1;
+  bool fib = 2;
+  bool directly_connected = 3;
+  bool duplicate = 4;
+  string ip = 5;
+  string afi = 6;
+  int32 interface_index = 7;
+  string interface_name = 8;
+  bool active = 9;
+  int32 weight = 10;
 }
 
 // ================ Analyzer payload Messages ================

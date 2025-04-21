@@ -14,11 +14,17 @@ func (l *Logger) Error(msg string) error {
 }
 
 func (l *Logger) Debug(msg string) error {
-	return l.log("DEBUG", msg)
+	if l.debugLevel >= DebugLevelDebug {
+		return l.log("DEBUG", msg)
+	}
+	return nil
 }
 
 func (l *Logger) Warning(msg string) error {
-	return l.log("WARNING", msg)
+	if l.debugLevel >= DebugLevelError {
+		return l.log("WARNING", msg)
+	}
+	return nil
 }
 
 func (l *Logger) log(level, msg string) error {
@@ -30,4 +36,16 @@ func (l *Logger) log(level, msg string) error {
 
 	_, err := l.file.WriteString(logLine)
 	return err
+}
+
+func (l *Logger) SetNormalMode() {
+	l.SetDebugLevel(DebugLevelNormal)
+}
+
+func (l *Logger) SetErrorMode() {
+	l.SetDebugLevel(DebugLevelError)
+}
+
+func (l *Logger) SetDebugMode() {
+	l.SetDebugLevel(DebugLevelDebug)
 }

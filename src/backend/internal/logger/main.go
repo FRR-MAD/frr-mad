@@ -6,11 +6,18 @@ import (
 	"sync"
 )
 
+const (
+	DebugLevelNormal = iota
+	DebugLevelError
+	DebugLevelDebug
+)
+
 type Logger struct {
-	name     string
-	file     *os.File
-	mu       sync.Mutex
-	filePath string
+	name       string
+	file       *os.File
+	mu         sync.Mutex
+	filePath   string
+	debugLevel int
 }
 
 var (
@@ -32,9 +39,10 @@ func NewLogger(name, filePath string) (*Logger, error) {
 	}
 
 	logger := &Logger{
-		name:     name,
-		file:     file,
-		filePath: filePath,
+		name:       name,
+		file:       file,
+		filePath:   filePath,
+		debugLevel: DebugLevelNormal,
 	}
 
 	registry[name] = logger
@@ -61,4 +69,16 @@ func (l *Logger) Close() error {
 	registryMu.Unlock()
 
 	return l.file.Close()
+}
+
+func (l *Logger) SetDebugLevel(level int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.debugLevel = level
+}
+
+func (l *Logger) GetDebugLevel() int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.debugLevel
 }

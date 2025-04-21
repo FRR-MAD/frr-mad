@@ -1,8 +1,10 @@
 package dashboard
 
 import (
+	"fmt"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
@@ -88,6 +90,8 @@ func (m *Model) renderOSPFDashboard() string {
 		Headers("Advertised Route", "Anomaly Type", "Details", "Troubleshot").
 		Rows(anomalyRows...)
 
+	systemResourcesBackend, _ := getSystemResources()
+
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
 		styles.BoxTitleStyle.Render("System Resources"),
 		styles.GeneralBoxStyle.Width(boxWidthOneFourth-2).Render("here\nsome\nresources: \n"),
@@ -102,6 +106,8 @@ func (m *Model) renderOSPFDashboard() string {
 		ospfTable.Render(),
 		styles.BoxTitleStyle.Render("OSPF Anomaly Detected"),
 		ospfBadTable.Render(),
+		styles.BoxTitleStyle.Render("Original Backend Call"),
+		systemResourcesBackend,
 	)
 
 	// Update the viewport content with...
@@ -114,4 +120,26 @@ func (m *Model) renderOSPFDashboard() string {
 	)
 
 	return horizontalDashboard
+}
+
+func getSystemResources() (string, error) {
+	params := map[string]*frrProto.ResponseValue{
+		"client_id": &frrProto.ResponseValue{
+			Kind: &frrProto.ResponseValue_StringValue{
+				StringValue: "example_client",
+			},
+		},
+	}
+
+	response, err := backend.SendMessage("system", "allResources", params)
+	if err != nil {
+		return "err occurred in getSystemResources()", fmt.Errorf("rpc error: %w", err)
+	}
+	if response.Status != "success" {
+		return "response.Status was no success", fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
+	}
+
+	stringValue := response.Data.GetStringValue()
+
+	return stringValue, nil
 }

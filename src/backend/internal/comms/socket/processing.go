@@ -60,6 +60,15 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 			s.exitSocketServer()
 		}()
 		return &response
+	case "system":
+		switch message.Command {
+		case "allResources":
+			return s.getTesting3()
+		}
+		response.Status = "success"
+		response.Message = "Returning magical system data"
+
+		return &response
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", message.Command)

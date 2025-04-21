@@ -28,7 +28,8 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderAdvertisementTab() string {
-
+	// on this view:
+	// show three advertisement boxes: based on vtysh LSA queries / based on file analysis / based on FIB analysis
 	returnString := "Advertisement"
 	return lipgloss.NewStyle().Render(returnString)
 }

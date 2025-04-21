@@ -14,10 +14,13 @@ topology:
         - ../protobufSource:/app/protobufSource
     r102:
       kind: linux
-      image: frr-854
+      image: frr-854-dev
       binds:
         - r102/daemons:/etc/frr/daemons
         - r102/frr.conf:/etc/frr/frr.conf
+        - ../src:/app/src
+        - ../local:/app/local
+        - ../protobufSource:/app/protobufSource
     r103:
       kind: linux
       image: frr-854

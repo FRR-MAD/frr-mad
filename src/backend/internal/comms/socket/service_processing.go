@@ -25,8 +25,8 @@ func getOSPFMetrics() *frrProto.Response {
 	var response frrProto.Response
 
 	ospfMetrics := aggregator.OSPFMetricsDummyData()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_OspfMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfMetrics{
 			OspfMetrics: ospfMetrics,
 		},
 	}
@@ -43,8 +43,8 @@ func getOSPFNeighbor() *frrProto.Response {
 	var ospfMetrics frrProto.OSPFMetrics
 	neighbors := aggregator.OSPFNeighborDummyData()
 	ospfMetrics.Neighbors = neighbors
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_OspfMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfMetrics{
 			OspfMetrics: &ospfMetrics,
 		},
 	}
@@ -61,8 +61,8 @@ func getOSPFRoute() *frrProto.Response {
 	var ospfMetrics frrProto.OSPFMetrics
 	routes := aggregator.OSPFRouteDummyData()
 	ospfMetrics.Routes = routes
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_OspfMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfMetrics{
 			OspfMetrics: &ospfMetrics,
 		},
 	}
@@ -79,8 +79,8 @@ func getOSPFInterface() *frrProto.Response {
 	var ospfMetrics frrProto.OSPFMetrics
 	interfaces := aggregator.OSPFInterfaceDummyData()
 	ospfMetrics.Interfaces = interfaces
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_OspfMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfMetrics{
 			OspfMetrics: &ospfMetrics,
 		},
 	}
@@ -97,8 +97,8 @@ func getOSPFlsa() *frrProto.Response {
 	var ospfMetrics frrProto.OSPFMetrics
 	lsas := aggregator.OSPFlsaDummyData()
 	ospfMetrics.Lsas = lsas
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_OspfMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfMetrics{
 			OspfMetrics: &ospfMetrics,
 		},
 	}
@@ -114,8 +114,8 @@ func getNetworkConfig() *frrProto.Response {
 
 	var networkConfig *frrProto.NetworkConfig
 	networkConfig = aggregator.NetworkConfigDummyData()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_NetworkConfig{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_NetworkConfig{
 			NetworkConfig: networkConfig,
 		},
 	}
@@ -131,8 +131,8 @@ func getOSPFArea() *frrProto.Response {
 
 	var networkConfig frrProto.NetworkConfig
 	networkConfig.Areas = aggregator.OSPFAreaDummyData()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_NetworkConfig{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_NetworkConfig{
 			NetworkConfig: &networkConfig,
 		},
 	}
@@ -148,8 +148,8 @@ func getInterfaceConfig() *frrProto.Response {
 
 	var networkConfig frrProto.NetworkConfig
 	networkConfig.Interfaces = aggregator.OSPFInterfaceConfigDummyData()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_NetworkConfig{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_NetworkConfig{
 			NetworkConfig: &networkConfig,
 		},
 	}
@@ -164,8 +164,8 @@ func getSystemMetrics() *frrProto.Response {
 	var response frrProto.Response
 
 	systemMetrics := aggregator.SystemMetricsDummyData()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_SystemMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_SystemMetrics{
 			SystemMetrics: systemMetrics,
 		},
 	}
@@ -180,8 +180,8 @@ func getInterfaceStats() *frrProto.Response {
 	var response frrProto.Response
 
 	interfaceStats := aggregator.GetInterfaceStats()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_InterfaceStats{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_InterfaceStats{
 			InterfaceStats: interfaceStats[0],
 		},
 	}
@@ -196,8 +196,8 @@ func getCombinedState() *frrProto.Response {
 	var response frrProto.Response
 
 	combinedState := aggregator.GetCombinedState()
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_CombinedState{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_CombinedState{
 			CombinedState: combinedState,
 		},
 	}
@@ -215,8 +215,8 @@ func (s *Socket) getTesting() *frrProto.Response {
 	if err != nil {
 		log.Printf("Collection error: %v", err)
 	}
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_CombinedState{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_CombinedState{
 			CombinedState: state,
 		},
 	}
@@ -234,8 +234,8 @@ func (s *Socket) getTesting2() *frrProto.Response {
 	if err != nil {
 		log.Printf("Collection error: %v", err)
 	}
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_OspfMetrics{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfMetrics{
 			OspfMetrics: state.GetOspf(),
 		},
 	}
@@ -248,8 +248,8 @@ func (s *Socket) getTesting2() *frrProto.Response {
 func (s *Socket) getTesting3() *frrProto.Response {
 	var response frrProto.Response
 
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_StringValue{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_StringValue{
 			StringValue: s.analyzer.Foobar(),
 		},
 	}
@@ -269,8 +269,8 @@ func (s *Socket) getTesting4() *frrProto.Response {
 		response.Message = err.Error()
 		return &response
 	}
-	value := &frrProto.Value{
-		Kind: &frrProto.Value_StringValue{
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_StringValue{
 			StringValue: staticConfig,
 		},
 	}

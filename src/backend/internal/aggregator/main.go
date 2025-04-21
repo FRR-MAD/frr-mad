@@ -1,7 +1,7 @@
 package aggregator
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
@@ -23,7 +23,8 @@ func StartAggregator(collector *Collector, pollInterval time.Duration) {
 		for range ticker.C {
 			_, err := collector.Collect()
 			if err != nil {
-				log.Printf("Collection error: %v", err)
+				//log.Printf("Collection error: %v", err)
+				collector.logger.Error(fmt.Sprintf("Collection error: %v", err))
 				continue
 			}
 
