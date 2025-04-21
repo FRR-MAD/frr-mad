@@ -3,7 +3,6 @@ package aggregator
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	frrSocket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator/frrsockets"
@@ -50,7 +49,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 		//fmt.Print(err)
 		c.logger.Error(err.Error())
 		log.Panic(err)
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
 	c.FullFrrData.StaticFrrConfiguration = staticFRRConfigParsed
@@ -168,7 +167,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 
 	fmt.Printf("Response FetchExpectedRoutes: \n%+v\n", out5)
 
-	os.Exit(0)
+	//os.Exit(0)
 
 	//config, err := ParseStaticFRRConfig(c.configPath)
 	if err != nil {
