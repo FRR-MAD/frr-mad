@@ -10,26 +10,27 @@ import "google/protobuf/timestamp.proto";
 message Message {
   string service = 1;
   string command = 2;
-  map<string, Value> params = 3;
+  map<string, ResponseValue> params = 3;
 }
 
 // Command represents a specific command
 message Command {
   string command = 1;
   string action = 2;
-  map<string, Value> params = 3;
+  map<string, ResponseValue> params = 3;
 }
 
 // Response represents the server's response
 message Response {
   string status = 1;
   string message = 2;
-  Value data = 3;
+  ResponseValue data = 3;
 }
 
-// Value represents a dynamic value (similar to interface{} in Go)
-message Value {
+// ResponseValue represents a dynamic value (similar to interface{} in Go)
+message ResponseValue {
   oneof kind {
+    // For testing
     string string_value = 1;
     int64 int_value = 2;
     double double_value = 3;
@@ -65,14 +66,14 @@ message Value {
   }
 }
 
-// Struct represents a map of string to Value (similar to map[string]interface{})
+// Struct represents a map of string to ResponseValue (similar to map[string]interface{})
 message Struct {
-  map<string, Value> fields = 1;
+  map<string, ResponseValue> fields = 1;
 }
 
 // ListValue represents a list of Values (similar to []interface{})
 message ListValue {
-  repeated Value values = 1;
+  repeated ResponseValue values = 1;
 }
 
 // ================ Aggregator payload Messages ================
