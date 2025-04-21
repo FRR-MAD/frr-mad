@@ -376,7 +376,7 @@ func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
 
 	fmt.Printf("Response: \n%+v\n", out5)
 
-	os.Exit(0)
+	//os.Exit(0)
 
 	//config, err := ParseStaticFRRConfig(c.configPath)
 	if err != nil {
