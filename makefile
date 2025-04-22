@@ -1,5 +1,6 @@
 BACKEND_SRC := src/backend
 FRONTEND_SRC := src/frontend
+TEMPCLIENT_SRC:= tempClient
 
 
 PROTO_SRC := protobufSource/protocol.proto
@@ -40,6 +41,10 @@ build/backend: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
 	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o ../../binaries/analyzer_dev ./cmd/frr-analytics
 
+build/tempClient:
+	@cd $(TEMPCLIENT_SRC) && go mod tidy
+	cd $(TEMPCLIENT_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o ../dockerfile/files/tempClient .
+
 build/local: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
 	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=local -o ../../binaries/analyzer_dev ./cmd/frr-analytics
@@ -69,12 +74,12 @@ protobuf/clean:
 
 #### Hot Module Reloading ####
 
-.PHONY: hmr/docker hmr/start hmr/stop
+.PHONY: hmr/docker hmr/run hmr/stop hmr/clean
 hmr/docker:
 	docker build -t frr-854-dev -f dockerfile/frr-dev.dockerfile .
 	docker build -t frr-854 -f dockerfile/frr.dockerfile .
 
-hmr/start:
+hmr/run:
 	cd containerlab && chmod +x scripts/
 	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
 	cd containerlab && sh scripts/pc-interfaces.sh
@@ -82,3 +87,7 @@ hmr/start:
 
 hmr/stop: 
 	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
+
+hmr/clean: hmr/stop
+	docker container list -a -q | xargs -i{} docker container rm {}
+	docker network prune -f

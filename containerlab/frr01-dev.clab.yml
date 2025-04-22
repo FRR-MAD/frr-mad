@@ -30,6 +30,7 @@ topology:
         - ../src:/app/src
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
+        - r103/tmp/:/tmp/tcpdump/
     cr104:
       kind: linux
       image: frr-854
@@ -144,6 +145,7 @@ topology:
         - r202/daemons:/etc/frr/daemons
         - r202/frr.conf:/etc/frr/frr.conf
 
+
     pc101:
       kind: linux
       image: praqma/network-multitool:latest
@@ -196,7 +198,15 @@ topology:
       kind: linux
       image: praqma/network-multitool:latest
 
-    pc391:
+    pc392:
+      kind: linux
+      image: praqma/network-multitool:latest
+
+    pc393:
+      kind: linux
+      image: praqma/network-multitool:latest
+
+    pc394:
       kind: linux
       image: praqma/network-multitool:latest
 
@@ -233,5 +243,7 @@ topology:
     - endpoints: ["r202:eth2", "pc201:eth1"]
     - endpoints: ["r301:eth2", "r302:eth1"]
     - endpoints: ["r301:eth3", "r391:eth1"]
+    - endpoints: ["r301:eth4", "pc392:eth1"]
     - endpoints: ["r302:eth2", "pc301:eth1"]
-    - endpoints: ["r391:eth2", "pc391:eth1"]
+    - endpoints: ["r391:eth2", "pc393:eth1"]
+    - endpoints: ["r391:eth3", "pc394:eth1"]

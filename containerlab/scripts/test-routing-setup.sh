@@ -145,19 +145,21 @@ test_ping "clab-frr01-pc301" "10.1.0.100" "PC301-PC111"
 test_ping "clab-frr01-pc301" "10.2.0.100" "PC301-PC121"
 test_ping "clab-frr01-pc301" "10.3.0.100" "PC301-PC131"
 test_no_ping "clab-frr01-pc301" "192.168.1.100" "PC301-PC191"
-test_ping "clab-frr01-pc301" "192.168.30.100" "PC301-PC391"
+test_ping "clab-frr01-pc301" "192.168.33.100" "PC301-PC393"
+test_ping "clab-frr01-pc301" "192.168.34.100" "PC301-PC394"
 test_no_ping "clab-frr01-pc301" "10.20.0.100" "PC301-PC201"
 # test_ping "clab-frr01-pc301" "10.30.0.100" "PC301-PC301"
+test_ping "clab-frr01-pc301" "192.168.32.100" "PC301-PC392"
 
-# Test pings from PC391
-test_no_ping "clab-frr01-pc391" "10.0.0.100" "PC391-PC101"
-test_no_ping "clab-frr01-pc391" "10.1.0.100" "PC391-PC111"
-test_no_ping "clab-frr01-pc391" "10.2.0.100" "PC391-PC121"
-test_no_ping "clab-frr01-pc391" "10.3.0.100" "PC391-PC131"
-# test_ping "clab-frr01-pc391" "192.168.30.100" "PC391-PC391"
-test_no_ping "clab-frr01-pc391" "10.20.0.100" "PC391-PC201"
-# only this test will work because R391 has only one static route (this)
-test_ping "clab-frr01-pc391" "10.30.0.100" "PC391-PC301"
+# Test pings from PC393
+test_no_ping "clab-frr01-pc393" "10.0.0.100" "PC393-PC101"
+test_no_ping "clab-frr01-pc393" "10.1.0.100" "PC393-PC111"
+test_no_ping "clab-frr01-pc393" "10.2.0.100" "PC393-PC121"
+test_no_ping "clab-frr01-pc393" "10.3.0.100" "PC393-PC131"
+# test_ping "clab-frr01-pc393" "192.168.30.100" "PC393-PC391"
+test_no_ping "clab-frr01-pc393" "10.20.0.100" "PC393-PC201"
+# only this test will work because R393 has only one static route (this)
+test_ping "clab-frr01-pc393" "10.30.0.100" "PC393-PC301"
 
 # Wait for all background pings to finish
 wait "${PING_PIDS[@]}"
