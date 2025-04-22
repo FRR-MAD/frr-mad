@@ -12,7 +12,7 @@ func InitAggregator(config map[string]string, logger *logger.Logger) *Collector 
 	configPath := config["FRRConfigPath"]
 	socketPath := config["SocketPath"]
 
-	return NewCollector(metricsURL, configPath, socketPath, logger)
+	return newCollector(metricsURL, configPath, socketPath, logger)
 }
 
 func StartAggregator(collector *Collector, pollInterval time.Duration) {
@@ -21,7 +21,7 @@ func StartAggregator(collector *Collector, pollInterval time.Duration) {
 		defer ticker.Stop()
 
 		for range ticker.C {
-			_, err := collector.Collect()
+			err := collector.Collect()
 			if err != nil {
 				//log.Printf("Collection error: %v", err)
 				collector.logger.Error(fmt.Sprintf("Collection error: %v", err))
