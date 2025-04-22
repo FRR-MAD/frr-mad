@@ -8,15 +8,19 @@ import (
 
 // Model defines the state for the shell page.
 type Model struct {
-	title       string
-	subTabs     []string
-	windowSize  *common.WindowSize
-	activeShell string
-	bashInput   string
-	bashOutput  string
-	vtyshInput  string
-	vtyshOutput string
-	viewport    viewport.Model
+	title               string
+	subTabs             []string
+	windowSize          *common.WindowSize
+	activeShell         string
+	bashInput           string
+	bashOutput          string
+	vtyshInput          string
+	vtyshOutput         string
+	backendServiceInput string
+	backendCommandInput string
+	activeBackendInput  string
+	backendResponse     string
+	viewport            viewport.Model
 }
 
 // New creates and returns a new dashboard Model.
@@ -32,11 +36,14 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		title:       "3 - Shell",
-		subTabs:     []string{"bash", "vtysh"},
-		windowSize:  windowSize,
-		activeShell: "",
-		viewport:    vp,
+		title:               "3 - Shell",
+		subTabs:             []string{"bash", "vtysh", "Backend Test"},
+		windowSize:          windowSize,
+		activeShell:         "",
+		backendServiceInput: "",
+		backendCommandInput: "",
+		activeBackendInput:  "service",
+		viewport:            vp,
 	}
 }
 
@@ -54,6 +61,11 @@ func (m *Model) GetSubTabsLength() int {
 func (m *Model) ClearInput() {
 	m.bashInput = ""
 	m.vtyshInput = ""
+}
+
+func (m *Model) clearBackendInput() {
+	m.backendServiceInput = ""
+	m.backendCommandInput = ""
 }
 
 func (m *Model) ClearOutput() {

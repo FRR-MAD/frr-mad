@@ -5,7 +5,9 @@ import (
 
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	tea "github.com/charmbracelet/bubbletea"
+	"google.golang.org/protobuf/encoding/protojson"
 	"time"
 )
 
@@ -23,7 +25,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.bashInput = m.bashInput[:len(m.bashInput)-1]
 			} else if currentSubTabLocal == 1 && len(m.vtyshInput) > 0 {
 				m.vtyshInput = m.vtyshInput[:len(m.vtyshInput)-1]
+			} else if m.activeBackendInput == "service" {
+				m.backendServiceInput = m.backendServiceInput[:len(m.backendServiceInput)-1]
+			} else if m.activeBackendInput == "command" {
+				m.backendCommandInput = m.backendCommandInput[:len(m.backendCommandInput)-1]
 			}
+		case "tab":
+			m.activeBackendInput = "command"
 		case "left", "right":
 			m.ClearInput()
 			m.ClearOutput()
@@ -42,12 +50,40 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					m.vtyshOutput = vtyshOutput
 				}
+			} else if currentSubTabLocal == 2 {
+				res, err := backend.SendMessage(
+					m.backendServiceInput,
+					m.backendCommandInput,
+					nil,
+				)
+				if err != nil {
+					m.backendResponse = fmt.Sprintf("Error: %v", err)
+				} else {
+					// Pretty‑print the protobuf into nice indented JSON
+					marshaler := protojson.MarshalOptions{
+						Multiline:     true,
+						Indent:        "  ",
+						UseProtoNames: true,
+					}
+					pretty, perr := marshaler.Marshal(res.Data)
+					if perr != nil {
+						m.backendResponse = res.Data.String()
+					} else {
+						m.backendResponse = string(pretty)
+					}
+				}
+				m.clearBackendInput()
+				m.activeBackendInput = "service"
 			}
 		default:
 			if currentSubTabLocal == 0 {
 				m.bashInput += msg.String()
 			} else if currentSubTabLocal == 1 {
 				m.vtyshInput += msg.String()
+			} else if m.activeBackendInput == "service" {
+				m.backendServiceInput += msg.String()
+			} else if m.activeBackendInput == "command" {
+				m.backendCommandInput += msg.String()
 			}
 		}
 	case tea.MouseMsg:

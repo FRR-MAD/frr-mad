@@ -20,6 +20,8 @@ func (m *Model) View() string {
 		return m.renderShellTab0()
 	} else if currentSubTabLocal == 1 {
 		return m.renderShellTab1()
+	} else if currentSubTabLocal == 2 {
+		return m.renderBackendTestTab()
 	}
 	return m.renderShellTab0()
 }
@@ -79,4 +81,55 @@ func (m *Model) renderShellTab1() string {
 	return lipgloss.JoinVertical(lipgloss.Left,
 		input,
 		styles.TextOutputStyle.Render(m.viewport.View()))
+}
+
+func (m *Model) renderBackendTestTab() string {
+
+	testInfo := "To Test the Backend we need a service and a command e.g. 'ospf' / 'database'\n" +
+		"press 'tab' to switch to command input. press 'enter' to send backend call.\n"
+
+	var serviceBox, commandBox string
+	if m.activeBackendInput == "service" {
+		serviceBox = lipgloss.JoinVertical(lipgloss.Left,
+			styles.BoxTitleStyle.Render("Enter Service:"),
+			styles.GeneralBoxStyle.Width(20).Render(m.backendServiceInput),
+		)
+
+		commandBox = lipgloss.JoinVertical(lipgloss.Left,
+			styles.BoxTitleStyle.Render("Enter Command:"),
+			styles.InactiveBoxStyle.Width(20).Render(m.backendCommandInput),
+		)
+	} else {
+		serviceBox = lipgloss.JoinVertical(lipgloss.Left,
+			styles.BoxTitleStyle.Render("Enter Service:"),
+			styles.InactiveBoxStyle.Width(20).Render(m.backendServiceInput),
+		)
+
+		commandBox = lipgloss.JoinVertical(lipgloss.Left,
+			styles.BoxTitleStyle.Render("Enter Command:"),
+			styles.GeneralBoxStyle.Width(20).Render(m.backendCommandInput),
+		)
+	}
+
+	inputsHorizontal := lipgloss.JoinHorizontal(lipgloss.Top,
+		serviceBox,
+		lipgloss.NewStyle().Margin(0, 0, 0, 2).Render(commandBox),
+		lipgloss.NewStyle().Margin(0, 0, 0, 4).Render(testInfo),
+	)
+
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 8
+
+	// Update the viewport dimensions.
+	m.viewport.Width = m.windowSize.Width - 6
+	m.viewport.Height = outputMaxHeight
+
+	// Update the viewport content with the latest backendResponse.
+	m.viewport.SetContent(m.backendResponse)
+
+	completeTab := lipgloss.JoinVertical(lipgloss.Left,
+		inputsHorizontal,
+		styles.TextOutputStyle.Render(m.viewport.View()),
+	)
+
+	return completeTab
 }
