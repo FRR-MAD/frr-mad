@@ -162,10 +162,10 @@ func (s *Socket) getInterfaces() *frrProto.Response {
 	}
 }
 
-func (s *Socket) getRoutes() *frrProto.Response {
+func (s *Socket) getRoutingInformationBase() *frrProto.Response {
 	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_Routes{
-			Routes: s.metrics.GetRoutes(),
+		Kind: &frrProto.ResponseValue_RoutingInformationBase{
+			RoutingInformationBase: s.metrics.GetRoutingInformationBase(),
 		},
 	}
 	return &frrProto.Response{

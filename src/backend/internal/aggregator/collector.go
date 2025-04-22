@@ -53,7 +53,7 @@ func initFullFrrData() *frrProto.FullFRRData {
 		OspfDuplicates:         &frrProto.OSPFDuplicates{},
 		OspfNeighbors:          &frrProto.OSPFNeighbors{},
 		Interfaces:             &frrProto.InterfaceList{},
-		Routes:                 &frrProto.RouteList{},
+		RoutingInformationBase: &frrProto.RoutingInformationBase{},
 		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{},
 		SystemMetrics:          &frrProto.SystemMetrics{},
 	}
@@ -87,41 +87,48 @@ func (c *Collector) Collect() error {
 		//proto.Merge(target, result)
 		// Reset target by creating a new instance of the same type
 		// Warning: Copy of Sync.Mutex lock
-		switch v := target.(type) {
-		case *frrProto.StaticFRRConfiguration:
-			*v = *result.(*frrProto.StaticFRRConfiguration)
-		case *frrProto.OSPFRouterData:
-			*v = *result.(*frrProto.OSPFRouterData)
-		case *frrProto.OSPFNetworkData:
-			*v = *result.(*frrProto.OSPFNetworkData)
-		case *frrProto.OSPFSummaryData:
-			*v = *result.(*frrProto.OSPFSummaryData)
-		case *frrProto.OSPFAsbrSummaryData:
-			*v = *result.(*frrProto.OSPFAsbrSummaryData)
-		case *frrProto.OSPFExternalData:
-			*v = *result.(*frrProto.OSPFExternalData)
-		case *frrProto.OSPFNssaExternalData:
-			*v = *result.(*frrProto.OSPFNssaExternalData)
-		case *frrProto.OSPFDatabase:
-			*v = *result.(*frrProto.OSPFDatabase)
-		case *frrProto.OSPFDuplicates:
-			*v = *result.(*frrProto.OSPFDuplicates)
-		case *frrProto.OSPFNeighbors:
-			*v = *result.(*frrProto.OSPFNeighbors)
-		case *frrProto.InterfaceList:
-			*v = *result.(*frrProto.InterfaceList)
-		case *frrProto.RouteList:
-			*v = *result.(*frrProto.RouteList)
-		case *frrProto.SystemMetrics:
-			*v = *result.(*frrProto.SystemMetrics)
-		default:
-			// Fallback to proto.Merge if type isn't explicitly handled
-			// First clear the message if possible
-			if p, ok := target.(interface{ Reset() }); ok {
-				p.Reset()
-			}
-			proto.Merge(target, result)
+
+		// check out Reset()
+		if p, ok := target.(interface{ Reset() }); ok {
+			p.Reset()
 		}
+		proto.Merge(target, result)
+
+		//switch v := target.(type) {
+		//case *frrProto.StaticFRRConfiguration:
+		//	*v = *result.(*frrProto.StaticFRRConfiguration)
+		//case *frrProto.OSPFRouterData:
+		//	*v = *result.(*frrProto.OSPFRouterData)
+		//case *frrProto.OSPFNetworkData:
+		//	*v = *result.(*frrProto.OSPFNetworkData)
+		//case *frrProto.OSPFSummaryData:
+		//	*v = *result.(*frrProto.OSPFSummaryData)
+		//case *frrProto.OSPFAsbrSummaryData:
+		//	*v = *result.(*frrProto.OSPFAsbrSummaryData)
+		//case *frrProto.OSPFExternalData:
+		//	*v = *result.(*frrProto.OSPFExternalData)
+		//case *frrProto.OSPFNssaExternalData:
+		//	*v = *result.(*frrProto.OSPFNssaExternalData)
+		//case *frrProto.OSPFDatabase:
+		//	*v = *result.(*frrProto.OSPFDatabase)
+		//case *frrProto.OSPFDuplicates:
+		//	*v = *result.(*frrProto.OSPFDuplicates)
+		//case *frrProto.OSPFNeighbors:
+		//	*v = *result.(*frrProto.OSPFNeighbors)
+		//case *frrProto.InterfaceList:
+		//	*v = *result.(*frrProto.InterfaceList)
+		//case *frrProto.RouteList:
+		//	*v = *result.(*frrProto.RouteList)
+		//case *frrProto.SystemMetrics:
+		//	*v = *result.(*frrProto.SystemMetrics)
+		//default:
+		//	// Fallback to proto.Merge if type isn't explicitly handled
+		//	// First clear the message if possible
+		//	if p, ok := target.(interface{ Reset() }); ok {
+		//		p.Reset()
+		//	}
+		//	proto.Merge(target, result)
+		//}
 
 		// Log results consistently
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s(): %v\n", name, target))
@@ -173,8 +180,8 @@ func (c *Collector) Collect() error {
 		return FetchInterfaceStatus(executor)
 	})
 
-	fetchAndMerge("ExpectedRoutes", c.FullFrrData.Routes, func() (proto.Message, error) {
-		return FetchExpectedRoutes(executor)
+	fetchAndMerge("ExpectedRoutes", c.FullFrrData.RoutingInformationBase, func() (proto.Message, error) {
+		return FetchRib(executor)
 	})
 
 	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {
@@ -229,8 +236,8 @@ func (c *Collector) ensureFieldsInitialized() {
 		c.FullFrrData.Interfaces = &frrProto.InterfaceList{}
 	}
 
-	if c.FullFrrData.Routes == nil {
-		c.FullFrrData.Routes = &frrProto.RouteList{}
+	if c.FullFrrData.RoutingInformationBase == nil {
+		c.FullFrrData.RoutingInformationBase = &frrProto.RoutingInformationBase{}
 	}
 
 	if c.FullFrrData.SystemMetrics == nil {

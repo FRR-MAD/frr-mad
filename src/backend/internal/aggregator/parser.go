@@ -528,13 +528,13 @@ func ParseInterfaceStatus(jsonData []byte) (*frrProto.InterfaceList, error) {
 	return result, nil
 }
 
-func ParseRouteList(jsonData []byte) (*frrProto.RouteList, error) {
+func ParseRib(jsonData []byte) (*frrProto.RoutingInformationBase, error) {
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal(jsonData, &rawResponse); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	result := &frrProto.RouteList{
+	result := &frrProto.RoutingInformationBase{
 		Routes: make(map[string]*frrProto.RouteEntry),
 	}
 

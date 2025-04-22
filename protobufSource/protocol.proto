@@ -47,7 +47,7 @@ message ResponseValue {
     OSPFDuplicates ospf_duplicates = 10;
     OSPFNeighbors ospf_neighbors = 11;
     InterfaceList interfaces = 12;
-    RouteList routes = 13;
+    RoutingInformationBase routing_information_base = 13;
     StaticFRRConfiguration static_frr_configuration = 14;
     SystemMetrics system_metrics = 15;
   }
@@ -169,7 +169,7 @@ message FullFRRData {
   OSPFDuplicates ospf_duplicates = 8;
   OSPFNeighbors ospf_neighbors = 9;
   InterfaceList interfaces = 10;
-  RouteList routes = 11;
+  RoutingInformationBase routing_information_base = 11;
   StaticFRRConfiguration static_frr_configuration = 12;
   SystemMetrics system_metrics = 13;
 }
@@ -500,7 +500,7 @@ message EvpnMh {
 }
 
 // ================ Routes ================
-message RouteList {
+message RoutingInformationBase {
   map<string, RouteEntry> routes = 1;
 }
 

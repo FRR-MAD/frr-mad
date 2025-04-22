@@ -144,12 +144,12 @@ func FetchInterfaceStatus(executor *frrSocket.FRRCommandExecutor) (*frrProto.Int
 	return ParseInterfaceStatus(output)
 }
 
-func FetchExpectedRoutes(executor *frrSocket.FRRCommandExecutor) (*frrProto.RouteList, error) {
+func FetchRib(executor *frrSocket.FRRCommandExecutor) (*frrProto.RoutingInformationBase, error) {
 	output, err := executor.ExecZebraCmd("show ip route json")
 	if err != nil {
 		return nil, err
 	}
-	return ParseRouteList(output)
+	return ParseRib(output)
 }
 
 func (f *Fetcher) CollectSystemMetrics() (*frrProto.SystemMetrics, error) {

@@ -39,8 +39,8 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 			return s.getOspfNeighbors()
 		case "interfaces":
 			return s.getInterfaces()
-		case "routes":
-			return s.getRoutes()
+		case "rib":
+			return s.getRoutingInformationBase()
 		case "staticConfig":
 			return s.getStaticFrrConfiguration()
 		default:
