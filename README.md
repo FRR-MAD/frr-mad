@@ -13,11 +13,19 @@
 
 ```
 root/
-├── frontend/               # 
-├── backend/                # 
-│   ├── analytics/          # 
-│   └── collector/          # 
-└── README.md               # Project documentation
+├── archive/                 # 
+├── backend/                 # 
+├── binaries/                # Ready to use Go binaries
+├── protobufSource/          # Protofile for go-types generation
+├── src/                     # Source Code 
+│   ├── backend/             # 
+│   │   ├── internal/        # 
+│   │   │   ├── aggregator/  # Logic to fetch, process and parse data
+│   │   │   ├── analyzer/    # Logic to analyze collected data
+│   │   │   ├── comms/       # Unix Socket creation
+│   │   │   ├── logger/      # Logic for application logging
+│   └── frontend/            # Terminal User Interface using Charmbracelet Libraries
+└── README.md                # Project documentation
 ```
 
 ### Backend Aggregator Structure
@@ -39,7 +47,26 @@ backend
 4. **Single responsibility**: Each package has a clear purpose
 5. **Testability**: Components are modular and can be tested independently
 
-This is the initial design of the code environment. 
+This is the initial design of the code environment.
+
+### Frontend Structure
+
+```
+root/
+├── src/                           # Source Code 
+│   ├── frontend/                  # 
+│   │   ├── cmd/                   # 
+│   │   │   ├── tui/               # Entry Point (main.go)
+│   │   ├── internal/              # 
+│   │   │   ├── common/            # Shared types, helpers, and utilites across pages
+│   │   │   ├── pages/             # Each Page has it’s own model
+│   │   │   │   ├── examplePage/   #
+│   │   │   │   │   ├── model/     # Bubbletea model
+│   │   │   │   │   ├── update/    # update logic and message handling
+│   │   │   │   │   ├── view/      # UI rendering and Backend data aggregation
+│   │   │   ├── services/          # Backend service layer to call external systems
+│   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
+```
 
 ## development Tools
 

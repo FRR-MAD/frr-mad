@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#/usr/bin/frr_exporter --web.listen-address=:9342 &
+air -c .air.toml &
+
+exec /bin/bash /usr/lib/frr/docker-start

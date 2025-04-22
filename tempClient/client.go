@@ -20,11 +20,11 @@ func main() {
 	}
 
 	// socketPath := os.Args[1]
-	command := "PING"
+	service := "PING"
 	packageName := "system"
 
 	if len(os.Args) > 1 {
-		command = os.Args[1]
+		service = os.Args[1]
 	}
 
 	if len(os.Args) > 2 {
@@ -38,15 +38,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			fmt.Printf("Failed to close connection: %s\n", err)
+		}
+	}(conn)
 
 	// Create a Message
 	message := &frrProto.Message{
-		Command: command,
-		Package: packageName,
-		Params: map[string]*frrProto.Value{
+		Service: service,
+		Command: packageName,
+		Params: map[string]*frrProto.ResponseValue{
 			"client_id": {
-				Kind: &frrProto.Value_StringValue{
+				Kind: &frrProto.ResponseValue_StringValue{
 					StringValue: "example_client",
 				},
 			},
@@ -148,35 +153,37 @@ func receiveResponse(conn net.Conn) (*frrProto.Response, error) {
 }
 
 // Helper function to print response data based on its type
-func printResponseData(data *frrProto.Value) {
+func printResponseData(data *frrProto.ResponseValue) {
 	if data == nil {
 		return
 	}
 
-	switch v := data.Kind.(type) {
-	case *frrProto.Value_StringValue:
-		fmt.Printf("Data (string): %s\n", v.StringValue)
-	case *frrProto.Value_IntValue:
-		fmt.Printf("Data (int): %d\n", v.IntValue)
-	case *frrProto.Value_DoubleValue:
-		fmt.Printf("Data (double): %f\n", v.DoubleValue)
-	case *frrProto.Value_BoolValue:
-		fmt.Printf("Data (bool): %t\n", v.BoolValue)
-	case *frrProto.Value_StructValue:
-		fmt.Println("Data (struct):")
-		for key, val := range v.StructValue.Fields {
-			fmt.Printf("  %s: ", key)
-			printResponseData(val)
-		}
-	case *frrProto.Value_ListValue:
-		fmt.Println("Data (list):")
-		for i, val := range v.ListValue.Values {
-			fmt.Printf("  [%d]: ", i)
-			printResponseData(val)
-		}
-	case *frrProto.Value_BytesValue:
-		fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
-	default:
-		fmt.Println("Data: <unknown type>")
-	}
+	fmt.Printf("Data: %v\n", data.String())
+
+	// switch v := data.Kind.(type) {
+	// case *frrProto.Value_StringValue:
+	// 	fmt.Printf("Data (string): %s\n", v.StringValue)
+	// case *frrProto.Value_IntValue:
+	// 	fmt.Printf("Data (int): %d\n", v.IntValue)
+	// case *frrProto.Value_DoubleValue:
+	// 	fmt.Printf("Data (double): %f\n", v.DoubleValue)
+	// case *frrProto.Value_BoolValue:
+	// 	fmt.Printf("Data (bool): %t\n", v.BoolValue)
+	// case *frrProto.Value_StructValue:
+	// 	fmt.Println("Data (struct):")
+	// 	for key, val := range v.StructValue.Fields {
+	// 		fmt.Printf("  %s: ", key)
+	// 		printResponseData(val)
+	// 	}
+	// case *frrProto.Value_ListValue:
+	// 	fmt.Println("Data (list):")
+	// 	for i, val := range v.ListValue.Values {
+	// 		fmt.Printf("  [%d]: ", i)
+	// 		printResponseData(val)
+	// 	}
+	// case *frrProto.Value_BytesValue:
+	// 	fmt.Printf("Data (bytes): %d bytes\n", len(v.BytesValue))
+	// default:
+	// 	fmt.Println("Data: <unknown type>")
+	// }
 }
