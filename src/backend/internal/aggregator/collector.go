@@ -64,15 +64,13 @@ func initFullFrrData() *frrProto.FullFRRData {
 func (c *Collector) Collect() error {
 	c.logger.Debug(fmt.Sprintf("Address of collector: %p\n", c))
 
-	// Previously hard coded socket path to /var/run/frr
 	executor := NewFRRCommandExecutor(c.socketPath, 2*time.Second)
 
-	// Define a generic fetch function to reduce repetition
+	// Generic fetch function
 	fetchAndMerge := func(name string, target proto.Message, fetchFunc func() (proto.Message, error)) {
 		result, err := fetchFunc()
 		if err != nil {
 			c.logger.Error(err.Error())
-			// Decide whether to panic based on the specific fetch - here we only panic for static config
 			if name == "StaticFRRConfig" {
 				log.Panic(err)
 			}
@@ -87,7 +85,6 @@ func (c *Collector) Collect() error {
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s() Address: %p\n", name, target))
 	}
 
-	// Ensure all data containers exist
 	c.initDataContainers()
 
 	// Fetch each type of data using the generic function
