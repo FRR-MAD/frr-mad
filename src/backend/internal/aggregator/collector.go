@@ -8,6 +8,7 @@ import (
 	frrSocket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator/frrsockets"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"google.golang.org/protobuf/proto"
 )
 
 type Collector struct {
@@ -25,175 +26,178 @@ func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.F
 	}
 }
 
-func NewCollector(metricsURL, configPath, socketPath string, logger *logger.Logger) *Collector {
+func newCollector(metricsURL, configPath, socketPath string, logger *logger.Logger) *Collector {
+	fullFrrData := initFullFrrData()
+
 	return &Collector{
 		fetcher:     NewFetcher(metricsURL),
 		configPath:  configPath,
 		socketPath:  socketPath,
 		logger:      logger,
-		FullFrrData: &frrProto.FullFRRData{},
+		FullFrrData: fullFrrData,
+		//FullFrrData: &frrProto.FullFRRData{},
 	}
 }
 
-func (c *Collector) Collect() (*frrProto.FullFRRData, error) {
-	// ospfMetrics, err := c.fetcher.FetchOSPF()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("OSPF fetch failed: %w", err)
-	// }
+func initFullFrrData() *frrProto.FullFRRData {
+	//var fullFrrData frrProto.FullFRRData
+
+	fullFrrData := frrProto.FullFRRData{
+		OspfDatabase:           &frrProto.OSPFDatabase{},
+		OspfRouterData:         &frrProto.OSPFRouterData{},
+		OspfNetworkData:        &frrProto.OSPFNetworkData{},
+		OspfSummaryData:        &frrProto.OSPFSummaryData{},
+		OspfAsbrSummaryData:    &frrProto.OSPFAsbrSummaryData{},
+		OspfExternalData:       &frrProto.OSPFExternalData{},
+		OspfNssaExternalData:   &frrProto.OSPFNssaExternalData{},
+		OspfDuplicates:         &frrProto.OSPFDuplicates{},
+		OspfNeighbors:          &frrProto.OSPFNeighbors{},
+		Interfaces:             &frrProto.InterfaceList{},
+		Routes:                 &frrProto.RouteList{},
+		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{},
+		SystemMetrics:          &frrProto.SystemMetrics{},
+	}
+
+	return &fullFrrData
+}
+
+func (c *Collector) Collect() error {
+	c.logger.Debug(fmt.Sprintf("Address of collector: %p\n", c))
 
 	// Previously hard coded socket path to /var/run/frr
 	executor := NewFRRCommandExecutor(c.socketPath, 2*time.Second)
 
-	staticFRRConfigParsed, err := fetchStaticFRRConfig()
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		log.Panic(err)
-		//os.Exit(1)
+	// Define a generic fetch function to reduce repetition
+	fetchAndMerge := func(name string, target proto.Message, fetchFunc func() (proto.Message, error)) {
+		result, err := fetchFunc()
+		if err != nil {
+			c.logger.Error(err.Error())
+			// Decide whether to panic based on the specific fetch - here we only panic for static config
+			if name == "StaticFRRConfig" {
+				log.Panic(err)
+			}
+			return
+		}
+
+		// Merge the fetched data into the target
+		proto.Merge(target, result)
+
+		// Log results consistently
+		c.logger.Debug(fmt.Sprintf("Response of Fetch%s(): %v\n", name, target))
+		c.logger.Debug(fmt.Sprintf("Response of Fetch%s() Address: %p\n", name, target))
 	}
 
-	c.FullFrrData.StaticFrrConfiguration = staticFRRConfigParsed
-	//fmt.Printf("Response of FetchStaticFRRConfig(): \n%+v\n", staticFRRConfigParsed)
-	c.logger.Debug("Response of FetchStaticFRRConfig(): " + staticFRRConfigParsed.String())
+	// Ensure all data containers exist
+	c.initDataContainers()
 
-	ospfRouterData, err := FetchOSPFRouterData(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	// Fetch each type of data using the generic function
+	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
+		return fetchStaticFRRConfig()
+	})
+
+	fetchAndMerge("OSPFRouterData", c.FullFrrData.OspfRouterData, func() (proto.Message, error) {
+		return FetchOSPFRouterData(executor)
+	})
+
+	fetchAndMerge("OSPFNetworkData", c.FullFrrData.OspfNetworkData, func() (proto.Message, error) {
+		return FetchOSPFNetworkData(executor)
+	})
+
+	fetchAndMerge("OSPFSummaryData", c.FullFrrData.OspfSummaryData, func() (proto.Message, error) {
+		return FetchOSPFSummaryData(executor)
+	})
+
+	fetchAndMerge("OSPFAsbrSummaryData", c.FullFrrData.OspfAsbrSummaryData, func() (proto.Message, error) {
+		return FetchOSPFAsbrSummaryData(executor)
+	})
+
+	fetchAndMerge("OSPFExternalData", c.FullFrrData.OspfExternalData, func() (proto.Message, error) {
+		return FetchOSPFExternalData(executor)
+	})
+
+	fetchAndMerge("OSPFNssaExternalData", c.FullFrrData.OspfNssaExternalData, func() (proto.Message, error) {
+		return FetchOSPFNssaExternalData(executor)
+	})
+
+	fetchAndMerge("FullOSPFDatabase", c.FullFrrData.OspfDatabase, func() (proto.Message, error) {
+		return FetchFullOSPFDatabase(executor)
+	})
+
+	fetchAndMerge("OSPFDuplicateCandidates", c.FullFrrData.OspfDuplicates, func() (proto.Message, error) {
+		return FetchOSPFDuplicateCandidates(executor)
+	})
+
+	fetchAndMerge("OSPFNeighbors", c.FullFrrData.OspfNeighbors, func() (proto.Message, error) {
+		return FetchOSPFNeighbors(executor)
+	})
+
+	fetchAndMerge("InterfaceStatus", c.FullFrrData.Interfaces, func() (proto.Message, error) {
+		return FetchInterfaceStatus(executor)
+	})
+
+	fetchAndMerge("ExpectedRoutes", c.FullFrrData.Routes, func() (proto.Message, error) {
+		return FetchExpectedRoutes(executor)
+	})
+
+	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {
+		return c.fetcher.CollectSystemMetrics()
+	})
+
+	return nil
+}
+
+func (c *Collector) initDataContainers() {
+	if c.FullFrrData.StaticFrrConfiguration == nil {
+		c.FullFrrData.StaticFrrConfiguration = &frrProto.StaticFRRConfiguration{}
 	}
 
-	//fmt.Printf("Response: \n%+v\n", ospfRouterData)
-	c.FullFrrData.OspfRouterData = ospfRouterData
-	c.logger.Debug("Response of FetchOSPFRouterData(): " + ospfRouterData.String())
-	c.logger.Debug(fmt.Sprintf("Response of FetchOSPFRouterData() Address: %p\n", ospfRouterData))
-
-	ospfNetworkData, err := FetchOSPFNetworkData(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfRouterData == nil {
+		c.FullFrrData.OspfRouterData = &frrProto.OSPFRouterData{}
 	}
 
-	//fmt.Printf("Response: \n%+v\n", ospfNetworkData)
-	c.FullFrrData.OspfNetworkData = ospfNetworkData
-	c.logger.Debug("Response of FetchOSPFNetworkData(): " + ospfNetworkData.String())
-
-	ospfSummaryData, err := FetchOSPFSummaryData(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfNetworkData == nil {
+		c.FullFrrData.OspfNetworkData = &frrProto.OSPFNetworkData{}
 	}
 
-	//fmt.Printf("Response: \n%+v\n", ospfSummaryData)
-	c.FullFrrData.OspfSummaryData = ospfSummaryData
-	c.logger.Debug("Response of FetchOSPFSummaryData(): " + ospfSummaryData.String())
-
-	ospfAsbrSummaryData, err := FetchOSPFAsbrSummaryData(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfSummaryData == nil {
+		c.FullFrrData.OspfSummaryData = &frrProto.OSPFSummaryData{}
 	}
 
-	//fmt.Printf("Response: \n%+v\n", ospfAsbrSummaryData)
-	c.FullFrrData.OspfAsbrSummaryData = ospfAsbrSummaryData
-	c.logger.Debug("Response of FetchOSPFAsbrSummaryData(): " + ospfAsbrSummaryData.String())
-
-	ospfExternalData, err := FetchOSPFExternalData(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfAsbrSummaryData == nil {
+		c.FullFrrData.OspfAsbrSummaryData = &frrProto.OSPFAsbrSummaryData{}
 	}
 
-	//fmt.Printf("Response: \n%+v\n", ospfExternalData)
-	c.FullFrrData.OspfExternalData = ospfExternalData
-	c.logger.Debug("Response of FetchOSPFExternalData(): " + ospfExternalData.String())
-	c.logger.Debug(fmt.Sprintf("Response of FetchOSPFExternalData() Address: %p\n", ospfExternalData))
-
-	ospfNssaExternalData, err := FetchOSPFNssaExternalData(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfExternalData == nil {
+		c.FullFrrData.OspfExternalData = &frrProto.OSPFExternalData{}
 	}
 
-	//fmt.Printf("Response: \n%+v\n", ospfNssaExternalData)
-	c.FullFrrData.OspfNssaExternalData = ospfNssaExternalData
-	c.logger.Debug("Response of FetchOSPFNssaExternalData(): " + ospfNssaExternalData.String())
-
-	out1, err := FetchFullOSPFDatabase(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfNssaExternalData == nil {
+		c.FullFrrData.OspfNssaExternalData = &frrProto.OSPFNssaExternalData{}
 	}
 
-	fmt.Printf("Response FetchFullOSPFDatabase: \n%+v\n", out1)
-	c.logger.Debug("Response of FetchFullOSPFDatabase(): " + out1.String())
-
-	out2, err := FetchOSPFDuplicateCandidates(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfDatabase == nil {
+		c.FullFrrData.OspfDatabase = &frrProto.OSPFDatabase{}
 	}
 
-	fmt.Printf("Response FetchOSPFDuplicateCandidates: \n%+v\n", out2)
-	c.logger.Debug("Response of FetchOSPFDuplicateCandidates(): " + out2.String())
-
-	out3, err := FetchOSPFNeighbors(executor)
-	if err != nil {
-		fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfDuplicates == nil {
+		c.FullFrrData.OspfDuplicates = &frrProto.OSPFDuplicates{}
 	}
 
-	fmt.Printf("Response FetchOSPFNeighbors: \n%+v\n", out3)
-	c.logger.Debug("Response of FetchOSPFNeighbors(): " + out3.String())
-	c.logger.Debug(fmt.Sprintf("Response of FetchOSPFNeighbors() Address: %p", out3))
-
-	out4, err := FetchInterfaceStatus(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.OspfNeighbors == nil {
+		c.FullFrrData.OspfNeighbors = &frrProto.OSPFNeighbors{}
 	}
 
-	fmt.Printf("Response FetchInterfaceStatus: \n%+v\n", out4)
-
-	out5, err := FetchExpectedRoutes(executor)
-	if err != nil {
-		//fmt.Print(err)
-		c.logger.Error(err.Error())
-		//os.Exit(1)
+	if c.FullFrrData.Interfaces == nil {
+		c.FullFrrData.Interfaces = &frrProto.InterfaceList{}
 	}
 
-	fmt.Printf("Response FetchExpectedRoutes: \n%+v\n", out5)
-
-	//os.Exit(0)
-
-	//config, err := ParseStaticFRRConfig(c.configPath)
-	if err != nil {
-		return nil, fmt.Errorf("config parse failed: %w", err)
+	if c.FullFrrData.Routes == nil {
+		c.FullFrrData.Routes = &frrProto.RouteList{}
 	}
 
-	systemMetrics, err := c.fetcher.CollectSystemMetrics()
-	if err != nil {
-		return nil, fmt.Errorf("system metrics failed: %w", err)
+	if c.FullFrrData.SystemMetrics == nil {
+		c.FullFrrData.SystemMetrics = &frrProto.SystemMetrics{}
 	}
-
-	c.FullFrrData.SystemMetrics = systemMetrics
-
-	state := &frrProto.FullFRRData{
-		//Ospf:      ospfMetrics,
-		//Config: config,
-		SystemMetrics: systemMetrics,
-	}
-
-	return state, nil
 }
 
 // Functions for testing maybe remove later
