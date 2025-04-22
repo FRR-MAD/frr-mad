@@ -14,28 +14,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
-// 	var response frrProto.OSPFRouterData
-// 	unmarshaler := protojson.UnmarshalOptions{
-// 		DiscardUnknown: true,
-// 	}
-
-// 	if err := unmarshaler.Unmarshal(jsonData, &response); err != nil {
-// 		return nil, fmt.Errorf("failed to parse OSPF router LSA json: %w", err)
-// 	}
-
-// 	return &response, nil
-// }
-
-// func ParseOSPFNetworkLSA(jsonData []byte) (*frrProto.OSPFNetworkData, error) {
-// 	var response frrProto.OSPFNetworkData
-// 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
-// 	if err := unmarshaler.Unmarshal(jsonData, &response); err != nil {
-// 		return nil, fmt.Errorf("failed to parse OSPF network LSA json: %w", err)
-// 	}
-// 	return &response, nil
-// }
-
 func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
@@ -250,39 +228,55 @@ func ParseOSPFExternalLSA(jsonData []byte) (*frrProto.OSPFExternalData, error) {
 }
 
 func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, error) {
-	var jsonMap map[string]interface{}
-	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(jsonData, &rawData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	transformedMap := make(map[string]interface{})
-	transformedMap["router_id"] = jsonMap["routerId"]
+	transformed := make(map[string]interface{})
 
-	if nssaStates, ok := jsonMap["NSSA External Link States"].(map[string]interface{}); ok {
-		transformedStates := make(map[string]interface{})
-		for areaID, areaData := range nssaStates {
-			areaDataMap := areaData.(map[string]interface{})
-			transformedLSAs := make(map[string]interface{})
-
-			for lsaID, lsaData := range areaDataMap {
-				transformedLSAs[lsaID] = transformNssaExternalLSA(lsaData.(map[string]interface{}))
-			}
-
-			transformedStates[areaID] = map[string]interface{}{
-				"data": transformedLSAs,
-			}
-		}
-		transformedMap["nssa_external_link_states"] = transformedStates
+	if routerID, ok := rawData["routerId"]; ok {
+		transformed["router_id"] = routerID
 	}
 
-	transformedJSON, err := json.Marshal(transformedMap)
+	if nssaStates, ok := rawData["NSSA-external Link States"].(map[string]interface{}); ok {
+		areas := make(map[string]interface{})
+
+		for areaID, areaData := range nssaStates {
+			areaDataMap, ok := areaData.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			lsas := make(map[string]interface{})
+			for lsaID, lsaData := range areaDataMap {
+				lsaDataMap, ok := lsaData.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				lsas[lsaID] = transformNssaExternalLSA(lsaDataMap)
+			}
+
+			areas[areaID] = map[string]interface{}{
+				"data": lsas,
+			}
+		}
+
+		transformed["nssa_external_link_states"] = areas
+	}
+
+	transformedJSON, err := json.Marshal(transformed)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+		return nil, fmt.Errorf("failed to marshal transformed data: %w", err)
 	}
 
 	var result frrProto.OSPFNssaExternalData
-	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
-	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+	opts := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+
+	if err := opts.Unmarshal(transformedJSON, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
 	}
 
@@ -1108,9 +1102,9 @@ func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interfa
 		"externalRouteTag":   "external_route_tag",
 	}
 
-	for origKey, newKey := range fieldMapping {
-		if value, exists := lsaData[origKey]; exists {
-			transformed[newKey] = value
+	for jsonKey, protoKey := range fieldMapping {
+		if value, exists := lsaData[jsonKey]; exists {
+			transformed[protoKey] = value
 		}
 	}
 
