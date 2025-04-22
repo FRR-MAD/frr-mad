@@ -64,15 +64,19 @@ func initFullFrrData() *frrProto.FullFRRData {
 func (c *Collector) Collect() error {
 	c.logger.Debug(fmt.Sprintf("Address of collector: %p\n", c))
 
-	// Previously hard coded socket path to /var/run/frr
+	if c.FullFrrData == nil {
+		c.FullFrrData = initFullFrrData()
+	} else {
+		c.ensureFieldsInitialized()
+	}
+
 	executor := NewFRRCommandExecutor(c.socketPath, 2*time.Second)
 
-	// Define a generic fetch function to reduce repetition
+	// Generic fetch function
 	fetchAndMerge := func(name string, target proto.Message, fetchFunc func() (proto.Message, error)) {
 		result, err := fetchFunc()
 		if err != nil {
 			c.logger.Error(err.Error())
-			// Decide whether to panic based on the specific fetch - here we only panic for static config
 			if name == "StaticFRRConfig" {
 				log.Panic(err)
 			}
@@ -80,15 +84,49 @@ func (c *Collector) Collect() error {
 		}
 
 		// Merge the fetched data into the target
-		proto.Merge(target, result)
+		//proto.Merge(target, result)
+		// Reset target by creating a new instance of the same type
+		// Warning: Copy of Sync.Mutex lock
+		switch v := target.(type) {
+		case *frrProto.StaticFRRConfiguration:
+			*v = *result.(*frrProto.StaticFRRConfiguration)
+		case *frrProto.OSPFRouterData:
+			*v = *result.(*frrProto.OSPFRouterData)
+		case *frrProto.OSPFNetworkData:
+			*v = *result.(*frrProto.OSPFNetworkData)
+		case *frrProto.OSPFSummaryData:
+			*v = *result.(*frrProto.OSPFSummaryData)
+		case *frrProto.OSPFAsbrSummaryData:
+			*v = *result.(*frrProto.OSPFAsbrSummaryData)
+		case *frrProto.OSPFExternalData:
+			*v = *result.(*frrProto.OSPFExternalData)
+		case *frrProto.OSPFNssaExternalData:
+			*v = *result.(*frrProto.OSPFNssaExternalData)
+		case *frrProto.OSPFDatabase:
+			*v = *result.(*frrProto.OSPFDatabase)
+		case *frrProto.OSPFDuplicates:
+			*v = *result.(*frrProto.OSPFDuplicates)
+		case *frrProto.OSPFNeighbors:
+			*v = *result.(*frrProto.OSPFNeighbors)
+		case *frrProto.InterfaceList:
+			*v = *result.(*frrProto.InterfaceList)
+		case *frrProto.RouteList:
+			*v = *result.(*frrProto.RouteList)
+		case *frrProto.SystemMetrics:
+			*v = *result.(*frrProto.SystemMetrics)
+		default:
+			// Fallback to proto.Merge if type isn't explicitly handled
+			// First clear the message if possible
+			if p, ok := target.(interface{ Reset() }); ok {
+				p.Reset()
+			}
+			proto.Merge(target, result)
+		}
 
 		// Log results consistently
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s(): %v\n", name, target))
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s() Address: %p\n", name, target))
 	}
-
-	// Ensure all data containers exist
-	c.initDataContainers()
 
 	// Fetch each type of data using the generic function
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
@@ -146,7 +184,7 @@ func (c *Collector) Collect() error {
 	return nil
 }
 
-func (c *Collector) initDataContainers() {
+func (c *Collector) ensureFieldsInitialized() {
 	if c.FullFrrData.StaticFrrConfiguration == nil {
 		c.FullFrrData.StaticFrrConfiguration = &frrProto.StaticFRRConfiguration{}
 	}
