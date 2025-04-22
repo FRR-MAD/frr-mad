@@ -98,7 +98,7 @@ func (m *Model) renderOSPFDashboard() string {
 	} else {
 		cpuAmountString = fmt.Sprintf("%v", cpuAmount)
 		cpuUsageString = fmt.Sprintf("%.2f%%", cpuUsage*100)
-		memoryString = fmt.Sprintf("%.2f%%", memoryUsage*100)
+		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
 	}
 
 	// Convert 0.0–1.0 → percentage and clamp to [0,100]
@@ -153,16 +153,4 @@ func getSystemResources() (int64, float64, float64, error) {
 	memoryUsage := systemMetrics.MemoryUsage
 
 	return cores, cpuUsage, memoryUsage, nil
-}
-
-// clamp returns x clamped to the [min,max] interval.
-func clamp(x, min, max float64) float64 {
-	switch {
-	case x < min:
-		return min
-	case x > max:
-		return max
-	default:
-		return x
-	}
 }

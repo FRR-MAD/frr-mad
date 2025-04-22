@@ -1,5 +1,7 @@
 package common
 
+import "time"
+
 type WindowSize struct {
 	Width  int
 	Height int
@@ -14,3 +16,5 @@ type FooterOption struct {
 	PageTitle   string
 	PageOptions []string
 }
+
+type ReloadMessage time.Time

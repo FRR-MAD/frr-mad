@@ -5,6 +5,7 @@ import (
 
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	tea "github.com/charmbracelet/bubbletea"
+	"time"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -24,6 +25,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case common.OSPFMsg:
 		m.ospfAnomalies = common.DetectOSPFAnomalies(string(msg))
+	case common.ReloadMessage:
+		m.currentTime = time.Time(msg)
+		return m, reloadView()
 	}
 
 	return m, nil

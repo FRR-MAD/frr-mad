@@ -3,6 +3,7 @@ package dashboard
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"github.com/charmbracelet/bubbles/viewport"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -13,6 +14,7 @@ type Model struct {
 	ospfAnomalies []string
 	windowSize    *common.WindowSize
 	viewport      viewport.Model
+	currentTime   time.Time
 }
 
 func New(windowSize *common.WindowSize) *Model {
@@ -46,8 +48,15 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 	}
 }
 
+func reloadView() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return common.ReloadMessage(t)
+	})
+}
+
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		common.FetchOSPFData(),
+		reloadView(),
 	)
 }
