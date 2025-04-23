@@ -117,7 +117,7 @@ func (m *Model) renderBackendTestTab() string {
 		lipgloss.NewStyle().Margin(0, 0, 0, 4).Render(testInfo),
 	)
 
-	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 8
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 7
 
 	// Update the viewport dimensions.
 	m.viewport.Width = m.windowSize.Width - 6

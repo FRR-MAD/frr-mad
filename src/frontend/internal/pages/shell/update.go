@@ -25,9 +25,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.bashInput = m.bashInput[:len(m.bashInput)-1]
 			} else if currentSubTabLocal == 1 && len(m.vtyshInput) > 0 {
 				m.vtyshInput = m.vtyshInput[:len(m.vtyshInput)-1]
-			} else if m.activeBackendInput == "service" {
+			} else if currentSubTabLocal == 2 && m.activeBackendInput == "service" && len(m.backendServiceInput) > 0 {
 				m.backendServiceInput = m.backendServiceInput[:len(m.backendServiceInput)-1]
-			} else if m.activeBackendInput == "command" {
+			} else if currentSubTabLocal == 2 && m.activeBackendInput == "command" && len(m.backendCommandInput) > 0 {
 				m.backendCommandInput = m.backendCommandInput[:len(m.backendCommandInput)-1]
 			}
 		case "tab":
@@ -35,6 +35,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "left", "right":
 			m.ClearInput()
 			m.ClearOutput()
+			m.clearBackendInput()
 		case "enter":
 			if currentSubTabLocal == 0 {
 				bashOutput, err := common.RunCustomCommand("bash", m.bashInput, 5*time.Second)
