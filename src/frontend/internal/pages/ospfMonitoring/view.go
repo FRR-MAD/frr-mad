@@ -2,6 +2,8 @@ package ospfMonitoring
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+
 	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
@@ -47,6 +49,7 @@ func (m *Model) renderRouterMonitorTab() string {
 
 	var routerLSABlocks []string
 
+	ospfNeighbors := getOspfNeighborInterfaces()
 	routerLSASelf, _ := getOspfRouterData()
 
 	for area, areaData := range routerLSASelf.RouterStates {
@@ -56,9 +59,11 @@ func (m *Model) renderRouterMonitorTab() string {
 		for _, lsa := range areaData.LsaEntries {
 			for _, link := range lsa.RouterLinks {
 				if strings.Contains(link.LinkType, "Transit Network") {
-					name := "Direct Neighbor"
+					name := "No Neighbor"
 					if link.DesignatedRouterAddress == link.RouterInterfaceAddress {
 						name = "self"
+					} else if common.ContainsString(ospfNeighbors, link.DesignatedRouterAddress) {
+						name = "Direct Neighbor"
 					}
 					transitData = append(transitData, []string{
 						link.DesignatedRouterAddress,
@@ -326,4 +331,21 @@ func getOspfRouterData() (*pkg.OSPFRouterData, error) {
 	}
 
 	return response.Data.GetOspfRouterData(), nil
+}
+
+func getOspfNeighborInterfaces() []string {
+	response, err := backend.SendMessage("ospf", "neighbors", nil)
+	if err != nil {
+		return nil
+	}
+	ospfNeighbors := response.Data.GetOspfNeighbors()
+
+	var neighborAddresses []string
+	for _, neighborGroup := range ospfNeighbors.Neighbors {
+		for _, neighbor := range neighborGroup.Neighbors {
+			neighborAddresses = append(neighborAddresses, neighbor.IfaceAddress)
+		}
+	}
+
+	return neighborAddresses
 }
