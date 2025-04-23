@@ -145,7 +145,7 @@ func (m *Model) renderRouterMonitorTab() string {
 
 		completeAreaRouterLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, horizontalTables)
 
-		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n"+completeAreaRouterLSAs+"\n\n")
+		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
 	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight

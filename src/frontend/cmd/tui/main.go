@@ -94,6 +94,12 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if subTabsLength >= 3 {
 				m.currentSubTab = 2
 			}
+		case "4":
+			if m.currentSubTab == -1 {
+				m.currentView = ViewShell
+			} else if subTabsLength >= 4 {
+				m.currentSubTab = 3
+			}
 		case "9":
 			if m.currentSubTab == -1 {
 				break
