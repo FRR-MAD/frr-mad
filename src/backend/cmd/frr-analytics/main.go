@@ -134,7 +134,7 @@ func startAggregator(config map[string]string, logging *logger.Logger, pollInter
 }
 
 func startAnalyzer(config map[string]string, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
-	detection := analyzer.InitAnalyzer(config, aggregatorService, logging)
+	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging)
 	analyzer.StartAnalyzer(detection, pollInterval)
 	detection.Foobar()
 	return detection

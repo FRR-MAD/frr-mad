@@ -1,10 +1,8 @@
 package analyzer
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
@@ -13,16 +11,21 @@ import (
  */
 type Analyzer struct {
 	//	anomalyDetection *AnomalyDetection
-	Cache     *frrProto.Anomalies
-	Collector *aggregator.Collector
+	Anomalies *frrProto.Anomalies
+	metrics   *frrProto.FullFRRData
 	Logger    *logger.Logger
 }
 
-func InitAnalyzer(config map[string]string, collector *aggregator.Collector, logger *logger.Logger) *Analyzer {
+func initAnomalies() *frrProto.Anomalies {
+	return &frrProto.Anomalies{}
+}
+
+func InitAnalyzer(config map[string]string, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
+	anomalies := initAnomalies()
 
 	return &Analyzer{
-		Cache:     &frrProto.Anomalies{},
-		Collector: collector,
+		Anomalies: anomalies,
+		metrics:   metrics,
 		Logger:    logger,
 	}
 }
@@ -34,7 +37,6 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 		defer ticker.Stop()
 		for range ticker.C {
 			analyzer.AnomalyAnalysis()
-			fmt.Printf("Analyzer: \n%+v\n", analyzer.Collector.FullFrrData.OspfAsbrSummaryData)
 		}
 	}()
 
