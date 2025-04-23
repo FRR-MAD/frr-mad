@@ -1,6 +1,25 @@
 package common
 
-import "time"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+	"time"
+)
+
+// ================================ //
+// INTERFACES                       //
+// ================================ //
+
+// PageInterface defines a module that has a title.
+type PageInterface interface {
+	tea.Model
+	GetTitle() Tab
+	GetSubTabsLength() int
+	GetFooterOptions() FooterOption
+}
+
+// ================================ //
+// STRUCTS                          //
+// ================================ //
 
 type WindowSize struct {
 	Width  int

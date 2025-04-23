@@ -1,6 +1,7 @@
 package styles
 
 import (
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -15,13 +16,13 @@ const FooterHeight = 1
 // Colors
 // ----------------------------
 
-var BoxBorderBlue = "#5f87ff" // Usage: Active Tab, Content Border
-var Grey = "#444444"          // Usage: inactive components, options
-var NormalBeige = "#d7d7af"   // Usage: Box Border when content good
-var BadRed = "#d70000"        // Usage: Box Border when content bad
+var MainBlue = "#5f87ff"    // Usage: Active Tab, Content Border
+var Grey = "#444444"        // Usage: inactive components, options
+var NormalBeige = "#d7d7af" // Usage: Box Border when content good
+var BadRed = "#d70000"      // Usage: Box Border when content bad
 var NavyBlue = "#3a3a3a"
 
-//var BoxBorderBlue = "111" // Usage: Active Tab, Content Border
+//var MainBlue = "111" // Usage: Active Tab, Content Border
 //var Grey = "238"          // Usage: inactive components, options
 //var NormalBeige = "187"   // Usage: Box Border when content good
 //var BadRed = "#160"        // Usage: Box Border when content bad
@@ -39,11 +40,24 @@ var BoxTitleStyle = lipgloss.NewStyle().
 	BorderRight(false).
 	BorderBottom(true)
 
+//var BoxTitleStyleCenterM02 = BoxTitleStyle.
+//	Margin(0, 2).
+//	Align(lipgloss.Center)
+
 var TextOutputStyle = lipgloss.NewStyle().
 	Padding(1, 2)
 
-var ActiveContentStyle = GeneralBoxStyle.
-	BorderBottom(false)
+var ContentTitleH1Style = lipgloss.NewStyle().
+	Border(lipgloss.RoundedBorder()).
+	BorderForeground(lipgloss.Color(NormalBeige)).
+	BorderBottom(false).
+	Padding(0, 1).
+	Align(lipgloss.Center).
+	Bold(true)
+
+var ContentTitleH2Style = ContentTitleH1Style.
+	Margin(0, 2).
+	BorderForeground(lipgloss.Color(Grey))
 
 // ----------------------------
 // Box Styling
@@ -51,7 +65,7 @@ var ActiveContentStyle = GeneralBoxStyle.
 
 var ContentBoxStyle = lipgloss.NewStyle().
 	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color(BoxBorderBlue)).
+	BorderForeground(lipgloss.Color(MainBlue)).
 	Padding(0, 2)
 
 var GeneralBoxStyle = lipgloss.NewStyle().
@@ -161,7 +175,7 @@ var OSPFMonitoringTableTitleBorder = lipgloss.Border{
 
 var ActiveTabBoxStyle = lipgloss.NewStyle().
 	Border(ActiveTabBorder).
-	BorderForeground(lipgloss.Color(BoxBorderBlue)).
+	BorderForeground(lipgloss.Color(MainBlue)).
 	Padding(0, 4).
 	Bold(true).
 	Underline(true)
@@ -173,13 +187,13 @@ var ActiveTabBoxLockedStyle = ActiveTabBoxStyle.
 var InactiveTabBoxStyle = lipgloss.NewStyle().
 	Border(InactiveTabBorder).
 	BorderForeground(lipgloss.Color(Grey)).
-	BorderBottomForeground(lipgloss.Color(BoxBorderBlue)).
+	BorderBottomForeground(lipgloss.Color(MainBlue)).
 	Padding(0, 4).
 	Bold(false)
 
 var TabGap = lipgloss.NewStyle().
 	Border(InactiveTabBorder).
-	BorderForeground(lipgloss.Color(BoxBorderBlue)).
+	BorderForeground(lipgloss.Color(MainBlue)).
 	BorderTop(false).
 	BorderLeft(false).
 	BorderRight(false)
@@ -231,3 +245,42 @@ var (
 //			return cellStyle
 //		}
 //	})
+
+func BuildTableStyles() table.Styles {
+	// start from the defaults
+	s := table.DefaultStyles()
+
+	// 1) Header line: rounded border, orange text, centered, a bit of padding
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color(Grey)).
+		Align(lipgloss.Center).
+		PaddingTop(0).
+		PaddingBottom(0).
+		PaddingLeft(1).
+		PaddingRight(1)
+
+	// 2) Cell style: thin border on the left, small horizontal padding
+	s.Cell = s.Cell.
+		BorderLeft(true).
+		BorderRight(true).
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color(Grey)).
+		PaddingLeft(1).
+		PaddingRight(1)
+
+	// 3) Selected row: swap fg/bg for high contrast
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color(NavyBlue)).
+		Bold(true)
+
+	return s
+}
+
+// ----------------------------
+// Other Styling Elements
+// ----------------------------
+
+var ContentBottomBorderStyle = ContentTitleH2Style.
+	BorderBottom(true).
+	BorderTop(false)

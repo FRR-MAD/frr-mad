@@ -32,7 +32,7 @@ func New(windowSize *common.WindowSize) *Model {
 		title: "2 - OSPF Monitoring",
 		// '9 - Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
-		subTabs:       []string{"1 - Advertisement", "2 - TBD", "3 - TBD", "9 - Running Config"},
+		subTabs:       []string{"1 - Advertisement", "2 - Router LSAs", "3 - TBD", "4 - TBD", "9 - Running Config"},
 		runningConfig: []string{"Fetching running config..."},
 		windowSize:    windowSize,
 		viewport:      vp,
@@ -52,9 +52,9 @@ func (m *Model) GetSubTabsLength() int {
 
 func (m *Model) GetFooterOptions() common.FooterOption {
 	keyBoardOptions := []string{
-		"'r': refresh",
-		"'up' / 'down': scroll",
-		"'e': export OSPF data",
+		"[r] refresh",
+		"[↑/↓] scroll",
+		"[e] export OSPF data",
 	}
 	return common.FooterOption{
 		PageTitle:   m.title,

@@ -61,7 +61,7 @@ func initModel() *AppModel {
 		//ospf2:         ospfMonitoring.New(windowSize),
 		//ospf3:         ospfMonitoring.New(windowSize),
 		shell:  shell.New(windowSize),
-		footer: components.NewFooter("'ctrl' + 'c': exit FRR-MAD", "'enter': enter sub tabs"),
+		footer: components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
 	}
 }
 
@@ -127,7 +127,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.currentSubTab == -1 {
 				m.currentSubTab = 0
 				m.footer.Clean()
-				m.footer.Append("'esc': exit sub tab")
+				m.footer.Append("[esc] exit sub tab")
 				currentPageOptions := m.getCurrentFooterOptions()
 				m.footer.AppendMultiple(currentPageOptions)
 			}

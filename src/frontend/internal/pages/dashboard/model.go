@@ -39,8 +39,8 @@ func (m *Model) GetSubTabsLength() int {
 
 func (m *Model) GetFooterOptions() common.FooterOption {
 	keyBoardOptions := []string{
-		"'r': refresh dashboard",
-		"'e': export everything",
+		"[r] refresh dashboard",
+		// "[e] export everything",
 	}
 	return common.FooterOption{
 		PageTitle:   m.title,

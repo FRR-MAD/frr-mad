@@ -76,6 +76,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.clearBackendInput()
 				m.activeBackendInput = "service"
 			}
+		//case "w":
+		//	err := common.CopyToClipboard(m.backendResponse)
+		//	if err != nil {
+		//		// m.statusMsg = "Clipboard error: " + err.Error()
+		//	} else {
+		//		// m.statusMsg = "Copied response to clipboard!"
+		//	}
+		//	m.showRawOutput = !m.showRawOutput
+
 		default:
 			if currentSubTabLocal == 0 {
 				m.bashInput += msg.String()

@@ -50,11 +50,11 @@ func (m *Model) renderOSPFDashboard() string {
 	allGoodRows := backend.GetOSPFMetrics()
 	anomalyRows := backend.GetOSPFAnomalies()
 
-	advertisingRouteTitle1 := styles.ActiveContentStyle.
+	advertisingRouteTitle1 := styles.ContentTitleH1Style.
 		Width(boxWidthThreeFourth - 2).
 		Render("Area 0.0.0.0, Router LSAs (Type 1)")
 
-	advertisingRouteTitle2 := styles.ActiveContentStyle.
+	advertisingRouteTitle2 := styles.ContentTitleH1Style.
 		Width(boxWidthThreeFourth - 2).
 		Render("Area 0.0.0.0, Autonomous System External LSAs (Type 5)")
 

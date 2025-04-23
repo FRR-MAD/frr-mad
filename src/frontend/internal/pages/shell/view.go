@@ -86,7 +86,8 @@ func (m *Model) renderShellTab1() string {
 func (m *Model) renderBackendTestTab() string {
 
 	testInfo := "To Test the Backend we need a service and a command e.g. 'ospf' / 'database'\n" +
-		"press 'tab' to switch to command input. press 'enter' to send backend call.\n"
+		"Press 'tab' to switch to command input. press 'enter' to send backend call.\n" // +
+	// "press '' to copy output to clipboard."
 
 	var serviceBox, commandBox string
 	if m.activeBackendInput == "service" {

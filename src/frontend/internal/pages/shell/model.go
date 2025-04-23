@@ -37,7 +37,7 @@ func New(windowSize *common.WindowSize) *Model {
 
 	return &Model{
 		title:               "3 - Shell",
-		subTabs:             []string{"bash", "vtysh", "Backend Test"},
+		subTabs:             []string{"1 - bash", "2 - vtysh", "3 - Backend Test"},
 		windowSize:          windowSize,
 		activeShell:         "",
 		backendServiceInput: "",
@@ -75,9 +75,9 @@ func (m *Model) ClearOutput() {
 
 func (m *Model) GetFooterOptions() common.FooterOption {
 	keyBoardOptions := []string{
-		"'enter': execute command",
-		"'up': scroll up",
-		"'down': scroll down",
+		"[enter]: execute command",
+		"[↑/↓] scroll",
+		"[backspace]: delete last character",
 	}
 	return common.FooterOption{
 		PageTitle:   m.title,
