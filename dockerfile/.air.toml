@@ -6,6 +6,7 @@ tmp_dir = "/app/tmp"
 [build]
 # Command to build your app
 cmd = "cd /app/src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/frr_analyzer ./cmd/frr-analytics"
+# && cd /app/src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/frr_tui ./cmd/tui"
 # Binary file generated
 bin = "/app/tmp/frr_analyzer"
 # How the built app is run
