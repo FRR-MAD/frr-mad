@@ -5,7 +5,8 @@ RUN apk update && apk add --no-cache \
     git \
     build-base \
     ca-certificates \
-    bash
+    bash \
+    jq
 
 RUN wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz && \
@@ -13,7 +14,7 @@ RUN wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz && \
 
 ENV PATH=$PATH:/usr/local/go/bin
 ENV GOPATH=/go
-ENV PATH=$PATH:$GOPATH/bin
+ENV PATH=$PATH:$GOPATH/bin:/app/tmp
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" "$GOPATH/pkg"
 
