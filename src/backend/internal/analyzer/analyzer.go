@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
@@ -9,10 +10,10 @@ import (
 // analyze the different ospf anomalies
 // call ospf functions
 
-type magicalState struct {
-	Hostname   string `json:"hostname"`
-	FrrVersion string `json:"frr_version"`
-	Areas      []area `json:"areas"`
+type routerLsa struct {
+	Hostname string `json:"hostname"`
+	RouterId string `json:"router_id"`
+	Areas    []area `json:"areas"`
 }
 
 type area struct {
@@ -23,58 +24,301 @@ type area struct {
 
 type advertisment struct {
 	IpAddress    string `json:"ip_address"`
-	PrefixLength uint32 `json:"prefix_length"`
-	LsaType      int    `json:"lsa_type"`
+	PrefixLength string `json:"prefix_length"`
 	Cost         int    `json:"cost"`
+	LinkType     string `json:"link_type"`
+}
+
+type ACLEntry struct {
+	IPAddress    string
+	PrefixLength int
+	IsPermit     bool
+	Any          bool
+}
+
+type accessList struct {
+	accessListName string
+	aclEntry       []ACLEntry
 }
 
 func (c *Analyzer) AnomalyAnalysis() {
-	ms := convertToMagicalState(c.metrics.StaticFrrConfiguration)
-
-	// Print the result
-	fmt.Println(ms)
-	//msJSON, _ := json.MarshalIndent(ms, "", "  ")
-	//fmt.Println("Magical State:")
-	//fmt.Println(string(msJSON))
-
-	//// Convert back to StaticFRRConfiguration
-	//backToConfig := ConvertFromMagicalState(ms)
-
-	//// Print the result
-	//configJSON, _ := json.MarshalIndent(backToConfig, "", "  ")
-	//fmt.Println("\nBack to StaticFRRConfiguration:")
-	//fmt.Println(string(configJSON))
-
-	//	tmpAreaMap := make(map[string][]advertisment)
-
-	//for _, v := range c.metrics.StaticFrrConfiguration.Interfaces {
-	//areaValue := v.GetArea()
-	//if areaValue != "" {
-	//for _, i := range v.IpAddress {
-	//tmpAdvertisment := advertisment{
-	//ip_address:    i.GetIpAddress(),
-	//prefix_length: i.GetPrefixLength(),
-	//lsa_type:      1,
-	//cost:          10,
+	//fmt.Println(c.metrics.StaticFrrConfiguration.GetOspfConfig())
+	//redistributionList := []string{
+	//	"ospf",
 	//}
-	//if _, exists := tmpAreaMap[areaValue]; !exists {
-	//tmpAreaMap[areaValue] = make([]advertisment, 0)
-	//}
-	//tmpAreaMap[areaValue] = append(tmpAreaMap[areaValue], tmpAdvertisment)
-	//}
+	//redistributionList = append(redistributionList, "static")
+	//c.Logger.Debug(fmt.Sprintf("%v", staticConfig))
 
-	//}
+	// access list stuff
+	fmt.Println(getAccessLists(c.metrics.StaticFrrConfiguration))
+
+	// analysis of ospf networks
+	// still needs to do cross checking with a potential access list?
+	// for that it's better to create a variety of different configurations
+	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
+	configuredRouterLSDB := convertToMagicalState(c.metrics.StaticFrrConfiguration)
+	for _, area := range configuredRouterLSDB.Areas {
+		fmt.Printf("Length of area %s: %d\n", area.Name, len(area.Links))
+	}
+	fmt.Printf("\n%v\n", configuredRouterLSDB)
+	fmt.Println()
+	fmt.Println()
+
+	// analysis of runtime configuration
+
+	//fmt.Println(c.metrics.OspfRouterData)
+	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
+	runtimeRouterLSDB := convertOSPFRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	for _, area := range runtimeRouterLSDB.Areas {
+		fmt.Printf("Length of area %s: %d\n", area.Name, len(area.Links))
+	}
+	fmt.Printf("\n%v\n", runtimeRouterLSDB)
+	//for _, area := range runTimeRouterLSDB {
 	//}
 
-	//fmt.Printf("%v\n", tmpAreaMap)
+	//getFileStaticAdvertisment(c.metrics.StaticFrrConfiguration)
+
+	//	for _, redist := range c.metrics.StaticFrrConfiguration.OspfConfig.GetRedistribution() { fmt.Println(redist.Type)
+	//		switch redist.Type {
+	//		case "ospf":
+	//
+	//		case "static":
+	//		case "bgp":
+	//			//if c.metrics.StaticFrrConfiguration.OspfConfig.Area
+	//			// check if area is nssa
+	//			// if area is nssa, some bgp distribution into ospf should be visible
+	//		default:
+	//			continue
+	//		}
+	//	}
+
+}
+
+func convertOSPFRouterData(config *frrProto.OSPFRouterData, hostname string) routerLsa {
+	result := routerLsa{
+		RouterId: config.RouterId,
+		Areas:    []area{},
+	}
+
+	for areaName, routerArea := range config.RouterStates {
+		for _, lsaEntry := range routerArea.LsaEntries {
+			var currentArea *area
+			for i := range result.Areas {
+				if result.Areas[i].Name == areaName {
+					currentArea = &result.Areas[i]
+					break
+				}
+			}
+
+			if currentArea == nil {
+				newArea := area{
+					Name:    areaName,
+					LsaType: lsaEntry.LsaType,
+					Links:   []advertisment{},
+				}
+				result.Areas = append(result.Areas, newArea)
+				currentArea = &result.Areas[len(result.Areas)-1]
+			}
+
+			for _, routerLink := range lsaEntry.RouterLinks {
+				var ipAddress, prefixLength string
+
+				if routerLink.LinkType == "Stub Network" {
+					ipAddress = routerLink.NetworkAddress
+					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
+				} else if routerLink.LinkType == "a Transit Network" {
+					ipAddress = routerLink.RouterInterfaceAddress
+					//prefixLength = "24" // Assuming a /24 for transit links
+				} else {
+					if routerLink.RouterInterfaceAddress != "" {
+						ipAddress = routerLink.RouterInterfaceAddress
+						prefixLength = "24"
+					} else if routerLink.NetworkAddress != "" {
+						ipAddress = routerLink.NetworkAddress
+						prefixLength = maskToPrefixLength(routerLink.NetworkMask)
+					} else {
+						continue
+					}
+				}
+
+				adv := advertisment{
+					IpAddress:    ipAddress,
+					PrefixLength: prefixLength,
+					Cost:         int(routerLink.Tos0Metric),
+					LinkType:     routerLink.LinkType,
+				}
+
+				currentArea.Links = append(currentArea.Links, adv)
+			}
+		}
+	}
+
+	result.Hostname = hostname
+
+	return result
+}
+
+func parseIPAddress(ipWithPrefix string) []string {
+	fmt.Println(ipWithPrefix)
+	parts := strings.Split(ipWithPrefix, "/")
+	if len(parts) == 2 {
+		return parts
+	}
+	return []string{ipWithPrefix, "32"} // Default to /32 if no prefix is specified
+}
+
+func maskToPrefixLength(mask string) string {
+	maskMap := map[string]string{
+		"255.255.255.255": "32",
+		"255.255.255.254": "31",
+		"255.255.255.252": "30",
+		"255.255.255.248": "29",
+		"255.255.255.240": "28",
+		"255.255.255.224": "27",
+		"255.255.255.192": "26",
+		"255.255.255.128": "25",
+		"255.255.255.0":   "24",
+		"255.255.254.0":   "23",
+		"255.255.252.0":   "22",
+		"255.255.248.0":   "21",
+		"255.255.240.0":   "20",
+		"255.255.224.0":   "19",
+		"255.255.192.0":   "18",
+		"255.255.128.0":   "17",
+		"255.255.0.0":     "16",
+		"255.254.0.0":     "15",
+		"255.252.0.0":     "14",
+		"255.248.0.0":     "13",
+		"255.240.0.0":     "12",
+		"255.224.0.0":     "11",
+		"255.192.0.0":     "10",
+		"255.128.0.0":     "9",
+		"255.0.0.0":       "8",
+		"254.0.0.0":       "7",
+		"252.0.0.0":       "6",
+		"248.0.0.0":       "5",
+		"240.0.0.0":       "4",
+		"224.0.0.0":       "3",
+		"192.0.0.0":       "2",
+		"128.0.0.0":       "1",
+		"0.0.0.0":         "0",
+	}
+
+	if prefix, ok := maskMap[mask]; ok {
+		return prefix
+	}
+
+	return "32" // Default to /32 if mask is unknown
+}
+
+func getFileStaticAdvertisment(config *frrProto.StaticFRRConfiguration) {
+
+}
+
+func printAccessLists(accessLists map[string]accessList) {
+	for _, acl := range accessLists {
+		fmt.Printf("Access List: %s\n", acl.accessListName)
+
+		for i, entry := range acl.aclEntry {
+			action := "deny"
+			if entry.IsPermit {
+				action = "permit"
+			}
+
+			if entry.Any {
+				fmt.Printf("  Rule %d: %s any\n", i+1, action)
+			} else {
+				fmt.Printf("  Rule %d: %s %s/%d\n", i+1, action, entry.IPAddress, entry.PrefixLength)
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessList {
+	// Create result map: access list name -> AccessList struct
+	result := make(map[string]accessList)
+
+	// Iterate through all access lists in the configuration
+	for name, aclConfig := range config.AccessList {
+		entries := []ACLEntry{}
+
+		// Process each access list item
+		for _, item := range aclConfig.AccessListItems {
+			// Create a new ACL entry
+			entry := ACLEntry{
+				IsPermit: item.AccessControl == "permit",
+			}
+
+			// Check which type of destination we have
+			switch dest := item.Destination.(type) {
+			case *frrProto.AccessListItem_IpPrefix:
+				entry.IPAddress = dest.IpPrefix.IpAddress
+				entry.PrefixLength = int(dest.IpPrefix.PrefixLength)
+			case *frrProto.AccessListItem_Any:
+				entry.IPAddress = "any"
+				//dest.IpPrefix.IpAddress
+				entry.Any = true
+			}
+
+			entries = append(entries, entry)
+		}
+
+		// Create AccessList struct and add to result map
+		result[name] = accessList{
+			accessListName: name,
+			aclEntry:       entries,
+		}
+	}
+
+	return result
+}
+
+func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
+	//fmt.Printf("%+v\n", config)
+	//result := &magicalState{
+	//Hostname: config.GetRouterId(),
+	//Areas:    []area{},
+	//}
+
+	//areaMap := make(map[string]*area)
+
+	//fmt.Println(result)
+	//fmt.Printf("%+v\n", config.GetRouterStates())
+	var advertismentList []advertisment
+	fmt.Println("########### Start New Print ###########")
+	for _, area := range config.GetRouterStates() {
+		fmt.Println("--------- Value ---------")
+		//fmt.Println(value.LsaEntries["lsa_type"])
+		for _, entry := range area.LsaEntries {
+			fmt.Println("--------- entry ---------")
+			for _, link := range entry.RouterLinks {
+				if link.GetNetworkAddress() != "" {
+					adv := advertisment{
+						IpAddress:    link.GetNetworkAddress(),
+						PrefixLength: link.GetNetworkMask(),
+						//LsaType:      entry.GetLsaType(),
+						Cost: int(link.GetTos0Metric()),
+					}
+					advertismentList = append(advertismentList, adv)
+
+				}
+				//fmt.Println(link)
+			}
+			//fmt.Println(entry)
+			fmt.Println(advertismentList)
+		}
+	}
+	//fmt.Println(advertismentList)
+	fmt.Println("###########  End New Print  ###########")
 }
 
 // ConvertToMagicalState converts a StaticFRRConfiguration to a magicalState
-func convertToMagicalState(config *frrProto.StaticFRRConfiguration) *magicalState {
-	result := &magicalState{
-		Hostname:   config.Hostname,
-		FrrVersion: config.FrrVersion,
-		Areas:      []area{},
+func convertToMagicalState(config *frrProto.StaticFRRConfiguration) *routerLsa {
+	result := &routerLsa{
+		Hostname: config.Hostname,
+		RouterId: config.OspfConfig.GetRouterId(),
+		Areas:    []area{},
 	}
 
 	// Map to store unique areas
@@ -86,6 +330,10 @@ func convertToMagicalState(config *frrProto.StaticFRRConfiguration) *magicalStat
 		if iface.Area == "" {
 			continue
 		}
+		linkType := "a Transit Network"
+		if iface.Passive {
+			linkType = "Stub Network"
+		}
 
 		// Get or create area
 		a, exists := areaMap[iface.Area]
@@ -93,7 +341,7 @@ func convertToMagicalState(config *frrProto.StaticFRRConfiguration) *magicalStat
 		if !exists {
 			newArea := area{
 				Name:    iface.Area,
-				LsaType: "router", // Default LSA type for areas
+				LsaType: "router-lsa", // Default LSA type for areas
 				Links:   advertismentList,
 			}
 			areaMap[iface.Area] = &newArea
@@ -103,19 +351,14 @@ func convertToMagicalState(config *frrProto.StaticFRRConfiguration) *magicalStat
 		// Create advertisements from IP addresses
 		var adv advertisment
 		for _, ip := range iface.IpAddress {
-			//adv := advertisement{
-			//IpAddress:    ip.IpAddress,
-			//PrefixLength: ip.PrefixLength,
-			//LsaType:      1,
-			//Cost:         10,
-			//}
 			adv.IpAddress = ip.IpAddress
-			adv.PrefixLength = ip.PrefixLength
-			adv.LsaType = 1
+			adv.PrefixLength = fmt.Sprintf("%d", ip.PrefixLength)
 			adv.Cost = 10
+			adv.LinkType = linkType
 
 			a.Links = append(a.Links, adv)
 		}
+
 	}
 
 	// Convert map to slice for the final result
@@ -125,55 +368,6 @@ func convertToMagicalState(config *frrProto.StaticFRRConfiguration) *magicalStat
 
 	return result
 }
-
-// ConvertFromMagicalState converts a magicalState back to StaticFRRConfiguration//
-//func ConvertFromMagicalState(ms *magicalState) *StaticFRRConfiguration {
-//config := &StaticFRRConfiguration{
-//Hostname:   ms.Hostname,
-//FrrVersion: ms.FrrVersion,
-//Interfaces: []*Interface{},
-//}
-
-//// Create a map to group IPs by area
-//areaIPs := make(map[string][]*IPPrefix)
-
-//// Process all areas and their advertisements
-//for _, a := range ms.Areas {
-//for _, adv := range a.Links {
-//ip := &IPPrefix{
-//IpAddress:    adv.IpAddress,
-//PrefixLength: adv.PrefixLength,
-//}
-//areaIPs[a.Name] = append(areaIPs[a.Name], ip)
-//}
-//}
-
-//// Create interfaces for each area
-//// Note: This is a simplification. In a real scenario, you might want to
-//// create more logical interface groupings based on your application's needs.
-//for areaName, ips := range areaIPs {
-//iface := &Interface{
-//Name:      fmt.Sprintf("area_%s_interface", areaName), // Generate a name
-//IpAddress: ips,
-//Area:      areaName,
-//Passive:   false,
-//}
-//config.Interfaces = append(config.Interfaces, iface)
-//}
-
-//return config
-//}
-
-//// Helper function to marshal/unmarshal
-//func MarshalMagicalState(ms *magicalState) ([]byte, error) {
-//return json.Marshal(ms)
-//}
-
-//func UnmarshalMagicalState(data []byte) (*magicalState, error) {
-//var ms magicalState
-//err := json.Unmarshal(data, &ms)
-//return &ms, err
-//}
 
 func Example() {
 	// Convert to magicalState
