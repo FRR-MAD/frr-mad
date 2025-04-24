@@ -43,17 +43,20 @@ func main() {
 	// serviceArgs := []string{"--aggregator", "--analyzer", "--exporter"}
 
 	// load config
-	config := configs.LoadConfig()
+	config, err := configs.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 
-	defaultConfig := config["default"]
-	socketConfig := config["socket"]
-	aggregatorConfig := config["aggregator"]
-	analyzerConfig := config["analyzer"]
-	exporterConfig := config["exporter"]
+	defaultConfig := config.Default
+	socketConfig := config.Socket
+	aggregatorConfig := config.Aggregator
+	analyzerConfig := config.Analyzer
+	exporterConfig := config.Exporter
 
 	// set debug level
 	var debugLevel int
-	switch defaultConfig["DebugLevel"] {
+	switch defaultConfig.DebugLevel {
 	case "debug":
 		debugLevel = 2
 	case "error":
@@ -67,7 +70,7 @@ func main() {
 	applicationLogger.SetDebugLevel(debugLevel)
 
 	// poll interval
-	pollInterval := time.Duration(strToInt(aggregatorConfig["PollInterval"])) * time.Second
+	pollInterval := time.Duration(aggregatorConfig.PollInterval) * time.Second
 
 	// service manager
 	var madService MadService
@@ -102,7 +105,7 @@ func main() {
 		if service == "exporter" {
 			exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
 			exporterLogger.SetDebugLevel(debugLevel)
-			madService.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
+			madService.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval)
 			fmt.Println(exporterConfig)
 		}
 	}
@@ -126,21 +129,21 @@ func main() {
 
 }
 
-func startAggregator(config map[string]string, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
+func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
 	collector := aggregator.InitAggregator(config, logging)
 	aggregator.StartAggregator(collector, pollInterval)
 
 	return collector
 }
 
-func startAnalyzer(config map[string]string, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
+func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
 	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging)
 	analyzer.StartAnalyzer(detection, pollInterval)
 	detection.Foobar()
 	return detection
 }
 
-func startExporter(config map[string]string, logging *logger.Logger, pollInterval time.Duration) string {
+func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration) string {
 	// exporter := exporter.InitExporter(config, logging)
 	// exporter.StartExporter(exporter, pollInterval)
 	// return exporter

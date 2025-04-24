@@ -80,7 +80,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	for _, area := range configuredRouterLSDB.Areas {
 		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	}
-	fmt.Printf("\n%v\n", configuredRouterLSDB)
+	fmt.Printf("\n%+v\n", configuredRouterLSDB)
 	fmt.Println()
 	fmt.Println()
 
@@ -92,7 +92,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	for _, area := range runtimeRouterLSDB.Areas {
 		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	}
-	fmt.Printf("\n%v\n", runtimeRouterLSDB)
+	fmt.Printf("\n%+v\n", runtimeRouterLSDB)
 	//for _, area := range runTimeRouterLSDB {
 	//}
 
@@ -164,16 +164,10 @@ func convertOSPFRouterData(config *frrProto.OSPFRouterData, hostname string) *in
 				adv := advertisment{}
 				adv.InterfaceAddress = ipAddress
 				adv.LinkType = routerLink.LinkType
-				fmt.Println(isStub)
+
 				if isStub {
 					adv.PrefixLength = prefixLength
 				}
-				//adv := advertisment{
-				//	InterfaceAddress: ipAddress,
-				//	PrefixLength:     prefixLength,
-				//	//Cost:             int(routerLink.Tos0Metric),
-				//	LinkType:         routerLink.LinkType,
-				//}
 
 				currentArea.Links = append(currentArea.Links, adv)
 			}

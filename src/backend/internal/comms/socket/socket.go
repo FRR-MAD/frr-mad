@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -27,9 +28,9 @@ type Socket struct {
 	logger     *logger.Logger
 }
 
-func NewSocket(socketPath map[string]string, metrics *frrProto.FullFRRData, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
+func NewSocket(socketPath configs.SocketConfig, metrics *frrProto.FullFRRData, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
 	return &Socket{
-		socketPath: socketPath["UnixSocketLocation"],
+		socketPath: socketPath.UnixSocketLocation,
 		mutex:      sync.Mutex{},
 		metrics:    metrics,
 		analyzer:   analyzer,

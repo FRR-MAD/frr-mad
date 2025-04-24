@@ -20,7 +20,7 @@ func initAnomalies() *frrProto.Anomalies {
 	return &frrProto.Anomalies{}
 }
 
-func InitAnalyzer(config map[string]string, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
+func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
 	anomalies := initAnomalies()
 
 	return &Analyzer{

@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 )
 
-func InitAggregator(config map[string]string, logger *logger.Logger) *Collector {
-	metricsURL := config["FRRMetricsURL"]
-	configPath := config["FRRConfigPath"]
-	socketPath := config["SocketPath"]
+func InitAggregator(config configs.AggregatorConfig, logger *logger.Logger) *Collector {
+	metricsURL := config.FRRMetricsURL //config["FRRMetricsURL"]
+	configPath := config.FRRConfigPath //config["FRRConfigPath"]
+	socketPath := config.SocketPath    //config["SocketPath"]
 
 	return newCollector(metricsURL, configPath, socketPath, logger)
 }
