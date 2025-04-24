@@ -49,6 +49,9 @@ func (c *Analyzer) AnomalyAnalysis() {
 	//redistributionList = append(redistributionList, "static")
 	//c.Logger.Debug(fmt.Sprintf("%v", staticConfig))
 
+	// basic StaticFRRConfiguration
+	//fmt.Println(c.metrics.StaticFrrConfiguration)
+
 	// access list stuff
 	fmt.Println(getAccessLists(c.metrics.StaticFrrConfiguration))
 
