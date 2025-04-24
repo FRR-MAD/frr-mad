@@ -4,5 +4,6 @@
 package configs
 
 func init() {
-	ConfigLocation = "/etc/frr_mad/frr_mad.conf"
+	// ConfigLocation = "./configs/dev-config.conf"
+	ConfigLocation = "/tmp/dev-config.conf"
 }
