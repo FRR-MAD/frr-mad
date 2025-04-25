@@ -36,8 +36,8 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		title:               "3 - Shell",
-		subTabs:             []string{"1 - bash", "2 - vtysh", "3 - Backend Test"},
+		title:               "Shell",
+		subTabs:             []string{"bash", "vtysh", "Backend Test"},
 		windowSize:          windowSize,
 		activeShell:         "",
 		backendServiceInput: "",

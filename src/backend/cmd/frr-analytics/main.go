@@ -76,8 +76,6 @@ func main() {
 	case "stop":
 		pidFile := fmt.Sprintf("%s/frr-mad.pid", config.Socket.UnixSocketLocation)
 		stopApp(pidFile)
-		//fmt.Println("Stopping the FRR-MAD application...")
-		//fmt.Println("Not implemented yet. Please use SIGTERM to stop the running instance.")
 	case "reload":
 		fmt.Println("Reloading the FRR-MAD configuration...")
 		fmt.Println("Not implemented yet. Please restart the application manually.")

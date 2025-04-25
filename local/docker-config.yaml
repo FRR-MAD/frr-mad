@@ -1,0 +1,24 @@
+default:
+  tempfiles: /tmp/frr-mad
+  logpath: /var/log/frr-mad
+  debuglevel: debug
+
+socket:
+  unixsocketlocation: /var/run/frr-mad
+  unixsocketname: analyzer.sock
+  sockettype: unix
+
+analyzer:
+  foo: bar
+
+aggregator:
+  frrmetricsurl: http://localhost:9342/metrics
+  frrconfigpath: /etc/frr/frr.conf
+  pollinterval: 5
+  socketpathbgp: /var/run/frr/bgpd.vty
+  socketpathospf: /var/run/frr/ospfd.vty
+  socketpathzebra: /var/run/frr/zebra.vty
+  socketpath: /var/run/frr
+
+exporter:
+  foo: bar

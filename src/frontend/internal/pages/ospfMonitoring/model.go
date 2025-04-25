@@ -29,10 +29,10 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		title: "2 - OSPF Monitoring",
+		title: "OSPF Monitoring",
 		// '9 - Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
-		subTabs:       []string{"1 - Advertisement", "2 - Router LSAs", "3 - TBD", "4 - TBD", "9 - Running Config"},
+		subTabs:       []string{"Advertisement", "Router LSAs", "TBD", "TBD", "Running Config"},
 		runningConfig: []string{"Fetching running config..."},
 		windowSize:    windowSize,
 		viewport:      vp,
