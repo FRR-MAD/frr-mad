@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -60,24 +59,35 @@ type accessList struct {
 }
 
 func (c *Analyzer) AnomalyAnalysis() {
-	// access list stuff
-	fmt.Println(getAccessLists(c.metrics.StaticFrrConfiguration))
-
-	// analysis of ospf networks
-	// still needs to do cross checking with a potential access list?
-	// for that it's better to create a variety of different configurations
+	// static file parsing
 	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
-	configuredRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	for _, area := range configuredRouterLSDB.Areas {
+	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
+	for _, area := range predictedRouterLSDB.Areas {
 		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	}
-	fmt.Printf("\n%+v\n", configuredRouterLSDB)
+	fmt.Printf("\n%+v\n", predictedRouterLSDB)
 	fmt.Println()
 	fmt.Println()
 
-	// analysis of runtime configuration
+	fmt.Println("#################### File Configuration External LSDB Prediction ####################")
+	predictedExternalLSDB := convertStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+	//for _, area := range predictedExternalLSDB.Areas {
+	//fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	//}
+	fmt.Printf("\n%+v\n", predictedExternalLSDB)
+	fmt.Println()
+	fmt.Println()
 
-	//fmt.Println(c.metrics.OspfRouterData)
+	fmt.Println("#################### File Configuration NSSA External LSDB Prediction ####################")
+	predictedNssaExternalLSDB := convertStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
+	//for _, area := range predictedNssaExternalLSDB.Areas {
+	//	fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	//}
+	fmt.Printf("\n%+v\n", predictedNssaExternalLSDB)
+	fmt.Println()
+	fmt.Println()
+
+	// runtime parsing
 	fmt.Println("#################### Runtime Configuration Router LSDB IS_STATE ####################")
 	runtimeRouterLSDB := convertRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
 	for _, area := range runtimeRouterLSDB.Areas {
@@ -88,96 +98,23 @@ func (c *Analyzer) AnomalyAnalysis() {
 	fmt.Println()
 
 	fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
-	runtimeExternalLSDB := convertExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := convertRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	for _, area := range runtimeExternalLSDB.Areas {
+		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	}
 	fmt.Printf("\n%+v\n", runtimeExternalLSDB)
 	fmt.Println()
 	fmt.Println()
 
-	//runtimeExternalLSDB := convertExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	//for _, area := range runTimeRouterLSDB {
-	//}
-
-	//getFileStaticAdvertisment(c.metrics.StaticFrrConfiguration)
-
-	//	for _, redist := range c.metrics.StaticFrrConfiguration.OspfConfig.GetRedistribution() { fmt.Println(redist.Type)
-	//		switch redist.Type {
-	//		case "ospf":
-	//
-	//		case "static":
-	//		case "bgp":
-	//			//if c.metrics.StaticFrrConfiguration.OspfConfig.Area
-	//			// check if area is nssa
-	//			// if area is nssa, some bgp distribution into ospf should be visible
-	//		default:
-	//			continue
-	//		}
-	//	}
-
-}
-
-func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *intraAreaLsa {
-	result := intraAreaLsa{
-		RouterId: config.RouterId,
-		Areas:    []area{},
+	fmt.Println("#################### Runtime Configuration NSSA External LSDB IS_STATE ####################")
+	runtimeNssaExternalLSDB := convertNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	for _, area := range runtimeNssaExternalLSDB.Areas {
+		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	}
+	fmt.Printf("\n%+v\n", runtimeNssaExternalLSDB)
+	fmt.Println()
+	fmt.Println()
 
-	for areaName, routerArea := range config.RouterStates {
-		for _, lsaEntry := range routerArea.LsaEntries {
-			var currentArea *area
-			for i := range result.Areas {
-				if result.Areas[i].AreaName == areaName {
-					currentArea = &result.Areas[i]
-					break
-				}
-			}
-
-			if currentArea == nil {
-				newArea := area{
-					AreaName: areaName,
-					LsaType:  lsaEntry.LsaType,
-					Links:    []advertisment{},
-				}
-				result.Areas = append(result.Areas, newArea)
-				currentArea = &result.Areas[len(result.Areas)-1]
-			}
-
-			for _, routerLink := range lsaEntry.RouterLinks {
-				var ipAddress, prefixLength string
-				isStub := false
-				if routerLink.LinkType == "Stub Network" {
-					ipAddress = routerLink.NetworkAddress
-					isStub = true
-					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-				} else if routerLink.LinkType == "a Transit Network" {
-					ipAddress = routerLink.RouterInterfaceAddress
-					//prefixLength = "24" // Assuming a /24 for transit links
-				} else {
-					if routerLink.RouterInterfaceAddress != "" {
-						ipAddress = routerLink.RouterInterfaceAddress
-					} else if routerLink.NetworkAddress != "" {
-						ipAddress = routerLink.NetworkAddress
-						//prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-					} else {
-						continue
-					}
-				}
-
-				adv := advertisment{}
-				adv.InterfaceAddress = ipAddress
-				adv.LinkType = routerLink.LinkType
-
-				if isStub {
-					adv.PrefixLength = prefixLength
-				}
-
-				currentArea.Links = append(currentArea.Links, adv)
-			}
-		}
-	}
-
-	result.Hostname = hostname
-
-	return &result
 }
 
 func parseIPAddress(ipWithPrefix string) []string {
@@ -231,30 +168,6 @@ func maskToPrefixLength(mask string) string {
 	}
 
 	return "32" // Default to /32 if mask is unknown
-}
-
-func getFileStaticAdvertisment(config *frrProto.StaticFRRConfiguration) {
-
-}
-
-func printAccessLists(accessLists map[string]accessList) {
-	for _, acl := range accessLists {
-		fmt.Printf("Access List: %s\n", acl.accessListName)
-
-		for i, entry := range acl.aclEntry {
-			action := "deny"
-			if entry.IsPermit {
-				action = "permit"
-			}
-
-			if entry.Any {
-				fmt.Printf("  Rule %d: %s any\n", i+1, action)
-			} else {
-				fmt.Printf("  Rule %d: %s %s/%d\n", i+1, action, entry.IPAddress, entry.PrefixLength)
-			}
-		}
-		fmt.Println()
-	}
 }
 
 func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessList {
@@ -332,99 +245,4 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 		}
 	}
 	//fmt.Println(advertismentList)
-	fmt.Println("###########  End New Print  ###########")
-}
-
-// ConvertToMagicalState converts a StaticFRRConfiguration to a magicalState
-func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intraAreaLsa {
-	result := &intraAreaLsa{
-		Hostname: config.Hostname,
-		RouterId: config.OspfConfig.GetRouterId(),
-		Areas:    []area{},
-	}
-
-	// Map to store unique areas
-	areaMap := make(map[string]*area)
-
-	// Process all interfaces
-	for _, iface := range config.Interfaces {
-		// Skip interfaces without an area
-		if iface.Area == "" {
-			continue
-		}
-
-		a, exists := areaMap[iface.Area]
-		advertismentList := make([]advertisment, 0)
-		if !exists {
-			newArea := area{
-				AreaName: iface.Area,
-				LsaType:  "router-lsa",
-				Links:    advertismentList,
-			}
-			areaMap[iface.Area] = &newArea
-			a = &newArea
-		}
-
-		// Create advertisements from IP addresses
-		var adv advertisment
-		for _, ip := range iface.InterfaceIpPrefixes {
-			adv.InterfaceAddress = ip.IpPrefix.IpAddress
-			//			adv.Cost = 10
-			adv.LinkType = "a Transit Network"
-			if ip.Passive {
-				adv.PrefixLength = fmt.Sprintf("%d", ip.IpPrefix.PrefixLength)
-				adv.LinkType = "a Transit Network"
-			}
-
-			a.Links = append(a.Links, adv)
-		}
-
-	}
-
-	// Convert map to slice for the final result
-	for _, a := range areaMap {
-		result.Areas = append(result.Areas, *a)
-	}
-
-	return result
-}
-
-func convertExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *interAreaLsa {
-	if config == nil {
-		return nil
-	}
-
-	// Create a new interAreaLsa instance
-	result := &interAreaLsa{
-		Hostname: hostname,
-		RouterId: config.RouterId,
-		Areas:    []area{},
-	}
-
-	// Since AS-external-LSA (type 5) doesn't belong to a specific area,
-	// we'll create a single "area" to represent the AS external links
-	externalArea := area{
-		AreaName: "External",
-		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []advertisment{},
-	}
-
-	// Process each AS external link
-	for prefix, lsa := range config.AsExternalLinkStates {
-		// Create a new advertisement for this external link
-		fmt.Println(prefix)
-		adv := advertisment{
-			LinkStateId:  lsa.LinkStateId,
-			PrefixLength: strconv.Itoa(int(lsa.NetworkMask)), // Convert mask to prefix length
-			LinkType:     "external",                         // This is an external link
-		}
-
-		// Add the advertisement to the external area
-		externalArea.Links = append(externalArea.Links, adv)
-	}
-
-	// Add the external area to the result
-	result.Areas = append(result.Areas, externalArea)
-
-	return result
 }
