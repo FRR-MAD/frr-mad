@@ -62,8 +62,10 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// static file parsing
 	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
 	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	for _, area := range predictedRouterLSDB.Areas {
-		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	if predictedRouterLSDB != nil {
+		for _, area := range predictedRouterLSDB.Areas {
+			fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+		}
 	}
 	fmt.Printf("\n%+v\n", predictedRouterLSDB)
 	fmt.Println()
@@ -71,18 +73,23 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	fmt.Println("#################### File Configuration External LSDB Prediction ####################")
 	predictedExternalLSDB := convertStaticFileExternalData(c.metrics.StaticFrrConfiguration)
-	//for _, area := range predictedExternalLSDB.Areas {
-	//fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	//}
+	if predictedExternalLSDB != nil {
+		for _, area := range predictedExternalLSDB.Areas {
+			fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+		}
+	}
 	fmt.Printf("\n%+v\n", predictedExternalLSDB)
 	fmt.Println()
 	fmt.Println()
 
 	fmt.Println("#################### File Configuration NSSA External LSDB Prediction ####################")
 	predictedNssaExternalLSDB := convertStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
-	//for _, area := range predictedNssaExternalLSDB.Areas {
-	//	fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	//}
+	if predictedNssaExternalLSDB != nil {
+
+		for _, area := range predictedNssaExternalLSDB.Areas {
+			fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+		}
+	}
 	fmt.Printf("\n%+v\n", predictedNssaExternalLSDB)
 	fmt.Println()
 	fmt.Println()

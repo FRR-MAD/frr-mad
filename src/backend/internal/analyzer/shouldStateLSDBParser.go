@@ -3,12 +3,17 @@ package analyzer
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
 // lsa type 1 prediction parsing
 func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intraAreaLsa {
+	if config == nil || config.OspfConfig == nil {
+		return nil
+	}
+
 	result := &intraAreaLsa{
 		Hostname: config.Hostname,
 		RouterId: config.OspfConfig.GetRouterId(),
@@ -25,37 +30,93 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 			continue
 		}
 
+		// Get or create area entry
 		a, exists := areaMap[iface.Area]
-		advertismentList := make([]advertisment, 0)
 		if !exists {
 			newArea := area{
 				AreaName: iface.Area,
-				LsaType:  "router-lsa",
-				Links:    advertismentList,
+				LsaType:  "router-LSA",
+				Links:    []advertisment{},
 			}
 			areaMap[iface.Area] = &newArea
 			a = &newArea
 		}
 
 		// Create advertisements from IP addresses
-		var adv advertisment
-		for _, ip := range iface.InterfaceIpPrefixes {
-			adv.InterfaceAddress = ip.IpPrefix.IpAddress
-			//			adv.Cost = 10
-			adv.LinkType = "a Transit Network"
-			if ip.Passive {
-				adv.PrefixLength = fmt.Sprintf("%d", ip.IpPrefix.PrefixLength)
-				adv.LinkType = "a Transit Network"
+		for _, ipPrefix := range iface.InterfaceIpPrefixes {
+			if ipPrefix.IpPrefix == nil {
+				continue
+			}
+
+			adv := advertisment{
+				InterfaceAddress: ipPrefix.IpPrefix.IpAddress,
+				PrefixLength:     strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
+			}
+
+			// Determine link type based on interface properties
+			if ipPrefix.Passive {
+				adv.LinkType = "stub network"
+			} else if strings.Contains(iface.Name, "lo") {
+				// Loopback interfaces
+				adv.LinkType = "stub network"
+			} else {
+				// Default to transit network unless we can determine it's point-to-point
+				// In a real implementation, you would check for ospf network point-to-point configuration
+				adv.LinkType = "transit network"
+
+				// Check for point-to-point configuration (simplified check)
+				// In your full implementation, parse the actual OSPF network type
+				if strings.Contains(iface.Name, "peer") || strings.Contains(iface.Name, "p2p") {
+					adv.LinkType = "point-to-point"
+				}
 			}
 
 			a.Links = append(a.Links, adv)
 		}
+	}
 
+	// Process virtual links if present
+	if config.OspfConfig != nil {
+		for _, ospfArea := range config.OspfConfig.Area {
+			if ospfArea.Type == "" {
+				continue
+			}
+
+			// Check if this is the area containing virtual links
+			if config.OspfConfig.VirtualLinkNeighbor != "" {
+				// Get the transit area (where the virtual link is configured)
+				a, exists := areaMap[ospfArea.Name]
+				if !exists {
+					// If area doesn't exist in the map yet, create it
+					newArea := area{
+						AreaName: ospfArea.Name,
+						LsaType:  "router-LSA",
+						Links:    []advertisment{},
+					}
+					areaMap[ospfArea.Name] = &newArea
+					a = &newArea
+				}
+
+				// Add virtual link advertisement
+				adv := advertisment{
+					LinkStateId: config.OspfConfig.VirtualLinkNeighbor,
+					LinkType:    "virtual link",
+				}
+				a.Links = append(a.Links, adv)
+			}
+		}
 	}
 
 	// Convert map to slice for the final result
 	for _, a := range areaMap {
-		result.Areas = append(result.Areas, *a)
+		if len(a.Links) > 0 {
+			result.Areas = append(result.Areas, *a)
+		}
+	}
+
+	// If no areas were found, return nil
+	if len(result.Areas) == 0 {
+		return nil
 	}
 
 	return result
