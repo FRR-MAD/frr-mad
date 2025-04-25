@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -87,6 +88,11 @@ func (c *Analyzer) AnomalyAnalysis() {
 	fmt.Println()
 
 	fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
+	runtimeExternalLSDB := convertExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	fmt.Printf("\n%+v\n", runtimeExternalLSDB)
+	fmt.Println()
+	fmt.Println()
+
 	//runtimeExternalLSDB := convertExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 	//for _, area := range runTimeRouterLSDB {
 	//}
@@ -383,10 +389,42 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 	return result
 }
 
-func Example() {
-	// Convert to magicalState
-}
+func convertExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *interAreaLsa {
+	if config == nil {
+		return nil
+	}
 
-func (a *Analyzer) Foobar() string {
-	return "mighty analyzer"
+	// Create a new interAreaLsa instance
+	result := &interAreaLsa{
+		Hostname: hostname,
+		RouterId: config.RouterId,
+		Areas:    []area{},
+	}
+
+	// Since AS-external-LSA (type 5) doesn't belong to a specific area,
+	// we'll create a single "area" to represent the AS external links
+	externalArea := area{
+		AreaName: "External",
+		LsaType:  "AS-external-LSA", // Type 5
+		Links:    []advertisment{},
+	}
+
+	// Process each AS external link
+	for prefix, lsa := range config.AsExternalLinkStates {
+		// Create a new advertisement for this external link
+		fmt.Println(prefix)
+		adv := advertisment{
+			LinkStateId:  lsa.LinkStateId,
+			PrefixLength: strconv.Itoa(int(lsa.NetworkMask)), // Convert mask to prefix length
+			LinkType:     "external",                         // This is an external link
+		}
+
+		// Add the advertisement to the external area
+		externalArea.Links = append(externalArea.Links, adv)
+	}
+
+	// Add the external area to the result
+	result.Areas = append(result.Areas, externalArea)
+
+	return result
 }
