@@ -29,7 +29,6 @@ go.sum
 # folders
 binaries
 proto-binary
-local
 logger
 
 /makefile.yannick
