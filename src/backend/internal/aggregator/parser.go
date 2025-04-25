@@ -706,25 +706,41 @@ func parseInterfaceLine(line string) *frrProto.Interface {
 }
 
 func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line string) bool {
+	parts := strings.Fields(line)
 	switch {
 	case strings.HasPrefix(line, "ip address "):
-		parts := strings.Fields(line)
 		ip, ipNet, err := net.ParseCIDR(parts[2])
 		if err != nil || ipNet == nil {
 			log.Printf("bad CIDR %q: %v", parts[2], err)
 			return true
 		}
 		prefixLength, _ := ipNet.Mask.Size()
-		currentInterfacePointer.IpAddress = append(currentInterfacePointer.IpAddress, &frrProto.IPPrefix{
-			IpAddress:    ip.String(),
-			PrefixLength: uint32(prefixLength),
+		currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
+			IpPrefix: &frrProto.IPPrefix{
+				IpAddress:    ip.String(),
+				PrefixLength: uint32(prefixLength),
+			},
+			Passive: false,
 		})
 		return true
 	case strings.HasPrefix(line, "ip ospf area "):
 		currentInterfacePointer.Area = strings.Fields(line)[3]
 		return true
 	case line == "ip ospf passive":
-		currentInterfacePointer.Passive = true
+		if len(parts) < 4 {
+			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				interfaceIPPrefix.Passive = true
+				return true
+			}
+		} else {
+			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				if interfaceIPPrefix.IpPrefix.IpAddress == parts[3] {
+					interfaceIPPrefix.Passive = true
+					return true
+				}
+			}
+		}
+		// currentInterfacePointer.Passive = true
 		return true
 	case line == "exit":
 		return true

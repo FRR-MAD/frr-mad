@@ -75,9 +75,8 @@ message StaticFRRConfiguration {
 
 message Interface {
   string name = 1;
-  repeated IPPrefix ip_address = 2;
+  repeated InterfaceIPPrefix interface_ip_prefixes = 2;
   string area = 3;
-  bool passive = 4;
   // Optional: cost, dead-interval, hello-interval
 }
 
@@ -123,6 +122,11 @@ message AccessListItem {
     IPPrefix ip_prefix = 3;
     bool any = 4; // if set to true, means "any"
   }
+}
+
+message InterfaceIPPrefix {
+  IPPrefix ip_prefix = 1;
+  bool passive = 2;
 }
 
 message IPPrefix {
