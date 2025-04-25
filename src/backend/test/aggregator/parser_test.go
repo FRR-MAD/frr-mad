@@ -86,14 +86,14 @@ func testInterfaces(
 	if r101Eth1.Name != "eth1" {
 		t.Errorf("Expected first interface name to be 'r101Eth1', got '%s'", r101Eth1.Name)
 	}
-	if len(r101Eth1.IpAddress) == 0 {
+	if len(r101Eth1.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth1 to have at least one IP address")
 	} else {
-		if r101Eth1.IpAddress[0].IpAddress != "172.22.1.1" {
-			t.Errorf("Expected r101Eth1 IP to be 172.22.1.1, got '%s'", r101Eth1.IpAddress[0].IpAddress)
+		if r101Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "172.22.1.1" {
+			t.Errorf("Expected r101Eth1 IP to be 172.22.1.1, got '%s'", r101Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r101Eth1.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r101Eth1 prefix length to be 24, got %d", r101Eth1.IpAddress[0].PrefixLength)
+		if r101Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r101Eth1 prefix length to be 24, got %d", r101Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 
@@ -102,21 +102,32 @@ func testInterfaces(
 	if r101Eth2.Name != "eth2" {
 		t.Errorf("Expected second interface name to be 'r101Eth2', got '%s'", r101Eth2.Name)
 	}
-	if len(r101Eth2.IpAddress) == 0 {
-		t.Error("Expected r101Eth2 to have at least one IP address")
+	if len(r101Eth2.InterfaceIpPrefixes) != 2 {
+		t.Errorf("Expected r101Eth2 to have 2 IP address, got '%v'", len(r101Eth2.InterfaceIpPrefixes))
 	} else {
-		if r101Eth2.IpAddress[0].IpAddress != "10.0.12.1" {
-			t.Errorf("Expected r101Eth2 IP to be 172.22.1.1, got '%s'", r101Eth2.IpAddress[0].IpAddress)
+		if r101Eth2.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.0.12.1" {
+			t.Errorf("Expected r101Eth2 IP to be 10.0.12.1, got '%s'", r101Eth2.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r101Eth2.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r101Eth2 prefix length to be 24, got %d", r101Eth2.IpAddress[0].PrefixLength)
+		if r101Eth2.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r101Eth2 prefix length to be 24, got %d", r101Eth2.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
+		}
+		if r101Eth2.InterfaceIpPrefixes[1].IpPrefix.IpAddress != "10.0.2.1" {
+			t.Errorf("Expected r101Eth2 IP to be 10.0.2.1, got '%s'", r101Eth2.InterfaceIpPrefixes[1].IpPrefix.IpAddress)
+		}
+		if r101Eth2.InterfaceIpPrefixes[1].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r101Eth2 prefix length to be 24, got %d", r101Eth2.InterfaceIpPrefixes[1].IpPrefix.PrefixLength)
 		}
 	}
 	if r101Eth2.Area != "0.0.0.0" {
 		t.Errorf("Expected r101Eth2 to be in Area '0.0.0.0', got '%s'", r101Eth2.Area)
 	}
-	if r101Eth2.Passive {
-		t.Errorf("Expected r101Eth2 to be in Passive 'false', got '%v'", r101Eth2.Passive)
+	if r101Eth2.InterfaceIpPrefixes[0].Passive {
+		t.Errorf("Expected r101Eth2 IP Address to be in Passive 'false', got '%v'", r101Eth2.InterfaceIpPrefixes[0].Passive)
+	}
+	if !r101Eth2.InterfaceIpPrefixes[1].Passive {
+		t.Errorf("Expected r101Eth2 IP Address '%s' to be in Passive 'false', got '%v'",
+			r101Eth2.InterfaceIpPrefixes[1].IpPrefix.IpAddress,
+			r101Eth2.InterfaceIpPrefixes[1].Passive)
 	}
 
 	// r101Eth3
@@ -124,20 +135,20 @@ func testInterfaces(
 	if r101Eth3.Name != "eth3" {
 		t.Errorf("Expected r101Eth3 name to be 'r101Eth3', got '%s'", r101Eth3.Name)
 	}
-	if len(r101Eth3.IpAddress) == 0 {
+	if len(r101Eth3.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth3 to have at least one IP address")
 	} else {
-		if r101Eth3.IpAddress[0].IpAddress != "10.0.13.1" {
-			t.Errorf("Expected r101Eth3 IP to be 10.0.13.1, got '%s'", r101Eth3.IpAddress[0].IpAddress)
+		if r101Eth3.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.0.13.1" {
+			t.Errorf("Expected r101Eth3 IP to be 10.0.13.1, got '%s'", r101Eth3.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r101Eth3.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r101Eth3 prefix length to be 24, got %d", r101Eth3.IpAddress[0].PrefixLength)
+		if r101Eth3.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r101Eth3 prefix length to be 24, got %d", r101Eth3.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 	if r101Eth3.Area != "0.0.0.0" {
 		t.Errorf("Expected r101Eth3 to be in Area '0.0.0.0', got '%s'", r101Eth3.Area)
 	}
-	if r101Eth3.Passive {
+	if r101Eth3.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r101Eth3 to be non-passive")
 	}
 
@@ -146,21 +157,21 @@ func testInterfaces(
 	if r101Eth4.Name != "eth4" {
 		t.Errorf("Expected r101Eth4 name to be 'r101Eth4', got '%s'", r101Eth4.Name)
 	}
-	if len(r101Eth4.IpAddress) == 0 {
+	if len(r101Eth4.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth4 to have at least one IP address")
 	} else {
-		if r101Eth4.IpAddress[0].IpAddress != "10.0.0.1" {
-			t.Errorf("Expected r101Eth4 IP to be 10.0.0.1, got '%s'", r101Eth4.IpAddress[0].IpAddress)
+		if r101Eth4.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.0.0.1" {
+			t.Errorf("Expected r101Eth4 IP to be 10.0.0.1, got '%s'", r101Eth4.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r101Eth4.IpAddress[0].PrefixLength != 23 {
-			t.Errorf("Expected r101Eth4 prefix length to be 23, got %d", r101Eth4.IpAddress[0].PrefixLength)
+		if r101Eth4.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 23 {
+			t.Errorf("Expected r101Eth4 prefix length to be 23, got %d", r101Eth4.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 	if r101Eth4.Area != "0.0.0.0" {
 		t.Errorf("Expected r101Eth4 to be in Area '0.0.0.0', got '%s'", r101Eth4.Area)
 	}
-	if !r101Eth4.Passive {
-		t.Error("Expected r101Eth4 to be passive")
+	if !r101Eth4.InterfaceIpPrefixes[0].Passive {
+		t.Errorf("Expected r101Eth4 to be passive, got '%v'", r101Eth4.InterfaceIpPrefixes[0].Passive)
 	}
 
 	// r101Eth11
@@ -168,20 +179,20 @@ func testInterfaces(
 	if r101Eth11.Name != "eth11" {
 		t.Errorf("Expected r101Eth11 name to be 'r101Eth11', got '%s'", r101Eth11.Name)
 	}
-	if len(r101Eth11.IpAddress) == 0 {
+	if len(r101Eth11.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth11 to have at least one IP address")
 	} else {
-		if r101Eth11.IpAddress[0].IpAddress != "10.0.19.1" {
-			t.Errorf("Expected r101Eth11 IP to be 10.0.19.1, got '%s'", r101Eth11.IpAddress[0].IpAddress)
+		if r101Eth11.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.0.19.1" {
+			t.Errorf("Expected r101Eth11 IP to be 10.0.19.1, got '%s'", r101Eth11.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r101Eth11.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r101Eth11 prefix length to be 24, got %d", r101Eth11.IpAddress[0].PrefixLength)
+		if r101Eth11.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r101Eth11 prefix length to be 24, got %d", r101Eth11.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 	if r101Eth11.Area != "0.0.0.0" {
 		t.Errorf("Expected r101Eth11 to be in Area '0.0.0.0', got '%s'", r101Eth11.Area)
 	}
-	if r101Eth11.Passive {
+	if r101Eth11.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r101Eth11 to be non-passive")
 	}
 
@@ -190,17 +201,17 @@ func testInterfaces(
 	if r101Lo.Name != "lo" {
 		t.Errorf("Expected r101Lo interface name to be 'r101Lo', got '%s'", r101Lo.Name)
 	}
-	if len(r101Lo.IpAddress) == 0 {
+	if len(r101Lo.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Lo to have at least one IP address")
 	} else {
-		if r101Lo.IpAddress[0].IpAddress != "65.0.1.1" {
-			t.Errorf("Expected r101Lo IP to be 65.0.1.1, got '%s'", r101Lo.IpAddress[0].IpAddress)
+		if r101Lo.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "65.0.1.1" {
+			t.Errorf("Expected r101Lo IP to be 65.0.1.1, got '%s'", r101Lo.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r101Lo.IpAddress[0].PrefixLength != 32 {
-			t.Errorf("Expected r101Lo prefix length to be 32, got %d", r101Lo.IpAddress[0].PrefixLength)
+		if r101Lo.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 32 {
+			t.Errorf("Expected r101Lo prefix length to be 32, got %d", r101Lo.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
-	if !r101Lo.Passive {
+	if !r101Lo.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r101Lo to be passive")
 	}
 
@@ -214,27 +225,33 @@ func testInterfaces(
 	if r103Eth1.Name != "eth1" {
 		t.Errorf("Expected first interface name to be 'r103Eth1', got '%s'", r103Eth1.Name)
 	}
-	if len(r103Eth1.IpAddress) != 3 {
-		t.Errorf("Expected r103Eth1 to have 3 IP address, got '%v'", len(r103Eth1.IpAddress))
+	if len(r103Eth1.InterfaceIpPrefixes) != 3 {
+		t.Errorf("Expected r103Eth1 to have 3 IP address, got '%v'", len(r103Eth1.InterfaceIpPrefixes))
 	} else {
-		if r103Eth1.IpAddress[0].IpAddress != "10.0.13.3" {
-			t.Errorf("Expected r103Eth1 IP1 to be 10.0.13.3, got '%s'", r103Eth1.IpAddress[0].IpAddress)
+		if r103Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.0.13.3" {
+			t.Errorf("Expected r103Eth1 IP1 to be 10.0.13.3, got '%s'", r103Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r103Eth1.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r103Eth1 prefix length to be 24, got %d", r103Eth1.IpAddress[0].PrefixLength)
+		if r103Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r103Eth1 prefix length to be 24, got %d", r103Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
-		if r103Eth1.IpAddress[1].IpAddress != "10.0.13.33" {
-			t.Errorf("Expected r103Eth1 IP2 to be 10.0.13.33, got '%s'", r103Eth1.IpAddress[1].IpAddress)
+		if r103Eth1.InterfaceIpPrefixes[1].IpPrefix.IpAddress != "10.0.13.33" {
+			t.Errorf("Expected r103Eth1 IP2 to be 10.0.13.33, got '%s'", r103Eth1.InterfaceIpPrefixes[1].IpPrefix.IpAddress)
 		}
-		if r103Eth1.IpAddress[2].IpAddress != "10.0.13.30" {
-			t.Errorf("Expected r103Eth1 IP3 to be 10.0.13.30, got '%s'", r103Eth1.IpAddress[2].IpAddress)
+		if r103Eth1.InterfaceIpPrefixes[2].IpPrefix.IpAddress != "10.0.13.30" {
+			t.Errorf("Expected r103Eth1 IP3 to be 10.0.13.30, got '%s'", r103Eth1.InterfaceIpPrefixes[2].IpPrefix.IpAddress)
 		}
 	}
 	if r103Eth1.Area != "0.0.0.0" {
 		t.Errorf("Expected r103Eth1 to be in Area '0.0.0.0', got '%s'", r103Eth1.Area)
 	}
-	if r103Eth1.Passive {
-		t.Error("Expected r103Eth1 to be non-passive")
+	if r103Eth1.InterfaceIpPrefixes[0].Passive {
+		t.Errorf("Expected r103Eth1 IP Address '%s' to be non-passive", r103Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
+	}
+	if r103Eth1.InterfaceIpPrefixes[1].Passive {
+		t.Errorf("Expected r103Eth1 IP Address '%s' to be non-passive", r103Eth1.InterfaceIpPrefixes[1].IpPrefix.IpAddress)
+	}
+	if r103Eth1.InterfaceIpPrefixes[1].Passive {
+		t.Errorf("Expected r103Eth1 IP Address '%s' to be non-passive", r103Eth1.InterfaceIpPrefixes[2].IpPrefix.IpAddress)
 	}
 
 	// r103Eth2
@@ -242,20 +259,20 @@ func testInterfaces(
 	if r103Eth2.Name != "eth2" {
 		t.Errorf("Expected second interface name to be 'eth2', got '%s'", r103Eth2.Name)
 	}
-	if len(r103Eth2.IpAddress) == 0 {
+	if len(r103Eth2.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r103Eth2 to have at least one IP address")
 	} else {
-		if r103Eth2.IpAddress[0].IpAddress != "10.0.23.3" {
-			t.Errorf("Expected r103Eth2 IP to be 10.0.23.3, got '%s'", r103Eth2.IpAddress[0].IpAddress)
+		if r103Eth2.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.0.23.3" {
+			t.Errorf("Expected r103Eth2 IP to be 10.0.23.3, got '%s'", r103Eth2.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r103Eth2.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r103Eth2 prefix length to be 24, got %d", r103Eth2.IpAddress[0].PrefixLength)
+		if r103Eth2.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r103Eth2 prefix length to be 24, got %d", r103Eth2.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 	if r103Eth2.Area != "0.0.0.0" {
 		t.Errorf("Expected r103Eth2 to be in Area '0.0.0.0', got '%s'", r103Eth2.Area)
 	}
-	if r103Eth2.Passive {
+	if r103Eth2.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r103Eth2 to be non-passive")
 	}
 
@@ -264,20 +281,20 @@ func testInterfaces(
 	if r103Eth3.Name != "eth3" {
 		t.Errorf("Expected second interface name to be 'eth3', got '%s'", r103Eth3.Name)
 	}
-	if len(r103Eth3.IpAddress) == 0 {
+	if len(r103Eth3.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r103Eth3 to have at least one IP address")
 	} else {
-		if r103Eth3.IpAddress[0].IpAddress != "10.2.31.3" {
-			t.Errorf("Expected r103Eth3 IP to be 10.2.31.3, got '%s'", r103Eth3.IpAddress[0].IpAddress)
+		if r103Eth3.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.2.31.3" {
+			t.Errorf("Expected r103Eth3 IP to be 10.2.31.3, got '%s'", r103Eth3.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r103Eth3.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r103Eth3 prefix length to be 24, got %d", r103Eth3.IpAddress[0].PrefixLength)
+		if r103Eth3.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r103Eth3 prefix length to be 24, got %d", r103Eth3.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 	if r103Eth3.Area != "0.0.0.2" {
 		t.Errorf("Expected r103Eth3 to be in Area '0.0.0.0', got '%s'", r103Eth3.Area)
 	}
-	if r103Eth3.Passive {
+	if r103Eth3.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r103Eth3 to be non-passive")
 	}
 
@@ -291,20 +308,20 @@ func testInterfaces(
 	if r112Eth1.Name != "eth1" {
 		t.Errorf("Expected first interface name to be 'eth1', got '%s'", r112Eth1.Name)
 	}
-	if len(r112Eth1.IpAddress) != 1 {
-		t.Errorf("Expected r112Eth1 to have 1 IP address, got '%v'", len(r112Eth1.IpAddress))
+	if len(r112Eth1.InterfaceIpPrefixes) != 1 {
+		t.Errorf("Expected r112Eth1 to have 1 IP address, got '%v'", len(r112Eth1.InterfaceIpPrefixes))
 	} else {
-		if r112Eth1.IpAddress[0].IpAddress != "10.1.12.12" {
-			t.Errorf("Expected r112Eth1 IP1 to be 10.1.12.12, got '%s'", r112Eth1.IpAddress[0].IpAddress)
+		if r112Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.1.12.12" {
+			t.Errorf("Expected r112Eth1 IP1 to be 10.1.12.12, got '%s'", r112Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
-		if r112Eth1.IpAddress[0].PrefixLength != 24 {
-			t.Errorf("Expected r112Eth1 prefix length to be 24, got %d", r112Eth1.IpAddress[0].PrefixLength)
+		if r112Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
+			t.Errorf("Expected r112Eth1 prefix length to be 24, got %d", r112Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
 	}
 	if r112Eth1.Area != "0.0.0.1" {
 		t.Errorf("Expected r112Eth1 to be in Area '0.0.0.1', got '%s'", r112Eth1.Area)
 	}
-	if r112Eth1.Passive {
+	if r112Eth1.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r112Eth1 to be non-passive")
 	}
 }

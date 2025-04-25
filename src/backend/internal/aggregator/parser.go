@@ -726,7 +726,7 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 	case strings.HasPrefix(line, "ip ospf area "):
 		currentInterfacePointer.Area = strings.Fields(line)[3]
 		return true
-	case strings.HasPrefix(line, "ip ospf passive "):
+	case strings.HasPrefix(line, "ip ospf passive"):
 		if len(parts) < 4 {
 			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
 				interfaceIPPrefix.Passive = true
