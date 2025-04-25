@@ -59,16 +59,6 @@ type accessList struct {
 }
 
 func (c *Analyzer) AnomalyAnalysis() {
-	//fmt.Println(c.metrics.StaticFrrConfiguration.GetOspfConfig())
-	//redistributionList := []string{
-	//	"ospf",
-	//}
-	//redistributionList = append(redistributionList, "static")
-	//c.Logger.Debug(fmt.Sprintf("%v", staticConfig))
-
-	// basic StaticFRRConfiguration
-	//fmt.Println(c.metrics.StaticFrrConfiguration)
-
 	// access list stuff
 	fmt.Println(getAccessLists(c.metrics.StaticFrrConfiguration))
 
@@ -93,6 +83,11 @@ func (c *Analyzer) AnomalyAnalysis() {
 		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	}
 	fmt.Printf("\n%+v\n", runtimeRouterLSDB)
+	fmt.Println()
+	fmt.Println()
+
+
+	fmt.Println("#################### File Configuration External LSDB Prediction ####################")
 	//for _, area := range runTimeRouterLSDB {
 	//}
 

@@ -48,6 +48,8 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	createFolders(config)
+
 	defaultConfig := config.Default
 	socketConfig := config.Socket
 	aggregatorConfig := config.Aggregator
@@ -66,7 +68,7 @@ func main() {
 	}
 
 	// start logger instances
-	applicationLogger := createNewLogger("frr_mad", "/tmp/frr_mad.log")
+	applicationLogger := createNewLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", defaultConfig.LogPath))
 	applicationLogger.SetDebugLevel(debugLevel)
 
 	// poll interval
@@ -92,18 +94,18 @@ func main() {
 
 	for _, service := range serviceList {
 		if service == "analyzer" {
-			aggregatorLogger := createNewLogger("aggregator", "/tmp/aggregator.log")
+			aggregatorLogger := createNewLogger("aggregator", fmt.Sprintf("%v/aggregator.log", defaultConfig.LogPath))
 			aggregatorLogger.SetDebugLevel(debugLevel)
 			madService.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
 
-			analyzerLogger := createNewLogger("analyzer", "/tmp/analyzer.log")
+			analyzerLogger := createNewLogger("analyzer", fmt.Sprintf("%v/analyzer.log", defaultConfig.LogPath))
 			analyzerLogger.SetDebugLevel(debugLevel)
 			madService.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval, madService.Aggregator)
 		}
 		if service == "aggregator" {
 		}
 		if service == "exporter" {
-			exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
+			exporterLogger := createNewLogger("exporter", fmt.Sprintf("%v/exporter.log", defaultConfig.LogPath))
 			exporterLogger.SetDebugLevel(debugLevel)
 			madService.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval)
 			fmt.Println(exporterConfig)
@@ -177,3 +179,20 @@ func createNewLogger(name, filePath string) *logger.Logger {
 }
 
 // create different files and folders
+func createFolders(config *configs.Config) {
+	paths := []string{
+		config.Default.TempFiles,
+		config.Default.LogPath,
+		config.Socket.UnixSocketLocation,
+	}
+
+	// Create each directory with all necessary parent directories
+	for _, path := range paths {
+		err := os.MkdirAll(path, 0755)
+		if err != nil {
+			fmt.Printf("Error creating directory %s: %v\n", path, err)
+			return
+		}
+		//fmt.Printf("Created directory: %s\n", path)
+	}
+}

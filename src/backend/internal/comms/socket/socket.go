@@ -28,9 +28,9 @@ type Socket struct {
 	logger     *logger.Logger
 }
 
-func NewSocket(socketPath configs.SocketConfig, metrics *frrProto.FullFRRData, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
+func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
 	return &Socket{
-		socketPath: socketPath.UnixSocketLocation,
+		socketPath: fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:      sync.Mutex{},
 		metrics:    metrics,
 		analyzer:   analyzer,
@@ -40,6 +40,7 @@ func NewSocket(socketPath configs.SocketConfig, metrics *frrProto.FullFRRData, a
 
 func (s *Socket) Start() error {
 	os.Remove(s.socketPath)
+	fmt.Println(s.socketPath)
 
 	l, err := net.ListenUnix("unix", &net.UnixAddr{s.socketPath, "unix"})
 	if err != nil {

@@ -19,6 +19,7 @@ type DefaultConfig struct {
 
 type SocketConfig struct {
 	UnixSocketLocation string `mapstructure:"unixsocketlocation"`
+	UnixSocketName     string `mapstructure:"unixsocketname"`
 	SocketType         string `mapstructure:"sockettype"`
 }
 
@@ -71,6 +72,7 @@ func GetConfig() map[string]map[string]string {
 
 	result["socket"] = map[string]string{
 		"UnixSocketLocation": config.Socket.UnixSocketLocation,
+		"UnixSocketName":     config.Socket.UnixSocketName,
 		"SocketType":         config.Socket.SocketType,
 	}
 
