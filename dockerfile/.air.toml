@@ -10,7 +10,7 @@ cmd = "cd /app/src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ld
 # Binary file generated
 bin = "/app/tmp/analyzer_frr"
 # How the built app is run
-full_bin = "/app/tmp/analyzer_frr"
+full_bin = "/app/tmp/analyzer_frr start"
 # Delay before rebuilding after file changes (in milliseconds)
 delay = 500
 # Directories to exclude from watching
