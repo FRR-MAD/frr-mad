@@ -734,6 +734,10 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 			}
 		} else {
 			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				fmt.Print("\n=================================\n")
+				fmt.Printf("debug static parser parts[3] %s\n", parts[3])
+				fmt.Printf("debug static parser parts[3] %s\n", interfaceIPPrefix.IpPrefix.IpAddress)
+				fmt.Print("\n=================================\n")
 				if interfaceIPPrefix.IpPrefix.IpAddress == parts[3] {
 					interfaceIPPrefix.Passive = true
 					return true
