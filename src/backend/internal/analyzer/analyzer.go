@@ -78,7 +78,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	//fmt.Println(c.metrics.OspfRouterData)
 	fmt.Println("#################### Runtime Configuration Router LSDB IS_STATE ####################")
-	runtimeRouterLSDB := convertOSPFRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	runtimeRouterLSDB := convertRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
 	for _, area := range runtimeRouterLSDB.Areas {
 		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	}
@@ -86,8 +86,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 	fmt.Println()
 	fmt.Println()
 
-
-	fmt.Println("#################### File Configuration External LSDB Prediction ####################")
+	fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
+	//runtimeExternalLSDB := convertExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 	//for _, area := range runTimeRouterLSDB {
 	//}
 
@@ -109,7 +109,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 }
 
-func convertOSPFRouterData(config *frrProto.OSPFRouterData, hostname string) *intraAreaLsa {
+func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *intraAreaLsa {
 	result := intraAreaLsa{
 		RouterId: config.RouterId,
 		Areas:    []area{},
@@ -346,18 +346,13 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 		if iface.Area == "" {
 			continue
 		}
-		linkType := "a Transit Network"
-		if iface.Passive {
-			linkType = "Stub Network"
-		}
 
-		// Get or create area
 		a, exists := areaMap[iface.Area]
 		advertismentList := make([]advertisment, 0)
 		if !exists {
 			newArea := area{
 				AreaName: iface.Area,
-				LsaType:  "router-lsa", // Default LSA type for areas
+				LsaType:  "router-lsa",
 				Links:    advertismentList,
 			}
 			areaMap[iface.Area] = &newArea
@@ -366,12 +361,13 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 
 		// Create advertisements from IP addresses
 		var adv advertisment
-		for _, ip := range iface.IpAddress {
-			adv.InterfaceAddress = ip.IpAddress
+		for _, ip := range iface.InterfaceIpPrefixes {
+			adv.InterfaceAddress = ip.IpPrefix.IpAddress
 			//			adv.Cost = 10
-			adv.LinkType = linkType
-			if iface.Passive {
-				adv.PrefixLength = fmt.Sprintf("%d", ip.PrefixLength)
+			adv.LinkType = "a Transit Network"
+			if ip.Passive {
+				adv.PrefixLength = fmt.Sprintf("%d", ip.IpPrefix.PrefixLength)
+				adv.LinkType = "a Transit Network"
 			}
 
 			a.Links = append(a.Links, adv)
