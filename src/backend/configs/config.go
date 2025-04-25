@@ -116,14 +116,10 @@ func splitTupleComponents(tuple string) []string {
 	return parts
 }
 
-func GetFlagConfigs(config map[string]map[string]string, section string) (map[string]ParsedFlag, error) {
+func GetFlagConfigs(config map[string]string) (map[string]ParsedFlag, error) {
 	flags := make(map[string]ParsedFlag)
-	sectionConfig, ok := config[section]
-	if !ok {
-		return nil, fmt.Errorf("section %s not found in config", section)
-	}
 
-	for key, value := range sectionConfig {
+	for key, value := range config {
 		if strings.HasPrefix(value, "(") && strings.HasSuffix(value, ")") {
 			flag, err := ParseFlagTuple(value)
 			if err != nil {

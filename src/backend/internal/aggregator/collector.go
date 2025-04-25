@@ -6,7 +6,6 @@ import (
 	"time"
 
 	frrSocket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator/frrsockets"
-	exporter "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"google.golang.org/protobuf/proto"
@@ -129,78 +128,53 @@ func (c *Collector) Collect() error {
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s() Address: %p\n", name, target))
 	}
 
-	// Metric exporter
-	metricsExporter := exporter.GetOSPFMetricsExporter()
-
 	// Fetch each type of data using the generic function
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
 		return fetchStaticFRRConfig()
 	})
 
 	fetchAndMerge("OSPFRouterData", c.FullFrrData.OspfRouterData, func() (proto.Message, error) {
-		res, err := FetchOSPFRouterData(executor)
-		metricsExporter.UpdateRouterMetrics(res)
-		return res, err
+		return FetchOSPFRouterData(executor)
 	})
 
 	fetchAndMerge("OSPFNetworkData", c.FullFrrData.OspfNetworkData, func() (proto.Message, error) {
-		res, err := FetchOSPFNetworkData(executor)
-		metricsExporter.UpdateNetworkMetrics(res)
-		return res, err
+		return FetchOSPFNetworkData(executor)
 	})
 
 	fetchAndMerge("OSPFSummaryData", c.FullFrrData.OspfSummaryData, func() (proto.Message, error) {
-		res, err := FetchOSPFSummaryData(executor)
-		metricsExporter.UpdateSummaryMetrics(res)
-		return res, err
+		return FetchOSPFSummaryData(executor)
 	})
 
 	fetchAndMerge("OSPFAsbrSummaryData", c.FullFrrData.OspfAsbrSummaryData, func() (proto.Message, error) {
-		res, err := FetchOSPFAsbrSummaryData(executor)
-		metricsExporter.UpdateASBRSummaryMetrics(res)
-		return res, err
+		return FetchOSPFAsbrSummaryData(executor)
 	})
 
 	fetchAndMerge("OSPFExternalData", c.FullFrrData.OspfExternalData, func() (proto.Message, error) {
-		res, err := FetchOSPFExternalData(executor)
-		metricsExporter.UpdateExternalMetrics(res)
-		return res, err
+		return FetchOSPFExternalData(executor)
 	})
 
 	fetchAndMerge("OSPFNssaExternalData", c.FullFrrData.OspfNssaExternalData, func() (proto.Message, error) {
-		res, err := FetchOSPFNssaExternalData(executor)
-		metricsExporter.UpdateNSSAExternalMetrics(res)
-		return res, err
+		return FetchOSPFNssaExternalData(executor)
 	})
 
 	fetchAndMerge("FullOSPFDatabase", c.FullFrrData.OspfDatabase, func() (proto.Message, error) {
-		res, err := FetchFullOSPFDatabase(executor)
-		metricsExporter.UpdateDatabaseMetrics(res)
-		return res, err
+		return FetchFullOSPFDatabase(executor)
 	})
 
 	fetchAndMerge("OSPFDuplicateCandidates", c.FullFrrData.OspfDuplicates, func() (proto.Message, error) {
-		res, err := FetchOSPFDuplicateCandidates(executor)
-		metricsExporter.UpdateDuplicateMetrics(res)
-		return res, err
+		return FetchOSPFDuplicateCandidates(executor)
 	})
 
 	fetchAndMerge("OSPFNeighbors", c.FullFrrData.OspfNeighbors, func() (proto.Message, error) {
-		res, err := FetchOSPFNeighbors(executor)
-		metricsExporter.UpdateNeighborMetrics(res)
-		return res, err
+		return FetchOSPFNeighbors(executor)
 	})
 
 	fetchAndMerge("InterfaceStatus", c.FullFrrData.Interfaces, func() (proto.Message, error) {
-		res, err := FetchInterfaceStatus(executor)
-		metricsExporter.UpdateInterfaceMetrics(res)
-		return res, err
+		return FetchInterfaceStatus(executor)
 	})
 
 	fetchAndMerge("ExpectedRoutes", c.FullFrrData.Routes, func() (proto.Message, error) {
-		res, err := FetchExpectedRoutes(executor)
-		metricsExporter.UpdateRouteMetrics(res)
-		return res, err
+		return FetchExpectedRoutes(executor)
 	})
 
 	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {

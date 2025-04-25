@@ -23,7 +23,7 @@ type MadService struct {
 	//AggregateService ServiceActivator
 	Analyzer   *analyzer.Analyzer
 	Aggregator *aggregator.Collector
-	Exporter   *exporter.PrometheusAlerter
+	Exporter   *exporter.Exporter
 }
 
 type ServiceActivator struct {
@@ -35,7 +35,7 @@ type ServiceActivator struct {
 type ServiceSelector struct {
 	Analyzer   *analyzer.Analyzer
 	Aggregator *aggregator.Collector
-	Exporter   *exporter.PrometheusAlerter
+	Exporter   *exporter.Exporter
 }
 
 func main() {
@@ -85,8 +85,8 @@ func main() {
 	}
 
 	if len(serviceList) == 0 {
-		serviceList = append(serviceList, "exporter")
 		serviceList = append(serviceList, "analyzer")
+		serviceList = append(serviceList, "exporter")
 	}
 
 	for _, service := range serviceList {
@@ -105,7 +105,7 @@ func main() {
 		if service == "exporter" {
 			exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
 			exporterLogger.SetDebugLevel(debugLevel)
-			exporter, err := startExporter(exporterConfig, exporterLogger)
+			exporter, err := startExporter(exporterConfig, exporterLogger, pollInterval, madService.Aggregator, madService.Analyzer)
 			if err != nil {
 				exporterLogger.Error(fmt.Sprintf("Failed to start exporter: %v", err))
 				// if not working close everything
@@ -146,18 +146,16 @@ func startAnalyzer(config map[string]string, logging *logger.Logger, pollInterva
 	detection := analyzer.InitAnalyzer(config, aggregatorService, logging)
 	analyzer.StartAnalyzer(detection, pollInterval)
 
-	// test the exporter with anomalies
-	//detection.GenerateTestAlerts()
-
-	// if the anomalie resolves:
-	//detection.CleanTestAlerts()
-
 	detection.Foobar()
 	return detection
 }
 
-func startExporter(config map[string]string, logging *logger.Logger) (*exporter.PrometheusAlerter, error) {
-	return exporter.InitExporter(config, logging)
+func startExporter(config map[string]string, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector, analyzerService *analyzer.Analyzer) (*exporter.Exporter, error) {
+	exporter, err := exporter.NewExporter(config, logging, pollInterval, aggregatorService.FullFrrData, analyzerService.Cache)
+
+	exporter.Start()
+	// exporter.Stop()
+	return exporter, err
 }
 
 func getEnv(key, defaultValue string) string {
