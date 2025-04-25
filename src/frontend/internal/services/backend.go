@@ -15,7 +15,7 @@ import (
 // todo: take the path from the config file
 const (
 	// Path to the Unix domain socket your analyzer listens on.
-	socketPath        = "/tmp/analyzer.sock"
+	socketPath        = "/var/run/frr-mad/analyzer.sock"
 	socketDialTimeout = 2 * time.Second
 
 	// Maximum response size we’re willing to read (for sanity checking).

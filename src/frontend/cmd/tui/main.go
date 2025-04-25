@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	// "log"
 	"os"
 
@@ -218,6 +217,12 @@ func (m *AppModel) View() string {
 }
 
 func main() {
+	// Load configuration
+	//config, err := configs.LoadConfig()
+	//if err != nil {
+	//	log.Fatalf("Failed to load configuration: %v", err)
+	//}
+
 	maybeUpdateTERM()
 	p := tea.NewProgram(initModel())
 	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
