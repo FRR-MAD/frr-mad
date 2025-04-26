@@ -28,7 +28,7 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 1 {
 		return m.renderRouterMonitorTab()
 	} else if currentSubTabLocal == 2 {
-		return m.renderOSPFTab0()
+		return m.renderExternalMonitorTab()
 	} else if currentSubTabLocal == 3 {
 		return m.renderOSPFTab1()
 	} else if currentSubTabLocal == 4 {
@@ -38,13 +38,13 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderRouterMonitorTab() string {
-	boxWidthForTwo := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
-	if boxWidthForTwo < 20 {
-		boxWidthForTwo = 20 // Minimum width to ensure readability
+	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
+	if boxWidthForTwoH2 < 20 {
+		boxWidthForTwoH2 = 20 // Minimum width to ensure readability
 	}
-	boxWidthForOne := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
-	if boxWidthForOne < 20 {
-		boxWidthForOne = 20 // Minimum width to ensure readability
+	boxWidthForOneH1 := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
+	if boxWidthForOneH1 < 20 {
+		boxWidthForOneH1 = 20 // Minimum width to ensure readability
 	}
 
 	var routerLSABlocks []string
@@ -130,20 +130,20 @@ func (m *Model) renderRouterMonitorTab() string {
 		}
 
 		areaHeader := styles.ContentTitleH1Style.
-			Width(boxWidthForOne).
+			Width(boxWidthForOneH1).
 			Margin(0, 0, 1, 0).
 			Padding(1, 0, 0, 0).
 			Render(fmt.Sprintf("Area %s", area))
 
 		correctBoxWidthTransit := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwo-2).Render("Transit Networks"),
-			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForTwo).Render(transitTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwo-2).Render(""),
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2-2).Render("Transit Networks"),
+			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForTwoH2).Render(transitTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2-2).Render(""),
 		)
 		correctBoxWidthStub := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwo-2).Render("Stub Networks"),
-			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForTwo).Render(stubTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwo-2).Render(""),
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2-2).Render("Stub Networks"),
+			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForTwoH2).Render(stubTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2-2).Render(""),
 		)
 
 		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, correctBoxWidthTransit, correctBoxWidthStub)
@@ -154,10 +154,116 @@ func (m *Model) renderRouterMonitorTab() string {
 	}
 
 	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = boxWidthForOne + 2
+	m.viewport.Width = boxWidthForOneH1 + 2
 	m.viewport.Height = contentMaxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
+
+	return m.viewport.View()
+}
+
+func (m *Model) renderExternalMonitorTab() string {
+	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
+	if boxWidthForTwoH2 < 20 {
+		boxWidthForTwoH2 = 20 // Minimum width to ensure readability
+	}
+	boxWidthForOneH1 := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
+	if boxWidthForOneH1 < 20 {
+		boxWidthForOneH1 = 20 // Minimum width to ensure readability
+	}
+	boxWidthForOneH2 := boxWidthForOneH1 - 4 // -4 (for margin) -2 (for border)
+
+	var externalLsaBlock []string
+	// var nssaExternalLsaBlock []string
+
+	externalLSASelf, _ := getOspfExternalData()
+	// nssaExternalDataSelf, _ := getOspfNssaExternalData()
+
+	var externalTableData [][]string
+	var externalTableDataExpanded [][]string
+	for externalLinkState, linkStateData := range externalLSASelf.AsExternalLinkStates {
+		externalTableData = append(externalTableData, []string{
+			linkStateData.LinkStateId,
+			string(linkStateData.NetworkMask),
+			linkStateData.MetricType,
+		})
+
+		externalTableDataExpanded = append(externalTableDataExpanded, []string{
+			externalLinkState,
+			string(linkStateData.NetworkMask),
+			linkStateData.MetricType,
+		})
+	}
+
+	rowsExternal := len(externalTableData)
+	externalTable := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderTop(true).
+		BorderBottom(true).
+		BorderLeft(true).
+		BorderRight(true).
+		BorderHeader(true).
+		BorderColumn(true).
+		Headers("Link State ID", "CIDR", "Metric Type").
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row == ltable.HeaderRow:
+				return styles.HeaderStyle
+			case row == rowsExternal-1:
+				return styles.NormalCellStyle.BorderBottom(true)
+			default:
+				return styles.NormalCellStyle
+			}
+		})
+
+	for _, r := range externalTableData {
+		externalTable = externalTable.Row(r...)
+	}
+
+	externalHeader := styles.ContentTitleH1Style.
+		Width(boxWidthForOneH1).
+		Margin(0, 0, 1, 0).
+		Padding(1, 0, 0, 0).
+		Render("External LSAs (Type 5)")
+
+	externalDataBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render("Self Originating"),
+		lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForOneH2).Render(externalTable.String()),
+		styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
+	)
+	var completeExternalBox string
+	if len(externalLSASelf.AsExternalLinkStates) != 0 {
+		completeExternalBox = lipgloss.JoinVertical(lipgloss.Left, externalHeader, externalDataBox)
+
+	} else {
+		completeExternalBox = lipgloss.JoinVertical(lipgloss.Left,
+			externalHeader,
+			"no self originating external advertisements",
+		)
+	}
+
+	externalLsaBlock = append(externalLsaBlock, completeExternalBox+"\n\n")
+
+	//for area, areaData := range nssaExternalDataSelf.NssaExternalLinkStates {
+	//	var nssaExternalTableData [][]string
+	//	// var nssaExternalTableDataExpanded [][]string
+	//
+	//	for _, lsaData := range areaData.Data {
+	//		nssaExternalTableData = append(nssaExternalTableData, []string{
+	//			lsaData.LinkStateId,
+	//			string(lsaData.NetworkMask),
+	//			lsaData.MetricType,
+	//			lsaData.NssaForwardAddress,
+	//		})
+	//	}
+	//
+	//}
+
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = boxWidthForOneH1 + 2
+	m.viewport.Height = contentMaxHeight
+
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, externalLsaBlock...))
 
 	return m.viewport.View()
 }
@@ -348,4 +454,22 @@ func getOspfNeighborInterfaces() []string {
 	}
 
 	return neighborAddresses
+}
+
+func getOspfExternalData() (*pkg.OSPFExternalData, error) {
+	response, err := backend.SendMessage("ospf", "externalData", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfExternalData(), nil
+}
+
+func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
+	response, err := backend.SendMessage("ospf", "nssaExternalData", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfNssaExternalData(), nil
 }

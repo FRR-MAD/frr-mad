@@ -12,6 +12,7 @@ type Model struct {
 	title         string
 	subTabs       []string
 	runningConfig []string
+	expandedMode  bool
 	windowSize    *common.WindowSize
 	viewport      viewport.Model
 }
@@ -30,10 +31,11 @@ func New(windowSize *common.WindowSize) *Model {
 
 	return &Model{
 		title: "OSPF Monitoring",
-		// '9 - Running Config' has to remain last in the list
+		// 'Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
-		subTabs:       []string{"Advertisement", "Router LSAs", "TBD", "TBD", "Running Config"},
+		subTabs:       []string{"Advertisement", "Router LSAs", "External LSAs", "TBD", "Running Config"},
 		runningConfig: []string{"Fetching running config..."},
+		expandedMode:  false,
 		windowSize:    windowSize,
 		viewport:      vp,
 	}
