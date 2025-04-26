@@ -1151,95 +1151,71 @@ func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interfa
 
 func transformDatabaseRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	if v, ok := lsaData["numOfRouterLinks"]; ok {
+		transformed["num_of_router_links"] = v
 	}
-
-	transformed["num_of_router_links"] = lsaData["numOfRouterLinks"]
 
 	return transformed
 }
 
 func transformDatabaseNetworkLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
-	}
-
+	addDatabaseLSABaseParameters(transformed, lsaData)
 	return transformed
 }
 
 func transformDatabaseSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
-	}
-
+	addDatabaseLSABaseParameters(transformed, lsaData)
 	transformed["summary_address"] = lsaData["summaryAddress"]
-
 	return transformed
 }
 
 func transformDatabaseASBRSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
-	}
-
+	addDatabaseLSABaseParameters(transformed, lsaData)
 	return transformed
 }
 
 func transformDatabaseExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	if v, ok := lsaData["metricType"]; ok {
+		transformed["metric_type"] = v
+	}
+	if v, ok := lsaData["route"]; ok {
+		transformed["route"] = v
+	}
+	if v, ok := lsaData["tag"]; ok {
+		transformed["tag"] = v
+	}
+	return transformed
+}
 
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
+// addDatabaseLSABaseParameters will pull lsId, advertisedRouter, lsaAge,
+// sequenceNumber and checksum out of the raw lsaData and
+// stick them under transformed["base"] in snake_case.
+func addDatabaseLSABaseParameters(transformed, lsaData map[string]interface{}) {
+	base := make(map[string]interface{})
+
+	if v, ok := lsaData["lsId"]; ok {
+		base["ls_id"] = v
+	}
+	if v, ok := lsaData["advertisedRouter"]; ok {
+		base["advertised_router"] = v
+	}
+	if v, ok := lsaData["lsaAge"]; ok {
+		base["lsa_age"] = v
+	}
+	if v, ok := lsaData["sequenceNumber"]; ok {
+		base["sequence_number"] = v
+	}
+	if v, ok := lsaData["checksum"]; ok {
+		base["checksum"] = v
 	}
 
-	transformed["metric_type"] = lsaData["metricType"]
-	transformed["route"] = lsaData["route"]
-	transformed["tag"] = lsaData["tag"]
-
-	return transformed
+	transformed["base"] = base
 }
 
 func transformExternalLinkState(lsaData map[string]interface{}) map[string]interface{} {

@@ -55,8 +55,6 @@ message ResponseValue {
 
 // ================ Aggregator payload Messages ================
 
-// ================ NEW setup ================
-
 message StaticFRRConfiguration {
   string hostname = 1;
   string frr_version = 2;
