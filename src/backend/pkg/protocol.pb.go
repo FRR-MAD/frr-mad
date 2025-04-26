@@ -1130,6 +1130,7 @@ type InterfaceIPPrefix struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	IpPrefix      *IPPrefix              `protobuf:"bytes,1,opt,name=ip_prefix,json=ipPrefix,proto3" json:"ip_prefix,omitempty"`
 	Passive       bool                   `protobuf:"varint,2,opt,name=passive,proto3" json:"passive,omitempty"`
+	PeerIpPrefix  *IPPrefix              `protobuf:"bytes,3,opt,name=peer_ip_prefix,json=peerIpPrefix,proto3" json:"peer_ip_prefix,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1176,6 +1177,13 @@ func (x *InterfaceIPPrefix) GetPassive() bool {
 		return x.Passive
 	}
 	return false
+}
+
+func (x *InterfaceIPPrefix) GetPeerIpPrefix() *IPPrefix {
+	if x != nil {
+		return x.PeerIpPrefix
+	}
+	return nil
 }
 
 type IPPrefix struct {
@@ -5829,10 +5837,11 @@ const file_protocol_proto_rawDesc = "" +
 	"\x0eaccess_control\x18\x02 \x01(\tR\raccessControl\x126\n" +
 	"\tip_prefix\x18\x03 \x01(\v2\x17.communication.IPPrefixH\x00R\bipPrefix\x12\x12\n" +
 	"\x03any\x18\x04 \x01(\bH\x00R\x03anyB\r\n" +
-	"\vdestination\"c\n" +
+	"\vdestination\"\xa2\x01\n" +
 	"\x11InterfaceIPPrefix\x124\n" +
 	"\tip_prefix\x18\x01 \x01(\v2\x17.communication.IPPrefixR\bipPrefix\x12\x18\n" +
-	"\apassive\x18\x02 \x01(\bR\apassive\"N\n" +
+	"\apassive\x18\x02 \x01(\bR\apassive\x12=\n" +
+	"\x0epeer_ip_prefix\x18\x03 \x01(\v2\x17.communication.IPPrefixR\fpeerIpPrefix\"N\n" +
 	"\bIPPrefix\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\x12#\n" +
@@ -6467,98 +6476,99 @@ var file_protocol_proto_depIdxs = []int32{
 	12,  // 26: communication.AccessList.access_list_items:type_name -> communication.AccessListItem
 	14,  // 27: communication.AccessListItem.ip_prefix:type_name -> communication.IPPrefix
 	14,  // 28: communication.InterfaceIPPrefix.ip_prefix:type_name -> communication.IPPrefix
-	17,  // 29: communication.NetworkConfig.areas:type_name -> communication.OSPFArea
-	18,  // 30: communication.NetworkConfig.interfaces:type_name -> communication.OSPFInterfaceConfig
-	37,  // 31: communication.FullFRRData.ospf_database:type_name -> communication.OSPFDatabase
-	20,  // 32: communication.FullFRRData.ospf_router_data:type_name -> communication.OSPFRouterData
-	24,  // 33: communication.FullFRRData.ospf_network_data:type_name -> communication.OSPFNetworkData
-	28,  // 34: communication.FullFRRData.ospf_summary_data:type_name -> communication.OSPFSummaryData
-	31,  // 35: communication.FullFRRData.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
-	32,  // 36: communication.FullFRRData.ospf_external_data:type_name -> communication.OSPFExternalData
-	34,  // 37: communication.FullFRRData.ospf_nssa_external_data:type_name -> communication.OSPFNssaExternalData
-	45,  // 38: communication.FullFRRData.ospf_duplicates:type_name -> communication.OSPFDuplicates
-	47,  // 39: communication.FullFRRData.ospf_neighbors:type_name -> communication.OSPFNeighbors
-	50,  // 40: communication.FullFRRData.interfaces:type_name -> communication.InterfaceList
-	54,  // 41: communication.FullFRRData.routing_information_base:type_name -> communication.RoutingInformationBase
-	4,   // 42: communication.FullFRRData.static_frr_configuration:type_name -> communication.StaticFRRConfiguration
-	15,  // 43: communication.FullFRRData.system_metrics:type_name -> communication.SystemMetrics
-	73,  // 44: communication.OSPFRouterData.router_states:type_name -> communication.OSPFRouterData.RouterStatesEntry
-	74,  // 45: communication.OSPFRouterArea.lsa_entries:type_name -> communication.OSPFRouterArea.LsaEntriesEntry
-	75,  // 46: communication.OSPFRouterLSA.router_links:type_name -> communication.OSPFRouterLSA.RouterLinksEntry
-	76,  // 47: communication.OSPFNetworkData.net_states:type_name -> communication.OSPFNetworkData.NetStatesEntry
-	77,  // 48: communication.NetAreaState.lsa_entries:type_name -> communication.NetAreaState.LsaEntriesEntry
-	78,  // 49: communication.NetworkLSA.attached_routers:type_name -> communication.NetworkLSA.AttachedRoutersEntry
-	79,  // 50: communication.OSPFSummaryData.net_states:type_name -> communication.OSPFSummaryData.NetStatesEntry
-	80,  // 51: communication.OSPFSummaryData.summary_states:type_name -> communication.OSPFSummaryData.SummaryStatesEntry
-	81,  // 52: communication.SummaryAreaState.lsa_entries:type_name -> communication.SummaryAreaState.LsaEntriesEntry
-	82,  // 53: communication.OSPFAsbrSummaryData.asbr_summary_states:type_name -> communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry
-	83,  // 54: communication.OSPFExternalData.as_external_link_states:type_name -> communication.OSPFExternalData.AsExternalLinkStatesEntry
-	84,  // 55: communication.OSPFNssaExternalData.nssa_external_link_states:type_name -> communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
-	85,  // 56: communication.NssaExternalArea.data:type_name -> communication.NssaExternalArea.DataEntry
-	86,  // 57: communication.OSPFDatabase.areas:type_name -> communication.OSPFDatabase.AreasEntry
-	44,  // 58: communication.OSPFDatabase.as_external_link_states:type_name -> communication.ASExternalLSA
-	40,  // 59: communication.OSPFDatabaseArea.router_link_states:type_name -> communication.RouterDataLSA
-	41,  // 60: communication.OSPFDatabaseArea.network_link_states:type_name -> communication.NetworkDataLSA
-	42,  // 61: communication.OSPFDatabaseArea.summary_link_states:type_name -> communication.SummaryDataLSA
-	43,  // 62: communication.OSPFDatabaseArea.asbr_summary_link_states:type_name -> communication.ASBRSummaryLSA
-	39,  // 63: communication.RouterDataLSA.base:type_name -> communication.BaseLSA
-	39,  // 64: communication.NetworkDataLSA.base:type_name -> communication.BaseLSA
-	39,  // 65: communication.SummaryDataLSA.base:type_name -> communication.BaseLSA
-	39,  // 66: communication.ASBRSummaryLSA.base:type_name -> communication.BaseLSA
-	39,  // 67: communication.ASExternalLSA.base:type_name -> communication.BaseLSA
-	46,  // 68: communication.OSPFDuplicates.as_external_link_states:type_name -> communication.ASExternalLinkState
-	87,  // 69: communication.OSPFNeighbors.neighbors:type_name -> communication.OSPFNeighbors.NeighborsEntry
-	49,  // 70: communication.NeighborList.neighbors:type_name -> communication.Neighbor
-	88,  // 71: communication.InterfaceList.interfaces:type_name -> communication.InterfaceList.InterfacesEntry
-	52,  // 72: communication.SingleInterface.ip_addresses:type_name -> communication.IpAddress
-	53,  // 73: communication.SingleInterface.evpn_mh:type_name -> communication.EvpnMh
-	89,  // 74: communication.RoutingInformationBase.routes:type_name -> communication.RoutingInformationBase.RoutesEntry
-	56,  // 75: communication.RouteEntry.routes:type_name -> communication.Route
-	57,  // 76: communication.Route.nexthops:type_name -> communication.Nexthop
-	61,  // 77: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
-	62,  // 78: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
-	63,  // 79: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
-	64,  // 80: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
-	93,  // 81: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 82: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
-	93,  // 83: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 84: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
-	93,  // 85: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 86: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
-	93,  // 87: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 88: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
-	90,  // 89: communication.OspfRouterInfo.router_link_states:type_name -> communication.OspfRouterInfo.RouterLinkStatesEntry
-	91,  // 90: communication.AreaLinkStates.router_lsas:type_name -> communication.AreaLinkStates.RouterLsasEntry
-	92,  // 91: communication.RouterLSA.router_links:type_name -> communication.RouterLSA.RouterLinksEntry
-	3,   // 92: communication.Message.ParamsEntry.value:type_name -> communication.ResponseValue
-	3,   // 93: communication.Command.ParamsEntry.value:type_name -> communication.ResponseValue
-	10,  // 94: communication.StaticFRRConfiguration.RouteMapEntry.value:type_name -> communication.RouteMap
-	11,  // 95: communication.StaticFRRConfiguration.AccessListEntry.value:type_name -> communication.AccessList
-	21,  // 96: communication.OSPFRouterData.RouterStatesEntry.value:type_name -> communication.OSPFRouterArea
-	22,  // 97: communication.OSPFRouterArea.LsaEntriesEntry.value:type_name -> communication.OSPFRouterLSA
-	23,  // 98: communication.OSPFRouterLSA.RouterLinksEntry.value:type_name -> communication.OSPFRouterLSALink
-	25,  // 99: communication.OSPFNetworkData.NetStatesEntry.value:type_name -> communication.NetAreaState
-	26,  // 100: communication.NetAreaState.LsaEntriesEntry.value:type_name -> communication.NetworkLSA
-	27,  // 101: communication.NetworkLSA.AttachedRoutersEntry.value:type_name -> communication.AttachedRouter
-	25,  // 102: communication.OSPFSummaryData.NetStatesEntry.value:type_name -> communication.NetAreaState
-	29,  // 103: communication.OSPFSummaryData.SummaryStatesEntry.value:type_name -> communication.SummaryAreaState
-	30,  // 104: communication.SummaryAreaState.LsaEntriesEntry.value:type_name -> communication.SummaryLSA
-	29,  // 105: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry.value:type_name -> communication.SummaryAreaState
-	33,  // 106: communication.OSPFExternalData.AsExternalLinkStatesEntry.value:type_name -> communication.ExternalLSA
-	35,  // 107: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
-	36,  // 108: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
-	38,  // 109: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
-	48,  // 110: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
-	51,  // 111: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
-	55,  // 112: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry
-	66,  // 113: communication.OspfRouterInfo.RouterLinkStatesEntry.value:type_name -> communication.AreaLinkStates
-	67,  // 114: communication.AreaLinkStates.RouterLsasEntry.value:type_name -> communication.RouterLSA
-	68,  // 115: communication.RouterLSA.RouterLinksEntry.value:type_name -> communication.RouterLink
-	116, // [116:116] is the sub-list for method output_type
-	116, // [116:116] is the sub-list for method input_type
-	116, // [116:116] is the sub-list for extension type_name
-	116, // [116:116] is the sub-list for extension extendee
-	0,   // [0:116] is the sub-list for field type_name
+	14,  // 29: communication.InterfaceIPPrefix.peer_ip_prefix:type_name -> communication.IPPrefix
+	17,  // 30: communication.NetworkConfig.areas:type_name -> communication.OSPFArea
+	18,  // 31: communication.NetworkConfig.interfaces:type_name -> communication.OSPFInterfaceConfig
+	37,  // 32: communication.FullFRRData.ospf_database:type_name -> communication.OSPFDatabase
+	20,  // 33: communication.FullFRRData.ospf_router_data:type_name -> communication.OSPFRouterData
+	24,  // 34: communication.FullFRRData.ospf_network_data:type_name -> communication.OSPFNetworkData
+	28,  // 35: communication.FullFRRData.ospf_summary_data:type_name -> communication.OSPFSummaryData
+	31,  // 36: communication.FullFRRData.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
+	32,  // 37: communication.FullFRRData.ospf_external_data:type_name -> communication.OSPFExternalData
+	34,  // 38: communication.FullFRRData.ospf_nssa_external_data:type_name -> communication.OSPFNssaExternalData
+	45,  // 39: communication.FullFRRData.ospf_duplicates:type_name -> communication.OSPFDuplicates
+	47,  // 40: communication.FullFRRData.ospf_neighbors:type_name -> communication.OSPFNeighbors
+	50,  // 41: communication.FullFRRData.interfaces:type_name -> communication.InterfaceList
+	54,  // 42: communication.FullFRRData.routing_information_base:type_name -> communication.RoutingInformationBase
+	4,   // 43: communication.FullFRRData.static_frr_configuration:type_name -> communication.StaticFRRConfiguration
+	15,  // 44: communication.FullFRRData.system_metrics:type_name -> communication.SystemMetrics
+	73,  // 45: communication.OSPFRouterData.router_states:type_name -> communication.OSPFRouterData.RouterStatesEntry
+	74,  // 46: communication.OSPFRouterArea.lsa_entries:type_name -> communication.OSPFRouterArea.LsaEntriesEntry
+	75,  // 47: communication.OSPFRouterLSA.router_links:type_name -> communication.OSPFRouterLSA.RouterLinksEntry
+	76,  // 48: communication.OSPFNetworkData.net_states:type_name -> communication.OSPFNetworkData.NetStatesEntry
+	77,  // 49: communication.NetAreaState.lsa_entries:type_name -> communication.NetAreaState.LsaEntriesEntry
+	78,  // 50: communication.NetworkLSA.attached_routers:type_name -> communication.NetworkLSA.AttachedRoutersEntry
+	79,  // 51: communication.OSPFSummaryData.net_states:type_name -> communication.OSPFSummaryData.NetStatesEntry
+	80,  // 52: communication.OSPFSummaryData.summary_states:type_name -> communication.OSPFSummaryData.SummaryStatesEntry
+	81,  // 53: communication.SummaryAreaState.lsa_entries:type_name -> communication.SummaryAreaState.LsaEntriesEntry
+	82,  // 54: communication.OSPFAsbrSummaryData.asbr_summary_states:type_name -> communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry
+	83,  // 55: communication.OSPFExternalData.as_external_link_states:type_name -> communication.OSPFExternalData.AsExternalLinkStatesEntry
+	84,  // 56: communication.OSPFNssaExternalData.nssa_external_link_states:type_name -> communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
+	85,  // 57: communication.NssaExternalArea.data:type_name -> communication.NssaExternalArea.DataEntry
+	86,  // 58: communication.OSPFDatabase.areas:type_name -> communication.OSPFDatabase.AreasEntry
+	44,  // 59: communication.OSPFDatabase.as_external_link_states:type_name -> communication.ASExternalLSA
+	40,  // 60: communication.OSPFDatabaseArea.router_link_states:type_name -> communication.RouterDataLSA
+	41,  // 61: communication.OSPFDatabaseArea.network_link_states:type_name -> communication.NetworkDataLSA
+	42,  // 62: communication.OSPFDatabaseArea.summary_link_states:type_name -> communication.SummaryDataLSA
+	43,  // 63: communication.OSPFDatabaseArea.asbr_summary_link_states:type_name -> communication.ASBRSummaryLSA
+	39,  // 64: communication.RouterDataLSA.base:type_name -> communication.BaseLSA
+	39,  // 65: communication.NetworkDataLSA.base:type_name -> communication.BaseLSA
+	39,  // 66: communication.SummaryDataLSA.base:type_name -> communication.BaseLSA
+	39,  // 67: communication.ASBRSummaryLSA.base:type_name -> communication.BaseLSA
+	39,  // 68: communication.ASExternalLSA.base:type_name -> communication.BaseLSA
+	46,  // 69: communication.OSPFDuplicates.as_external_link_states:type_name -> communication.ASExternalLinkState
+	87,  // 70: communication.OSPFNeighbors.neighbors:type_name -> communication.OSPFNeighbors.NeighborsEntry
+	49,  // 71: communication.NeighborList.neighbors:type_name -> communication.Neighbor
+	88,  // 72: communication.InterfaceList.interfaces:type_name -> communication.InterfaceList.InterfacesEntry
+	52,  // 73: communication.SingleInterface.ip_addresses:type_name -> communication.IpAddress
+	53,  // 74: communication.SingleInterface.evpn_mh:type_name -> communication.EvpnMh
+	89,  // 75: communication.RoutingInformationBase.routes:type_name -> communication.RoutingInformationBase.RoutesEntry
+	56,  // 76: communication.RouteEntry.routes:type_name -> communication.Route
+	57,  // 77: communication.Route.nexthops:type_name -> communication.Nexthop
+	61,  // 78: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
+	62,  // 79: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
+	63,  // 80: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
+	64,  // 81: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
+	93,  // 82: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	60,  // 83: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
+	93,  // 84: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	60,  // 85: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
+	93,  // 86: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
+	60,  // 87: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
+	93,  // 88: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
+	60,  // 89: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
+	90,  // 90: communication.OspfRouterInfo.router_link_states:type_name -> communication.OspfRouterInfo.RouterLinkStatesEntry
+	91,  // 91: communication.AreaLinkStates.router_lsas:type_name -> communication.AreaLinkStates.RouterLsasEntry
+	92,  // 92: communication.RouterLSA.router_links:type_name -> communication.RouterLSA.RouterLinksEntry
+	3,   // 93: communication.Message.ParamsEntry.value:type_name -> communication.ResponseValue
+	3,   // 94: communication.Command.ParamsEntry.value:type_name -> communication.ResponseValue
+	10,  // 95: communication.StaticFRRConfiguration.RouteMapEntry.value:type_name -> communication.RouteMap
+	11,  // 96: communication.StaticFRRConfiguration.AccessListEntry.value:type_name -> communication.AccessList
+	21,  // 97: communication.OSPFRouterData.RouterStatesEntry.value:type_name -> communication.OSPFRouterArea
+	22,  // 98: communication.OSPFRouterArea.LsaEntriesEntry.value:type_name -> communication.OSPFRouterLSA
+	23,  // 99: communication.OSPFRouterLSA.RouterLinksEntry.value:type_name -> communication.OSPFRouterLSALink
+	25,  // 100: communication.OSPFNetworkData.NetStatesEntry.value:type_name -> communication.NetAreaState
+	26,  // 101: communication.NetAreaState.LsaEntriesEntry.value:type_name -> communication.NetworkLSA
+	27,  // 102: communication.NetworkLSA.AttachedRoutersEntry.value:type_name -> communication.AttachedRouter
+	25,  // 103: communication.OSPFSummaryData.NetStatesEntry.value:type_name -> communication.NetAreaState
+	29,  // 104: communication.OSPFSummaryData.SummaryStatesEntry.value:type_name -> communication.SummaryAreaState
+	30,  // 105: communication.SummaryAreaState.LsaEntriesEntry.value:type_name -> communication.SummaryLSA
+	29,  // 106: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry.value:type_name -> communication.SummaryAreaState
+	33,  // 107: communication.OSPFExternalData.AsExternalLinkStatesEntry.value:type_name -> communication.ExternalLSA
+	35,  // 108: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
+	36,  // 109: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
+	38,  // 110: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
+	48,  // 111: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
+	51,  // 112: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
+	55,  // 113: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry
+	66,  // 114: communication.OspfRouterInfo.RouterLinkStatesEntry.value:type_name -> communication.AreaLinkStates
+	67,  // 115: communication.AreaLinkStates.RouterLsasEntry.value:type_name -> communication.RouterLSA
+	68,  // 116: communication.RouterLSA.RouterLinksEntry.value:type_name -> communication.RouterLink
+	117, // [117:117] is the sub-list for method output_type
+	117, // [117:117] is the sub-list for method input_type
+	117, // [117:117] is the sub-list for extension type_name
+	117, // [117:117] is the sub-list for extension extendee
+	0,   // [0:117] is the sub-list for field type_name
 }
 
 func init() { file_protocol_proto_init() }

@@ -13,24 +13,29 @@ func TestParseStaticFRRConfig(t *testing.T) {
 	configPathR101 := "./mock-files/r101.conf"
 	configPathR103 := "./mock-files/r103.conf"
 	configPathR112 := "./mock-files/r112.conf"
+	configPathR203 := "./mock-files/r203.conf"
 	configR101, err := aggregator.ParseStaticFRRConfig(configPathR101)
 	if err != nil {
-		t.Fatalf("ParseStaticFRRConfig failed: %v", err)
+		t.Fatalf("ParseStaticFRRConfig configR101 failed: %v", err)
 	}
 	configR103, err := aggregator.ParseStaticFRRConfig(configPathR103)
 	if err != nil {
-		t.Fatalf("ParseStaticFRRConfig failed: %v", err)
+		t.Fatalf("ParseStaticFRRConfig configR103 failed: %v", err)
 	}
 	configR112, err := aggregator.ParseStaticFRRConfig(configPathR112)
 	if err != nil {
-		t.Fatalf("ParseStaticFRRConfig failed: %v", err)
+		t.Fatalf("ParseStaticFRRConfig configR112 failed: %v", err)
+	}
+	configR203, err := aggregator.ParseStaticFRRConfig(configPathR203)
+	if err != nil {
+		t.Fatalf("ParseStaticFRRConfig configR203 failed: %v", err)
 	}
 
 	t.Run("Metadata", func(t *testing.T) {
 		testMetadataR101(t, configR101, configR103, configR112)
 	})
 	t.Run("Interfaces", func(t *testing.T) {
-		testInterfaces(t, configR101, configR103, configR112)
+		testInterfaces(t, configR101, configR103, configR112, configR203)
 	})
 	t.Run("StaticRoutes", func(t *testing.T) {
 		testStaticRoutes(t, configR101, configR103, configR112)
@@ -75,6 +80,7 @@ func testInterfaces(
 	configR101 *frrProto.StaticFRRConfiguration,
 	configR103 *frrProto.StaticFRRConfiguration,
 	configR112 *frrProto.StaticFRRConfiguration,
+	configR203 *frrProto.StaticFRRConfiguration,
 ) {
 	// ========== r101 ==========
 	if len(configR101.Interfaces) != 12 {
@@ -323,6 +329,26 @@ func testInterfaces(
 	}
 	if r112Eth1.InterfaceIpPrefixes[0].Passive {
 		t.Error("Expected r112Eth1 to be non-passive")
+	}
+
+	// ========== r203 ==========
+	r203Eth1 := configR203.Interfaces[0]
+	if r203Eth1.Name != "eth1" {
+		t.Errorf("Expected first interface name to be 'eth1', got '%s'", r203Eth1.Name)
+	}
+	if r203Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "10.20.13.3" {
+		t.Errorf("Expected r203Eth1 IP1 to be 10.20.13.3, got '%s'", r203Eth1.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
+	}
+	if r203Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 32 {
+		t.Errorf("Expected r203Eth1 prefix length to be 32, got %d", r203Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
+	}
+	if r203Eth1.InterfaceIpPrefixes[0].PeerIpPrefix.IpAddress != "10.20.13.1" {
+		t.Errorf("Expected r203Eth1 peer IP to be 10.20.13.1, got '%s'",
+			r203Eth1.InterfaceIpPrefixes[0].PeerIpPrefix.IpAddress)
+	}
+	if r203Eth1.InterfaceIpPrefixes[0].PeerIpPrefix.PrefixLength != 32 {
+		t.Errorf("Expected r203Eth1 peer IP prefix length to be 32, got %d",
+			r203Eth1.InterfaceIpPrefixes[0].PeerIpPrefix.PrefixLength)
 	}
 }
 

@@ -127,6 +127,7 @@ message AccessListItem {
 message InterfaceIPPrefix {
   IPPrefix ip_prefix = 1;
   bool passive = 2;
+  IPPrefix peer_ip_prefix = 3;
 }
 
 message IPPrefix {

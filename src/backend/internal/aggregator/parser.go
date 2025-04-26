@@ -709,19 +709,42 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 	parts := strings.Fields(line)
 	switch {
 	case strings.HasPrefix(line, "ip address "):
-		ip, ipNet, err := net.ParseCIDR(parts[2])
-		if err != nil || ipNet == nil {
-			log.Printf("bad CIDR %q: %v", parts[2], err)
+		if len(parts) == 3 {
+			ip, ipNet, err := net.ParseCIDR(parts[2])
+			if err != nil || ipNet == nil {
+				log.Printf("bad CIDR %q: %v", parts[2], err)
+				return true
+			}
+			prefixLength, _ := ipNet.Mask.Size()
+			currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
+				IpPrefix: &frrProto.IPPrefix{
+					IpAddress:    ip.String(),
+					PrefixLength: uint32(prefixLength),
+				},
+				Passive: false,
+			})
+			return true
+		} else if parts[3] == "peer" {
+			ip := parts[2]
+			peerIp, ipNet, err := net.ParseCIDR(parts[4])
+			if err != nil || ipNet == nil {
+				log.Printf("bad CIDR %q: %v", parts[2], err)
+				return true
+			}
+			peerIpPrefixLength, _ := ipNet.Mask.Size()
+			currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
+				IpPrefix: &frrProto.IPPrefix{
+					IpAddress:    ip,
+					PrefixLength: 32,
+				},
+				Passive: false,
+				PeerIpPrefix: &frrProto.IPPrefix{
+					IpAddress:    peerIp.String(),
+					PrefixLength: uint32(peerIpPrefixLength),
+				},
+			})
 			return true
 		}
-		prefixLength, _ := ipNet.Mask.Size()
-		currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
-			IpPrefix: &frrProto.IPPrefix{
-				IpAddress:    ip.String(),
-				PrefixLength: uint32(prefixLength),
-			},
-			Passive: false,
-		})
 		return true
 	case strings.HasPrefix(line, "ip ospf area "):
 		currentInterfacePointer.Area = strings.Fields(line)[3]
@@ -740,7 +763,6 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 				}
 			}
 		}
-		// currentInterfacePointer.Passive = true
 		return true
 	case line == "exit":
 		return true
