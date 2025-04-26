@@ -55,6 +55,7 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 			// Determine link type based on interface properties
 			if ipPrefix.Passive {
 				adv.LinkType = "stub network"
+				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
 			} else if strings.Contains(iface.Name, "lo") {
 				// Loopback interfaces
 				adv.LinkType = "stub network"
@@ -318,4 +319,16 @@ func convertStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) 
 	}
 
 	return result
+}
+
+func zeroLastOctetString(ipAddress string) string {
+	parts := strings.Split(ipAddress, ".")
+
+	//if len(parts) != 4 {
+	//	return "", fmt.Errorf("invalid IP address format: %s", ipAddress)
+	//}
+
+	parts[3] = "0"
+
+	return strings.Join(parts, ".")
 }

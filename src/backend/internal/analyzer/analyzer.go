@@ -72,6 +72,11 @@ type RedistributionList struct {
 	BGPRoutes    []RedistributedRoute `json:"bgp_routes,omitempty"`
 }
 
+// TODO: Currently there is no system checking if a host is ABR, ASBR or just a normal router.
+// TODO: Add another router to core that would be a normal internal router without being ABR or ASBR, just a simple internal router.
+// TODO: Properly check if the different network types per interface are correctly checked
+// TODO: Logic for detecting anomalies is still very naive and early stage. This needs to be cross checked with theory.
+// TODO: The current approach is to first analyze the different states as in should state according to configuration and is state according to what's in the LSDB. Is that enouh?
 func (c *Analyzer) AnomalyAnalysis() {
 
 	// fmt.Println("#################### File Configuration Access List Enhanced ####################") accessListEnhanced := getStaticRedistributionList(c.metrics.StaticFrrConfiguration)
@@ -88,6 +93,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	//
 	// static file parsing
 	// fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
+	//fmt.Println(c.metrics.StaticFrrConfiguration)
 	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 	// if predictedRouterLSDB != nil {
 	// for _, area := range predictedRouterLSDB.Areas {
@@ -100,6 +106,10 @@ func (c *Analyzer) AnomalyAnalysis() {
 	//
 	// fmt.Println("#################### File Configuration External LSDB Prediction ####################")
 	predictedExternalLSDB := convertStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+	// fmt.Println("----------------------------------------")
+	// fmt.Println(predictedExternalLSDB)
+	// fmt.Println("----------------------------------------")
+
 	// if predictedExternalLSDB != nil {
 	// for _, area := range predictedExternalLSDB.Areas {
 	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
