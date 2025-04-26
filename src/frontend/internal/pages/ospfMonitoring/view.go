@@ -3,6 +3,7 @@ package ospfMonitoring
 import (
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"strconv"
 
 	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
@@ -174,18 +175,19 @@ func (m *Model) renderExternalMonitorTab() string {
 	boxWidthForOneH2 := boxWidthForOneH1 - 4 // -4 (for margin) -2 (for border)
 
 	var externalLsaBlock []string
-	// var nssaExternalLsaBlock []string
+	var nssaExternalLsaBlock []string
 
 	externalLSASelf, _ := getOspfExternalData()
-	// nssaExternalDataSelf, _ := getOspfNssaExternalData()
+	nssaExternalDataSelf, _ := getOspfNssaExternalData()
 
 	var externalTableData [][]string
 	var externalTableDataExpanded [][]string
 	for externalLinkState, linkStateData := range externalLSASelf.AsExternalLinkStates {
 		externalTableData = append(externalTableData, []string{
 			linkStateData.LinkStateId,
-			string(linkStateData.NetworkMask),
+			"/" + strconv.Itoa(int(linkStateData.NetworkMask)),
 			linkStateData.MetricType,
+			linkStateData.ForwardAddress,
 		})
 
 		externalTableDataExpanded = append(externalTableDataExpanded, []string{
@@ -204,7 +206,7 @@ func (m *Model) renderExternalMonitorTab() string {
 		BorderRight(true).
 		BorderHeader(true).
 		BorderColumn(true).
-		Headers("Link State ID", "CIDR", "Metric Type").
+		Headers("Link State ID", "CIDR", "Metric Type", "Forwarding Address").
 		StyleFunc(func(row, col int) lipgloss.Style {
 			switch {
 			case row == ltable.HeaderRow:
@@ -231,39 +233,86 @@ func (m *Model) renderExternalMonitorTab() string {
 		lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForOneH2).Render(externalTable.String()),
 		styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
 	)
-	var completeExternalBox string
-	if len(externalLSASelf.AsExternalLinkStates) != 0 {
-		completeExternalBox = lipgloss.JoinVertical(lipgloss.Left, externalHeader, externalDataBox)
 
-	} else {
-		completeExternalBox = lipgloss.JoinVertical(lipgloss.Left,
-			externalHeader,
-			"no self originating external advertisements",
-		)
-	}
+	var completeExternalBox string
+	completeExternalBox = lipgloss.JoinVertical(lipgloss.Left, externalHeader, externalDataBox)
 
 	externalLsaBlock = append(externalLsaBlock, completeExternalBox+"\n\n")
 
-	//for area, areaData := range nssaExternalDataSelf.NssaExternalLinkStates {
-	//	var nssaExternalTableData [][]string
-	//	// var nssaExternalTableDataExpanded [][]string
-	//
-	//	for _, lsaData := range areaData.Data {
-	//		nssaExternalTableData = append(nssaExternalTableData, []string{
-	//			lsaData.LinkStateId,
-	//			string(lsaData.NetworkMask),
-	//			lsaData.MetricType,
-	//			lsaData.NssaForwardAddress,
-	//		})
-	//	}
-	//
-	//}
+	for area, areaData := range nssaExternalDataSelf.NssaExternalLinkStates {
+		var nssaExternalTableData [][]string
+		// var nssaExternalTableDataExpanded [][]string
+
+		for _, lsaData := range areaData.Data {
+			nssaExternalTableData = append(nssaExternalTableData, []string{
+				lsaData.LinkStateId,
+				"/" + strconv.Itoa(int(lsaData.NetworkMask)),
+				lsaData.MetricType,
+				lsaData.NssaForwardAddress,
+			})
+		}
+		rowsNssaExternal := len(nssaExternalTableData)
+		nssaExternalTable := ltable.New().
+			Border(lipgloss.NormalBorder()).
+			BorderTop(true).
+			BorderBottom(true).
+			BorderLeft(true).
+			BorderRight(true).
+			BorderHeader(true).
+			BorderColumn(true).
+			Headers("Link State ID", "CIDR", "Metric Type", "Forwarding Address").
+			StyleFunc(func(row, col int) lipgloss.Style {
+				switch {
+				case row == ltable.HeaderRow:
+					return styles.HeaderStyle
+				case row == rowsNssaExternal-1:
+					return styles.NormalCellStyle.BorderBottom(true)
+				default:
+					return styles.NormalCellStyle
+				}
+			})
+
+		for _, r := range nssaExternalTableData {
+			nssaExternalTable = nssaExternalTable.Row(r...)
+		}
+
+		nssaExternalHeader := styles.ContentTitleH1Style.
+			Width(boxWidthForOneH1).
+			Margin(0, 0, 1, 0).
+			Padding(1, 0, 0, 0).
+			Render("NSSA External LSAs (Type 7) in Area " + area)
+
+		nssaExternalDataBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render("Self Originating"),
+			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForOneH2).Render(nssaExternalTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
+		)
+		// var completeNssaExternalBox string
+		completeNssaExternalBox := lipgloss.JoinVertical(lipgloss.Left, nssaExternalHeader, nssaExternalDataBox)
+
+		nssaExternalLsaBlock = append(nssaExternalLsaBlock, completeNssaExternalBox+"\n\n")
+	}
 
 	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
 	m.viewport.Width = boxWidthForOneH1 + 2
 	m.viewport.Height = contentMaxHeight
 
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, externalLsaBlock...))
+	var allLsaBlocks []string
+	if externalLSASelf.AsExternalLinkStates != nil {
+		if len(nssaExternalDataSelf.NssaExternalLinkStates) == 0 {
+			allLsaBlocks = append(externalLsaBlock, nssaExternalLsaBlock...)
+		} else {
+			allLsaBlocks = externalLsaBlock
+		}
+	} else {
+		allLsaBlocks = allLsaBlocks[:0]
+		allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
+			externalHeader,
+			"no self originating external advertisements",
+		))
+	}
+
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, allLsaBlocks...))
 
 	return m.viewport.View()
 }
