@@ -38,21 +38,72 @@ func (m *Model) View() string {
 	return m.renderAdvertisementTab()
 }
 
+//func (m *Model) renderLsdbMonitorTab() string {
+//	boxWidthForOneH1 := m.windowSize.Width - 10       // - 6 (padding+margin content) - 2 (for each border)
+//	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
+//
+//	var lsdbBlocks []string
+//
+//	lsdb, _ := getLSDB()
+//
+//	var databaseBlocks []string
+//	for area, lsaTypes := range lsdb.Areas {
+//		var routerLinkStateData [][]string
+//		var networkLinkStateData [][]string
+//		var summaryLinkStateData [][]string
+//		var asbrSummaryLinkStateData [][]string
+//		for _, routerLinkState := range lsaTypes.RouterLinkStates {
+//			routerLinkStateData = append(routerLinkStateData, []string{
+//				routerLinkState.Base.AdvertisedRouter,
+//				strconv.Itoa(int(routerLinkState.Base.LsaAge)),
+//				strconv.Itoa(int(routerLinkState.NumOfRouterLinks)),
+//			})
+//		}
+//		for _, networkLinkState := range lsaTypes.NetworkLinkStates {
+//			networkLinkStateData = append(networkLinkStateData, []string{
+//				networkLinkState.Base.LsId,
+//				networkLinkState.Base.AdvertisedRouter,
+//				strconv.Itoa(int(networkLinkState.Base.LsaAge)),
+//			})
+//		}
+//		for _, summarLinkState := range lsaTypes.SummaryLinkStates {
+//			summaryLinkStateData = append(summaryLinkStateData, []string{
+//				summarLinkState.SummaryAddress,
+//				summarLinkState.Base.AdvertisedRouter,
+//				strconv.Itoa(int(summarLinkState.Base.LsaAge)),
+//			})
+//		}
+//		for _, asbrSummaryLinkState := range lsaTypes.AsbrSummaryLinkStates {
+//			asbrSummaryLinkStateData = append(asbrSummaryLinkStateData, []string{
+//				asbrSummaryLinkState.Base.LsId,
+//				asbrSummaryLinkState.Base.AdvertisedRouter,
+//				asbrSummaryLinkState.Base.LsaAge
+//			})
+//		}
+//
+//		areaHeader := styles.ContentTitleH1Style.
+//			Width(boxWidthForOneH1).
+//			Margin(0, 0, 1, 0).
+//			Padding(1, 0, 0, 0).
+//			Render(fmt.Sprintf("Area %s", area))
+//	}
+//	return "nothing"
+//}
+
 func (m *Model) renderRouterMonitorTab() string {
-	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
-	if boxWidthForTwoH2 < 20 {
-		boxWidthForTwoH2 = 20 // Minimum width to ensure readability
-	}
 	boxWidthForOneH1 := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
 	if boxWidthForOneH1 < 20 {
 		boxWidthForOneH1 = 20 // Minimum width to ensure readability
 	}
-
-	var routerLSABlocks []string
+	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
+	if boxWidthForTwoH2 < 20 {
+		boxWidthForTwoH2 = 20 // Minimum width to ensure readability
+	}
 
 	ospfNeighbors := getOspfNeighborInterfaces()
 	routerLSASelf, _ := getOspfRouterData()
 
+	var routerLSABlocks []string
 	for area, areaData := range routerLSASelf.RouterStates {
 		var transitData [][]string
 		var stubData [][]string
@@ -477,6 +528,19 @@ func (m *Model) renderRunningConfigTab() string {
 	runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
 
 	return runningConfigBox
+}
+
+// ============================== //
+// HELPERS: BACKEND CALLS         //
+// ============================== //
+
+func getLSDB() (*pkg.OSPFDatabase, error) {
+	response, err := backend.SendMessage("ospf", "database", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfDatabase(), nil
 }
 
 func getOspfRouterData() (*pkg.OSPFRouterData, error) {
