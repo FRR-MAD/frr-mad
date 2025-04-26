@@ -47,18 +47,47 @@ type advertisment struct {
 }
 
 type ACLEntry struct {
-	IPAddress    string
-	PrefixLength int
-	IsPermit     bool
-	Any          bool
+	IPAddress    string `json:"ip_address,omitempty"`
+	PrefixLength int    `json:"prefix_length,omitempty"`
+	IsPermit     bool   `json:"is_permit"`
+	Any          bool   `json:"any,omitempty"`
+	Sequence     int    `json:"sequence"`
 }
 
 type accessList struct {
-	accessListName string
-	aclEntry       []ACLEntry
+	accessListName string     `json:"access_list_name"`
+	aclEntry       []ACLEntry `json:"acl_entries"`
+}
+
+type RedistributedRoute struct {
+	IPPrefix     string `json:"ip_prefix"`
+	PrefixLength int    `json:"prefix_length,omitempty"`
+	NextHop      string `json:"next_hop,omitempty"`
+	RouteMapName string `json:"route_map_name,omitempty"`
+	Metric       string `json:"metric,omitempty"`
+	MetricType   string `json:"metric_type,omitempty"`
+}
+
+type RedistributionList struct {
+	StaticRoutes []RedistributedRoute `json:"static_routes,omitempty"`
+	BGPRoutes    []RedistributedRoute `json:"bgp_routes,omitempty"`
 }
 
 func (c *Analyzer) AnomalyAnalysis() {
+
+	fmt.Println("#################### File Configuration Access List Enhanced ####################")
+	accessListEnhanced := getStaticRedistributionList(c.metrics.StaticFrrConfiguration)
+	fmt.Printf("\n%+v\n", accessListEnhanced)
+	fmt.Println()
+	fmt.Println()
+
+	// access list
+	fmt.Println("#################### File Configuration Access List ####################")
+	accessList := getAccessLists(c.metrics.StaticFrrConfiguration)
+	fmt.Printf("\n%+v\n", accessList)
+	fmt.Println()
+	fmt.Println()
+
 	// static file parsing
 	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
 	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
@@ -178,35 +207,44 @@ func maskToPrefixLength(mask string) string {
 }
 
 func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessList {
-	// Create result map: access list name -> AccessList struct
 	result := make(map[string]accessList)
 
-	// Iterate through all access lists in the configuration
+	if config == nil || config.AccessList == nil {
+		return result
+	}
+
 	for name, aclConfig := range config.AccessList {
+		if aclConfig == nil {
+			continue
+		}
+
 		entries := []ACLEntry{}
 
-		// Process each access list item
 		for _, item := range aclConfig.AccessListItems {
-			// Create a new ACL entry
-			entry := ACLEntry{
-				IsPermit: item.AccessControl == "permit",
+			if item == nil {
+				continue
 			}
 
-			// Check which type of destination we have
+			entry := ACLEntry{
+				IsPermit: item.AccessControl == "permit",
+				Sequence: int(item.Sequence),
+			}
+
 			switch dest := item.Destination.(type) {
 			case *frrProto.AccessListItem_IpPrefix:
-				entry.IPAddress = dest.IpPrefix.IpAddress
-				entry.PrefixLength = int(dest.IpPrefix.PrefixLength)
+				if dest != nil && dest.IpPrefix != nil {
+					entry.IPAddress = dest.IpPrefix.IpAddress
+					entry.PrefixLength = int(dest.IpPrefix.PrefixLength)
+				}
 			case *frrProto.AccessListItem_Any:
 				entry.IPAddress = "any"
-				//dest.IpPrefix.IpAddress
 				entry.Any = true
+				entry.PrefixLength = 0
 			}
 
 			entries = append(entries, entry)
 		}
 
-		// Create AccessList struct and add to result map
 		result[name] = accessList{
 			accessListName: name,
 			aclEntry:       entries,
@@ -252,4 +290,137 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 		}
 	}
 	//fmt.Println(advertismentList)
+}
+
+func getStaticRedistributionList(config *frrProto.StaticFRRConfiguration) RedistributionList {
+	result := RedistributionList{
+		StaticRoutes: []RedistributedRoute{},
+		BGPRoutes:    []RedistributedRoute{},
+	}
+
+	if config == nil || config.StaticRoutes == nil || config.OspfConfig == nil {
+		return result
+	}
+
+	// Find static redistribution configuration in OSPF
+	var staticRedistConfig *frrProto.Redistribution
+	for _, redistribution := range config.OspfConfig.Redistribution {
+		if redistribution != nil && redistribution.Type == "static" {
+			staticRedistConfig = redistribution
+			break
+		}
+	}
+
+	// If no static redistribution is configured, return empty list
+	if staticRedistConfig == nil {
+		return result
+	}
+
+	// If no route-map is specified, all static routes will be redistributed
+	if staticRedistConfig.RouteMap == "" {
+		for _, staticRoute := range config.StaticRoutes {
+			if staticRoute != nil && staticRoute.IpPrefix != nil {
+				result.StaticRoutes = append(result.StaticRoutes, RedistributedRoute{
+					IPPrefix:     staticRoute.IpPrefix.IpAddress,
+					PrefixLength: int(staticRoute.IpPrefix.PrefixLength),
+					NextHop:      staticRoute.NextHop,
+					Metric:       staticRedistConfig.Metric,
+					MetricType:   "E1", // Default assuming metric-type 1
+				})
+			}
+		}
+		return result
+	}
+
+	// Get the route-map specified in the redistribution
+	routeMapName := staticRedistConfig.RouteMap
+	routeMap, exists := config.RouteMap[routeMapName]
+	if !exists || routeMap == nil {
+		return result
+	}
+
+	// Check if the route-map permits and what access list it uses
+	if !routeMap.Permit {
+		return result // If the route-map is deny, no routes will be redistributed
+	}
+
+	accessListName := routeMap.AccessList
+	accessList, exists := config.AccessList[accessListName]
+	if !exists || accessList == nil {
+		return result
+	}
+
+	// Filter static routes based on the access list
+	for _, staticRoute := range config.StaticRoutes {
+		if staticRoute == nil || staticRoute.IpPrefix == nil {
+			continue
+		}
+
+		// Check if static route matches any permit rule in the access list
+		isPermitted := false
+		for _, item := range accessList.AccessListItems {
+			if item == nil {
+				continue
+			}
+
+			if item.AccessControl != "permit" {
+				continue
+			}
+
+			// Check for IP prefix match or "any" match
+			switch dest := item.Destination.(type) {
+			case *frrProto.AccessListItem_IpPrefix:
+				if dest != nil && dest.IpPrefix != nil {
+					// Check if the static route prefix is contained within the access list prefix
+					if isSubnetOf(staticRoute.IpPrefix, dest.IpPrefix) {
+						isPermitted = true
+						break
+					}
+				}
+			case *frrProto.AccessListItem_Any:
+				isPermitted = true
+				break
+			}
+		}
+
+		if isPermitted {
+			result.StaticRoutes = append(result.StaticRoutes, RedistributedRoute{
+				IPPrefix:     staticRoute.IpPrefix.IpAddress,
+				PrefixLength: int(staticRoute.IpPrefix.PrefixLength),
+				NextHop:      staticRoute.NextHop,
+				RouteMapName: routeMapName,
+				Metric:       staticRedistConfig.Metric,
+				MetricType:   "E1", // Assuming metric-type 1 as default
+			})
+		}
+	}
+
+	// Find BGP redistribution configuration in OSPF
+	var bgpRedistConfig *frrProto.Redistribution
+	for _, redistribution := range config.OspfConfig.Redistribution {
+		if redistribution != nil && redistribution.Type == "bgp" {
+			bgpRedistConfig = redistribution
+			break
+		}
+	}
+
+	// For demonstration purposes, we're just returning a placeholder for BGP routes
+	// since we don't have BGP route information in the config structure
+	if bgpRedistConfig != nil {
+		result.BGPRoutes = append(result.BGPRoutes, RedistributedRoute{
+			RouteMapName: bgpRedistConfig.RouteMap,
+			Metric:       bgpRedistConfig.Metric,
+			MetricType:   "E1", // Assuming metric-type 1 as default
+		})
+	}
+
+	return result
+}
+
+// Helper function to check if one prefix is a subnet of another
+func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
+	// This is a simplified implementation. In a real-world scenario,
+	// you would need to convert IP addresses to binary and compare them properly.
+	// For now, we'll just check if they have the same IP address and subnet contains network.
+	return subnet.IpAddress == network.IpAddress && subnet.PrefixLength >= network.PrefixLength
 }
