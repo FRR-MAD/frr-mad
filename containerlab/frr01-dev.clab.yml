@@ -193,10 +193,39 @@ topology:
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
 
+    r203:
+      kind: linux
+      image: frr-854-dev
+      binds:
+        - r203/daemons:/etc/frr/daemons
+        - r203/frr.conf:/etc/frr/frr.conf
+        - ../src:/app/src
+        - ../local:/app/local
+        - ../protobufSource:/app/protobufSource
+
+    r204:
+      kind: linux
+      image: frr-854-dev
+      binds:
+        - r204/daemons:/etc/frr/daemons
+        - r204/frr.conf:/etc/frr/frr.conf
+        - ../src:/app/src
+        - ../local:/app/local
+        - ../protobufSource:/app/protobufSource
+
+    sw101:
+      kind: bridge
+    sw111:
+      kind: bridge
 
     pc101:
       kind: linux
       image: praqma/network-multitool:latest
+    
+    pc102:
+      kind: linux
+      image: praqma/network-multitool:latest
+
 
     cpc104:
       kind: linux
@@ -225,6 +254,11 @@ topology:
     pc111:
       kind: linux
       image: praqma/network-multitool:latest
+    
+    pc112:
+      kind: linux
+      image: praqma/network-multitool:latest
+
 
     pc121:
       kind: linux
@@ -239,6 +273,14 @@ topology:
       image: praqma/network-multitool:latest
 
     pc201:
+      kind: linux
+      image: praqma/network-multitool:latest
+
+    pc203:
+      kind: linux
+      image: praqma/network-multitool:latest
+
+    pc204:
       kind: linux
       image: praqma/network-multitool:latest
 
@@ -260,7 +302,9 @@ topology:
 
   links:
     - endpoints: ["r101:eth1", "r201:eth1"]
-    - endpoints: ["r101:eth2", "r102:eth1"]
+    - endpoints: ["r101:eth2", "sw101:eth1"]
+    - endpoints: ["r102:eth1", "sw101:eth2"]
+    - endpoints: ["pc102:eth1", "sw101:eth3"]
     - endpoints: ["r101:eth3", "r103:eth1"]
     - endpoints: ["r101:eth4", "pc101:eth1"]
     - endpoints: ["r101:eth5", "r191:eth1"]
@@ -279,7 +323,10 @@ topology:
     - endpoints: ["cr108:eth2", "cpc108:eth1"]
     - endpoints: ["cr109:eth2", "cpc109:eth1"]
     - endpoints: ["r111:eth2", "pc111:eth1"]
-    - endpoints: ["r111:eth3", "r112:eth1"]
+    # even though it’s a different switch, you must use other interfaces than on sw101.
+    - endpoints: ["r111:eth3", "sw111:eth11"]
+    - endpoints: ["r112:eth1", "sw111:eth12"]
+    - endpoints: ["pc112:eth1", "sw111:eth13"]
     - endpoints: ["r112:eth2", "r301:eth1"]
     - endpoints: ["r103:eth3", "r121:eth1"]
     - endpoints: ["r121:eth3", "pc121:eth1"]
@@ -287,8 +334,14 @@ topology:
     - endpoints: ["r122:eth2", "r131:eth1"]
     - endpoints: ["r131:eth2", "pc131:eth1"]
     - endpoints: ["r191:eth2", "pc191:eth1"]
+    # AS65002
     - endpoints: ["r201:eth2", "r202:eth1"]
+    - endpoints: ["r201:eth3", "r203:eth1"]
+    - endpoints: ["r201:eth4", "r204:eth1"]
     - endpoints: ["r202:eth2", "pc201:eth1"]
+    - endpoints: ["r203:eth2", "pc203:eth1"]
+    - endpoints: ["r204:eth2", "pc204:eth1"]
+    # AS65003
     - endpoints: ["r301:eth2", "r302:eth1"]
     - endpoints: ["r301:eth3", "r391:eth1"]
     - endpoints: ["r301:eth4", "pc392:eth1"]
