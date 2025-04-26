@@ -12,6 +12,7 @@ const (
 	LevelNormal = iota
 	LevelError
 	LevelDebug
+	LevelNone // Highest number (3) but should prevent all logging
 )
 
 // Logger wraps slog.Logger with additional functionality
@@ -101,6 +102,9 @@ func (l *Logger) SetDebugLevel(level int) {
 		slogLevel = slog.LevelWarn
 	case LevelDebug:
 		slogLevel = slog.LevelDebug
+	case LevelNone:
+		// Use a level that's higher than any possible log level to suppress all logging
+		slogLevel = slog.LevelError + 1000
 	default:
 		slogLevel = slog.LevelInfo
 	}
@@ -133,21 +137,30 @@ func (l *Logger) SetDebugMode() {
 	l.SetDebugLevel(LevelDebug)
 }
 
+// SetNoneMode sets the logger to none mode (no logging)
+func (l *Logger) SetNoneMode() {
+	l.SetDebugLevel(LevelNone)
+}
+
 // Info logs an info message
 func (l *Logger) Info(msg string) error {
-	l.logger.Info(msg)
+	if l.level != LevelNone {
+		l.logger.Info(msg)
+	}
 	return nil
 }
 
 // Error logs an error message
 func (l *Logger) Error(msg string) error {
-	l.logger.Error(msg)
+	if l.level != LevelNone {
+		l.logger.Error(msg)
+	}
 	return nil
 }
 
 // Debug logs a debug message if the level is high enough
 func (l *Logger) Debug(msg string) error {
-	if l.level >= LevelDebug {
+	if l.level >= LevelDebug && l.level != LevelNone {
 		l.logger.Debug(msg)
 	}
 	return nil
@@ -155,7 +168,7 @@ func (l *Logger) Debug(msg string) error {
 
 // Warning logs a warning message if the level is high enough
 func (l *Logger) Warning(msg string) error {
-	if l.level >= LevelError {
+	if l.level >= LevelError && l.level != LevelNone {
 		l.logger.Warn(msg)
 	}
 	return nil
