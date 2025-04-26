@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"fmt"
-	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
@@ -75,92 +74,97 @@ type RedistributionList struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
-	fmt.Println("#################### File Configuration Access List Enhanced ####################")
-	accessListEnhanced := getStaticRedistributionList(c.metrics.StaticFrrConfiguration)
-	fmt.Printf("\n%+v\n", accessListEnhanced)
-	fmt.Println()
-	fmt.Println()
-
+	// fmt.Println("#################### File Configuration Access List Enhanced ####################") accessListEnhanced := getStaticRedistributionList(c.metrics.StaticFrrConfiguration)
+	// fmt.Printf("\n%+v\n", accessListEnhanced)
+	// fmt.Println()
+	// fmt.Println()
+	//
 	// access list
-	fmt.Println("#################### File Configuration Access List ####################")
+	// fmt.Println("#################### File Configuration Access List ####################")
 	accessList := getAccessLists(c.metrics.StaticFrrConfiguration)
-	fmt.Printf("\n%+v\n", accessList)
-	fmt.Println()
-	fmt.Println()
-
+	// fmt.Printf("\n%+v\n", accessList)
+	// fmt.Println()
+	// fmt.Println()
+	//
 	// static file parsing
-	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
+	// fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
 	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	if predictedRouterLSDB != nil {
-		for _, area := range predictedRouterLSDB.Areas {
-			fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-		}
-	}
-	fmt.Printf("\n%+v\n", predictedRouterLSDB)
-	fmt.Println()
-	fmt.Println()
-
-	fmt.Println("#################### File Configuration External LSDB Prediction ####################")
+	// if predictedRouterLSDB != nil {
+	// for _, area := range predictedRouterLSDB.Areas {
+	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	// }
+	// }
+	// fmt.Printf("\n%+v\n", predictedRouterLSDB)
+	// fmt.Println()
+	// fmt.Println()
+	//
+	// fmt.Println("#################### File Configuration External LSDB Prediction ####################")
 	predictedExternalLSDB := convertStaticFileExternalData(c.metrics.StaticFrrConfiguration)
-	if predictedExternalLSDB != nil {
-		for _, area := range predictedExternalLSDB.Areas {
-			fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-		}
-	}
-	fmt.Printf("\n%+v\n", predictedExternalLSDB)
-	fmt.Println()
-	fmt.Println()
-
-	fmt.Println("#################### File Configuration NSSA External LSDB Prediction ####################")
+	// if predictedExternalLSDB != nil {
+	// for _, area := range predictedExternalLSDB.Areas {
+	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	// }
+	// }
+	// fmt.Printf("\n%+v\n", predictedExternalLSDB)
+	// fmt.Println()
+	// fmt.Println()
+	//
+	// fmt.Println("#################### File Configuration NSSA External LSDB Prediction ####################")
 	predictedNssaExternalLSDB := convertStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
-	if predictedNssaExternalLSDB != nil {
-
-		for _, area := range predictedNssaExternalLSDB.Areas {
-			fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-		}
-	}
-	fmt.Printf("\n%+v\n", predictedNssaExternalLSDB)
-	fmt.Println()
-	fmt.Println()
-
+	// if predictedNssaExternalLSDB != nil {
+	//
+	// for _, area := range predictedNssaExternalLSDB.Areas {
+	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	// }
+	// }
+	// fmt.Printf("\n%+v\n", predictedNssaExternalLSDB)
+	// fmt.Println()
+	// fmt.Println()
+	//
 	// runtime parsing
-	fmt.Println("#################### Runtime Configuration Router LSDB IS_STATE ####################")
+	// fmt.Println("#################### Runtime Configuration Router LSDB IS_STATE ####################")
 	runtimeRouterLSDB := convertRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
-	for _, area := range runtimeRouterLSDB.Areas {
-		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	}
-	fmt.Printf("\n%+v\n", runtimeRouterLSDB)
-	fmt.Println()
-	fmt.Println()
-
-	fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
+	// for _, area := range runtimeRouterLSDB.Areas {
+	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	// }
+	// fmt.Printf("\n%+v\n", runtimeRouterLSDB)
+	// fmt.Println()
+	// fmt.Println()
+	//
+	// fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
 	runtimeExternalLSDB := convertRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	for _, area := range runtimeExternalLSDB.Areas {
-		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	}
-	fmt.Printf("\n%+v\n", runtimeExternalLSDB)
-	fmt.Println()
-	fmt.Println()
-
-	fmt.Println("#################### Runtime Configuration NSSA External LSDB IS_STATE ####################")
+	// for _, area := range runtimeExternalLSDB.Areas {
+	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	// }
+	// fmt.Printf("\n%+v\n", runtimeExternalLSDB)
+	// fmt.Println()
+	// fmt.Println()
+	//
+	// fmt.Println("#################### Runtime Configuration NSSA External LSDB IS_STATE ####################")
 	runtimeNssaExternalLSDB := convertNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	for _, area := range runtimeNssaExternalLSDB.Areas {
-		fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	}
-	fmt.Printf("\n%+v\n", runtimeNssaExternalLSDB)
-	fmt.Println()
-	fmt.Println()
+	// for _, area := range runtimeNssaExternalLSDB.Areas {
+	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
+	// }
+	// fmt.Printf("\n%+v\n", runtimeNssaExternalLSDB)
+	// fmt.Println()
+	// fmt.Println()
+
+	routerAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+
+	externalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+
+	nssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
 
 }
 
-func parseIPAddress(ipWithPrefix string) []string {
-	fmt.Println(ipWithPrefix)
-	parts := strings.Split(ipWithPrefix, "/")
-	if len(parts) == 2 {
-		return parts
-	}
-	return []string{ipWithPrefix, "32"} // Default to /32 if no prefix is specified
-}
+//func parseIPAddress(ipWithPrefix string) []string {
+//	fmt.Println(ipWithPrefix)
+//	parts := strings.Split(ipWithPrefix, "/")
+//	if len(parts) == 2 {
+//		return parts
+//	}
+//	return []string{ipWithPrefix, "32"} // Default to /32 if no prefix is specified
+//}
 
 func maskToPrefixLength(mask string) string {
 	maskMap := map[string]string{

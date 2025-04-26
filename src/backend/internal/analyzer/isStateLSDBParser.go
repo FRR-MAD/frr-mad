@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"strconv"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -27,8 +26,7 @@ func convertRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostnam
 		Links:    []advertisment{},
 	}
 
-	for prefix, lsa := range config.AsExternalLinkStates {
-		fmt.Println(prefix)
+	for _, lsa := range config.AsExternalLinkStates {
 		adv := advertisment{
 			LinkStateId:  lsa.LinkStateId,
 			PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),

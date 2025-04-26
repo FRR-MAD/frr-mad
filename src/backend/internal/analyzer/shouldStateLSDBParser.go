@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -196,7 +195,6 @@ func convertStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *int
 	}
 
 	// Add external area to the result if it has any links
-	fmt.Println(externalArea)
 	if len(externalArea.Links) > 0 {
 		// Ensure no NSSA-only router (a router with only NSSA areas doesn't generate type 5 LSAs)
 		// Check if router has any non-NSSA areas
