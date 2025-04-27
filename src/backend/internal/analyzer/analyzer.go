@@ -30,12 +30,12 @@ type interAreaLsa struct {
 }
 
 type area struct {
-	AreaName string         `json:"name"`
-	LsaType  string         `json:"lsa_type"`
-	Links    []advertisment `json:"links"`
+	AreaName string          `json:"name"`
+	LsaType  string          `json:"lsa_type"`
+	Links    []advertisement `json:"links"`
 }
 
-type advertisment struct {
+type advertisement struct {
 	// populated with type 1 lsa
 	InterfaceAddress string `json:"interface_address,omitempty"`
 	// populated with type 2, 3, 4, 5, 7
@@ -176,6 +176,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 //	return []string{ipWithPrefix, "32"} // Default to /32 if no prefix is specified
 //}
 
+// todo: move to utils or use a library, i think https://pkg.go.dev/net should cover that. (i used it for file parser)
 func maskToPrefixLength(mask string) string {
 	maskMap := map[string]string{
 		"255.255.255.255": "32",
@@ -232,7 +233,7 @@ func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessLi
 			continue
 		}
 
-		entries := []ACLEntry{}
+		var entries []ACLEntry
 
 		for _, item := range aclConfig.AccessListItems {
 			if item == nil {
@@ -279,7 +280,7 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 
 	//fmt.Println(result)
 	//fmt.Printf("%+v\n", config.GetRouterStates())
-	var advertismentList []advertisment
+	var advertisementList []advertisement
 	fmt.Println("########### Start New Print ###########")
 	for _, area := range config.GetRouterStates() {
 		fmt.Println("--------- Value ---------")
@@ -288,22 +289,22 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 			fmt.Println("--------- entry ---------")
 			for _, link := range entry.RouterLinks {
 				if link.GetNetworkAddress() != "" {
-					adv := advertisment{
+					adv := advertisement{
 						InterfaceAddress: link.GetNetworkAddress(),
 						PrefixLength:     link.GetNetworkMask(),
 						//LsaType:      entry.GetLsaType(),
 						// Cost: int(link.GetTos0Metric()),
 					}
-					advertismentList = append(advertismentList, adv)
+					advertisementList = append(advertisementList, adv)
 
 				}
 				//fmt.Println(link)
 			}
 			//fmt.Println(entry)
-			fmt.Println(advertismentList)
+			fmt.Println(advertisementList)
 		}
 	}
-	//fmt.Println(advertismentList)
+	//fmt.Println(advertisementList)
 }
 
 func getStaticRedistributionList(config *frrProto.StaticFRRConfiguration) RedistributionList {
