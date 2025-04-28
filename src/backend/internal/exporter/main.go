@@ -48,8 +48,8 @@ func NewExporter(
 	// Create exporter
 	e := &Exporter{
 		interval:        pollInterval,
-		anomalyExporter: newAnomalyExporter(anomalies, registry, logger),
-		metricExporter:  newMetricExporter(frrData, registry, logger, flags),
+		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
+		metricExporter:  NewMetricExporter(frrData, registry, logger, flags),
 		stopChan:        make(chan struct{}),
 		logger:          logger,
 		server: &http.Server{

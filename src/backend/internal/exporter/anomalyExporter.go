@@ -17,7 +17,7 @@ type AnomalyExporter struct {
 	mutex         sync.Mutex
 }
 
-func newAnomalyExporter(anomalies *frrProto.Anomalies, registry prometheus.Registerer, logger *logger.Logger) *AnomalyExporter {
+func NewAnomalyExporter(anomalies *frrProto.Anomalies, registry prometheus.Registerer, logger *logger.Logger) *AnomalyExporter {
 	a := &AnomalyExporter{
 		anomalies:     anomalies,
 		activeAlerts:  make(map[string]bool),
