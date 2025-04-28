@@ -40,10 +40,6 @@ var BoxTitleStyle = lipgloss.NewStyle().
 	BorderRight(false).
 	BorderBottom(true)
 
-//var BoxTitleStyleCenterM02 = BoxTitleStyle.
-//	Margin(0, 2).
-//	Align(lipgloss.Center)
-
 var TextOutputStyle = lipgloss.NewStyle().
 	Padding(1, 2)
 
@@ -58,6 +54,10 @@ var ContentTitleH1Style = lipgloss.NewStyle().
 var ContentTitleH2Style = ContentTitleH1Style.
 	Margin(0, 2).
 	BorderForeground(lipgloss.Color(Grey))
+
+var AlignCenterAndM02 = lipgloss.NewStyle().
+	Margin(0, 2).
+	Align(lipgloss.Center)
 
 // ----------------------------
 // Box Styling

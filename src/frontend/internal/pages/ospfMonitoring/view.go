@@ -25,7 +25,7 @@ func (m *Model) OSPFView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		return m.renderAdvertisementTab()
+		return m.renderLsdbMonitorTab()
 	} else if currentSubTabLocal == 1 {
 		return m.renderRouterMonitorTab()
 	} else if currentSubTabLocal == 2 {
@@ -35,81 +35,244 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 4 {
 		return m.renderRunningConfigTab()
 	}
-	return m.renderAdvertisementTab()
+	return m.renderLsdbMonitorTab()
 }
 
-//func (m *Model) renderLsdbMonitorTab() string {
-//	boxWidthForOneH1 := m.windowSize.Width - 10       // - 6 (padding+margin content) - 2 (for each border)
-//	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
-//
-//	var lsdbBlocks []string
-//
-//	lsdb, _ := getLSDB()
-//
-//	var databaseBlocks []string
-//	for area, lsaTypes := range lsdb.Areas {
-//		var routerLinkStateData [][]string
-//		var networkLinkStateData [][]string
-//		var summaryLinkStateData [][]string
-//		var asbrSummaryLinkStateData [][]string
-//		for _, routerLinkState := range lsaTypes.RouterLinkStates {
-//			routerLinkStateData = append(routerLinkStateData, []string{
-//				routerLinkState.Base.AdvertisedRouter,
-//				strconv.Itoa(int(routerLinkState.Base.LsaAge)),
-//				strconv.Itoa(int(routerLinkState.NumOfRouterLinks)),
-//			})
-//		}
-//		for _, networkLinkState := range lsaTypes.NetworkLinkStates {
-//			networkLinkStateData = append(networkLinkStateData, []string{
-//				networkLinkState.Base.LsId,
-//				networkLinkState.Base.AdvertisedRouter,
-//				strconv.Itoa(int(networkLinkState.Base.LsaAge)),
-//			})
-//		}
-//		for _, summarLinkState := range lsaTypes.SummaryLinkStates {
-//			summaryLinkStateData = append(summaryLinkStateData, []string{
-//				summarLinkState.SummaryAddress,
-//				summarLinkState.Base.AdvertisedRouter,
-//				strconv.Itoa(int(summarLinkState.Base.LsaAge)),
-//			})
-//		}
-//		for _, asbrSummaryLinkState := range lsaTypes.AsbrSummaryLinkStates {
-//			asbrSummaryLinkStateData = append(asbrSummaryLinkStateData, []string{
-//				asbrSummaryLinkState.Base.LsId,
-//				asbrSummaryLinkState.Base.AdvertisedRouter,
-//				strconv.Itoa(int(asbrSummaryLinkState.Base.LsaAge)),
-//			})
-//		}
-//
-//		areaHeader := styles.ContentTitleH1Style.
-//			Width(boxWidthForOneH1).
-//			Margin(0, 0, 1, 0).
-//			Padding(1, 0, 0, 0).
-//			Render(fmt.Sprintf("Area %s", area))
-//	}
-//
-//	var asExternalLinkStateData [][]string
-//	for _, asExternalLinkState := range lsdb.AsExternalLinkStates {
-//		asExternalLinkStateData = append(asExternalLinkStateData, []string{
-//			asExternalLinkState.Route,
-//			asExternalLinkState.MetricType,
-//			asExternalLinkState.Base.AdvertisedRouter,
-//			strconv.Itoa(int(asExternalLinkState.Base.LsaAge)),
-//		})
-//	}
-//
-//	return "nothing"
-//}
+func (m *Model) renderLsdbMonitorTab() string {
+	boxWidthForOneH1 := m.windowSize.Width - 10    // - 6 (padding+margin content) - 2 (for each border)
+	boxWidthForOneH2 := boxWidthForOneH1 - 4       // -4 (for margin) -2 (for border)
+	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2 // -4 (for margin) -2 (for Border)
+
+	var lsdbBlocks []string
+
+	lsdb, _ := getLSDB()
+
+	// ===== OSPF Internal LSAs (Type 1-4) =====
+	for area, lsaTypes := range lsdb.Areas {
+		var routerLinkStateTableData [][]string
+		var networkLinkStateTableData [][]string
+		var summaryLinkStateTableData [][]string
+		var asbrSummaryLinkStateTableData [][]string
+
+		var amountOfRouterLS string
+		var amountOfNetworkLS string
+		var amountOfSummaryLS string
+		var amountOfAsSummaryLS string
+
+		// loop through LSAs (type 1-4) and extract data for tables
+		for _, routerLinkState := range lsaTypes.RouterLinkStates {
+			routerLinkStateTableData = append(routerLinkStateTableData, []string{
+				routerLinkState.Base.AdvertisedRouter,
+				strconv.Itoa(int(routerLinkState.NumOfRouterLinks)),
+				strconv.Itoa(int(routerLinkState.Base.LsaAge)),
+			})
+		}
+		if routerLinkStateTableData != nil {
+			amountOfRouterLS = strconv.Itoa(int(lsaTypes.RouterLinkStatesCount))
+		} else {
+			amountOfRouterLS = "0"
+		}
+		for _, networkLinkState := range lsaTypes.NetworkLinkStates {
+			networkLinkStateTableData = append(networkLinkStateTableData, []string{
+				networkLinkState.Base.LsId,
+				networkLinkState.Base.AdvertisedRouter,
+				strconv.Itoa(int(networkLinkState.Base.LsaAge)),
+			})
+		}
+		if networkLinkStateTableData != nil {
+			amountOfNetworkLS = strconv.Itoa(int(lsaTypes.NetworkLinkStatesCount))
+		} else {
+			amountOfNetworkLS = "0"
+		}
+
+		for _, summarLinkState := range lsaTypes.SummaryLinkStates {
+			summaryLinkStateTableData = append(summaryLinkStateTableData, []string{
+				summarLinkState.SummaryAddress,
+				summarLinkState.Base.AdvertisedRouter,
+				strconv.Itoa(int(summarLinkState.Base.LsaAge)),
+			})
+		}
+		if summaryLinkStateTableData == nil {
+			amountOfSummaryLS = "0"
+		} else {
+			amountOfSummaryLS = strconv.Itoa(int(lsaTypes.SummaryLinkStatesCount))
+		}
+
+		for _, asbrSummaryLinkState := range lsaTypes.AsbrSummaryLinkStates {
+			asbrSummaryLinkStateTableData = append(asbrSummaryLinkStateTableData, []string{
+				asbrSummaryLinkState.Base.LsId,
+				asbrSummaryLinkState.Base.AdvertisedRouter,
+				strconv.Itoa(int(asbrSummaryLinkState.Base.LsaAge)),
+			})
+		}
+		if asbrSummaryLinkStateTableData == nil {
+			amountOfAsSummaryLS = "0"
+		} else {
+			amountOfAsSummaryLS = strconv.Itoa(int(lsaTypes.AsbrSummaryLinkStatesCount))
+		}
+
+		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
+		rowsRouter := len(routerLinkStateTableData)
+		routerLinkStateTable := components.NewOspfMonitorTable(
+			[]string{
+				"Advertised Router ID",
+				"Router Links",
+				"LSA Age",
+			},
+			rowsRouter,
+		)
+		for _, r := range routerLinkStateTableData {
+			routerLinkStateTable = routerLinkStateTable.Row(r...)
+		}
+
+		// Create Table for Network Link States and Fill with extracted networkLinkStateTableData
+		rowsNetwork := len(networkLinkStateTableData)
+		networkLinkStateTable := components.NewOspfMonitorTable(
+			[]string{
+				"Designated Router ID",
+				"Advertised Router ID",
+				"LSA Age",
+			},
+			rowsNetwork,
+		)
+		for _, r := range networkLinkStateTableData {
+			networkLinkStateTable = networkLinkStateTable.Row(r...)
+		}
+
+		// Create Table for Summary Link States and Fill with extracted summaryLinkStateTableData
+		rowsSummary := len(summaryLinkStateTableData)
+		summaryLinkStateTable := components.NewOspfMonitorTable(
+			[]string{
+				"Network ID",
+				"Advertised Router ID",
+				"LSA Age",
+			},
+			rowsSummary,
+		)
+		for _, r := range summaryLinkStateTableData {
+			summaryLinkStateTable = summaryLinkStateTable.Row(r...)
+		}
+
+		// Create Table for AS Summary Link States and Fill with extracted asbrSummaryLinkStateTableData
+		rowsAsSummary := len(asbrSummaryLinkStateTableData)
+		asbrSummaryLinkStateTable := components.NewOspfMonitorTable(
+			[]string{
+				"AS Border Router ID",
+				"Advertised Router ID",
+				"LSA Age",
+			},
+			rowsAsSummary,
+		)
+		for _, r := range asbrSummaryLinkStateTableData {
+			asbrSummaryLinkStateTable = asbrSummaryLinkStateTable.Row(r...)
+		}
+
+		areaHeader := styles.ContentTitleH1Style.
+			Width(boxWidthForOneH1).
+			Margin(0, 0, 1, 0).
+			Padding(1, 0, 0, 0).
+			Render(fmt.Sprintf("Link State Database: Area %s", area))
+
+		// create styled boxes for each LSA Type (type 1-4)
+		routerTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfRouterLS+" Router Link States"),
+			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(routerLinkStateTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+		)
+		networkTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfNetworkLS+" Network Link States"),
+			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(networkLinkStateTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+		)
+		summaryTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfSummaryLS+" Summary Link States"),
+			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(summaryLinkStateTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+		)
+		asbrSummaryTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfAsSummaryLS+" ASBR Summary Link States"),
+			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(asbrSummaryLinkStateTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+		)
+
+		horizontalRouterAndNetworkLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, routerTableBox, networkTableBox)
+		horizontalSummaryAndAsbrSummaryLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, summaryTableBox, asbrSummaryTableBox)
+
+		completeAreaLSDB := lipgloss.JoinVertical(lipgloss.Left,
+			areaHeader,
+			horizontalRouterAndNetworkLinkStates,
+			horizontalSummaryAndAsbrSummaryLinkStates,
+		)
+
+		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB+"\n\n")
+	}
+
+	// ===== External LSA =====
+	var asExternalLinkStateTableData [][]string
+	var amountOfExternalLS string
+	for _, asExternalLinkState := range lsdb.AsExternalLinkStates {
+		asExternalLinkStateTableData = append(asExternalLinkStateTableData, []string{
+			asExternalLinkState.Route,
+			asExternalLinkState.MetricType,
+			asExternalLinkState.Base.AdvertisedRouter,
+			strconv.Itoa(int(asExternalLinkState.Base.LsaAge)),
+		})
+	}
+	if asExternalLinkStateTableData == nil {
+		amountOfExternalLS = "0"
+	} else {
+		amountOfExternalLS = strconv.Itoa(int(lsdb.AsExternalCount))
+	}
+
+	// Create Table for External Link States and Fill with extracted asExternalLinkStateTableData
+	rowsExternal := len(asExternalLinkStateTableData)
+	asExternalLinkStateTable := components.NewOspfMonitorTable(
+		[]string{
+			"External Route",
+			"Metric Type",
+			"Advertising Router ID",
+			"LSA Age",
+		},
+		rowsExternal,
+	)
+	for _, r := range asExternalLinkStateTableData {
+		asExternalLinkStateTable = asExternalLinkStateTable.Row(r...)
+	}
+
+	externalHeader := styles.ContentTitleH1Style.
+		Width(boxWidthForOneH1).
+		Margin(0, 0, 1, 0).
+		Padding(1, 0, 0, 0).
+		Render("Link State Database: AS External LSAs")
+
+	// create styled boxes for each external LSA Type (type 5 & 7)
+	externalTableBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render(amountOfExternalLS+" AS External Link States"),
+		styles.AlignCenterAndM02.Width(boxWidthForOneH2).Render(asExternalLinkStateTable.String()),
+		styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
+	)
+
+	completeExternalLSDB := lipgloss.JoinVertical(lipgloss.Left,
+		externalHeader,
+		externalTableBox,
+	)
+
+	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
+
+	// Set viewport sizes and assign content to viewport
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = boxWidthForOneH1 + 2
+	m.viewport.Height = contentMaxHeight
+
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
+
+	return m.viewport.View()
+}
 
 func (m *Model) renderRouterMonitorTab() string {
-	boxWidthForOneH1 := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
-	if boxWidthForOneH1 < 20 {
-		boxWidthForOneH1 = 20 // Minimum width to ensure readability
-	}
-	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
-	if boxWidthForTwoH2 < 20 {
-		boxWidthForTwoH2 = 20 // Minimum width to ensure readability
-	}
+	boxWidthForOneH1 := m.windowSize.Width - 10    // - 6 (padding+margin content) - 2 (for each border)
+	boxWidthForOneH2 := boxWidthForOneH1 - 4       // -4 (for margin) -2 (for border)
+	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2 // -4 (for margin) -2 (for Border)
 
 	ospfNeighbors := getOspfNeighborInterfaces()
 	routerLSASelf, _ := getOspfRouterData()
@@ -143,51 +306,26 @@ func (m *Model) renderRouterMonitorTab() string {
 		}
 
 		rowsTransit := len(transitData)
-		transitTable := ltable.New().
-			Border(lipgloss.NormalBorder()).
-			BorderTop(true).
-			BorderBottom(true).
-			BorderLeft(true).
-			BorderRight(true).
-			BorderHeader(true).
-			BorderColumn(true).
-			Headers("Link ID (DR Adr.)", "Designated Router", "Link Data (own Adr.)").
-			StyleFunc(func(row, col int) lipgloss.Style {
-				switch {
-				case row == ltable.HeaderRow:
-					return styles.HeaderStyle
-				case row == rowsTransit-1:
-					return styles.NormalCellStyle.BorderBottom(true)
-				default:
-					return styles.NormalCellStyle
-				}
-			})
-
+		transitTable := components.NewOspfMonitorTable(
+			[]string{
+				"Link ID (DR Adr.)",
+				"Designated Router",
+				"Link Data (own Adr.)",
+			},
+			rowsTransit,
+		)
 		for _, r := range transitData {
 			transitTable = transitTable.Row(r...)
 		}
 
 		rowsStub := len(stubData)
-		stubTable := ltable.New().
-			Border(lipgloss.NormalBorder()).
-			BorderTop(true).
-			BorderBottom(true).
-			BorderLeft(true).
-			BorderRight(true).
-			BorderHeader(true).
-			BorderColumn(true).
-			Headers("Network Address", "Network Mask").
-			StyleFunc(func(row, col int) lipgloss.Style {
-				switch {
-				case row == ltable.HeaderRow:
-					return styles.HeaderStyle
-				case row == rowsStub-1:
-					return styles.NormalCellStyle
-				default:
-					return styles.NormalCellStyle
-				}
-			})
-
+		stubTable := components.NewOspfMonitorTable(
+			[]string{
+				"Network Address",
+				"Network Mask",
+			},
+			rowsStub,
+		)
 		for _, r := range stubData {
 			stubTable = stubTable.Row(r...)
 		}
@@ -198,18 +336,18 @@ func (m *Model) renderRouterMonitorTab() string {
 			Padding(1, 0, 0, 0).
 			Render(fmt.Sprintf("Area %s", area))
 
-		correctBoxWidthTransit := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2-2).Render("Transit Networks"),
-			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForTwoH2).Render(transitTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2-2).Render(""),
+		transitTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render("Transit Networks"),
+			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(transitTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
 		)
-		correctBoxWidthStub := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2-2).Render("Stub Networks"),
-			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForTwoH2).Render(stubTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2-2).Render(""),
+		stubTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render("Stub Networks"),
+			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(stubTable.String()),
+			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
 		)
 
-		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, correctBoxWidthTransit, correctBoxWidthStub)
+		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, stubTableBox)
 
 		completeAreaRouterLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, horizontalTables)
 
@@ -292,7 +430,7 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	externalDataBox := lipgloss.JoinVertical(lipgloss.Left,
 		styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render("Self Originating"),
-		lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForOneH2).Render(externalTable.String()),
+		styles.AlignCenterAndM02.Width(boxWidthForOneH2).Render(externalTable.String()),
 		styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
 	)
 
@@ -306,9 +444,6 @@ func (m *Model) renderExternalMonitorTab() string {
 		// var nssaExternalTableDataExpanded [][]string
 
 		for _, lsaData := range areaData.Data {
-			//if slice, ok := len(slice) > 0 {
-			//
-			//}
 			nssaExternalTableData = append(nssaExternalTableData, []string{
 				lsaData.LinkStateId,
 				"/" + strconv.Itoa(int(lsaData.NetworkMask)),
@@ -349,7 +484,7 @@ func (m *Model) renderExternalMonitorTab() string {
 
 		nssaExternalDataBox := lipgloss.JoinVertical(lipgloss.Left,
 			styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render("Self Originating"),
-			lipgloss.NewStyle().Align(lipgloss.Center).Margin(0, 2).Width(boxWidthForOneH2).Render(nssaExternalTable.String()),
+			styles.AlignCenterAndM02.Width(boxWidthForOneH2).Render(nssaExternalTable.String()),
 			styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
 		)
 		// var completeNssaExternalBox string
@@ -363,18 +498,18 @@ func (m *Model) renderExternalMonitorTab() string {
 	m.viewport.Height = contentMaxHeight
 
 	var allLsaBlocks []string
-	if nssaExternalTableData != nil {
-		if externalTableData != nil {
-			allLsaBlocks = append(externalLsaBlock, nssaExternalLsaBlock...)
+	if nssaExternalTableData == nil {
+		if externalTableData == nil {
+			allLsaBlocks = allLsaBlocks[:0]
+			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
+				externalHeader,
+				"no self originating external advertisements",
+			))
 		} else {
 			allLsaBlocks = externalLsaBlock
 		}
 	} else {
-		allLsaBlocks = allLsaBlocks[:0]
-		allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
-			externalHeader,
-			"no self originating external advertisements",
-		))
+		allLsaBlocks = append(externalLsaBlock, nssaExternalLsaBlock...)
 	}
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, allLsaBlocks...))
@@ -599,15 +734,4 @@ func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
 	}
 
 	return response.Data.GetOspfNssaExternalData(), nil
-}
-
-// todo: maybe query which area has nssaExternal before creating tables
-// returns true if _any_ of the per‐area slices has at least one LSA
-func hasAnyNssaExternal(nssa map[string][]*pkg.NssaExternalArea) bool {
-	for _, states := range nssa {
-		if len(states) > 0 {
-			return true
-		}
-	}
-	return false
 }
