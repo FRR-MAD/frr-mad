@@ -23,6 +23,10 @@ type intraAreaLsa struct {
  * interAreaLsa handles LSA type 5 and 7
  * this difference is handled because there are no area distinctions with these types
  */
+
+/*
+ * make protobuf structs
+ */
 type interAreaLsa struct {
 	Hostname string `json:"hostname"`
 	RouterId string `json:"router_id"`
@@ -73,10 +77,15 @@ type RedistributionList struct {
 }
 
 // TODO: Currently there is no system checking if a host is ABR, ASBR or just a normal router.
+// TODO: add check if host has static routes
 // TODO: Add another router to core that would be a normal internal router without being ABR or ASBR, just a simple internal router.
 // TODO: Properly check if the different network types per interface are correctly checked
 // TODO: Logic for detecting anomalies is still very naive and early stage. This needs to be cross checked with theory.
-// TODO: The current approach is to first analyze the different states as in should state according to configuration and is state according to what's in the LSDB. Is that enouh?
+// TODO: The current approach is to first analyze the different states as in should state according to configuration and is state according to what's in the LSDB. Is that enough?
+
+// TODO: If an entry is in router, it CANNOT be in external or nssa-external LSDB
+// TODO: Vice Versa: if entry is in external, or nssa-external, it CANNOT be in router LSDB
+
 func (c *Analyzer) AnomalyAnalysis() {
 
 	// fmt.Println("#################### File Configuration Access List Enhanced ####################") accessListEnhanced := getStaticRedistributionList(c.metrics.StaticFrrConfiguration)
@@ -87,13 +96,13 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// access list
 	// fmt.Println("#################### File Configuration Access List ####################")
 	accessList := getAccessLists(c.metrics.StaticFrrConfiguration)
-	// fmt.Printf("\n%+v\n", accessList)
-	// fmt.Println()
-	// fmt.Println()
-	//
+	fmt.Printf("\n%+v\n", accessList)
+	fmt.Println()
+	fmt.Println()
+
 	// static file parsing
-	// fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
-	//fmt.Println(c.metrics.StaticFrrConfiguration)
+	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
+	fmt.Println(c.metrics.StaticFrrConfiguration)
 	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 	// if predictedRouterLSDB != nil {
 	// for _, area := range predictedRouterLSDB.Areas {
@@ -141,14 +150,15 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// fmt.Println()
 	// fmt.Println()
 	//
-	// fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
+	//fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
 	runtimeExternalLSDB := convertRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	// fmt.Println(c.metrics.OspfExternalData)
 	// for _, area := range runtimeExternalLSDB.Areas {
 	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
 	// }
 	// fmt.Printf("\n%+v\n", runtimeExternalLSDB)
-	// fmt.Println()
-	// fmt.Println()
+	fmt.Println()
+	fmt.Println()
 	//
 	// fmt.Println("#################### Runtime Configuration NSSA External LSDB IS_STATE ####################")
 	runtimeNssaExternalLSDB := convertNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)

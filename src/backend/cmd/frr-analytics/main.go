@@ -15,7 +15,7 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
 // Service represents a running service component of the application

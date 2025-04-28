@@ -8,8 +8,8 @@ import (
 type AnomalyAnalysis struct {
 	Type             string            `json:"type,omitempty"`
 	AnomalyDetection *AnomalyDetection `json:"anomaly_detection,omitempty"`
-	MissingEntries   []advertisment    `json:"missing_entries,omitempty"`
-	ExtraEntries     []advertisment    `json:"extra_entries,omitempty"`
+	MissingEntries   []advertisement   `json:"missing_entries,omitempty"`
+	ExtraEntries     []advertisement   `json:"extra_entries,omitempty"`
 }
 
 type AnomalyDetection struct {
@@ -21,27 +21,27 @@ func routerAnomalyAnalysis(accessList map[string]accessList, shouldState *intraA
 	result := &AnomalyAnalysis{
 		Type:             "router",
 		AnomalyDetection: &AnomalyDetection{},
-		MissingEntries:   []advertisment{},
-		ExtraEntries:     []advertisment{},
+		MissingEntries:   []advertisement{},
+		ExtraEntries:     []advertisement{},
 	}
 
 	if isState == nil || shouldState == nil {
 		return result
 	}
 
-	isStateMap := make(map[string]advertisment)
-	shouldStateMap := make(map[string]advertisment)
+	isStateMap := make(map[string]advertisement)
+	shouldStateMap := make(map[string]advertisement)
 
 	for _, area := range isState.Areas {
 		for _, link := range area.Links {
-			key := getAdvertismentKey(link)
+			key := getadvertisementKey(link)
 			isStateMap[key] = link
 		}
 	}
 
 	for _, area := range shouldState.Areas {
 		for _, link := range area.Links {
-			key := getAdvertismentKey(link)
+			key := getadvertisementKey(link)
 			shouldStateMap[key] = link
 		}
 	}
@@ -75,14 +75,14 @@ func routerAnomalyAnalysis(accessList map[string]accessList, shouldState *intraA
 	return result
 }
 
-func getAdvertismentKey(adv advertisment) string {
+func getadvertisementKey(adv advertisement) string {
 	if adv.InterfaceAddress != "" {
 		return normalizeNetworkAddress(adv.InterfaceAddress)
 	}
 	return normalizeNetworkAddress(adv.LinkStateId)
 }
 
-func isExcludedByAccessList(adv advertisment, accessLists map[string]accessList) bool {
+func isExcludedByAccessList(adv advertisement, accessLists map[string]accessList) bool {
 	for _, acl := range accessLists {
 		for _, entry := range acl.aclEntry {
 			if !entry.IsPermit {
@@ -105,16 +105,16 @@ func externalAnomalyAnalysis(accessList map[string]accessList, isState *interAre
 	result := &AnomalyAnalysis{
 		Type:             "external",
 		AnomalyDetection: &AnomalyDetection{},
-		MissingEntries:   []advertisment{},
-		ExtraEntries:     []advertisment{},
+		MissingEntries:   []advertisement{},
+		ExtraEntries:     []advertisement{},
 	}
 
 	if isState == nil || shouldState == nil {
 		return result
 	}
 
-	isStateMap := make(map[string]advertisment)
-	shouldStateMap := make(map[string]advertisment)
+	isStateMap := make(map[string]advertisement)
+	shouldStateMap := make(map[string]advertisement)
 
 	for _, area := range isState.Areas {
 		for _, link := range area.Links {

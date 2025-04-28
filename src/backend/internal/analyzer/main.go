@@ -3,8 +3,8 @@ package analyzer
 import (
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
 /*
@@ -16,12 +16,8 @@ type Analyzer struct {
 	Logger    *logger.Logger
 }
 
-func initAnomalies() *frrProto.Anomalies {
-	return &frrProto.Anomalies{}
-}
-
 func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
-	anomalies := initAnomalies()
+	anomalies := &frrProto.Anomalies{}
 
 	return &Analyzer{
 		Anomalies: anomalies,
