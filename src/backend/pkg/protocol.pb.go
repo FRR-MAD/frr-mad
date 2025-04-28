@@ -225,6 +225,7 @@ type ResponseValue struct {
 	//	*ResponseValue_RoutingInformationBase
 	//	*ResponseValue_StaticFrrConfiguration
 	//	*ResponseValue_SystemMetrics
+	//	*ResponseValue_FrrRouterData
 	Kind          isResponseValue_Kind `protobuf_oneof:"kind"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -402,6 +403,15 @@ func (x *ResponseValue) GetSystemMetrics() *SystemMetrics {
 	return nil
 }
 
+func (x *ResponseValue) GetFrrRouterData() *FRRRouterData {
+	if x != nil {
+		if x, ok := x.Kind.(*ResponseValue_FrrRouterData); ok {
+			return x.FrrRouterData
+		}
+	}
+	return nil
+}
+
 type isResponseValue_Kind interface {
 	isResponseValue_Kind()
 }
@@ -469,6 +479,10 @@ type ResponseValue_SystemMetrics struct {
 	SystemMetrics *SystemMetrics `protobuf:"bytes,15,opt,name=system_metrics,json=systemMetrics,proto3,oneof"`
 }
 
+type ResponseValue_FrrRouterData struct {
+	FrrRouterData *FRRRouterData `protobuf:"bytes,16,opt,name=frr_router_data,json=frrRouterData,proto3,oneof"`
+}
+
 func (*ResponseValue_StringValue) isResponseValue_Kind() {}
 
 func (*ResponseValue_Anomalies) isResponseValue_Kind() {}
@@ -498,6 +512,8 @@ func (*ResponseValue_RoutingInformationBase) isResponseValue_Kind() {}
 func (*ResponseValue_StaticFrrConfiguration) isResponseValue_Kind() {}
 
 func (*ResponseValue_SystemMetrics) isResponseValue_Kind() {}
+
+func (*ResponseValue_FrrRouterData) isResponseValue_Kind() {}
 
 type StaticFRRConfiguration struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
@@ -1502,6 +1518,7 @@ type FullFRRData struct {
 	RoutingInformationBase *RoutingInformationBase `protobuf:"bytes,11,opt,name=routing_information_base,json=routingInformationBase,proto3" json:"routing_information_base,omitempty"`
 	StaticFrrConfiguration *StaticFRRConfiguration `protobuf:"bytes,12,opt,name=static_frr_configuration,json=staticFrrConfiguration,proto3" json:"static_frr_configuration,omitempty"`
 	SystemMetrics          *SystemMetrics          `protobuf:"bytes,13,opt,name=system_metrics,json=systemMetrics,proto3" json:"system_metrics,omitempty"`
+	FrrRouterData          *FRRRouterData          `protobuf:"bytes,14,opt,name=frr_router_data,json=frrRouterData,proto3" json:"frr_router_data,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -1627,6 +1644,65 @@ func (x *FullFRRData) GetSystemMetrics() *SystemMetrics {
 	return nil
 }
 
+func (x *FullFRRData) GetFrrRouterData() *FRRRouterData {
+	if x != nil {
+		return x.FrrRouterData
+	}
+	return nil
+}
+
+type FRRRouterData struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RouterName    string                 `protobuf:"bytes,1,opt,name=router_name,json=routerName,proto3" json:"router_name,omitempty"`
+	OspfRouterId  string                 `protobuf:"bytes,2,opt,name=ospf_router_id,json=ospfRouterId,proto3" json:"ospf_router_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FRRRouterData) Reset() {
+	*x = FRRRouterData{}
+	mi := &file_protocol_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FRRRouterData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FRRRouterData) ProtoMessage() {}
+
+func (x *FRRRouterData) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FRRRouterData.ProtoReflect.Descriptor instead.
+func (*FRRRouterData) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *FRRRouterData) GetRouterName() string {
+	if x != nil {
+		return x.RouterName
+	}
+	return ""
+}
+
+func (x *FRRRouterData) GetOspfRouterId() string {
+	if x != nil {
+		return x.OspfRouterId
+	}
+	return ""
+}
+
 type OSPFRouterData struct {
 	state         protoimpl.MessageState     `protogen:"open.v1"`
 	RouterId      string                     `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
@@ -1637,7 +1713,7 @@ type OSPFRouterData struct {
 
 func (x *OSPFRouterData) Reset() {
 	*x = OSPFRouterData{}
-	mi := &file_protocol_proto_msgTypes[20]
+	mi := &file_protocol_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1649,7 +1725,7 @@ func (x *OSPFRouterData) String() string {
 func (*OSPFRouterData) ProtoMessage() {}
 
 func (x *OSPFRouterData) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[20]
+	mi := &file_protocol_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1662,7 +1738,7 @@ func (x *OSPFRouterData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFRouterData.ProtoReflect.Descriptor instead.
 func (*OSPFRouterData) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{20}
+	return file_protocol_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *OSPFRouterData) GetRouterId() string {
@@ -1688,7 +1764,7 @@ type OSPFRouterArea struct {
 
 func (x *OSPFRouterArea) Reset() {
 	*x = OSPFRouterArea{}
-	mi := &file_protocol_proto_msgTypes[21]
+	mi := &file_protocol_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1700,7 +1776,7 @@ func (x *OSPFRouterArea) String() string {
 func (*OSPFRouterArea) ProtoMessage() {}
 
 func (x *OSPFRouterArea) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[21]
+	mi := &file_protocol_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1713,7 +1789,7 @@ func (x *OSPFRouterArea) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFRouterArea.ProtoReflect.Descriptor instead.
 func (*OSPFRouterArea) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{21}
+	return file_protocol_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *OSPFRouterArea) GetLsaEntries() map[string]*OSPFRouterLSA {
@@ -1744,7 +1820,7 @@ type OSPFRouterLSA struct {
 
 func (x *OSPFRouterLSA) Reset() {
 	*x = OSPFRouterLSA{}
-	mi := &file_protocol_proto_msgTypes[22]
+	mi := &file_protocol_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1756,7 +1832,7 @@ func (x *OSPFRouterLSA) String() string {
 func (*OSPFRouterLSA) ProtoMessage() {}
 
 func (x *OSPFRouterLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[22]
+	mi := &file_protocol_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1769,7 +1845,7 @@ func (x *OSPFRouterLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFRouterLSA.ProtoReflect.Descriptor instead.
 func (*OSPFRouterLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{22}
+	return file_protocol_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *OSPFRouterLSA) GetLsaAge() int32 {
@@ -1878,7 +1954,7 @@ type OSPFRouterLSALink struct {
 
 func (x *OSPFRouterLSALink) Reset() {
 	*x = OSPFRouterLSALink{}
-	mi := &file_protocol_proto_msgTypes[23]
+	mi := &file_protocol_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1890,7 +1966,7 @@ func (x *OSPFRouterLSALink) String() string {
 func (*OSPFRouterLSALink) ProtoMessage() {}
 
 func (x *OSPFRouterLSALink) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[23]
+	mi := &file_protocol_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1903,7 +1979,7 @@ func (x *OSPFRouterLSALink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFRouterLSALink.ProtoReflect.Descriptor instead.
 func (*OSPFRouterLSALink) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{23}
+	return file_protocol_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *OSPFRouterLSALink) GetLinkType() string {
@@ -1965,7 +2041,7 @@ type OSPFNetworkData struct {
 
 func (x *OSPFNetworkData) Reset() {
 	*x = OSPFNetworkData{}
-	mi := &file_protocol_proto_msgTypes[24]
+	mi := &file_protocol_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1977,7 +2053,7 @@ func (x *OSPFNetworkData) String() string {
 func (*OSPFNetworkData) ProtoMessage() {}
 
 func (x *OSPFNetworkData) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[24]
+	mi := &file_protocol_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1990,7 +2066,7 @@ func (x *OSPFNetworkData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFNetworkData.ProtoReflect.Descriptor instead.
 func (*OSPFNetworkData) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{24}
+	return file_protocol_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *OSPFNetworkData) GetRouterId() string {
@@ -2016,7 +2092,7 @@ type NetAreaState struct {
 
 func (x *NetAreaState) Reset() {
 	*x = NetAreaState{}
-	mi := &file_protocol_proto_msgTypes[25]
+	mi := &file_protocol_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2028,7 +2104,7 @@ func (x *NetAreaState) String() string {
 func (*NetAreaState) ProtoMessage() {}
 
 func (x *NetAreaState) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[25]
+	mi := &file_protocol_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2041,7 +2117,7 @@ func (x *NetAreaState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetAreaState.ProtoReflect.Descriptor instead.
 func (*NetAreaState) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{25}
+	return file_protocol_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *NetAreaState) GetLsaEntries() map[string]*NetworkLSA {
@@ -2070,7 +2146,7 @@ type NetworkLSA struct {
 
 func (x *NetworkLSA) Reset() {
 	*x = NetworkLSA{}
-	mi := &file_protocol_proto_msgTypes[26]
+	mi := &file_protocol_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2082,7 +2158,7 @@ func (x *NetworkLSA) String() string {
 func (*NetworkLSA) ProtoMessage() {}
 
 func (x *NetworkLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[26]
+	mi := &file_protocol_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2095,7 +2171,7 @@ func (x *NetworkLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkLSA.ProtoReflect.Descriptor instead.
 func (*NetworkLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{26}
+	return file_protocol_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *NetworkLSA) GetLsaAge() int32 {
@@ -2184,7 +2260,7 @@ type AttachedRouter struct {
 
 func (x *AttachedRouter) Reset() {
 	*x = AttachedRouter{}
-	mi := &file_protocol_proto_msgTypes[27]
+	mi := &file_protocol_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2196,7 +2272,7 @@ func (x *AttachedRouter) String() string {
 func (*AttachedRouter) ProtoMessage() {}
 
 func (x *AttachedRouter) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[27]
+	mi := &file_protocol_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2209,7 +2285,7 @@ func (x *AttachedRouter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttachedRouter.ProtoReflect.Descriptor instead.
 func (*AttachedRouter) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{27}
+	return file_protocol_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AttachedRouter) GetAttachedRouterId() string {
@@ -2230,7 +2306,7 @@ type OSPFSummaryData struct {
 
 func (x *OSPFSummaryData) Reset() {
 	*x = OSPFSummaryData{}
-	mi := &file_protocol_proto_msgTypes[28]
+	mi := &file_protocol_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2242,7 +2318,7 @@ func (x *OSPFSummaryData) String() string {
 func (*OSPFSummaryData) ProtoMessage() {}
 
 func (x *OSPFSummaryData) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[28]
+	mi := &file_protocol_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2255,7 +2331,7 @@ func (x *OSPFSummaryData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFSummaryData.ProtoReflect.Descriptor instead.
 func (*OSPFSummaryData) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{28}
+	return file_protocol_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *OSPFSummaryData) GetRouterId() string {
@@ -2288,7 +2364,7 @@ type SummaryAreaState struct {
 
 func (x *SummaryAreaState) Reset() {
 	*x = SummaryAreaState{}
-	mi := &file_protocol_proto_msgTypes[29]
+	mi := &file_protocol_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2300,7 +2376,7 @@ func (x *SummaryAreaState) String() string {
 func (*SummaryAreaState) ProtoMessage() {}
 
 func (x *SummaryAreaState) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[29]
+	mi := &file_protocol_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2313,7 +2389,7 @@ func (x *SummaryAreaState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SummaryAreaState.ProtoReflect.Descriptor instead.
 func (*SummaryAreaState) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{29}
+	return file_protocol_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *SummaryAreaState) GetLsaEntries() map[string]*SummaryLSA {
@@ -2342,7 +2418,7 @@ type SummaryLSA struct {
 
 func (x *SummaryLSA) Reset() {
 	*x = SummaryLSA{}
-	mi := &file_protocol_proto_msgTypes[30]
+	mi := &file_protocol_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2354,7 +2430,7 @@ func (x *SummaryLSA) String() string {
 func (*SummaryLSA) ProtoMessage() {}
 
 func (x *SummaryLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[30]
+	mi := &file_protocol_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2367,7 +2443,7 @@ func (x *SummaryLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SummaryLSA.ProtoReflect.Descriptor instead.
 func (*SummaryLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{30}
+	return file_protocol_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *SummaryLSA) GetLsaAge() int32 {
@@ -2457,7 +2533,7 @@ type OSPFAsbrSummaryData struct {
 
 func (x *OSPFAsbrSummaryData) Reset() {
 	*x = OSPFAsbrSummaryData{}
-	mi := &file_protocol_proto_msgTypes[31]
+	mi := &file_protocol_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2469,7 +2545,7 @@ func (x *OSPFAsbrSummaryData) String() string {
 func (*OSPFAsbrSummaryData) ProtoMessage() {}
 
 func (x *OSPFAsbrSummaryData) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[31]
+	mi := &file_protocol_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2482,7 +2558,7 @@ func (x *OSPFAsbrSummaryData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFAsbrSummaryData.ProtoReflect.Descriptor instead.
 func (*OSPFAsbrSummaryData) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{31}
+	return file_protocol_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *OSPFAsbrSummaryData) GetRouterId() string {
@@ -2509,7 +2585,7 @@ type OSPFExternalData struct {
 
 func (x *OSPFExternalData) Reset() {
 	*x = OSPFExternalData{}
-	mi := &file_protocol_proto_msgTypes[32]
+	mi := &file_protocol_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2521,7 +2597,7 @@ func (x *OSPFExternalData) String() string {
 func (*OSPFExternalData) ProtoMessage() {}
 
 func (x *OSPFExternalData) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[32]
+	mi := &file_protocol_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2534,7 +2610,7 @@ func (x *OSPFExternalData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFExternalData.ProtoReflect.Descriptor instead.
 func (*OSPFExternalData) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{32}
+	return file_protocol_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *OSPFExternalData) GetRouterId() string {
@@ -2574,7 +2650,7 @@ type ExternalLSA struct {
 
 func (x *ExternalLSA) Reset() {
 	*x = ExternalLSA{}
-	mi := &file_protocol_proto_msgTypes[33]
+	mi := &file_protocol_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2586,7 +2662,7 @@ func (x *ExternalLSA) String() string {
 func (*ExternalLSA) ProtoMessage() {}
 
 func (x *ExternalLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[33]
+	mi := &file_protocol_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2599,7 +2675,7 @@ func (x *ExternalLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExternalLSA.ProtoReflect.Descriptor instead.
 func (*ExternalLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{33}
+	return file_protocol_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ExternalLSA) GetLsaAge() int32 {
@@ -2717,7 +2793,7 @@ type OSPFNssaExternalData struct {
 
 func (x *OSPFNssaExternalData) Reset() {
 	*x = OSPFNssaExternalData{}
-	mi := &file_protocol_proto_msgTypes[34]
+	mi := &file_protocol_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2729,7 +2805,7 @@ func (x *OSPFNssaExternalData) String() string {
 func (*OSPFNssaExternalData) ProtoMessage() {}
 
 func (x *OSPFNssaExternalData) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[34]
+	mi := &file_protocol_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2742,7 +2818,7 @@ func (x *OSPFNssaExternalData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFNssaExternalData.ProtoReflect.Descriptor instead.
 func (*OSPFNssaExternalData) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{34}
+	return file_protocol_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *OSPFNssaExternalData) GetRouterId() string {
@@ -2768,7 +2844,7 @@ type NssaExternalArea struct {
 
 func (x *NssaExternalArea) Reset() {
 	*x = NssaExternalArea{}
-	mi := &file_protocol_proto_msgTypes[35]
+	mi := &file_protocol_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2780,7 +2856,7 @@ func (x *NssaExternalArea) String() string {
 func (*NssaExternalArea) ProtoMessage() {}
 
 func (x *NssaExternalArea) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[35]
+	mi := &file_protocol_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2793,7 +2869,7 @@ func (x *NssaExternalArea) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NssaExternalArea.ProtoReflect.Descriptor instead.
 func (*NssaExternalArea) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{35}
+	return file_protocol_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *NssaExternalArea) GetData() map[string]*NssaExternalLSA {
@@ -2826,7 +2902,7 @@ type NssaExternalLSA struct {
 
 func (x *NssaExternalLSA) Reset() {
 	*x = NssaExternalLSA{}
-	mi := &file_protocol_proto_msgTypes[36]
+	mi := &file_protocol_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2838,7 +2914,7 @@ func (x *NssaExternalLSA) String() string {
 func (*NssaExternalLSA) ProtoMessage() {}
 
 func (x *NssaExternalLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[36]
+	mi := &file_protocol_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2851,7 +2927,7 @@ func (x *NssaExternalLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NssaExternalLSA.ProtoReflect.Descriptor instead.
 func (*NssaExternalLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{36}
+	return file_protocol_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *NssaExternalLSA) GetLsaAge() int32 {
@@ -2972,7 +3048,7 @@ type OSPFDatabase struct {
 
 func (x *OSPFDatabase) Reset() {
 	*x = OSPFDatabase{}
-	mi := &file_protocol_proto_msgTypes[37]
+	mi := &file_protocol_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2984,7 +3060,7 @@ func (x *OSPFDatabase) String() string {
 func (*OSPFDatabase) ProtoMessage() {}
 
 func (x *OSPFDatabase) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[37]
+	mi := &file_protocol_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2997,7 +3073,7 @@ func (x *OSPFDatabase) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFDatabase.ProtoReflect.Descriptor instead.
 func (*OSPFDatabase) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{37}
+	return file_protocol_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *OSPFDatabase) GetRouterId() string {
@@ -3044,7 +3120,7 @@ type OSPFDatabaseArea struct {
 
 func (x *OSPFDatabaseArea) Reset() {
 	*x = OSPFDatabaseArea{}
-	mi := &file_protocol_proto_msgTypes[38]
+	mi := &file_protocol_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3056,7 +3132,7 @@ func (x *OSPFDatabaseArea) String() string {
 func (*OSPFDatabaseArea) ProtoMessage() {}
 
 func (x *OSPFDatabaseArea) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[38]
+	mi := &file_protocol_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3069,7 +3145,7 @@ func (x *OSPFDatabaseArea) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFDatabaseArea.ProtoReflect.Descriptor instead.
 func (*OSPFDatabaseArea) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{38}
+	return file_protocol_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *OSPFDatabaseArea) GetRouterLinkStates() []*RouterDataLSA {
@@ -3141,7 +3217,7 @@ type BaseLSA struct {
 
 func (x *BaseLSA) Reset() {
 	*x = BaseLSA{}
-	mi := &file_protocol_proto_msgTypes[39]
+	mi := &file_protocol_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3153,7 +3229,7 @@ func (x *BaseLSA) String() string {
 func (*BaseLSA) ProtoMessage() {}
 
 func (x *BaseLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[39]
+	mi := &file_protocol_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3166,7 +3242,7 @@ func (x *BaseLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseLSA.ProtoReflect.Descriptor instead.
 func (*BaseLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{39}
+	return file_protocol_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *BaseLSA) GetLsId() string {
@@ -3214,7 +3290,7 @@ type RouterDataLSA struct {
 
 func (x *RouterDataLSA) Reset() {
 	*x = RouterDataLSA{}
-	mi := &file_protocol_proto_msgTypes[40]
+	mi := &file_protocol_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3226,7 +3302,7 @@ func (x *RouterDataLSA) String() string {
 func (*RouterDataLSA) ProtoMessage() {}
 
 func (x *RouterDataLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[40]
+	mi := &file_protocol_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3239,7 +3315,7 @@ func (x *RouterDataLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouterDataLSA.ProtoReflect.Descriptor instead.
 func (*RouterDataLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{40}
+	return file_protocol_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *RouterDataLSA) GetBase() *BaseLSA {
@@ -3265,7 +3341,7 @@ type NetworkDataLSA struct {
 
 func (x *NetworkDataLSA) Reset() {
 	*x = NetworkDataLSA{}
-	mi := &file_protocol_proto_msgTypes[41]
+	mi := &file_protocol_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3277,7 +3353,7 @@ func (x *NetworkDataLSA) String() string {
 func (*NetworkDataLSA) ProtoMessage() {}
 
 func (x *NetworkDataLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[41]
+	mi := &file_protocol_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3290,7 +3366,7 @@ func (x *NetworkDataLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkDataLSA.ProtoReflect.Descriptor instead.
 func (*NetworkDataLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{41}
+	return file_protocol_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *NetworkDataLSA) GetBase() *BaseLSA {
@@ -3310,7 +3386,7 @@ type SummaryDataLSA struct {
 
 func (x *SummaryDataLSA) Reset() {
 	*x = SummaryDataLSA{}
-	mi := &file_protocol_proto_msgTypes[42]
+	mi := &file_protocol_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3322,7 +3398,7 @@ func (x *SummaryDataLSA) String() string {
 func (*SummaryDataLSA) ProtoMessage() {}
 
 func (x *SummaryDataLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[42]
+	mi := &file_protocol_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3335,7 +3411,7 @@ func (x *SummaryDataLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SummaryDataLSA.ProtoReflect.Descriptor instead.
 func (*SummaryDataLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{42}
+	return file_protocol_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *SummaryDataLSA) GetBase() *BaseLSA {
@@ -3361,7 +3437,7 @@ type ASBRSummaryLSA struct {
 
 func (x *ASBRSummaryLSA) Reset() {
 	*x = ASBRSummaryLSA{}
-	mi := &file_protocol_proto_msgTypes[43]
+	mi := &file_protocol_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3373,7 +3449,7 @@ func (x *ASBRSummaryLSA) String() string {
 func (*ASBRSummaryLSA) ProtoMessage() {}
 
 func (x *ASBRSummaryLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[43]
+	mi := &file_protocol_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3386,7 +3462,7 @@ func (x *ASBRSummaryLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ASBRSummaryLSA.ProtoReflect.Descriptor instead.
 func (*ASBRSummaryLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{43}
+	return file_protocol_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *ASBRSummaryLSA) GetBase() *BaseLSA {
@@ -3408,7 +3484,7 @@ type ASExternalLSA struct {
 
 func (x *ASExternalLSA) Reset() {
 	*x = ASExternalLSA{}
-	mi := &file_protocol_proto_msgTypes[44]
+	mi := &file_protocol_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3420,7 +3496,7 @@ func (x *ASExternalLSA) String() string {
 func (*ASExternalLSA) ProtoMessage() {}
 
 func (x *ASExternalLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[44]
+	mi := &file_protocol_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3433,7 +3509,7 @@ func (x *ASExternalLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ASExternalLSA.ProtoReflect.Descriptor instead.
 func (*ASExternalLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{44}
+	return file_protocol_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *ASExternalLSA) GetBase() *BaseLSA {
@@ -3475,7 +3551,7 @@ type OSPFDuplicates struct {
 
 func (x *OSPFDuplicates) Reset() {
 	*x = OSPFDuplicates{}
-	mi := &file_protocol_proto_msgTypes[45]
+	mi := &file_protocol_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3487,7 +3563,7 @@ func (x *OSPFDuplicates) String() string {
 func (*OSPFDuplicates) ProtoMessage() {}
 
 func (x *OSPFDuplicates) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[45]
+	mi := &file_protocol_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3500,7 +3576,7 @@ func (x *OSPFDuplicates) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFDuplicates.ProtoReflect.Descriptor instead.
 func (*OSPFDuplicates) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{45}
+	return file_protocol_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *OSPFDuplicates) GetRouterId() string {
@@ -3540,7 +3616,7 @@ type ASExternalLinkState struct {
 
 func (x *ASExternalLinkState) Reset() {
 	*x = ASExternalLinkState{}
-	mi := &file_protocol_proto_msgTypes[46]
+	mi := &file_protocol_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3552,7 +3628,7 @@ func (x *ASExternalLinkState) String() string {
 func (*ASExternalLinkState) ProtoMessage() {}
 
 func (x *ASExternalLinkState) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[46]
+	mi := &file_protocol_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3565,7 +3641,7 @@ func (x *ASExternalLinkState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ASExternalLinkState.ProtoReflect.Descriptor instead.
 func (*ASExternalLinkState) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{46}
+	return file_protocol_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *ASExternalLinkState) GetLsaAge() int32 {
@@ -3683,7 +3759,7 @@ type OSPFNeighbors struct {
 
 func (x *OSPFNeighbors) Reset() {
 	*x = OSPFNeighbors{}
-	mi := &file_protocol_proto_msgTypes[47]
+	mi := &file_protocol_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3695,7 +3771,7 @@ func (x *OSPFNeighbors) String() string {
 func (*OSPFNeighbors) ProtoMessage() {}
 
 func (x *OSPFNeighbors) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[47]
+	mi := &file_protocol_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3708,7 +3784,7 @@ func (x *OSPFNeighbors) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OSPFNeighbors.ProtoReflect.Descriptor instead.
 func (*OSPFNeighbors) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{47}
+	return file_protocol_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *OSPFNeighbors) GetNeighbors() map[string]*NeighborList {
@@ -3727,7 +3803,7 @@ type NeighborList struct {
 
 func (x *NeighborList) Reset() {
 	*x = NeighborList{}
-	mi := &file_protocol_proto_msgTypes[48]
+	mi := &file_protocol_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3739,7 +3815,7 @@ func (x *NeighborList) String() string {
 func (*NeighborList) ProtoMessage() {}
 
 func (x *NeighborList) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[48]
+	mi := &file_protocol_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3752,7 +3828,7 @@ func (x *NeighborList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NeighborList.ProtoReflect.Descriptor instead.
 func (*NeighborList) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{48}
+	return file_protocol_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *NeighborList) GetNeighbors() []*Neighbor {
@@ -3790,7 +3866,7 @@ type Neighbor struct {
 
 func (x *Neighbor) Reset() {
 	*x = Neighbor{}
-	mi := &file_protocol_proto_msgTypes[49]
+	mi := &file_protocol_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3802,7 +3878,7 @@ func (x *Neighbor) String() string {
 func (*Neighbor) ProtoMessage() {}
 
 func (x *Neighbor) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[49]
+	mi := &file_protocol_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3815,7 +3891,7 @@ func (x *Neighbor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Neighbor.ProtoReflect.Descriptor instead.
 func (*Neighbor) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{49}
+	return file_protocol_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *Neighbor) GetPriority() int32 {
@@ -3968,7 +4044,7 @@ type InterfaceList struct {
 
 func (x *InterfaceList) Reset() {
 	*x = InterfaceList{}
-	mi := &file_protocol_proto_msgTypes[50]
+	mi := &file_protocol_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3980,7 +4056,7 @@ func (x *InterfaceList) String() string {
 func (*InterfaceList) ProtoMessage() {}
 
 func (x *InterfaceList) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[50]
+	mi := &file_protocol_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3993,7 +4069,7 @@ func (x *InterfaceList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InterfaceList.ProtoReflect.Descriptor instead.
 func (*InterfaceList) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{50}
+	return file_protocol_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *InterfaceList) GetInterfaces() map[string]*SingleInterface {
@@ -4039,7 +4115,7 @@ type SingleInterface struct {
 
 func (x *SingleInterface) Reset() {
 	*x = SingleInterface{}
-	mi := &file_protocol_proto_msgTypes[51]
+	mi := &file_protocol_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4051,7 +4127,7 @@ func (x *SingleInterface) String() string {
 func (*SingleInterface) ProtoMessage() {}
 
 func (x *SingleInterface) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[51]
+	mi := &file_protocol_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4064,7 +4140,7 @@ func (x *SingleInterface) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SingleInterface.ProtoReflect.Descriptor instead.
 func (*SingleInterface) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{51}
+	return file_protocol_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *SingleInterface) GetAdministrativeStatus() string {
@@ -4274,7 +4350,7 @@ type IpAddress struct {
 
 func (x *IpAddress) Reset() {
 	*x = IpAddress{}
-	mi := &file_protocol_proto_msgTypes[52]
+	mi := &file_protocol_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4286,7 +4362,7 @@ func (x *IpAddress) String() string {
 func (*IpAddress) ProtoMessage() {}
 
 func (x *IpAddress) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[52]
+	mi := &file_protocol_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4299,7 +4375,7 @@ func (x *IpAddress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IpAddress.ProtoReflect.Descriptor instead.
 func (*IpAddress) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{52}
+	return file_protocol_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *IpAddress) GetAddress() string {
@@ -4350,7 +4426,7 @@ type EvpnMh struct {
 
 func (x *EvpnMh) Reset() {
 	*x = EvpnMh{}
-	mi := &file_protocol_proto_msgTypes[53]
+	mi := &file_protocol_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4362,7 +4438,7 @@ func (x *EvpnMh) String() string {
 func (*EvpnMh) ProtoMessage() {}
 
 func (x *EvpnMh) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[53]
+	mi := &file_protocol_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4375,7 +4451,7 @@ func (x *EvpnMh) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EvpnMh.ProtoReflect.Descriptor instead.
 func (*EvpnMh) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{53}
+	return file_protocol_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *EvpnMh) GetEthernetSegmentId() string {
@@ -4521,7 +4597,7 @@ type RoutingInformationBase struct {
 
 func (x *RoutingInformationBase) Reset() {
 	*x = RoutingInformationBase{}
-	mi := &file_protocol_proto_msgTypes[54]
+	mi := &file_protocol_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4533,7 +4609,7 @@ func (x *RoutingInformationBase) String() string {
 func (*RoutingInformationBase) ProtoMessage() {}
 
 func (x *RoutingInformationBase) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[54]
+	mi := &file_protocol_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4546,7 +4622,7 @@ func (x *RoutingInformationBase) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoutingInformationBase.ProtoReflect.Descriptor instead.
 func (*RoutingInformationBase) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{54}
+	return file_protocol_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *RoutingInformationBase) GetRoutes() map[string]*RouteEntry {
@@ -4565,7 +4641,7 @@ type RouteEntry struct {
 
 func (x *RouteEntry) Reset() {
 	*x = RouteEntry{}
-	mi := &file_protocol_proto_msgTypes[55]
+	mi := &file_protocol_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4577,7 +4653,7 @@ func (x *RouteEntry) String() string {
 func (*RouteEntry) ProtoMessage() {}
 
 func (x *RouteEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[55]
+	mi := &file_protocol_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4590,7 +4666,7 @@ func (x *RouteEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouteEntry.ProtoReflect.Descriptor instead.
 func (*RouteEntry) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{55}
+	return file_protocol_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *RouteEntry) GetRoutes() []*Route {
@@ -4627,7 +4703,7 @@ type Route struct {
 
 func (x *Route) Reset() {
 	*x = Route{}
-	mi := &file_protocol_proto_msgTypes[56]
+	mi := &file_protocol_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4639,7 +4715,7 @@ func (x *Route) String() string {
 func (*Route) ProtoMessage() {}
 
 func (x *Route) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[56]
+	mi := &file_protocol_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4652,7 +4728,7 @@ func (x *Route) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Route.ProtoReflect.Descriptor instead.
 func (*Route) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{56}
+	return file_protocol_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *Route) GetPrefix() string {
@@ -4806,7 +4882,7 @@ type Nexthop struct {
 
 func (x *Nexthop) Reset() {
 	*x = Nexthop{}
-	mi := &file_protocol_proto_msgTypes[57]
+	mi := &file_protocol_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4818,7 +4894,7 @@ func (x *Nexthop) String() string {
 func (*Nexthop) ProtoMessage() {}
 
 func (x *Nexthop) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[57]
+	mi := &file_protocol_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4831,7 +4907,7 @@ func (x *Nexthop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Nexthop.ProtoReflect.Descriptor instead.
 func (*Nexthop) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{57}
+	return file_protocol_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *Nexthop) GetFlags() int32 {
@@ -4917,7 +4993,7 @@ type Anomalies struct {
 
 func (x *Anomalies) Reset() {
 	*x = Anomalies{}
-	mi := &file_protocol_proto_msgTypes[58]
+	mi := &file_protocol_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4929,7 +5005,7 @@ func (x *Anomalies) String() string {
 func (*Anomalies) ProtoMessage() {}
 
 func (x *Anomalies) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[58]
+	mi := &file_protocol_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4942,7 +5018,7 @@ func (x *Anomalies) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Anomalies.ProtoReflect.Descriptor instead.
 func (*Anomalies) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{58}
+	return file_protocol_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *Anomalies) GetOveradvertisedRoutes() []*AnomalyOveradvertisedRoute {
@@ -4985,7 +5061,7 @@ type AnomalyState struct {
 
 func (x *AnomalyState) Reset() {
 	*x = AnomalyState{}
-	mi := &file_protocol_proto_msgTypes[59]
+	mi := &file_protocol_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4997,7 +5073,7 @@ func (x *AnomalyState) String() string {
 func (*AnomalyState) ProtoMessage() {}
 
 func (x *AnomalyState) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[59]
+	mi := &file_protocol_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5010,7 +5086,7 @@ func (x *AnomalyState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyState.ProtoReflect.Descriptor instead.
 func (*AnomalyState) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{59}
+	return file_protocol_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *AnomalyState) GetHasOveradvertisedRoutes() bool {
@@ -5052,7 +5128,7 @@ type RouterAttribute struct {
 
 func (x *RouterAttribute) Reset() {
 	*x = RouterAttribute{}
-	mi := &file_protocol_proto_msgTypes[60]
+	mi := &file_protocol_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5064,7 +5140,7 @@ func (x *RouterAttribute) String() string {
 func (*RouterAttribute) ProtoMessage() {}
 
 func (x *RouterAttribute) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[60]
+	mi := &file_protocol_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5077,7 +5153,7 @@ func (x *RouterAttribute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouterAttribute.ProtoReflect.Descriptor instead.
 func (*RouterAttribute) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{60}
+	return file_protocol_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *RouterAttribute) GetRouterName() string {
@@ -5108,7 +5184,7 @@ type AnomalyOveradvertisedRoute struct {
 
 func (x *AnomalyOveradvertisedRoute) Reset() {
 	*x = AnomalyOveradvertisedRoute{}
-	mi := &file_protocol_proto_msgTypes[61]
+	mi := &file_protocol_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5120,7 +5196,7 @@ func (x *AnomalyOveradvertisedRoute) String() string {
 func (*AnomalyOveradvertisedRoute) ProtoMessage() {}
 
 func (x *AnomalyOveradvertisedRoute) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[61]
+	mi := &file_protocol_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5133,7 +5209,7 @@ func (x *AnomalyOveradvertisedRoute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyOveradvertisedRoute.ProtoReflect.Descriptor instead.
 func (*AnomalyOveradvertisedRoute) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{61}
+	return file_protocol_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *AnomalyOveradvertisedRoute) GetTimestamp() *timestamppb.Timestamp {
@@ -5185,7 +5261,7 @@ type AnomalyUnderadvertisedRoute struct {
 
 func (x *AnomalyUnderadvertisedRoute) Reset() {
 	*x = AnomalyUnderadvertisedRoute{}
-	mi := &file_protocol_proto_msgTypes[62]
+	mi := &file_protocol_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5197,7 +5273,7 @@ func (x *AnomalyUnderadvertisedRoute) String() string {
 func (*AnomalyUnderadvertisedRoute) ProtoMessage() {}
 
 func (x *AnomalyUnderadvertisedRoute) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[62]
+	mi := &file_protocol_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5210,7 +5286,7 @@ func (x *AnomalyUnderadvertisedRoute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyUnderadvertisedRoute.ProtoReflect.Descriptor instead.
 func (*AnomalyUnderadvertisedRoute) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{62}
+	return file_protocol_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *AnomalyUnderadvertisedRoute) GetTimestamp() *timestamppb.Timestamp {
@@ -5262,7 +5338,7 @@ type AnomalyDuplicateRoute struct {
 
 func (x *AnomalyDuplicateRoute) Reset() {
 	*x = AnomalyDuplicateRoute{}
-	mi := &file_protocol_proto_msgTypes[63]
+	mi := &file_protocol_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5274,7 +5350,7 @@ func (x *AnomalyDuplicateRoute) String() string {
 func (*AnomalyDuplicateRoute) ProtoMessage() {}
 
 func (x *AnomalyDuplicateRoute) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[63]
+	mi := &file_protocol_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5287,7 +5363,7 @@ func (x *AnomalyDuplicateRoute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyDuplicateRoute.ProtoReflect.Descriptor instead.
 func (*AnomalyDuplicateRoute) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{63}
+	return file_protocol_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *AnomalyDuplicateRoute) GetTimestamp() *timestamppb.Timestamp {
@@ -5339,7 +5415,7 @@ type AnomalyMisconfiguredRoute struct {
 
 func (x *AnomalyMisconfiguredRoute) Reset() {
 	*x = AnomalyMisconfiguredRoute{}
-	mi := &file_protocol_proto_msgTypes[64]
+	mi := &file_protocol_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5351,7 +5427,7 @@ func (x *AnomalyMisconfiguredRoute) String() string {
 func (*AnomalyMisconfiguredRoute) ProtoMessage() {}
 
 func (x *AnomalyMisconfiguredRoute) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[64]
+	mi := &file_protocol_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5364,7 +5440,7 @@ func (x *AnomalyMisconfiguredRoute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyMisconfiguredRoute.ProtoReflect.Descriptor instead.
 func (*AnomalyMisconfiguredRoute) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{64}
+	return file_protocol_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *AnomalyMisconfiguredRoute) GetTimestamp() *timestamppb.Timestamp {
@@ -5413,7 +5489,7 @@ type OspfRouterInfo struct {
 
 func (x *OspfRouterInfo) Reset() {
 	*x = OspfRouterInfo{}
-	mi := &file_protocol_proto_msgTypes[65]
+	mi := &file_protocol_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5425,7 +5501,7 @@ func (x *OspfRouterInfo) String() string {
 func (*OspfRouterInfo) ProtoMessage() {}
 
 func (x *OspfRouterInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[65]
+	mi := &file_protocol_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5438,7 +5514,7 @@ func (x *OspfRouterInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OspfRouterInfo.ProtoReflect.Descriptor instead.
 func (*OspfRouterInfo) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{65}
+	return file_protocol_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *OspfRouterInfo) GetRouterId() string {
@@ -5465,7 +5541,7 @@ type AreaLinkStates struct {
 
 func (x *AreaLinkStates) Reset() {
 	*x = AreaLinkStates{}
-	mi := &file_protocol_proto_msgTypes[66]
+	mi := &file_protocol_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5477,7 +5553,7 @@ func (x *AreaLinkStates) String() string {
 func (*AreaLinkStates) ProtoMessage() {}
 
 func (x *AreaLinkStates) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[66]
+	mi := &file_protocol_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5490,7 +5566,7 @@ func (x *AreaLinkStates) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AreaLinkStates.ProtoReflect.Descriptor instead.
 func (*AreaLinkStates) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{66}
+	return file_protocol_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *AreaLinkStates) GetRouterLsas() map[string]*RouterLSA {
@@ -5522,7 +5598,7 @@ type RouterLSA struct {
 
 func (x *RouterLSA) Reset() {
 	*x = RouterLSA{}
-	mi := &file_protocol_proto_msgTypes[67]
+	mi := &file_protocol_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5534,7 +5610,7 @@ func (x *RouterLSA) String() string {
 func (*RouterLSA) ProtoMessage() {}
 
 func (x *RouterLSA) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[67]
+	mi := &file_protocol_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5547,7 +5623,7 @@ func (x *RouterLSA) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouterLSA.ProtoReflect.Descriptor instead.
 func (*RouterLSA) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{67}
+	return file_protocol_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *RouterLSA) GetLsaAge() int32 {
@@ -5659,7 +5735,7 @@ type RouterLink struct {
 
 func (x *RouterLink) Reset() {
 	*x = RouterLink{}
-	mi := &file_protocol_proto_msgTypes[68]
+	mi := &file_protocol_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5671,7 +5747,7 @@ func (x *RouterLink) String() string {
 func (*RouterLink) ProtoMessage() {}
 
 func (x *RouterLink) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[68]
+	mi := &file_protocol_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5684,7 +5760,7 @@ func (x *RouterLink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouterLink.ProtoReflect.Descriptor instead.
 func (*RouterLink) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{68}
+	return file_protocol_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *RouterLink) GetLinkType() string {
@@ -5758,7 +5834,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\bResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x120\n" +
-	"\x04data\x18\x03 \x01(\v2\x1c.communication.ResponseValueR\x04data\"\x89\t\n" +
+	"\x04data\x18\x03 \x01(\v2\x1c.communication.ResponseValueR\x04data\"\xd1\t\n" +
 	"\rResponseValue\x12#\n" +
 	"\fstring_value\x18\x01 \x01(\tH\x00R\vstringValue\x128\n" +
 	"\tanomalies\x18\x02 \x01(\v2\x18.communication.AnomaliesH\x00R\tanomalies\x12B\n" +
@@ -5777,7 +5853,8 @@ const file_protocol_proto_rawDesc = "" +
 	"interfaces\x12a\n" +
 	"\x18routing_information_base\x18\r \x01(\v2%.communication.RoutingInformationBaseH\x00R\x16routingInformationBase\x12a\n" +
 	"\x18static_frr_configuration\x18\x0e \x01(\v2%.communication.StaticFRRConfigurationH\x00R\x16staticFrrConfiguration\x12E\n" +
-	"\x0esystem_metrics\x18\x0f \x01(\v2\x1c.communication.SystemMetricsH\x00R\rsystemMetricsB\x06\n" +
+	"\x0esystem_metrics\x18\x0f \x01(\v2\x1c.communication.SystemMetricsH\x00R\rsystemMetrics\x12F\n" +
+	"\x0ffrr_router_data\x18\x10 \x01(\v2\x1c.communication.FRRRouterDataH\x00R\rfrrRouterDataB\x06\n" +
 	"\x04kind\"\xea\x05\n" +
 	"\x16StaticFRRConfiguration\x12\x1a\n" +
 	"\bhostname\x18\x01 \x01(\tR\bhostname\x12\x1f\n" +
@@ -5865,7 +5942,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\x04area\x18\x02 \x01(\tR\x04area\x12\x1c\n" +
 	"\tIpAddress\x18\x03 \x01(\tR\tIpAddress\x12\x18\n" +
 	"\apassive\x18\x04 \x01(\bR\apassive\x12\x12\n" +
-	"\x04cost\x18\x05 \x01(\x05R\x04cost\"\x86\b\n" +
+	"\x04cost\x18\x05 \x01(\x05R\x04cost\"\xcc\b\n" +
 	"\vFullFRRData\x12@\n" +
 	"\rospf_database\x18\x01 \x01(\v2\x1b.communication.OSPFDatabaseR\fospfDatabase\x12G\n" +
 	"\x10ospf_router_data\x18\x02 \x01(\v2\x1d.communication.OSPFRouterDataR\x0eospfRouterData\x12J\n" +
@@ -5882,7 +5959,12 @@ const file_protocol_proto_rawDesc = "" +
 	"interfaces\x12_\n" +
 	"\x18routing_information_base\x18\v \x01(\v2%.communication.RoutingInformationBaseR\x16routingInformationBase\x12_\n" +
 	"\x18static_frr_configuration\x18\f \x01(\v2%.communication.StaticFRRConfigurationR\x16staticFrrConfiguration\x12C\n" +
-	"\x0esystem_metrics\x18\r \x01(\v2\x1c.communication.SystemMetricsR\rsystemMetrics\"\xe9\x01\n" +
+	"\x0esystem_metrics\x18\r \x01(\v2\x1c.communication.SystemMetricsR\rsystemMetrics\x12D\n" +
+	"\x0ffrr_router_data\x18\x0e \x01(\v2\x1c.communication.FRRRouterDataR\rfrrRouterData\"V\n" +
+	"\rFRRRouterData\x12\x1f\n" +
+	"\vrouter_name\x18\x01 \x01(\tR\n" +
+	"routerName\x12$\n" +
+	"\x0eospf_router_id\x18\x02 \x01(\tR\fospfRouterId\"\xe9\x01\n" +
 	"\x0eOSPFRouterData\x12\x1b\n" +
 	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12Z\n" +
 	"\rrouter_states\x18\x02 \x03(\v2/.communication.OSPFRouterData.RouterStatesEntryR\x12Router Link States\x1a^\n" +
@@ -6349,7 +6431,7 @@ func file_protocol_proto_rawDescGZIP() []byte {
 	return file_protocol_proto_rawDescData
 }
 
-var file_protocol_proto_msgTypes = make([]protoimpl.MessageInfo, 93)
+var file_protocol_proto_msgTypes = make([]protoimpl.MessageInfo, 94)
 var file_protocol_proto_goTypes = []any{
 	(*Message)(nil),                     // 0: communication.Message
 	(*Command)(nil),                     // 1: communication.Command
@@ -6371,204 +6453,207 @@ var file_protocol_proto_goTypes = []any{
 	(*OSPFArea)(nil),                    // 17: communication.OSPFArea
 	(*OSPFInterfaceConfig)(nil),         // 18: communication.OSPFInterfaceConfig
 	(*FullFRRData)(nil),                 // 19: communication.FullFRRData
-	(*OSPFRouterData)(nil),              // 20: communication.OSPFRouterData
-	(*OSPFRouterArea)(nil),              // 21: communication.OSPFRouterArea
-	(*OSPFRouterLSA)(nil),               // 22: communication.OSPFRouterLSA
-	(*OSPFRouterLSALink)(nil),           // 23: communication.OSPFRouterLSALink
-	(*OSPFNetworkData)(nil),             // 24: communication.OSPFNetworkData
-	(*NetAreaState)(nil),                // 25: communication.NetAreaState
-	(*NetworkLSA)(nil),                  // 26: communication.NetworkLSA
-	(*AttachedRouter)(nil),              // 27: communication.AttachedRouter
-	(*OSPFSummaryData)(nil),             // 28: communication.OSPFSummaryData
-	(*SummaryAreaState)(nil),            // 29: communication.SummaryAreaState
-	(*SummaryLSA)(nil),                  // 30: communication.SummaryLSA
-	(*OSPFAsbrSummaryData)(nil),         // 31: communication.OSPFAsbrSummaryData
-	(*OSPFExternalData)(nil),            // 32: communication.OSPFExternalData
-	(*ExternalLSA)(nil),                 // 33: communication.ExternalLSA
-	(*OSPFNssaExternalData)(nil),        // 34: communication.OSPFNssaExternalData
-	(*NssaExternalArea)(nil),            // 35: communication.NssaExternalArea
-	(*NssaExternalLSA)(nil),             // 36: communication.NssaExternalLSA
-	(*OSPFDatabase)(nil),                // 37: communication.OSPFDatabase
-	(*OSPFDatabaseArea)(nil),            // 38: communication.OSPFDatabaseArea
-	(*BaseLSA)(nil),                     // 39: communication.BaseLSA
-	(*RouterDataLSA)(nil),               // 40: communication.RouterDataLSA
-	(*NetworkDataLSA)(nil),              // 41: communication.NetworkDataLSA
-	(*SummaryDataLSA)(nil),              // 42: communication.SummaryDataLSA
-	(*ASBRSummaryLSA)(nil),              // 43: communication.ASBRSummaryLSA
-	(*ASExternalLSA)(nil),               // 44: communication.ASExternalLSA
-	(*OSPFDuplicates)(nil),              // 45: communication.OSPFDuplicates
-	(*ASExternalLinkState)(nil),         // 46: communication.ASExternalLinkState
-	(*OSPFNeighbors)(nil),               // 47: communication.OSPFNeighbors
-	(*NeighborList)(nil),                // 48: communication.NeighborList
-	(*Neighbor)(nil),                    // 49: communication.Neighbor
-	(*InterfaceList)(nil),               // 50: communication.InterfaceList
-	(*SingleInterface)(nil),             // 51: communication.SingleInterface
-	(*IpAddress)(nil),                   // 52: communication.IpAddress
-	(*EvpnMh)(nil),                      // 53: communication.EvpnMh
-	(*RoutingInformationBase)(nil),      // 54: communication.RoutingInformationBase
-	(*RouteEntry)(nil),                  // 55: communication.RouteEntry
-	(*Route)(nil),                       // 56: communication.Route
-	(*Nexthop)(nil),                     // 57: communication.Nexthop
-	(*Anomalies)(nil),                   // 58: communication.Anomalies
-	(*AnomalyState)(nil),                // 59: communication.AnomalyState
-	(*RouterAttribute)(nil),             // 60: communication.RouterAttribute
-	(*AnomalyOveradvertisedRoute)(nil),  // 61: communication.AnomalyOveradvertisedRoute
-	(*AnomalyUnderadvertisedRoute)(nil), // 62: communication.AnomalyUnderadvertisedRoute
-	(*AnomalyDuplicateRoute)(nil),       // 63: communication.AnomalyDuplicateRoute
-	(*AnomalyMisconfiguredRoute)(nil),   // 64: communication.AnomalyMisconfiguredRoute
-	(*OspfRouterInfo)(nil),              // 65: communication.OspfRouterInfo
-	(*AreaLinkStates)(nil),              // 66: communication.AreaLinkStates
-	(*RouterLSA)(nil),                   // 67: communication.RouterLSA
-	(*RouterLink)(nil),                  // 68: communication.RouterLink
-	nil,                                 // 69: communication.Message.ParamsEntry
-	nil,                                 // 70: communication.Command.ParamsEntry
-	nil,                                 // 71: communication.StaticFRRConfiguration.RouteMapEntry
-	nil,                                 // 72: communication.StaticFRRConfiguration.AccessListEntry
-	nil,                                 // 73: communication.OSPFRouterData.RouterStatesEntry
-	nil,                                 // 74: communication.OSPFRouterArea.LsaEntriesEntry
-	nil,                                 // 75: communication.OSPFRouterLSA.RouterLinksEntry
-	nil,                                 // 76: communication.OSPFNetworkData.NetStatesEntry
-	nil,                                 // 77: communication.NetAreaState.LsaEntriesEntry
-	nil,                                 // 78: communication.NetworkLSA.AttachedRoutersEntry
-	nil,                                 // 79: communication.OSPFSummaryData.NetStatesEntry
-	nil,                                 // 80: communication.OSPFSummaryData.SummaryStatesEntry
-	nil,                                 // 81: communication.SummaryAreaState.LsaEntriesEntry
-	nil,                                 // 82: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry
-	nil,                                 // 83: communication.OSPFExternalData.AsExternalLinkStatesEntry
-	nil,                                 // 84: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
-	nil,                                 // 85: communication.NssaExternalArea.DataEntry
-	nil,                                 // 86: communication.OSPFDatabase.AreasEntry
-	nil,                                 // 87: communication.OSPFNeighbors.NeighborsEntry
-	nil,                                 // 88: communication.InterfaceList.InterfacesEntry
-	nil,                                 // 89: communication.RoutingInformationBase.RoutesEntry
-	nil,                                 // 90: communication.OspfRouterInfo.RouterLinkStatesEntry
-	nil,                                 // 91: communication.AreaLinkStates.RouterLsasEntry
-	nil,                                 // 92: communication.RouterLSA.RouterLinksEntry
-	(*timestamppb.Timestamp)(nil),       // 93: google.protobuf.Timestamp
+	(*FRRRouterData)(nil),               // 20: communication.FRRRouterData
+	(*OSPFRouterData)(nil),              // 21: communication.OSPFRouterData
+	(*OSPFRouterArea)(nil),              // 22: communication.OSPFRouterArea
+	(*OSPFRouterLSA)(nil),               // 23: communication.OSPFRouterLSA
+	(*OSPFRouterLSALink)(nil),           // 24: communication.OSPFRouterLSALink
+	(*OSPFNetworkData)(nil),             // 25: communication.OSPFNetworkData
+	(*NetAreaState)(nil),                // 26: communication.NetAreaState
+	(*NetworkLSA)(nil),                  // 27: communication.NetworkLSA
+	(*AttachedRouter)(nil),              // 28: communication.AttachedRouter
+	(*OSPFSummaryData)(nil),             // 29: communication.OSPFSummaryData
+	(*SummaryAreaState)(nil),            // 30: communication.SummaryAreaState
+	(*SummaryLSA)(nil),                  // 31: communication.SummaryLSA
+	(*OSPFAsbrSummaryData)(nil),         // 32: communication.OSPFAsbrSummaryData
+	(*OSPFExternalData)(nil),            // 33: communication.OSPFExternalData
+	(*ExternalLSA)(nil),                 // 34: communication.ExternalLSA
+	(*OSPFNssaExternalData)(nil),        // 35: communication.OSPFNssaExternalData
+	(*NssaExternalArea)(nil),            // 36: communication.NssaExternalArea
+	(*NssaExternalLSA)(nil),             // 37: communication.NssaExternalLSA
+	(*OSPFDatabase)(nil),                // 38: communication.OSPFDatabase
+	(*OSPFDatabaseArea)(nil),            // 39: communication.OSPFDatabaseArea
+	(*BaseLSA)(nil),                     // 40: communication.BaseLSA
+	(*RouterDataLSA)(nil),               // 41: communication.RouterDataLSA
+	(*NetworkDataLSA)(nil),              // 42: communication.NetworkDataLSA
+	(*SummaryDataLSA)(nil),              // 43: communication.SummaryDataLSA
+	(*ASBRSummaryLSA)(nil),              // 44: communication.ASBRSummaryLSA
+	(*ASExternalLSA)(nil),               // 45: communication.ASExternalLSA
+	(*OSPFDuplicates)(nil),              // 46: communication.OSPFDuplicates
+	(*ASExternalLinkState)(nil),         // 47: communication.ASExternalLinkState
+	(*OSPFNeighbors)(nil),               // 48: communication.OSPFNeighbors
+	(*NeighborList)(nil),                // 49: communication.NeighborList
+	(*Neighbor)(nil),                    // 50: communication.Neighbor
+	(*InterfaceList)(nil),               // 51: communication.InterfaceList
+	(*SingleInterface)(nil),             // 52: communication.SingleInterface
+	(*IpAddress)(nil),                   // 53: communication.IpAddress
+	(*EvpnMh)(nil),                      // 54: communication.EvpnMh
+	(*RoutingInformationBase)(nil),      // 55: communication.RoutingInformationBase
+	(*RouteEntry)(nil),                  // 56: communication.RouteEntry
+	(*Route)(nil),                       // 57: communication.Route
+	(*Nexthop)(nil),                     // 58: communication.Nexthop
+	(*Anomalies)(nil),                   // 59: communication.Anomalies
+	(*AnomalyState)(nil),                // 60: communication.AnomalyState
+	(*RouterAttribute)(nil),             // 61: communication.RouterAttribute
+	(*AnomalyOveradvertisedRoute)(nil),  // 62: communication.AnomalyOveradvertisedRoute
+	(*AnomalyUnderadvertisedRoute)(nil), // 63: communication.AnomalyUnderadvertisedRoute
+	(*AnomalyDuplicateRoute)(nil),       // 64: communication.AnomalyDuplicateRoute
+	(*AnomalyMisconfiguredRoute)(nil),   // 65: communication.AnomalyMisconfiguredRoute
+	(*OspfRouterInfo)(nil),              // 66: communication.OspfRouterInfo
+	(*AreaLinkStates)(nil),              // 67: communication.AreaLinkStates
+	(*RouterLSA)(nil),                   // 68: communication.RouterLSA
+	(*RouterLink)(nil),                  // 69: communication.RouterLink
+	nil,                                 // 70: communication.Message.ParamsEntry
+	nil,                                 // 71: communication.Command.ParamsEntry
+	nil,                                 // 72: communication.StaticFRRConfiguration.RouteMapEntry
+	nil,                                 // 73: communication.StaticFRRConfiguration.AccessListEntry
+	nil,                                 // 74: communication.OSPFRouterData.RouterStatesEntry
+	nil,                                 // 75: communication.OSPFRouterArea.LsaEntriesEntry
+	nil,                                 // 76: communication.OSPFRouterLSA.RouterLinksEntry
+	nil,                                 // 77: communication.OSPFNetworkData.NetStatesEntry
+	nil,                                 // 78: communication.NetAreaState.LsaEntriesEntry
+	nil,                                 // 79: communication.NetworkLSA.AttachedRoutersEntry
+	nil,                                 // 80: communication.OSPFSummaryData.NetStatesEntry
+	nil,                                 // 81: communication.OSPFSummaryData.SummaryStatesEntry
+	nil,                                 // 82: communication.SummaryAreaState.LsaEntriesEntry
+	nil,                                 // 83: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry
+	nil,                                 // 84: communication.OSPFExternalData.AsExternalLinkStatesEntry
+	nil,                                 // 85: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
+	nil,                                 // 86: communication.NssaExternalArea.DataEntry
+	nil,                                 // 87: communication.OSPFDatabase.AreasEntry
+	nil,                                 // 88: communication.OSPFNeighbors.NeighborsEntry
+	nil,                                 // 89: communication.InterfaceList.InterfacesEntry
+	nil,                                 // 90: communication.RoutingInformationBase.RoutesEntry
+	nil,                                 // 91: communication.OspfRouterInfo.RouterLinkStatesEntry
+	nil,                                 // 92: communication.AreaLinkStates.RouterLsasEntry
+	nil,                                 // 93: communication.RouterLSA.RouterLinksEntry
+	(*timestamppb.Timestamp)(nil),       // 94: google.protobuf.Timestamp
 }
 var file_protocol_proto_depIdxs = []int32{
-	69,  // 0: communication.Message.params:type_name -> communication.Message.ParamsEntry
-	70,  // 1: communication.Command.params:type_name -> communication.Command.ParamsEntry
+	70,  // 0: communication.Message.params:type_name -> communication.Message.ParamsEntry
+	71,  // 1: communication.Command.params:type_name -> communication.Command.ParamsEntry
 	3,   // 2: communication.Response.data:type_name -> communication.ResponseValue
-	58,  // 3: communication.ResponseValue.anomalies:type_name -> communication.Anomalies
-	37,  // 4: communication.ResponseValue.ospf_database:type_name -> communication.OSPFDatabase
-	20,  // 5: communication.ResponseValue.ospf_router_data:type_name -> communication.OSPFRouterData
-	24,  // 6: communication.ResponseValue.ospf_network_data:type_name -> communication.OSPFNetworkData
-	28,  // 7: communication.ResponseValue.ospf_summary_data:type_name -> communication.OSPFSummaryData
-	31,  // 8: communication.ResponseValue.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
-	32,  // 9: communication.ResponseValue.ospf_external_data:type_name -> communication.OSPFExternalData
-	34,  // 10: communication.ResponseValue.ospf_nssa_external_data:type_name -> communication.OSPFNssaExternalData
-	45,  // 11: communication.ResponseValue.ospf_duplicates:type_name -> communication.OSPFDuplicates
-	47,  // 12: communication.ResponseValue.ospf_neighbors:type_name -> communication.OSPFNeighbors
-	50,  // 13: communication.ResponseValue.interfaces:type_name -> communication.InterfaceList
-	54,  // 14: communication.ResponseValue.routing_information_base:type_name -> communication.RoutingInformationBase
+	59,  // 3: communication.ResponseValue.anomalies:type_name -> communication.Anomalies
+	38,  // 4: communication.ResponseValue.ospf_database:type_name -> communication.OSPFDatabase
+	21,  // 5: communication.ResponseValue.ospf_router_data:type_name -> communication.OSPFRouterData
+	25,  // 6: communication.ResponseValue.ospf_network_data:type_name -> communication.OSPFNetworkData
+	29,  // 7: communication.ResponseValue.ospf_summary_data:type_name -> communication.OSPFSummaryData
+	32,  // 8: communication.ResponseValue.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
+	33,  // 9: communication.ResponseValue.ospf_external_data:type_name -> communication.OSPFExternalData
+	35,  // 10: communication.ResponseValue.ospf_nssa_external_data:type_name -> communication.OSPFNssaExternalData
+	46,  // 11: communication.ResponseValue.ospf_duplicates:type_name -> communication.OSPFDuplicates
+	48,  // 12: communication.ResponseValue.ospf_neighbors:type_name -> communication.OSPFNeighbors
+	51,  // 13: communication.ResponseValue.interfaces:type_name -> communication.InterfaceList
+	55,  // 14: communication.ResponseValue.routing_information_base:type_name -> communication.RoutingInformationBase
 	4,   // 15: communication.ResponseValue.static_frr_configuration:type_name -> communication.StaticFRRConfiguration
 	15,  // 16: communication.ResponseValue.system_metrics:type_name -> communication.SystemMetrics
-	5,   // 17: communication.StaticFRRConfiguration.interfaces:type_name -> communication.Interface
-	6,   // 18: communication.StaticFRRConfiguration.static_routes:type_name -> communication.StaticRoute
-	7,   // 19: communication.StaticFRRConfiguration.ospf_config:type_name -> communication.OSPFConfig
-	71,  // 20: communication.StaticFRRConfiguration.route_map:type_name -> communication.StaticFRRConfiguration.RouteMapEntry
-	72,  // 21: communication.StaticFRRConfiguration.access_list:type_name -> communication.StaticFRRConfiguration.AccessListEntry
-	13,  // 22: communication.Interface.interface_ip_prefixes:type_name -> communication.InterfaceIPPrefix
-	14,  // 23: communication.StaticRoute.ip_prefix:type_name -> communication.IPPrefix
-	8,   // 24: communication.OSPFConfig.redistribution:type_name -> communication.Redistribution
-	9,   // 25: communication.OSPFConfig.area:type_name -> communication.Area
-	12,  // 26: communication.AccessList.access_list_items:type_name -> communication.AccessListItem
-	14,  // 27: communication.AccessListItem.ip_prefix:type_name -> communication.IPPrefix
-	14,  // 28: communication.InterfaceIPPrefix.ip_prefix:type_name -> communication.IPPrefix
-	14,  // 29: communication.InterfaceIPPrefix.peer_ip_prefix:type_name -> communication.IPPrefix
-	17,  // 30: communication.NetworkConfig.areas:type_name -> communication.OSPFArea
-	18,  // 31: communication.NetworkConfig.interfaces:type_name -> communication.OSPFInterfaceConfig
-	37,  // 32: communication.FullFRRData.ospf_database:type_name -> communication.OSPFDatabase
-	20,  // 33: communication.FullFRRData.ospf_router_data:type_name -> communication.OSPFRouterData
-	24,  // 34: communication.FullFRRData.ospf_network_data:type_name -> communication.OSPFNetworkData
-	28,  // 35: communication.FullFRRData.ospf_summary_data:type_name -> communication.OSPFSummaryData
-	31,  // 36: communication.FullFRRData.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
-	32,  // 37: communication.FullFRRData.ospf_external_data:type_name -> communication.OSPFExternalData
-	34,  // 38: communication.FullFRRData.ospf_nssa_external_data:type_name -> communication.OSPFNssaExternalData
-	45,  // 39: communication.FullFRRData.ospf_duplicates:type_name -> communication.OSPFDuplicates
-	47,  // 40: communication.FullFRRData.ospf_neighbors:type_name -> communication.OSPFNeighbors
-	50,  // 41: communication.FullFRRData.interfaces:type_name -> communication.InterfaceList
-	54,  // 42: communication.FullFRRData.routing_information_base:type_name -> communication.RoutingInformationBase
-	4,   // 43: communication.FullFRRData.static_frr_configuration:type_name -> communication.StaticFRRConfiguration
-	15,  // 44: communication.FullFRRData.system_metrics:type_name -> communication.SystemMetrics
-	73,  // 45: communication.OSPFRouterData.router_states:type_name -> communication.OSPFRouterData.RouterStatesEntry
-	74,  // 46: communication.OSPFRouterArea.lsa_entries:type_name -> communication.OSPFRouterArea.LsaEntriesEntry
-	75,  // 47: communication.OSPFRouterLSA.router_links:type_name -> communication.OSPFRouterLSA.RouterLinksEntry
-	76,  // 48: communication.OSPFNetworkData.net_states:type_name -> communication.OSPFNetworkData.NetStatesEntry
-	77,  // 49: communication.NetAreaState.lsa_entries:type_name -> communication.NetAreaState.LsaEntriesEntry
-	78,  // 50: communication.NetworkLSA.attached_routers:type_name -> communication.NetworkLSA.AttachedRoutersEntry
-	79,  // 51: communication.OSPFSummaryData.net_states:type_name -> communication.OSPFSummaryData.NetStatesEntry
-	80,  // 52: communication.OSPFSummaryData.summary_states:type_name -> communication.OSPFSummaryData.SummaryStatesEntry
-	81,  // 53: communication.SummaryAreaState.lsa_entries:type_name -> communication.SummaryAreaState.LsaEntriesEntry
-	82,  // 54: communication.OSPFAsbrSummaryData.asbr_summary_states:type_name -> communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry
-	83,  // 55: communication.OSPFExternalData.as_external_link_states:type_name -> communication.OSPFExternalData.AsExternalLinkStatesEntry
-	84,  // 56: communication.OSPFNssaExternalData.nssa_external_link_states:type_name -> communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
-	85,  // 57: communication.NssaExternalArea.data:type_name -> communication.NssaExternalArea.DataEntry
-	86,  // 58: communication.OSPFDatabase.areas:type_name -> communication.OSPFDatabase.AreasEntry
-	44,  // 59: communication.OSPFDatabase.as_external_link_states:type_name -> communication.ASExternalLSA
-	40,  // 60: communication.OSPFDatabaseArea.router_link_states:type_name -> communication.RouterDataLSA
-	41,  // 61: communication.OSPFDatabaseArea.network_link_states:type_name -> communication.NetworkDataLSA
-	42,  // 62: communication.OSPFDatabaseArea.summary_link_states:type_name -> communication.SummaryDataLSA
-	43,  // 63: communication.OSPFDatabaseArea.asbr_summary_link_states:type_name -> communication.ASBRSummaryLSA
-	39,  // 64: communication.RouterDataLSA.base:type_name -> communication.BaseLSA
-	39,  // 65: communication.NetworkDataLSA.base:type_name -> communication.BaseLSA
-	39,  // 66: communication.SummaryDataLSA.base:type_name -> communication.BaseLSA
-	39,  // 67: communication.ASBRSummaryLSA.base:type_name -> communication.BaseLSA
-	39,  // 68: communication.ASExternalLSA.base:type_name -> communication.BaseLSA
-	46,  // 69: communication.OSPFDuplicates.as_external_link_states:type_name -> communication.ASExternalLinkState
-	87,  // 70: communication.OSPFNeighbors.neighbors:type_name -> communication.OSPFNeighbors.NeighborsEntry
-	49,  // 71: communication.NeighborList.neighbors:type_name -> communication.Neighbor
-	88,  // 72: communication.InterfaceList.interfaces:type_name -> communication.InterfaceList.InterfacesEntry
-	52,  // 73: communication.SingleInterface.ip_addresses:type_name -> communication.IpAddress
-	53,  // 74: communication.SingleInterface.evpn_mh:type_name -> communication.EvpnMh
-	89,  // 75: communication.RoutingInformationBase.routes:type_name -> communication.RoutingInformationBase.RoutesEntry
-	56,  // 76: communication.RouteEntry.routes:type_name -> communication.Route
-	57,  // 77: communication.Route.nexthops:type_name -> communication.Nexthop
-	61,  // 78: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
-	62,  // 79: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
-	63,  // 80: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
-	64,  // 81: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
-	93,  // 82: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 83: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
-	93,  // 84: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 85: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
-	93,  // 86: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 87: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
-	93,  // 88: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
-	60,  // 89: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
-	90,  // 90: communication.OspfRouterInfo.router_link_states:type_name -> communication.OspfRouterInfo.RouterLinkStatesEntry
-	91,  // 91: communication.AreaLinkStates.router_lsas:type_name -> communication.AreaLinkStates.RouterLsasEntry
-	92,  // 92: communication.RouterLSA.router_links:type_name -> communication.RouterLSA.RouterLinksEntry
-	3,   // 93: communication.Message.ParamsEntry.value:type_name -> communication.ResponseValue
-	3,   // 94: communication.Command.ParamsEntry.value:type_name -> communication.ResponseValue
-	10,  // 95: communication.StaticFRRConfiguration.RouteMapEntry.value:type_name -> communication.RouteMap
-	11,  // 96: communication.StaticFRRConfiguration.AccessListEntry.value:type_name -> communication.AccessList
-	21,  // 97: communication.OSPFRouterData.RouterStatesEntry.value:type_name -> communication.OSPFRouterArea
-	22,  // 98: communication.OSPFRouterArea.LsaEntriesEntry.value:type_name -> communication.OSPFRouterLSA
-	23,  // 99: communication.OSPFRouterLSA.RouterLinksEntry.value:type_name -> communication.OSPFRouterLSALink
-	25,  // 100: communication.OSPFNetworkData.NetStatesEntry.value:type_name -> communication.NetAreaState
-	26,  // 101: communication.NetAreaState.LsaEntriesEntry.value:type_name -> communication.NetworkLSA
-	27,  // 102: communication.NetworkLSA.AttachedRoutersEntry.value:type_name -> communication.AttachedRouter
-	25,  // 103: communication.OSPFSummaryData.NetStatesEntry.value:type_name -> communication.NetAreaState
-	29,  // 104: communication.OSPFSummaryData.SummaryStatesEntry.value:type_name -> communication.SummaryAreaState
-	30,  // 105: communication.SummaryAreaState.LsaEntriesEntry.value:type_name -> communication.SummaryLSA
-	29,  // 106: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry.value:type_name -> communication.SummaryAreaState
-	33,  // 107: communication.OSPFExternalData.AsExternalLinkStatesEntry.value:type_name -> communication.ExternalLSA
-	35,  // 108: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
-	36,  // 109: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
-	38,  // 110: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
-	48,  // 111: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
-	51,  // 112: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
-	55,  // 113: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry
-	66,  // 114: communication.OspfRouterInfo.RouterLinkStatesEntry.value:type_name -> communication.AreaLinkStates
-	67,  // 115: communication.AreaLinkStates.RouterLsasEntry.value:type_name -> communication.RouterLSA
-	68,  // 116: communication.RouterLSA.RouterLinksEntry.value:type_name -> communication.RouterLink
-	117, // [117:117] is the sub-list for method output_type
-	117, // [117:117] is the sub-list for method input_type
-	117, // [117:117] is the sub-list for extension type_name
-	117, // [117:117] is the sub-list for extension extendee
-	0,   // [0:117] is the sub-list for field type_name
+	20,  // 17: communication.ResponseValue.frr_router_data:type_name -> communication.FRRRouterData
+	5,   // 18: communication.StaticFRRConfiguration.interfaces:type_name -> communication.Interface
+	6,   // 19: communication.StaticFRRConfiguration.static_routes:type_name -> communication.StaticRoute
+	7,   // 20: communication.StaticFRRConfiguration.ospf_config:type_name -> communication.OSPFConfig
+	72,  // 21: communication.StaticFRRConfiguration.route_map:type_name -> communication.StaticFRRConfiguration.RouteMapEntry
+	73,  // 22: communication.StaticFRRConfiguration.access_list:type_name -> communication.StaticFRRConfiguration.AccessListEntry
+	13,  // 23: communication.Interface.interface_ip_prefixes:type_name -> communication.InterfaceIPPrefix
+	14,  // 24: communication.StaticRoute.ip_prefix:type_name -> communication.IPPrefix
+	8,   // 25: communication.OSPFConfig.redistribution:type_name -> communication.Redistribution
+	9,   // 26: communication.OSPFConfig.area:type_name -> communication.Area
+	12,  // 27: communication.AccessList.access_list_items:type_name -> communication.AccessListItem
+	14,  // 28: communication.AccessListItem.ip_prefix:type_name -> communication.IPPrefix
+	14,  // 29: communication.InterfaceIPPrefix.ip_prefix:type_name -> communication.IPPrefix
+	14,  // 30: communication.InterfaceIPPrefix.peer_ip_prefix:type_name -> communication.IPPrefix
+	17,  // 31: communication.NetworkConfig.areas:type_name -> communication.OSPFArea
+	18,  // 32: communication.NetworkConfig.interfaces:type_name -> communication.OSPFInterfaceConfig
+	38,  // 33: communication.FullFRRData.ospf_database:type_name -> communication.OSPFDatabase
+	21,  // 34: communication.FullFRRData.ospf_router_data:type_name -> communication.OSPFRouterData
+	25,  // 35: communication.FullFRRData.ospf_network_data:type_name -> communication.OSPFNetworkData
+	29,  // 36: communication.FullFRRData.ospf_summary_data:type_name -> communication.OSPFSummaryData
+	32,  // 37: communication.FullFRRData.ospf_asbr_summary_data:type_name -> communication.OSPFAsbrSummaryData
+	33,  // 38: communication.FullFRRData.ospf_external_data:type_name -> communication.OSPFExternalData
+	35,  // 39: communication.FullFRRData.ospf_nssa_external_data:type_name -> communication.OSPFNssaExternalData
+	46,  // 40: communication.FullFRRData.ospf_duplicates:type_name -> communication.OSPFDuplicates
+	48,  // 41: communication.FullFRRData.ospf_neighbors:type_name -> communication.OSPFNeighbors
+	51,  // 42: communication.FullFRRData.interfaces:type_name -> communication.InterfaceList
+	55,  // 43: communication.FullFRRData.routing_information_base:type_name -> communication.RoutingInformationBase
+	4,   // 44: communication.FullFRRData.static_frr_configuration:type_name -> communication.StaticFRRConfiguration
+	15,  // 45: communication.FullFRRData.system_metrics:type_name -> communication.SystemMetrics
+	20,  // 46: communication.FullFRRData.frr_router_data:type_name -> communication.FRRRouterData
+	74,  // 47: communication.OSPFRouterData.router_states:type_name -> communication.OSPFRouterData.RouterStatesEntry
+	75,  // 48: communication.OSPFRouterArea.lsa_entries:type_name -> communication.OSPFRouterArea.LsaEntriesEntry
+	76,  // 49: communication.OSPFRouterLSA.router_links:type_name -> communication.OSPFRouterLSA.RouterLinksEntry
+	77,  // 50: communication.OSPFNetworkData.net_states:type_name -> communication.OSPFNetworkData.NetStatesEntry
+	78,  // 51: communication.NetAreaState.lsa_entries:type_name -> communication.NetAreaState.LsaEntriesEntry
+	79,  // 52: communication.NetworkLSA.attached_routers:type_name -> communication.NetworkLSA.AttachedRoutersEntry
+	80,  // 53: communication.OSPFSummaryData.net_states:type_name -> communication.OSPFSummaryData.NetStatesEntry
+	81,  // 54: communication.OSPFSummaryData.summary_states:type_name -> communication.OSPFSummaryData.SummaryStatesEntry
+	82,  // 55: communication.SummaryAreaState.lsa_entries:type_name -> communication.SummaryAreaState.LsaEntriesEntry
+	83,  // 56: communication.OSPFAsbrSummaryData.asbr_summary_states:type_name -> communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry
+	84,  // 57: communication.OSPFExternalData.as_external_link_states:type_name -> communication.OSPFExternalData.AsExternalLinkStatesEntry
+	85,  // 58: communication.OSPFNssaExternalData.nssa_external_link_states:type_name -> communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
+	86,  // 59: communication.NssaExternalArea.data:type_name -> communication.NssaExternalArea.DataEntry
+	87,  // 60: communication.OSPFDatabase.areas:type_name -> communication.OSPFDatabase.AreasEntry
+	45,  // 61: communication.OSPFDatabase.as_external_link_states:type_name -> communication.ASExternalLSA
+	41,  // 62: communication.OSPFDatabaseArea.router_link_states:type_name -> communication.RouterDataLSA
+	42,  // 63: communication.OSPFDatabaseArea.network_link_states:type_name -> communication.NetworkDataLSA
+	43,  // 64: communication.OSPFDatabaseArea.summary_link_states:type_name -> communication.SummaryDataLSA
+	44,  // 65: communication.OSPFDatabaseArea.asbr_summary_link_states:type_name -> communication.ASBRSummaryLSA
+	40,  // 66: communication.RouterDataLSA.base:type_name -> communication.BaseLSA
+	40,  // 67: communication.NetworkDataLSA.base:type_name -> communication.BaseLSA
+	40,  // 68: communication.SummaryDataLSA.base:type_name -> communication.BaseLSA
+	40,  // 69: communication.ASBRSummaryLSA.base:type_name -> communication.BaseLSA
+	40,  // 70: communication.ASExternalLSA.base:type_name -> communication.BaseLSA
+	47,  // 71: communication.OSPFDuplicates.as_external_link_states:type_name -> communication.ASExternalLinkState
+	88,  // 72: communication.OSPFNeighbors.neighbors:type_name -> communication.OSPFNeighbors.NeighborsEntry
+	50,  // 73: communication.NeighborList.neighbors:type_name -> communication.Neighbor
+	89,  // 74: communication.InterfaceList.interfaces:type_name -> communication.InterfaceList.InterfacesEntry
+	53,  // 75: communication.SingleInterface.ip_addresses:type_name -> communication.IpAddress
+	54,  // 76: communication.SingleInterface.evpn_mh:type_name -> communication.EvpnMh
+	90,  // 77: communication.RoutingInformationBase.routes:type_name -> communication.RoutingInformationBase.RoutesEntry
+	57,  // 78: communication.RouteEntry.routes:type_name -> communication.Route
+	58,  // 79: communication.Route.nexthops:type_name -> communication.Nexthop
+	62,  // 80: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
+	63,  // 81: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
+	64,  // 82: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
+	65,  // 83: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
+	94,  // 84: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	61,  // 85: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
+	94,  // 86: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	61,  // 87: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
+	94,  // 88: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
+	61,  // 89: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
+	94,  // 90: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
+	61,  // 91: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
+	91,  // 92: communication.OspfRouterInfo.router_link_states:type_name -> communication.OspfRouterInfo.RouterLinkStatesEntry
+	92,  // 93: communication.AreaLinkStates.router_lsas:type_name -> communication.AreaLinkStates.RouterLsasEntry
+	93,  // 94: communication.RouterLSA.router_links:type_name -> communication.RouterLSA.RouterLinksEntry
+	3,   // 95: communication.Message.ParamsEntry.value:type_name -> communication.ResponseValue
+	3,   // 96: communication.Command.ParamsEntry.value:type_name -> communication.ResponseValue
+	10,  // 97: communication.StaticFRRConfiguration.RouteMapEntry.value:type_name -> communication.RouteMap
+	11,  // 98: communication.StaticFRRConfiguration.AccessListEntry.value:type_name -> communication.AccessList
+	22,  // 99: communication.OSPFRouterData.RouterStatesEntry.value:type_name -> communication.OSPFRouterArea
+	23,  // 100: communication.OSPFRouterArea.LsaEntriesEntry.value:type_name -> communication.OSPFRouterLSA
+	24,  // 101: communication.OSPFRouterLSA.RouterLinksEntry.value:type_name -> communication.OSPFRouterLSALink
+	26,  // 102: communication.OSPFNetworkData.NetStatesEntry.value:type_name -> communication.NetAreaState
+	27,  // 103: communication.NetAreaState.LsaEntriesEntry.value:type_name -> communication.NetworkLSA
+	28,  // 104: communication.NetworkLSA.AttachedRoutersEntry.value:type_name -> communication.AttachedRouter
+	26,  // 105: communication.OSPFSummaryData.NetStatesEntry.value:type_name -> communication.NetAreaState
+	30,  // 106: communication.OSPFSummaryData.SummaryStatesEntry.value:type_name -> communication.SummaryAreaState
+	31,  // 107: communication.SummaryAreaState.LsaEntriesEntry.value:type_name -> communication.SummaryLSA
+	30,  // 108: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry.value:type_name -> communication.SummaryAreaState
+	34,  // 109: communication.OSPFExternalData.AsExternalLinkStatesEntry.value:type_name -> communication.ExternalLSA
+	36,  // 110: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
+	37,  // 111: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
+	39,  // 112: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
+	49,  // 113: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
+	52,  // 114: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
+	56,  // 115: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry
+	67,  // 116: communication.OspfRouterInfo.RouterLinkStatesEntry.value:type_name -> communication.AreaLinkStates
+	68,  // 117: communication.AreaLinkStates.RouterLsasEntry.value:type_name -> communication.RouterLSA
+	69,  // 118: communication.RouterLSA.RouterLinksEntry.value:type_name -> communication.RouterLink
+	119, // [119:119] is the sub-list for method output_type
+	119, // [119:119] is the sub-list for method input_type
+	119, // [119:119] is the sub-list for extension type_name
+	119, // [119:119] is the sub-list for extension extendee
+	0,   // [0:119] is the sub-list for field type_name
 }
 
 func init() { file_protocol_proto_init() }
@@ -6592,19 +6677,20 @@ func file_protocol_proto_init() {
 		(*ResponseValue_RoutingInformationBase)(nil),
 		(*ResponseValue_StaticFrrConfiguration)(nil),
 		(*ResponseValue_SystemMetrics)(nil),
+		(*ResponseValue_FrrRouterData)(nil),
 	}
 	file_protocol_proto_msgTypes[12].OneofWrappers = []any{
 		(*AccessListItem_IpPrefix)(nil),
 		(*AccessListItem_Any)(nil),
 	}
-	file_protocol_proto_msgTypes[68].OneofWrappers = []any{}
+	file_protocol_proto_msgTypes[69].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protocol_proto_rawDesc), len(file_protocol_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   93,
+			NumMessages:   94,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

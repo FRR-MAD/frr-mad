@@ -2,6 +2,7 @@ package components
 
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
 	"strings"
@@ -42,11 +43,10 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	}
 
 	// in future call backend to query router name
-	routerName := "R101"
+	routerName, routerOSPFID, _ := getRouterName()
 	routerNameWidth := lipgloss.Width(routerName)
 	routerNameString := "Router Name: "
 	routerNameStringWidth := lipgloss.Width(routerNameString)
-	routerOSPFID := "65.0.0.1"
 	routerOSPFIDWidth := lipgloss.Width(routerOSPFID)
 	ospfIdString := "OSPF ID: "
 	ospfIdStringWidth := lipgloss.Width(ospfIdString)
@@ -69,4 +69,18 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	horizontalSubTabs := lipgloss.JoinHorizontal(lipgloss.Bottom, renderedSubTabs...)
 
 	return lipgloss.JoinVertical(lipgloss.Left, horizontalTabs, horizontalSubTabs)
+}
+
+func getRouterName() (string, string, error) {
+	response, err := backend.SendMessage("frr", "routerData", nil)
+	if err != nil {
+		return "", "", err
+	}
+
+	routerData := response.Data.GetFrrRouterData()
+
+	routerName := routerData.RouterName
+	ospfRouterId := routerData.OspfRouterId
+
+	return routerName, ospfRouterId, nil
 }

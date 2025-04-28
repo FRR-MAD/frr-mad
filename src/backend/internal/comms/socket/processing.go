@@ -12,6 +12,15 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	var response frrProto.Response
 
 	switch message.Service {
+	case "frr":
+		switch message.Command {
+		case "routerData":
+			return s.getRouterName()
+		default:
+			response.Status = "error"
+			response.Message = "There was an error"
+			return &response
+		}
 	case "ospf":
 		switch message.Command {
 		case "dummy":

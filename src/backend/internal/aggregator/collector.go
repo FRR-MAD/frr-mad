@@ -56,6 +56,7 @@ func initFullFrrData() *frrProto.FullFRRData {
 		RoutingInformationBase: &frrProto.RoutingInformationBase{},
 		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{},
 		SystemMetrics:          &frrProto.SystemMetrics{},
+		FrrRouterData:          &frrProto.FRRRouterData{},
 	}
 
 	return &fullFrrData
@@ -186,6 +187,14 @@ func (c *Collector) Collect() error {
 
 	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {
 		return c.fetcher.CollectSystemMetrics()
+	})
+
+	fetchAndMerge("FrrRouterData", c.FullFrrData.FrrRouterData, func() (proto.Message, error) {
+		frrRouterData := &frrProto.FRRRouterData{
+			RouterName:   c.FullFrrData.StaticFrrConfiguration.Hostname,
+			OspfRouterId: c.FullFrrData.OspfDatabase.RouterId,
+		}
+		return frrRouterData, nil
 	})
 
 	return nil

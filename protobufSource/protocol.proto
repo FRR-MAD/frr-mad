@@ -50,6 +50,7 @@ message ResponseValue {
     RoutingInformationBase routing_information_base = 13;
     StaticFRRConfiguration static_frr_configuration = 14;
     SystemMetrics system_metrics = 15;
+    FRRRouterData frr_router_data = 16;
   }
 }
 
@@ -175,9 +176,15 @@ message FullFRRData {
   RoutingInformationBase routing_information_base = 11;
   StaticFRRConfiguration static_frr_configuration = 12;
   SystemMetrics system_metrics = 13;
+  FRRRouterData frr_router_data = 14;
 }
 
 // ================ Aggregator LSA Router ====================
+
+message FRRRouterData {
+  string router_name = 1;
+  string ospf_router_id =2;
+}
 
 message OSPFRouterData {
   string router_id = 1 [json_name = "routerId"];

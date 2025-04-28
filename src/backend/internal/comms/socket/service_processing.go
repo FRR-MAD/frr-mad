@@ -18,6 +18,19 @@ func (s *Socket) ospfDummyData() *frrProto.Response {
 	}
 }
 
+func (s *Socket) getRouterName() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_FrrRouterData{
+			FrrRouterData: s.metrics.GetFrrRouterData(),
+		},
+	}
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "Returng FRR Router Data",
+		Data:    value,
+	}
+}
+
 func (s *Socket) getSystemResources() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_SystemMetrics{
