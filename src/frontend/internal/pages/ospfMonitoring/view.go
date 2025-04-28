@@ -77,7 +77,7 @@ func (m *Model) View() string {
 //			asbrSummaryLinkStateData = append(asbrSummaryLinkStateData, []string{
 //				asbrSummaryLinkState.Base.LsId,
 //				asbrSummaryLinkState.Base.AdvertisedRouter,
-//				asbrSummaryLinkState.Base.LsaAge
+//				strconv.Itoa(int(asbrSummaryLinkState.Base.LsaAge)),
 //			})
 //		}
 //
@@ -87,6 +87,17 @@ func (m *Model) View() string {
 //			Padding(1, 0, 0, 0).
 //			Render(fmt.Sprintf("Area %s", area))
 //	}
+//
+//	var asExternalLinkStateData [][]string
+//	for _, asExternalLinkState := range lsdb.AsExternalLinkStates {
+//		asExternalLinkStateData = append(asExternalLinkStateData, []string{
+//			asExternalLinkState.Route,
+//			asExternalLinkState.MetricType,
+//			asExternalLinkState.Base.AdvertisedRouter,
+//			strconv.Itoa(int(asExternalLinkState.Base.LsaAge)),
+//		})
+//	}
+//
 //	return "nothing"
 //}
 
@@ -290,11 +301,14 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	externalLsaBlock = append(externalLsaBlock, completeExternalBox+"\n\n")
 
+	var nssaExternalTableData [][]string
 	for area, areaData := range nssaExternalDataSelf.NssaExternalLinkStates {
-		var nssaExternalTableData [][]string
 		// var nssaExternalTableDataExpanded [][]string
 
 		for _, lsaData := range areaData.Data {
+			//if slice, ok := len(slice) > 0 {
+			//
+			//}
 			nssaExternalTableData = append(nssaExternalTableData, []string{
 				lsaData.LinkStateId,
 				"/" + strconv.Itoa(int(lsaData.NetworkMask)),
@@ -349,8 +363,8 @@ func (m *Model) renderExternalMonitorTab() string {
 	m.viewport.Height = contentMaxHeight
 
 	var allLsaBlocks []string
-	if externalLSASelf.AsExternalLinkStates != nil {
-		if len(nssaExternalDataSelf.NssaExternalLinkStates) == 0 {
+	if nssaExternalTableData != nil {
+		if externalTableData != nil {
 			allLsaBlocks = append(externalLsaBlock, nssaExternalLsaBlock...)
 		} else {
 			allLsaBlocks = externalLsaBlock
@@ -585,4 +599,15 @@ func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
 	}
 
 	return response.Data.GetOspfNssaExternalData(), nil
+}
+
+// todo: maybe query which area has nssaExternal before creating tables
+// returns true if _any_ of the per‐area slices has at least one LSA
+func hasAnyNssaExternal(nssa map[string][]*pkg.NssaExternalArea) bool {
+	for _, states := range nssa {
+		if len(states) > 0 {
+			return true
+		}
+	}
+	return false
 }
