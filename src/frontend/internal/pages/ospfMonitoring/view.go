@@ -3,6 +3,7 @@ package ospfMonitoring
 import (
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"google.golang.org/protobuf/encoding/protojson"
 	"strconv"
 
 	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -39,9 +40,12 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderLsdbMonitorTab() string {
-	boxWidthForOneH1 := m.windowSize.Width - 10    // - 6 (padding+margin content) - 2 (for each border)
-	boxWidthForOneH2 := boxWidthForOneH1 - 4       // -4 (for margin) -2 (for border)
-	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2 // -4 (for margin) -2 (for Border)
+	// - 6 (padding+margin content) - 2 (for each border) -2 (to prevent errors)
+	boxWidthForOneH1 := m.windowSize.Width - 10
+	// -4 (for margin)
+	boxWidthForOneH2 := boxWidthForOneH1 - 4
+	// -4 (for margin) -2 (for border)
+	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2
 
 	var lsdbBlocks []string
 
@@ -270,9 +274,12 @@ func (m *Model) renderLsdbMonitorTab() string {
 }
 
 func (m *Model) renderRouterMonitorTab() string {
-	boxWidthForOneH1 := m.windowSize.Width - 10    // - 6 (padding+margin content) - 2 (for each border)
-	boxWidthForOneH2 := boxWidthForOneH1 - 4       // -4 (for margin) -2 (for border)
-	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2 // -4 (for margin) -2 (for Border)
+	// - 6 (padding+margin content) - 2 (for each border) -2 (to prevent errors)
+	boxWidthForOneH1 := m.windowSize.Width - 10
+	// -4 (for margin)
+	boxWidthForOneH2 := boxWidthForOneH1 - 4
+	// -4 (for margin) -2 (for border)
+	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2
 
 	ospfNeighbors := getOspfNeighborInterfaces()
 	routerLSASelf, _ := getOspfRouterData()
@@ -364,15 +371,12 @@ func (m *Model) renderRouterMonitorTab() string {
 }
 
 func (m *Model) renderExternalMonitorTab() string {
-	boxWidthForTwoH2 := (m.windowSize.Width - 16) / 2 // - 6 (padding+margin content) - 2 (for border) - 8 (for margin)
-	if boxWidthForTwoH2 < 20 {
-		boxWidthForTwoH2 = 20 // Minimum width to ensure readability
-	}
-	boxWidthForOneH1 := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
-	if boxWidthForOneH1 < 20 {
-		boxWidthForOneH1 = 20 // Minimum width to ensure readability
-	}
-	boxWidthForOneH2 := boxWidthForOneH1 - 4 // -4 (for margin) -2 (for border)
+	// - 6 (padding+margin content) - 2 (for each border) -2 (to prevent errors)
+	boxWidthForOneH1 := m.windowSize.Width - 10
+	// -4 (for margin)
+	boxWidthForOneH2 := boxWidthForOneH1 - 4
+	// -4 (for margin) -2 (for border)
+	// boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2
 
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
@@ -517,54 +521,54 @@ func (m *Model) renderExternalMonitorTab() string {
 	return m.viewport.View()
 }
 
-func (m *Model) renderAdvertisementTab() string {
-	// on this view:
-	// show three advertisement boxes: based on vtysh LSA queries / based on file analysis / based on FIB analysis
-
-	boxWidthForTwo := (m.windowSize.Width - 10) / 2 // - 6 (padding+margin content) - 2 (for gap) - 2 (for border)
-	if boxWidthForTwo < 20 {
-		boxWidthForTwo = 20 // Minimum width to ensure readability
-	}
-
-	shouldAdvertisedTitle := styles.BoxTitleStyle.Render("Should be Advertised")
-
-	shouldAdvertisedContent := "Area 0.0.0.0: \n"
-
-	shouldAdvertisedRouterLSA := styles.ContentTitleH1Style.
-		Width(boxWidthForTwo - 2).
-		Render("Area 0.0.0.0, Router LSAs (Type 1)")
-	shouldAdvertisedContent += shouldAdvertisedRouterLSA
-
-	shouldAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, shouldAdvertisedTitle, shouldAdvertisedContent)
-	shouldAdvertisedBox := lipgloss.NewStyle().Render(shouldAdvertisedVerticalStyle)
-
-	// ----------------------------------------------------
-	gap := 2
-	// ----------------------------------------------------
-
-	isAdvertisedTitle := styles.BoxTitleStyle.Render("Is Advertised")
-
-	isAdvertisedContent := "Area 0.0.0.0: \n"
-
-	// for each area create area box --> need length of areas
-
-	isAdvertisedRouterLSA := styles.ContentTitleH1Style.
-		Width(boxWidthForTwo - 2).
-		Render("Area 0.0.0.0, Router LSAs (Type 1)")
-	isAdvertisedContent += isAdvertisedRouterLSA
-
-	isAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, isAdvertisedTitle, isAdvertisedContent)
-	isAdvertisedBox := lipgloss.NewStyle().Render(isAdvertisedVerticalStyle)
-	// returnString := "Advertisement"
-
-	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top,
-		isAdvertisedBox,
-		lipgloss.NewStyle().Width(gap).Render(""),
-		shouldAdvertisedBox,
-	)
-
-	return horizontalBoxes
-}
+//func (m *Model) renderAdvertisementTab() string {
+//	// on this view:
+//	// show three advertisement boxes: based on vtysh LSA queries / based on file analysis / based on FIB analysis
+//
+//	boxWidthForTwo := (m.windowSize.Width - 10) / 2 // - 6 (padding+margin content) - 2 (for gap) - 2 (for border)
+//	if boxWidthForTwo < 20 {
+//		boxWidthForTwo = 20 // Minimum width to ensure readability
+//	}
+//
+//	shouldAdvertisedTitle := styles.BoxTitleStyle.Render("Should be Advertised")
+//
+//	shouldAdvertisedContent := "Area 0.0.0.0: \n"
+//
+//	shouldAdvertisedRouterLSA := styles.ContentTitleH1Style.
+//		Width(boxWidthForTwo - 2).
+//		Render("Area 0.0.0.0, Router LSAs (Type 1)")
+//	shouldAdvertisedContent += shouldAdvertisedRouterLSA
+//
+//	shouldAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, shouldAdvertisedTitle, shouldAdvertisedContent)
+//	shouldAdvertisedBox := lipgloss.NewStyle().Render(shouldAdvertisedVerticalStyle)
+//
+//	// ----------------------------------------------------
+//	gap := 2
+//	// ----------------------------------------------------
+//
+//	isAdvertisedTitle := styles.BoxTitleStyle.Render("Is Advertised")
+//
+//	isAdvertisedContent := "Area 0.0.0.0: \n"
+//
+//	// for each area create area box --> need length of areas
+//
+//	isAdvertisedRouterLSA := styles.ContentTitleH1Style.
+//		Width(boxWidthForTwo - 2).
+//		Render("Area 0.0.0.0, Router LSAs (Type 1)")
+//	isAdvertisedContent += isAdvertisedRouterLSA
+//
+//	isAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, isAdvertisedTitle, isAdvertisedContent)
+//	isAdvertisedBox := lipgloss.NewStyle().Render(isAdvertisedVerticalStyle)
+//	// returnString := "Advertisement"
+//
+//	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top,
+//		isAdvertisedBox,
+//		lipgloss.NewStyle().Width(gap).Render(""),
+//		shouldAdvertisedBox,
+//	)
+//
+//	return horizontalBoxes
+//}
 
 func (m *Model) renderOSPFTab0() string {
 	// Calculate box width dynamically for four horizontal boxes based on terminal width
@@ -734,4 +738,28 @@ func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
 	}
 
 	return response.Data.GetOspfNssaExternalData(), nil
+}
+
+func getStaticFRRConfigurationPretty() string {
+	response, err := backend.SendMessage("ospf", "staticConfig", nil)
+	if err != nil {
+		return ""
+	}
+
+	var prettyJson string
+
+	// Pretty‑print the protobuf into nice indented JSON
+	marshaler := protojson.MarshalOptions{
+		Multiline:     true,
+		Indent:        "  ",
+		UseProtoNames: true,
+	}
+	pretty, perr := marshaler.Marshal(response.Data)
+	if perr != nil {
+		prettyJson = response.Data.String()
+	} else {
+		prettyJson = string(pretty)
+	}
+
+	return prettyJson
 }

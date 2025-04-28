@@ -202,6 +202,7 @@ func (m *AppModel) View() string {
 		return "Unknown view"
 	}
 
+	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)
 	contentWidth := m.windowSize.Width - 4
 	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
 
