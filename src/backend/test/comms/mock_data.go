@@ -2,8 +2,8 @@ package socket_test
 
 import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
 // CreateMockOSPFDatabase creates a simple mock OSPFDatabase for testing

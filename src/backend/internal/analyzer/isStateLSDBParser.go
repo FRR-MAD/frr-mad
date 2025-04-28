@@ -12,6 +12,7 @@ func convertRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostnam
 		return nil
 	}
 
+	// TODO: check if redistribute has a route-map and only if compare to route-map lists
 	result := &interAreaLsa{
 		Hostname: hostname,
 		RouterId: config.RouterId,
@@ -23,11 +24,11 @@ func convertRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostnam
 	externalArea := area{
 		AreaName: "External",
 		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []advertisment{},
+		Links:    []advertisement{},
 	}
 
 	for _, lsa := range config.AsExternalLinkStates {
-		adv := advertisment{
+		adv := advertisement{
 			LinkStateId:  lsa.LinkStateId,
 			PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
 			LinkType:     "external",
@@ -57,11 +58,11 @@ func convertNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostna
 		nssaAreaObj := area{
 			AreaName: areaId,
 			LsaType:  "NSSA-LSA",
-			Links:    []advertisment{},
+			Links:    []advertisement{},
 		}
 
 		for _, lsa := range nssaArea.Data {
-			adv := advertisment{
+			adv := advertisement{
 				LinkStateId:  lsa.LinkStateId,
 				PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
 				LinkType:     "nssa-external",
@@ -97,7 +98,7 @@ func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) 
 				newArea := area{
 					AreaName: areaName,
 					LsaType:  lsaEntry.LsaType,
-					Links:    []advertisment{},
+					Links:    []advertisement{},
 				}
 				result.Areas = append(result.Areas, newArea)
 				currentArea = &result.Areas[len(result.Areas)-1]
@@ -124,7 +125,7 @@ func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) 
 					}
 				}
 
-				adv := advertisment{}
+				adv := advertisement{}
 				adv.InterfaceAddress = ipAddress
 				adv.LinkType = routerLink.LinkType
 

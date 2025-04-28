@@ -35,7 +35,7 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 			newArea := area{
 				AreaName: iface.Area,
 				LsaType:  "router-LSA",
-				Links:    []advertisment{},
+				Links:    []advertisement{},
 			}
 			areaMap[iface.Area] = &newArea
 			a = &newArea
@@ -47,7 +47,7 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 				continue
 			}
 
-			adv := advertisment{
+			adv := advertisement{
 				InterfaceAddress: ipPrefix.IpPrefix.IpAddress,
 				PrefixLength:     strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
 			}
@@ -91,14 +91,14 @@ func convertStaticFileRouterData(config *frrProto.StaticFRRConfiguration) *intra
 					newArea := area{
 						AreaName: ospfArea.Name,
 						LsaType:  "router-LSA",
-						Links:    []advertisment{},
+						Links:    []advertisement{},
 					}
 					areaMap[ospfArea.Name] = &newArea
 					a = &newArea
 				}
 
 				// Add virtual link advertisement
-				adv := advertisment{
+				adv := advertisement{
 					LinkStateId: config.OspfConfig.VirtualLinkNeighbor,
 					LinkType:    "virtual link",
 				}
@@ -161,7 +161,7 @@ func convertStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *int
 	externalArea := area{
 		AreaName: "External",
 		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []advertisment{},
+		Links:    []advertisement{},
 	}
 
 	// Add connected interfaces not in NSSA areas
@@ -173,7 +173,7 @@ func convertStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *int
 
 		for _, ipPrefix := range iface.InterfaceIpPrefixes {
 			if ipPrefix.IpPrefix != nil {
-				adv := advertisment{
+				adv := advertisement{
 					LinkStateId:  ipPrefix.IpPrefix.IpAddress,
 					PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
 					LinkType:     "external",
@@ -186,7 +186,7 @@ func convertStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *int
 	// Add static routes (will be advertised as type 5 in regular areas)
 	for _, staticRoute := range config.StaticRoutes {
 		if staticRoute.IpPrefix != nil {
-			adv := advertisment{
+			adv := advertisement{
 				LinkStateId:  staticRoute.IpPrefix.IpAddress,
 				PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
 				LinkType:     "external",
@@ -274,7 +274,7 @@ func convertStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) 
 		nssaAreaObj := area{
 			AreaName: nssaArea,
 			LsaType:  "NSSA-LSA", // Type 7
-			Links:    []advertisment{},
+			Links:    []advertisement{},
 		}
 
 		// Add connected interfaces in this NSSA area
@@ -283,7 +283,7 @@ func convertStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) 
 				if iface.Name == ifaceName {
 					for _, ipPrefix := range iface.InterfaceIpPrefixes {
 						if ipPrefix.IpPrefix != nil {
-							adv := advertisment{
+							adv := advertisement{
 								LinkStateId:  ipPrefix.IpPrefix.IpAddress,
 								PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
 								LinkType:     "nssa-external",
@@ -298,7 +298,7 @@ func convertStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) 
 		// Add static routes (will be advertised as type 7 in NSSA areas)
 		for _, staticRoute := range config.StaticRoutes {
 			if staticRoute.IpPrefix != nil {
-				adv := advertisment{
+				adv := advertisement{
 					LinkStateId:  staticRoute.IpPrefix.IpAddress,
 					PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
 					LinkType:     "nssa-external",

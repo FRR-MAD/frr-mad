@@ -8,7 +8,7 @@ import (
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/stretchr/testify/assert"
 )
 

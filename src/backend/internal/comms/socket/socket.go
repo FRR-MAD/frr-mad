@@ -10,8 +10,8 @@ import (
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -81,7 +81,7 @@ hmr/docker:
 
 hmr/run:
 	cd containerlab && chmod +x scripts/
-	cd containerlab && sh scripts/custom-bridges.sh
+	-cd containerlab && sh scripts/custom-bridges.sh
 	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
 	cd containerlab && sh scripts/pc-interfaces.sh
 	cd containerlab && sh scripts/remove-default-route.sh
