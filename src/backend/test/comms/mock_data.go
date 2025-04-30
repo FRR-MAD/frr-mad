@@ -126,7 +126,9 @@ func CreateMockFullFRRData() *frrProto.FullFRRData {
 func getMockData() (*logger.Logger, *analyzer.Analyzer, *frrProto.FullFRRData) {
 	mockLoggerInstance, _ := logger.NewLogger("testing", "/tmp/testing.log")
 	mockMetrics := CreateMockFullFRRData()
-	mockAnalyzerInstance := &analyzer.Analyzer{}
+	mockAnalyzerInstance := &analyzer.Analyzer{
+		AnalysisResult: &frrProto.AnomalyAnalysis{},
+	}
 
 	return mockLoggerInstance, mockAnalyzerInstance, mockMetrics
 }

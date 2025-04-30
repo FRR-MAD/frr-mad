@@ -27,7 +27,7 @@ func TestNewSocket(t *testing.T) {
 	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
 
 	// Create socket
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
 
 	assert.NotNil(t, socketInstance)
 	os.Remove("/tmp/test-socket")
@@ -47,7 +47,7 @@ func TestSocketConnectionHandling(t *testing.T) {
 	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
 
 	// Create socket
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
 
 	// Start socket server in a goroutine
 	socketErrChan := make(chan error, 1)
