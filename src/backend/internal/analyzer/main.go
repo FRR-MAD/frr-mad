@@ -11,18 +11,24 @@ import (
  */
 type Analyzer struct {
 	//	anomalyDetection *AnomalyDetection
-	Anomalies *frrProto.Anomalies
-	metrics   *frrProto.FullFRRData
-	Logger    *logger.Logger
+	AnalysisResult *frrProto.AnomalyAnalysis
+	metrics        *frrProto.FullFRRData
+	Logger         *logger.Logger
 }
 
 func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
-	anomalies := &frrProto.Anomalies{}
+	//anomalies := &frrProto.Anomalies{}
+	anomalyAnalysis := &frrProto.AnomalyAnalysis{
+		RouterAnomaly:       &frrProto.AnomalyDetection{},
+		ExternalAnomaly:     &frrProto.AnomalyDetection{},
+		NssaExternalAnomaly: &frrProto.AnomalyDetection{},
+	}
 
 	return &Analyzer{
-		Anomalies: anomalies,
-		metrics:   metrics,
-		Logger:    logger,
+		//Anomalies: anomalies,
+		AnalysisResult: anomalyAnalysis,
+		metrics:        metrics,
+		Logger:         logger,
 	}
 }
 

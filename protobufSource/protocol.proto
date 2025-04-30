@@ -35,10 +35,10 @@ message ResponseValue {
 
     // Analyzer command message types
     Anomalies anomalies = 2;
+    AnomalyDetection anomaly = 3;
 
     // New Aggregator service message types
-    OSPFDatabase ospf_database = 3;
-    OSPFRouterData ospf_router_data = 4;
+    OSPFDatabase ospf_database = 4;
     OSPFNetworkData ospf_network_data = 5;
     OSPFSummaryData ospf_summary_data = 6;
     OSPFAsbrSummaryData ospf_asbr_summary_data = 7;
@@ -51,6 +51,7 @@ message ResponseValue {
     StaticFRRConfiguration static_frr_configuration = 14;
     SystemMetrics system_metrics = 15;
     FRRRouterData frr_router_data = 16;
+    OSPFRouterData ospf_router_data = 17;
   }
 }
 
@@ -126,12 +127,13 @@ message AccessListItem {
 message InterfaceIPPrefix {
   IPPrefix ip_prefix = 1;
   bool passive = 2;
-  IPPrefix peer_ip_prefix = 3;
+  bool has_peer = 3; // true/false
+  IPPrefix peer_ip_prefix = 4;
 }
 
 message IPPrefix {
   string ip_address = 1;
-  uint32 prefix_length = 24;
+  uint32 prefix_length = 2;
 }
 
 message SystemMetrics {
@@ -563,11 +565,26 @@ message Anomalies {
   repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
 }
 
-message AnomalyState {
-  bool has_overadvertised_routes = 1;
-  bool has_underadvertised_routes = 2;
-  bool has_duplicate_routes = 3;
-  bool has_misconfigured_routes = 4;
+message AnomalyAnalysis {
+  AnomalyDetection router_anomaly= 1;
+  AnomalyDetection external_anomaly = 2;
+  AnomalyDetection nssa_external_anomaly = 3;
+}
+
+message AnomalyDetection {
+  bool HasOverAdvertisedPrefixes = 1;
+  bool HasUnderAdvertisedPrefixes = 2;
+  bool HasDuplicatePrefixes = 3;
+  bool HasMisconfiguredPrefixes = 4;
+  repeated Advertisement extra_entries = 5;
+  repeated Advertisement missing_entries = 6;
+}
+
+message Advertisement {
+  string InterfaceAddress = 1;
+  string LinkStateId = 2;
+  string PrefixLength = 3;
+  string LinkType = 4;
 }
 
 // Router information

@@ -84,6 +84,7 @@ func (c *Collector) Collect() error {
 			return
 		}
 
+		// TODO: Yes, do something here
 		// Merge the fetched data into the target
 		//proto.Merge(target, result)
 		// Reset target by creating a new instance of the same type

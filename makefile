@@ -33,17 +33,13 @@ binaries:
 .PHONY: build/all build/frontend build/backend build/backend/prod build/local
 build/all: build/frontend build/backend
 
-#.PHONY: build/frontend
-#build/frontend: binaries
-#	cd frontend && GOOS=linux GOARCH=amd64 go build -o  ../../binaries
+.PHONY: build/frontend
+build/frontend: binaries
+	cd $(FRONTEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o /tmp/frr-tui ./cmd/tui
 
 build/backend: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
 	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o ../../binaries/analyzer_dev ./cmd/frr-analytics
-
-build/tempClient:
-	@cd $(TEMPCLIENT_SRC) && go mod tidy
-	cd $(TEMPCLIENT_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o ../dockerfile/files/tempClient .
 
 build/local: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
@@ -59,17 +55,17 @@ build/backend/prod: binaries
 protobuf: protobuf/clean
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_BACKEND_DEST) protobufSource/protocol.proto
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_FRONTEND_DEST) protobufSource/protocol.proto
-	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
+#	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
 
 protobuf/mac: protobuf/clean
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_BACKEND_DEST) protobufSource/protocol.proto
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_FRONTEND_DEST) protobufSource/protocol.proto
-	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
+#	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
 
 protobuf/clean:
 	rm -f $(PROTO_BACKEND_DEST)/protocol.pb.go
 	rm -f $(PROTO_FRONTEND_DEST)/protocol.pb.go
-	rm -f $(PROTO_TEMPCLIENT_DEST)/protocol.pb.go
+#	rm -f $(PROTO_TEMPCLIENT_DEST)/protocol.pb.go
 
 
 #### Hot Module Reloading ####

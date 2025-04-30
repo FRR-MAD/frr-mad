@@ -145,6 +145,26 @@ topology:
         - ../src:/app/src
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
+    r192:
+      kind: linux
+      image: frr-854-dev
+      binds:
+        - r192/daemons:/etc/frr/daemons
+        - r192/frr.conf:/etc/frr/frr.conf
+        - ../src:/app/src
+        - ../local:/app/local
+        - ../protobufSource:/app/protobufSource
+
+    r193:
+      kind: linux
+      image: frr-854-dev
+      binds:
+        - r193/daemons:/etc/frr/daemons
+        - r193/frr.conf:/etc/frr/frr.conf
+        - ../src:/app/src
+        - ../local:/app/local
+        - ../protobufSource:/app/protobufSource
+
     r301:
       kind: linux
       image: frr-854-dev
@@ -272,6 +292,14 @@ topology:
       kind: linux
       image: praqma/network-multitool:latest
 
+    pc192:
+      kind: linux
+      image: praqma/network-multitool:latest
+
+    pc193:
+      kind: linux
+      image: praqma/network-multitool:latest
+
     pc201:
       kind: linux
       image: praqma/network-multitool:latest
@@ -316,6 +344,7 @@ topology:
     - endpoints: ["r101:eth11", "cr109:eth1"]
     - endpoints: ["r102:eth2", "r103:eth2"]
     - endpoints: ["r102:eth3", "r111:eth1"]
+    - endpoints: ["r102:eth4", "r193:eth1"]
     - endpoints: ["cr104:eth2", "cpc104:eth1"]
     - endpoints: ["cr105:eth2", "cpc105:eth1"]
     - endpoints: ["cr106:eth2", "cpc106:eth1"]
@@ -328,12 +357,15 @@ topology:
     - endpoints: ["r112:eth1", "sw111:eth12"]
     - endpoints: ["pc112:eth1", "sw111:eth13"]
     - endpoints: ["r112:eth2", "r301:eth1"]
+    - endpoints: ["r112:eth3", "r192:eth1"]
     - endpoints: ["r103:eth3", "r121:eth1"]
     - endpoints: ["r121:eth3", "pc121:eth1"]
     - endpoints: ["r121:eth2", "r122:eth1"]
     - endpoints: ["r122:eth2", "r131:eth1"]
     - endpoints: ["r131:eth2", "pc131:eth1"]
     - endpoints: ["r191:eth2", "pc191:eth1"]
+    - endpoints: ["r192:eth2", "pc192:eth1"]
+    - endpoints: ["r193:eth2", "pc193:eth1"]
     # AS65002
     - endpoints: ["r201:eth2", "r202:eth1"]
     - endpoints: ["r201:eth3", "r203:eth1"]

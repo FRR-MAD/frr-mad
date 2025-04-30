@@ -25,7 +25,7 @@ func TestSocketShutdown(t *testing.T) {
 
 	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
 
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
 
 	socketErrChan := make(chan error, 1)
 	go func() {
