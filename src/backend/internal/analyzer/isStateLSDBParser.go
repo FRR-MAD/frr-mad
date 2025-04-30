@@ -7,7 +7,7 @@ import (
 )
 
 // lsa type 5 parsing
-func convertRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *interAreaLsa {
+func getRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *interAreaLsa {
 	if config == nil {
 		return nil
 	}
@@ -24,11 +24,11 @@ func convertRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostnam
 	externalArea := area{
 		AreaName: "External",
 		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []advertisement{},
+		Links:    []frrProto.Advertisement{},
 	}
 
 	for _, lsa := range config.AsExternalLinkStates {
-		adv := advertisement{
+		adv := frrProto.Advertisement{
 			LinkStateId:  lsa.LinkStateId,
 			PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
 			LinkType:     "external",
@@ -43,7 +43,7 @@ func convertRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostnam
 }
 
 // lsa type 7 parsing
-func convertNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostname string) *interAreaLsa {
+func getNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostname string) *interAreaLsa {
 	if config == nil {
 		return nil
 	}
@@ -58,11 +58,11 @@ func convertNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostna
 		nssaAreaObj := area{
 			AreaName: areaId,
 			LsaType:  "NSSA-LSA",
-			Links:    []advertisement{},
+			Links:    []frrProto.Advertisement{},
 		}
 
 		for _, lsa := range nssaArea.Data {
-			adv := advertisement{
+			adv := frrProto.Advertisement{
 				LinkStateId:  lsa.LinkStateId,
 				PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
 				LinkType:     "nssa-external",
@@ -78,7 +78,7 @@ func convertNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostna
 }
 
 // lsa type 1 parsing
-func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *intraAreaLsa {
+func getRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *intraAreaLsa {
 	result := intraAreaLsa{
 		RouterId: config.RouterId,
 		Areas:    []area{},
@@ -98,7 +98,7 @@ func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) 
 				newArea := area{
 					AreaName: areaName,
 					LsaType:  lsaEntry.LsaType,
-					Links:    []advertisement{},
+					Links:    []frrProto.Advertisement{},
 				}
 				result.Areas = append(result.Areas, newArea)
 				currentArea = &result.Areas[len(result.Areas)-1]
@@ -125,7 +125,7 @@ func convertRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) 
 					}
 				}
 
-				adv := advertisement{}
+				adv := frrProto.Advertisement{}
 				adv.InterfaceAddress = ipAddress
 				adv.LinkType = routerLink.LinkType
 

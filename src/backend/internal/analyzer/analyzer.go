@@ -13,11 +13,6 @@ import (
  * intraAreaLsa handles LSA type 1, 2, 3, and 4
  * this difference is handled because there are no area distinctions with these types
  */
-type intraAreaLsa struct {
-	Hostname string `json:"hostname"`
-	RouterId string `json:"router_id"`
-	Areas    []area `json:"areas"`
-}
 
 /*
  * interAreaLsa handles LSA type 5 and 7
@@ -25,28 +20,84 @@ type intraAreaLsa struct {
  */
 
 /*
- * make protobuf structs
+ * make protobuf structsjjjj
  */
+
+/*
+ * There are different kinds of routers
+ * Backbone Router, Internal Router, ABR, ASBR
+ * Which are important?
+ * ABR: An ABR is an Area Boarder Router, it borders different routers
+ * What kind of LSAs does it send?
+	*
+const (
+	//BackboneRouter = iota // Has at least one interface in Area 0
+	//InternalRouter // Has all of its interfaces in a single area
+	Normal = iota // normal router, it's either a BackboneRouter or InternalRouter
+	ABR // An OSPF Router that has one or more interfaces in teh backbone area and one or more interfaces in a non-backbone area
+	ASBR // Connects to an area and also to an external AS
+)
+
+LSA received by area:
+	Standar Area:
+	- IN: 1,2,3,4,5
+	Stub Area:
+	- IN: 1,2,3
+	Totally Stubby Area:
+	- IN: 1,2
+	NSSA:
+	- IN: 1,2,3,7
+	- OUT: 5
+	Totally Stubby NSSA:
+	- IN: 1,2,7
+	- OUT: 5
+
+LSA Types by Router type:
+	Normal Router:
+	- T1
+	- T2 if DR
+	ABR:
+	- T1
+	- T3
+	- T4
+	- T5
+	- T7, if part of NSSA
+	ASBR:
+	- T1
+	- T5
+	- T7
+
+
+Method of finding out what kind of Router we are dealing with:
+	Standard:
+	- Has all interfaces in only one area
+	ABR:
+	- Part of Backbone and has two Areas
+	ASBR:
+	- if it has external routing protocols alongside ospf
+
+
+*/
+
+type intraAreaLsa struct {
+	Hostname   string `json:"hostname"`
+	RouterId   string `json:"router_id"`
+	RouterType string `json:"router_type"` // normal, asbr, asbr
+	Areas      []area `json:"areas"`
+}
+
 type interAreaLsa struct {
-	Hostname string `json:"hostname"`
-	RouterId string `json:"router_id"`
-	Areas    []area `json:"areas"`
+	Hostname   string `json:"hostname"`
+	RouterId   string `json:"router_id"`
+	RouterType string `json:"router_type"` // normal, asbr, asbr
+	Areas      []area `json:"areas"`
 }
 
 type area struct {
-	AreaName string          `json:"name"`
-	LsaType  string          `json:"lsa_type"`
-	Links    []advertisement `json:"links"`
-}
-
-type advertisement struct {
-	// populated with type 1 lsa
-	InterfaceAddress string `json:"interface_address,omitempty"`
-	// populated with type 2, 3, 4, 5, 7
-	LinkStateId  string `json:"link_state_id,omitempty"`
-	PrefixLength string `json:"prefix_length,omitempty"`
-	// Cost         int    `json:"cost,omitempty"`
-	LinkType string `json:"link_type"`
+	AreaName string                   `json:"name"`
+	LsaType  string                   `json:"lsa_type"`
+	AreaType string                   `json:"area_type"` //
+	Links    []frrProto.Advertisement `json:"links"`
 }
 
 type ACLEntry struct {
@@ -60,6 +111,11 @@ type ACLEntry struct {
 type accessList struct {
 	accessListName string     `json:"access_list_name"`
 	aclEntry       []ACLEntry `json:"acl_entries"`
+}
+
+type StaticList struct {
+	IpAddress    string `json:"ip_address"`
+	PrefixLength int    `json:"prefix_length"`
 }
 
 type RedistributedRoute struct {
@@ -76,11 +132,25 @@ type RedistributionList struct {
 	BGPRoutes    []RedistributedRoute `json:"bgp_routes,omitempty"`
 }
 
-// TODO: Currently there is no system checking if a host is ABR, ASBR or just a normal router.
-// TODO: add check if host has static routes
+type OspfRedistribution struct {
+	Type     string `json:"type"`
+	RouteMap string `json:"route_map"`
+	Metric   string `json:"metric"`
+}
+
+// DONE: Currently there is no system checking if a host is ABR, ASBR or just a normal router.
+// DONE: add check if host has static routes
+/*
+	- Static Lists are used to check if LSA Type 5 are required to do
+*/
 // TODO: Add another router to core that would be a normal internal router without being ABR or ASBR, just a simple internal router.
 // TODO: Properly check if the different network types per interface are correctly checked
+/*
+	- peer to peer is now correct
+*/
+
 // TODO: Logic for detecting anomalies is still very naive and early stage. This needs to be cross checked with theory.
+
 // TODO: The current approach is to first analyze the different states as in should state according to configuration and is state according to what's in the LSDB. Is that enough?
 
 // TODO: If an entry is in router, it CANNOT be in external or nssa-external LSDB
@@ -88,92 +158,38 @@ type RedistributionList struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
-	// fmt.Println("#################### File Configuration Access List Enhanced ####################") accessListEnhanced := getStaticRedistributionList(c.metrics.StaticFrrConfiguration)
-	// fmt.Printf("\n%+v\n", accessListEnhanced)
-	// fmt.Println()
-	// fmt.Println()
-	//
-	// access list
-	// fmt.Println("#################### File Configuration Access List ####################")
+	// required to know what routes are distributed
 	accessList := getAccessLists(c.metrics.StaticFrrConfiguration)
-	fmt.Printf("\n%+v\n", accessList)
-	fmt.Println()
-	fmt.Println()
 
-	// static file parsing
-	fmt.Println("#################### File Configuration Router LSDB Prediction ####################")
-	fmt.Println(c.metrics.StaticFrrConfiguration)
-	predictedRouterLSDB := convertStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	// if predictedRouterLSDB != nil {
-	// for _, area := range predictedRouterLSDB.Areas {
-	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	// }
-	// }
-	// fmt.Printf("\n%+v\n", predictedRouterLSDB)
-	// fmt.Println()
-	// fmt.Println()
-	//
-	// fmt.Println("#################### File Configuration External LSDB Prediction ####################")
-	predictedExternalLSDB := convertStaticFileExternalData(c.metrics.StaticFrrConfiguration)
-	// fmt.Println("----------------------------------------")
-	// fmt.Println(predictedExternalLSDB)
-	// fmt.Println("----------------------------------------")
+	// required to know what static routes there are
+	// very important for the stakeholder anomaly
+	// lsa type 1, 5 and 7 relevant
+	staticRouteMap := getStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
-	// if predictedExternalLSDB != nil {
-	// for _, area := range predictedExternalLSDB.Areas {
-	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	// }
-	// }
-	// fmt.Printf("\n%+v\n", predictedExternalLSDB)
-	// fmt.Println()
-	// fmt.Println()
-	//
-	// fmt.Println("#################### File Configuration NSSA External LSDB Prediction ####################")
-	predictedNssaExternalLSDB := convertStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
-	// if predictedNssaExternalLSDB != nil {
-	//
-	// for _, area := range predictedNssaExternalLSDB.Areas {
-	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	// }
-	// }
-	// fmt.Printf("\n%+v\n", predictedNssaExternalLSDB)
-	// fmt.Println()
-	// fmt.Println()
-	//
-	// runtime parsing
-	// fmt.Println("#################### Runtime Configuration Router LSDB IS_STATE ####################")
-	runtimeRouterLSDB := convertRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
-	// for _, area := range runtimeRouterLSDB.Areas {
-	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	// }
-	// fmt.Printf("\n%+v\n", runtimeRouterLSDB)
-	// fmt.Println()
-	// fmt.Println()
-	//
-	//fmt.Println("#################### Runtime Configuration External LSDB IS_STATE ####################")
-	runtimeExternalLSDB := convertRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	// fmt.Println(c.metrics.OspfExternalData)
-	// for _, area := range runtimeExternalLSDB.Areas {
-	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	// }
-	// fmt.Printf("\n%+v\n", runtimeExternalLSDB)
-	fmt.Println()
-	fmt.Println()
-	//
-	// fmt.Println("#################### Runtime Configuration NSSA External LSDB IS_STATE ####################")
-	runtimeNssaExternalLSDB := convertNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	// for _, area := range runtimeNssaExternalLSDB.Areas {
-	// fmt.Printf("Length of area %s: %d\n", area.AreaName, len(area.Links))
-	// }
-	// fmt.Printf("\n%+v\n", runtimeNssaExternalLSDB)
-	// fmt.Println()
-	// fmt.Println()
+	// should state
+	isNssa, predictedRouterLSDB := getStaticFileRouterData(c.metrics.StaticFrrConfiguration)
+	predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+	predictedNssaExternalLSDB := getStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
-	routerAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+	// is state
+	runtimeRouterLSDB := getRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := getRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	runtimeNssaExternalLSDB := getNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
-	externalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	// lsa type 1 always needs to be checked
+	c.routerAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
-	nssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+	// if router is an ABR/ASBR, lsa type 5 is important
+	if len(staticRouteMap) > 0 || isNssa {
+		fmt.Println("LSA Type 5 is checked")
+		externalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	}
+
+	// if router is in a NSSA area, this one is important
+	// currently it does nothing
+	if isNssa {
+		nssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+	}
 
 }
 
@@ -290,7 +306,7 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 
 	//fmt.Println(result)
 	//fmt.Printf("%+v\n", config.GetRouterStates())
-	var advertisementList []advertisement
+	var advertisementList []frrProto.Advertisement
 	fmt.Println("########### Start New Print ###########")
 	for _, area := range config.GetRouterStates() {
 		fmt.Println("--------- Value ---------")
@@ -299,7 +315,7 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 			fmt.Println("--------- entry ---------")
 			for _, link := range entry.RouterLinks {
 				if link.GetNetworkAddress() != "" {
-					adv := advertisement{
+					adv := frrProto.Advertisement{
 						InterfaceAddress: link.GetNetworkAddress(),
 						PrefixLength:     link.GetNetworkMask(),
 						//LsaType:      entry.GetLsaType(),
@@ -448,4 +464,22 @@ func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
 	// you would need to convert IP addresses to binary and compare them properly.
 	// For now, we'll just check if they have the same IP address and subnet contains network.
 	return subnet.IpAddress == network.IpAddress && subnet.PrefixLength >= network.PrefixLength
+}
+
+func getStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]accessList) map[string]*StaticList {
+	if len(config.StaticRoutes) == 0 {
+		return nil
+	}
+
+	result := map[string]*StaticList{}
+
+	for _, route := range config.StaticRoutes {
+		fmt.Println(route)
+		result[route.IpPrefix.GetIpAddress()] = &StaticList{
+			IpAddress:    route.IpPrefix.GetIpAddress(),
+			PrefixLength: int(route.IpPrefix.GetPrefixLength()),
+		}
+	}
+
+	return result
 }

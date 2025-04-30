@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"google.golang.org/protobuf/proto"
@@ -24,16 +23,16 @@ type Socket struct {
 	listener   net.Listener
 	mutex      sync.Mutex
 	metrics    *frrProto.FullFRRData
-	analyzer   *analyzer.Analyzer
+	anomalies  *frrProto.AnomalyAnalysis
 	logger     *logger.Logger
 }
 
-func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
+func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger) *Socket {
 	return &Socket{
 		socketPath: fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:      sync.Mutex{},
 		metrics:    metrics,
-		analyzer:   analyzer,
+		anomalies:  analysisResult,
 		logger:     logger,
 	}
 }

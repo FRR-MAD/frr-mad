@@ -722,6 +722,7 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 					PrefixLength: uint32(prefixLength),
 				},
 				Passive: false,
+				HasPeer: false,
 			})
 			return true
 		} else if parts[3] == "peer" {
@@ -738,6 +739,7 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 					PrefixLength: 32,
 				},
 				Passive: false,
+				HasPeer: true,
 				PeerIpPrefix: &frrProto.IPPrefix{
 					IpAddress:    peerIp.String(),
 					PrefixLength: uint32(peerIpPrefixLength),
