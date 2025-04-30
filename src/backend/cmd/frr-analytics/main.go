@@ -162,7 +162,7 @@ func startApp(config *configs.Config) {
 
 	// Start the socket server if we have any active services
 	if app.Aggregator != nil && app.Analyzer != nil {
-		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer, appLogger)
+		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger)
 
 		go func() {
 			if err := app.Socket.Start(); err != nil {

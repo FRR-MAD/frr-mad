@@ -1,10 +1,11 @@
 package aggregator_test
 
 import (
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"os"
 	"path/filepath"
 	"testing"
+
+	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 )
@@ -101,6 +102,9 @@ func testInterfaces(
 		if r101Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
 			t.Errorf("Expected r101Eth1 prefix length to be 24, got %d", r101Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
+		if r101Eth1.InterfaceIpPrefixes[0].HasPeer != false {
+			t.Errorf("Expected r101Eth1 to have no peer, got %t", r101Eth1.InterfaceIpPrefixes[0].HasPeer)
+		}
 	}
 
 	// r101Eth2
@@ -117,11 +121,17 @@ func testInterfaces(
 		if r101Eth2.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 24 {
 			t.Errorf("Expected r101Eth2 prefix length to be 24, got %d", r101Eth2.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
 		}
+		if r101Eth2.InterfaceIpPrefixes[0].HasPeer != false {
+			t.Errorf("Expected r101Eth2 to have no peer, got %t", r101Eth2.InterfaceIpPrefixes[0].HasPeer)
+		}
 		if r101Eth2.InterfaceIpPrefixes[1].IpPrefix.IpAddress != "10.0.2.1" {
 			t.Errorf("Expected r101Eth2 IP to be 10.0.2.1, got '%s'", r101Eth2.InterfaceIpPrefixes[1].IpPrefix.IpAddress)
 		}
 		if r101Eth2.InterfaceIpPrefixes[1].IpPrefix.PrefixLength != 24 {
 			t.Errorf("Expected r101Eth2 prefix length to be 24, got %d", r101Eth2.InterfaceIpPrefixes[1].IpPrefix.PrefixLength)
+		}
+		if r101Eth2.InterfaceIpPrefixes[1].HasPeer != false {
+			t.Errorf("Expected r101Eth2 to have no peer, got %t", r101Eth2.InterfaceIpPrefixes[1].HasPeer)
 		}
 	}
 	if r101Eth2.Area != "0.0.0.0" {
@@ -341,6 +351,9 @@ func testInterfaces(
 	}
 	if r203Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 32 {
 		t.Errorf("Expected r203Eth1 prefix length to be 32, got %d", r203Eth1.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
+	}
+	if r203Eth1.InterfaceIpPrefixes[0].HasPeer != true {
+		t.Errorf("Expected r203Eth1 to have peer, got %t", r203Eth1.InterfaceIpPrefixes[0].HasPeer)
 	}
 	if r203Eth1.InterfaceIpPrefixes[0].PeerIpPrefix.IpAddress != "10.20.13.1" {
 		t.Errorf("Expected r203Eth1 peer IP to be 10.20.13.1, got '%s'",
