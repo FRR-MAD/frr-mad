@@ -171,32 +171,30 @@ func (m *Model) renderLsdbMonitorTab() string {
 			asbrSummaryLinkStateTable = asbrSummaryLinkStateTable.Row(r...)
 		}
 
-		areaHeader := styles.ContentTitleH1Style.
+		areaHeader := styles.H1TitleStyle.
 			Width(boxWidthForOneH1).
-			Margin(0, 0, 1, 0).
-			Padding(1, 0, 0, 0).
 			Render(fmt.Sprintf("Link State Database: Area %s", area))
 
 		// create styled boxes for each LSA Type (type 1-4)
 		routerTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfRouterLS+" Router Link States"),
-			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(routerLinkStateTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+			styles.H2TitleStyle.Width(boxWidthForTwoH2).Render(amountOfRouterLS+" Router Link States"),
+			styles.AlignCenterAndM02P01.Width(boxWidthForTwoH2).Render(routerLinkStateTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
 		)
 		networkTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfNetworkLS+" Network Link States"),
-			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(networkLinkStateTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+			styles.H2TitleStyle.Width(boxWidthForTwoH2).Render(amountOfNetworkLS+" Network Link States"),
+			styles.AlignCenterAndM02P01.Width(boxWidthForTwoH2).Render(networkLinkStateTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
 		)
 		summaryTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfSummaryLS+" Summary Link States"),
-			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(summaryLinkStateTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+			styles.H2TitleStyle.Width(boxWidthForTwoH2).Render(amountOfSummaryLS+" Summary Link States"),
+			styles.AlignCenterAndM02P01.Width(boxWidthForTwoH2).Render(summaryLinkStateTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
 		)
 		asbrSummaryTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render(amountOfAsSummaryLS+" ASBR Summary Link States"),
-			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(asbrSummaryLinkStateTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+			styles.H2TitleStyle.Width(boxWidthForTwoH2).Render(amountOfAsSummaryLS+" ASBR Summary Link States"),
+			styles.AlignCenterAndM02P01.Width(boxWidthForTwoH2).Render(asbrSummaryLinkStateTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
 		)
 
 		horizontalRouterAndNetworkLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, routerTableBox, networkTableBox)
@@ -243,7 +241,7 @@ func (m *Model) renderLsdbMonitorTab() string {
 		asExternalLinkStateTable = asExternalLinkStateTable.Row(r...)
 	}
 
-	externalHeader := styles.ContentTitleH1Style.
+	externalHeader := styles.H1TitleStyle.
 		Width(boxWidthForOneH1).
 		Margin(0, 0, 1, 0).
 		Padding(1, 0, 0, 0).
@@ -251,9 +249,9 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	// create styled boxes for each external LSA Type (type 5 & 7)
 	externalTableBox := lipgloss.JoinVertical(lipgloss.Left,
-		styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render(amountOfExternalLS+" AS External Link States"),
-		styles.AlignCenterAndM02.Width(boxWidthForOneH2).Render(asExternalLinkStateTable.String()),
-		styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
+		styles.H2TitleStyle.Width(boxWidthForOneH2).Render(amountOfExternalLS+" AS External Link States"),
+		styles.AlignCenterAndM02P01.Width(boxWidthForOneH2).Render(asExternalLinkStateTable.String()),
+		styles.H2BoxBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
 	)
 
 	completeExternalLSDB := lipgloss.JoinVertical(lipgloss.Left,
@@ -274,12 +272,20 @@ func (m *Model) renderLsdbMonitorTab() string {
 }
 
 func (m *Model) renderRouterMonitorTab() string {
-	// - 6 (padding+margin content) - 2 (for each border) -2 (to prevent errors)
-	boxWidthForOneH1 := m.windowSize.Width - 10
-	// -4 (for margin)
-	boxWidthForOneH2 := boxWidthForOneH1 - 4
-	// -4 (for margin) -2 (for border)
-	boxWidthForTwoH2 := (boxWidthForOneH2 - 6) / 2
+	// Calculate box width dynamically for one horizontal box based on terminal width
+	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
+	widthForOneH1 := m.windowSize.Width - 10
+	/* -2 (for border) */
+	//widthForTwoH1 := (widthForOneH1 - 2) / 2
+	/* -4 (for margin) (-2 for borders already subtracted in widthForOneH1) */
+	widthForOneH2 := widthForOneH1 - 4
+	/* -4 (for margin) -2 (for border) */
+	widthForTwoH2 := (widthForOneH2 - 6) / 2
+
+	//widthForOneH1Box := widthForOneH1 - 2 // -4 (for margin) +2 (has no border)
+	//widthForTwoH1Box := widthForTwoH1 - 2 // -4 (for margin) +2 (has no border)
+	//widthForOneH2Box := widthForOneH2 - 2 // -4 (for margin) +2 (has no border)
+	widthForTwoH2Box := widthForTwoH2 - 2 // -4 (for margin) +2 (has no border)
 
 	ospfNeighbors := getOspfNeighborInterfaces()
 	routerLSASelf, _ := getOspfRouterData()
@@ -337,21 +343,21 @@ func (m *Model) renderRouterMonitorTab() string {
 			stubTable = stubTable.Row(r...)
 		}
 
-		areaHeader := styles.ContentTitleH1Style.
-			Width(boxWidthForOneH1).
+		areaHeader := styles.H1TitleStyle.
+			Width(widthForOneH1).
 			Margin(0, 0, 1, 0).
 			Padding(1, 0, 0, 0).
 			Render(fmt.Sprintf("Area %s", area))
 
 		transitTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render("Transit Networks"),
-			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(transitTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+			styles.H2TitleStyle.Width(widthForTwoH2).Render("Transit Networks"),
+			styles.H2ContentBoxStyle.Align(lipgloss.Center).Width(widthForTwoH2Box).Render(transitTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(widthForTwoH2).Render(""),
 		)
 		stubTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForTwoH2).Render("Stub Networks"),
-			styles.AlignCenterAndM02.Width(boxWidthForTwoH2).Render(stubTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForTwoH2).Render(""),
+			styles.H2TitleStyle.Width(widthForTwoH2).Render("Stub Networks"),
+			styles.H2ContentBoxStyle.Align(lipgloss.Center).Width(widthForTwoH2Box).Render(stubTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(widthForTwoH2).Render(""),
 		)
 
 		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, stubTableBox)
@@ -362,7 +368,7 @@ func (m *Model) renderRouterMonitorTab() string {
 	}
 
 	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = boxWidthForOneH1 + 2
+	m.viewport.Width = widthForOneH1 + 2
 	m.viewport.Height = contentMaxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
@@ -426,16 +432,16 @@ func (m *Model) renderExternalMonitorTab() string {
 		externalTable = externalTable.Row(r...)
 	}
 
-	externalHeader := styles.ContentTitleH1Style.
+	externalHeader := styles.H1TitleStyle.
 		Width(boxWidthForOneH1).
 		Margin(0, 0, 1, 0).
 		Padding(1, 0, 0, 0).
 		Render("External LSAs (Type 5)")
 
 	externalDataBox := lipgloss.JoinVertical(lipgloss.Left,
-		styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render("Self Originating"),
-		styles.AlignCenterAndM02.Width(boxWidthForOneH2).Render(externalTable.String()),
-		styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
+		styles.H2TitleStyle.Width(boxWidthForOneH2).Render("Self Originating"),
+		styles.AlignCenterAndM02P01.Width(boxWidthForOneH2).Render(externalTable.String()),
+		styles.H2BoxBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
 	)
 
 	var completeExternalBox string
@@ -480,16 +486,16 @@ func (m *Model) renderExternalMonitorTab() string {
 			nssaExternalTable = nssaExternalTable.Row(r...)
 		}
 
-		nssaExternalHeader := styles.ContentTitleH1Style.
+		nssaExternalHeader := styles.H1TitleStyle.
 			Width(boxWidthForOneH1).
 			Margin(0, 0, 1, 0).
 			Padding(1, 0, 0, 0).
 			Render("NSSA External LSAs (Type 7) in Area " + area)
 
 		nssaExternalDataBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.ContentTitleH2Style.Width(boxWidthForOneH2).Render("Self Originating"),
-			styles.AlignCenterAndM02.Width(boxWidthForOneH2).Render(nssaExternalTable.String()),
-			styles.ContentBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
+			styles.H2TitleStyle.Width(boxWidthForOneH2).Render("Self Originating"),
+			styles.AlignCenterAndM02P01.Width(boxWidthForOneH2).Render(nssaExternalTable.String()),
+			styles.H2BoxBottomBorderStyle.Width(boxWidthForOneH2).Render(""),
 		)
 		// var completeNssaExternalBox string
 		completeNssaExternalBox := lipgloss.JoinVertical(lipgloss.Left, nssaExternalHeader, nssaExternalDataBox)
@@ -534,7 +540,7 @@ func (m *Model) renderExternalMonitorTab() string {
 //
 //	shouldAdvertisedContent := "Area 0.0.0.0: \n"
 //
-//	shouldAdvertisedRouterLSA := styles.ContentTitleH1Style.
+//	shouldAdvertisedRouterLSA := styles.H1TitleStyle.
 //		Width(boxWidthForTwo - 2).
 //		Render("Area 0.0.0.0, Router LSAs (Type 1)")
 //	shouldAdvertisedContent += shouldAdvertisedRouterLSA
@@ -552,7 +558,7 @@ func (m *Model) renderExternalMonitorTab() string {
 //
 //	// for each area create area box --> need length of areas
 //
-//	isAdvertisedRouterLSA := styles.ContentTitleH1Style.
+//	isAdvertisedRouterLSA := styles.H1TitleStyle.
 //		Width(boxWidthForTwo - 2).
 //		Render("Area 0.0.0.0, Router LSAs (Type 1)")
 //	isAdvertisedContent += isAdvertisedRouterLSA
@@ -666,21 +672,49 @@ func (m *Model) renderOSPFTab1() string {
 }
 
 func (m *Model) renderRunningConfigTab() string {
-	// Calculate box width dynamically for one horizontal box based on terminal width
-	boxWidthForOne := m.windowSize.Width - 10 // - 6 (padding+margin content) - 2 (for each border)
-	if boxWidthForOne < 20 {
-		boxWidthForOne = 20 // Minimum width to ensure readability
-	}
+	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
+	widthForOneH1 := m.windowSize.Width - 10
+	// -2 (for border)
+	widthForTwoH1 := (widthForOneH1 - 2) / 2
+	// -4 (for margin) (-2 for borders already subtracted in widthForOneH1)
+	// widthForOneH2 := widthForOneH1 - 4
+	// -4 (for margin) -2 (for border)
+	// widthForTwoH2 := (widthForOneH2 - 6) / 2
 
+	// widthForOneH1Box := widthForOneH1 - 2 // -4 (for margin) +2 (has no border)
+	widthForTwoH1Box := widthForTwoH1 - 2 // -4 (for margin) +2 (has no border)
+	// widthForOneH2Box := widthForOneH2 - 2 // -4 (for margin) +2 (has no border)
+	// widthForTwoH2Box := widthForTwoH2 - 2 // -4 (for margin) +2 (has no border)
+
+	runningConfigTitle := styles.H1TitleStyle.Width(widthForTwoH1).Render("Running Config")
+	formatedRunningConfigOutput := strings.Join(m.runningConfig, "\n")
+	runningConfigBox := styles.H1ContentBoxStyle.Width(widthForTwoH1Box).Render(formatedRunningConfigOutput)
+	completeRunningConfig := lipgloss.JoinVertical(lipgloss.Left,
+		runningConfigTitle,
+		runningConfigBox,
+		styles.H1BoxBottomBorderStyle.Width(widthForTwoH1).Render(""),
+	)
+
+	staticFRRConfigTitle := styles.H1TitleStyle.Width(widthForTwoH1).Render("Parsed Running Config")
+	staticFRRConfiguration := getStaticFRRConfigurationPretty()
+	staticFileBox := styles.H1ContentBoxStyle.Width(widthForTwoH1Box).Render(staticFRRConfiguration)
+	completeStaticConfig := lipgloss.JoinVertical(lipgloss.Left,
+		staticFRRConfigTitle,
+		staticFileBox,
+		styles.H1BoxBottomBorderStyle.Width(widthForTwoH1).Render(""),
+	)
+
+	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
+
+	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
 	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = boxWidthForOne
+	m.viewport.Width = widthForOneH1 + 2
 	m.viewport.Height = outputMaxHeight
+	m.viewport.SetContent(completeContent)
 
-	m.viewport.SetContent(strings.Join(m.runningConfig, "\n"))
+	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
 
-	runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
-
-	return runningConfigBox
+	return m.viewport.View()
 }
 
 // ============================== //

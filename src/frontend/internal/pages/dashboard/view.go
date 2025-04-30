@@ -28,34 +28,39 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderOSPFDashboard() string {
-	// Calculate box width dynamically for two horizontal boxes based on terminal width
-	boxWidthForTwo := (m.windowSize.Width - 10) / 2 // - 6 (padding+border contentbox) - 5 (border + 1 gap)
-	if boxWidthForTwo < 20 {
-		boxWidthForTwo = 20 // Minimum width to ensure readability
-	}
+	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
+	widthForOneH1 := m.windowSize.Width - 10
+	// -2 (for border)
+	widthForTwoH1 := (widthForOneH1 - 2) / 2
+	// -4 (for margin) (-2 for borders already subtracted in widthForOneH1)
+	// widthForOneH2 := widthForOneH1 - 4
+	// -4 (for margin) -2 (for border)
+	// widthForTwoH2 := (widthForOneH2 - 6) / 2
 
-	boxWidthForOne := m.windowSize.Width - 8 // - 6 (padding+margin content) - 2 (for each border)
-	if boxWidthForOne < 20 {
-		boxWidthForOne = 20 // Minimum width to ensure readability
-	}
+	widthThreeFourthH1 := widthForTwoH1 / 2 * 3
+	widthOneFourthH1 := widthForTwoH1 / 2
+	widthThreeFourthH2 := widthThreeFourthH1 - 4 // for margin
+	widthOneFourthH2 := widthOneFourthH1 - 4     // for margin
 
-	boxWidthThreeFourth := boxWidthForTwo / 2 * 3
-	boxWidthOneFourth := boxWidthForTwo / 2
+	widthThreeFourthH1Box := widthThreeFourthH1 - 4 // for margin
+	// widthOneFourthH1Box := widthOneFourthH1 - 4     // for margin
+	// widthThreeFourthH2Box := widthThreeFourthH2 - 2 // for margin
+	widthOneFourthH2Box := widthOneFourthH2 - 2 // for margin
 
-	m.viewport.Width = boxWidthThreeFourth
+	m.viewport.Width = widthThreeFourthH1 + 2
 	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
 
-	gap := 2
+	// --------------------------------------
 
 	allGoodRows := backend.GetOSPFMetrics()
 	anomalyRows := backend.GetOSPFAnomalies()
 
-	advertisingRouteTitle1 := styles.ContentTitleH1Style.
-		Width(boxWidthThreeFourth - 2).
+	advertisingRouteTitle1 := styles.H2TitleStyle.
+		Width(widthThreeFourthH2).
 		Render("Area 0.0.0.0, Router LSAs (Type 1)")
 
-	advertisingRouteTitle2 := styles.ContentTitleH1Style.
-		Width(boxWidthThreeFourth - 2).
+	advertisingRouteTitle2 := styles.H2TitleStyle.
+		Width(widthThreeFourthH2).
 		Render("Area 0.0.0.0, Autonomous System External LSAs (Type 5)")
 
 	ospfTable := table.New().
@@ -70,7 +75,7 @@ func (m *Model) renderOSPFDashboard() string {
 				return styles.NormalCellStyle
 			}
 		}).
-		Width(boxWidthThreeFourth).
+		Width(widthThreeFourthH1Box).
 		//Headers("Advertising Route", "LSA Type", "Status").
 		Rows(allGoodRows...)
 
@@ -85,9 +90,23 @@ func (m *Model) renderOSPFDashboard() string {
 				return styles.BadCellStyle
 			}
 		}).
-		Width(boxWidthThreeFourth).
+		Width(widthThreeFourthH1Box).
 		Headers("Advertised Route", "Anomaly Type", "Details", "Troubleshot").
 		Rows(anomalyRows...)
+
+	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
+	verticalTables := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle.Width(widthThreeFourthH1).Render("All OSPF Routes are advertised as Expected"),
+		advertisingRouteTitle1,
+		ospfTable.Render(),
+		advertisingRouteTitle2,
+		ospfTable.Render(),
+		styles.H1TitleStyle.Width(widthThreeFourthH1).Render("OSPF Anomaly Detected"),
+		ospfBadTable.Render(),
+	)
+
+	// Update the viewport content with...
+	m.viewport.SetContent(verticalTables)
 
 	cpuAmount, cpuUsage, memoryUsage, err := getSystemResources()
 	var cpuAmountString, cpuUsageString, memoryString string
@@ -101,35 +120,27 @@ func (m *Model) renderOSPFDashboard() string {
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
 	}
 
-	// Convert 0.0–1.0 → percentage and clamp to [0,100]
-	//cpuPct := clamp(cpuUsage*100, 0, 100)
-	// memPct := clamp(memoryUsage*100, 0, 100)
+	cpuStatistics := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H2TitleStyle.Width(widthOneFourthH2).Render("CPU Metrics"),
+		styles.H2ContentBoxStyleP1101.Width(widthOneFourthH2Box).Render(
+			"CPU Usage: "+cpuUsageString+"\n"+
+				"Cores: "+cpuAmountString),
+	)
+
+	memoryStatistics := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H2TitleStyle.Width(widthOneFourthH2).Render("Memory Metrics"),
+		styles.H2ContentBoxStyleP1101.Width(widthOneFourthH2Box).Render(
+			"Memory Usage: "+memoryString),
+	)
 
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
-		styles.BoxTitleStyle.Render("System Resources"),
-		styles.GeneralBoxStyle.Width(boxWidthOneFourth-2).
-			Render("CPU Usage:\n"+cpuUsageString+
-				"\nCores:\n"+cpuAmountString+
-				"\n\nMemory Usage:\n"+memoryString),
+		styles.H1TitleStyle.Width(widthOneFourthH1).Render("System Resources"),
+		cpuStatistics,
+		memoryStatistics,
 	)
-
-	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
-	verticalTables := lipgloss.JoinVertical(lipgloss.Left,
-		styles.BoxTitleStyle.Render("All OSPF Routes are advertised as Expected"),
-		advertisingRouteTitle1,
-		ospfTable.Render(),
-		advertisingRouteTitle2,
-		ospfTable.Render(),
-		styles.BoxTitleStyle.Render("OSPF Anomaly Detected"),
-		ospfBadTable.Render(),
-	)
-
-	// Update the viewport content with...
-	m.viewport.SetContent(verticalTables)
 
 	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
 		m.viewport.View(),
-		lipgloss.NewStyle().Width(gap).Render(""),
 		systemResources,
 	)
 
