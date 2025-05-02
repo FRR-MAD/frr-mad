@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
 
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
@@ -24,7 +25,8 @@ func (m *Model) DashboardView(currentSubTab int) string {
 }
 
 func (m *Model) View() string {
-	if currentSubTabLocal == 0 && !hasAnomalyDetected {
+	if currentSubTabLocal == 0 {
+		m.detectAnomaly()
 		return m.renderOSPFDashboard()
 	} else if currentSubTabLocal == 1 {
 		return ""
@@ -33,12 +35,17 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderOSPFDashboard() string {
-	ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf()
-
 	// Update the viewport
 	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
 	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
-	m.viewport.SetContent(ospfDashboardLsdbSelf)
+
+	if hasAnomalyDetected {
+		ospfDashboardAnomalies := getOspfDashboardAnomalies()
+		m.viewport.SetContent(ospfDashboardAnomalies)
+	} else {
+		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf()
+		m.viewport.SetContent(ospfDashboardLsdbSelf)
+	}
 
 	cpuAmount, cpuUsage, memoryUsage, err := getSystemResources()
 	var cpuAmountString, cpuUsageString, memoryString string
@@ -338,7 +345,7 @@ func getOspfDashboardLsdbSelf() string {
 	}
 
 	externalHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).
-		Render("Link State Database: AS External LSAs")
+		Render("Link State Database (Self): AS External LSAs")
 
 	// create styled boxes for each external LSA Type (type 5 & 7)
 	externalTableBox := lipgloss.JoinVertical(lipgloss.Left,
@@ -359,6 +366,27 @@ func getOspfDashboardLsdbSelf() string {
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, lsdbSelfBlocks...)
+}
+
+func getOspfDashboardAnomalies() string {
+	// ospfAnomalies, _ := backend.GetRouterAnomalies()
+
+	return "Anomaly"
+}
+
+func (m *Model) detectAnomaly() {
+	ospfRouterAnomalies, _ := backend.GetRouterAnomalies()
+	ospfExternalAnomalies, _ := backend.GetExternalAnomalies()
+	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies()
+
+	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
+		common.HasAnyAnomaly(ospfExternalAnomalies) ||
+		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+
+		hasAnomalyDetected = true
+	} else {
+		hasAnomalyDetected = false
+	}
 }
 
 // ============================== //

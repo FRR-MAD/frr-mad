@@ -1,5 +1,7 @@
 package common
 
+import frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
+
 func ContainsString(slice []string, s string) bool {
 	for _, v := range slice {
 		if v == s {
@@ -7,4 +9,11 @@ func ContainsString(slice []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func HasAnyAnomaly(a *frrProto.AnomalyDetection) bool {
+	return a.HasUnderAdvertisedPrefixes ||
+		a.HasOverAdvertisedPrefixes ||
+		a.HasDuplicatePrefixes ||
+		a.HasMisconfiguredPrefixes
 }
