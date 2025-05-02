@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
 	"time"
 
@@ -18,11 +19,19 @@ type Model struct {
 }
 
 func New(windowSize *common.WindowSize) *Model {
+	boxWidthForOne := windowSize.Width - 6
+	// subtract tab row, footer, and border heights.
+	outputHeight := windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
+
+	// Create the viewport with the desired dimensions.
+	vp := viewport.New(boxWidthForOne, outputHeight)
+
 	return &Model{
 		title:         "Dashboard",
 		subTabs:       []string{"OSPF", "TBD"},
 		ospfAnomalies: []string{"Fetching OSPF data..."},
 		windowSize:    windowSize,
+		viewport:      vp,
 	}
 }
 

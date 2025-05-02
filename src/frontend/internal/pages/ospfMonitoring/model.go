@@ -33,7 +33,7 @@ func New(windowSize *common.WindowSize) *Model {
 		title: "OSPF Monitoring",
 		// 'Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
-		subTabs:       []string{"LSDB", "Router LSAs", "External LSAs", "TBD", "Running Config"},
+		subTabs:       []string{"LSDB", "Router LSAs", "External LSAs", "Running Config"},
 		runningConfig: []string{"Fetching running config..."},
 		expandedMode:  false,
 		windowSize:    windowSize,

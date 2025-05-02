@@ -28,39 +28,18 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderOSPFDashboard() string {
-	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
-	widthForOneH1 := m.windowSize.Width - 10
-	// -2 (for border)
-	widthForTwoH1 := (widthForOneH1 - 2) / 2
-	// -4 (for margin) (-2 for borders already subtracted in widthForOneH1)
-	// widthForOneH2 := widthForOneH1 - 4
-	// -4 (for margin) -2 (for border)
-	// widthForTwoH2 := (widthForOneH2 - 6) / 2
-
-	widthThreeFourthH1 := widthForTwoH1 / 2 * 3
-	widthOneFourthH1 := widthForTwoH1 / 2
-	widthThreeFourthH2 := widthThreeFourthH1 - 4 // for margin
-	widthOneFourthH2 := widthOneFourthH1 - 4     // for margin
-
-	widthThreeFourthH1Box := widthThreeFourthH1 - 4 // for margin
-	// widthOneFourthH1Box := widthOneFourthH1 - 4     // for margin
-	// widthThreeFourthH2Box := widthThreeFourthH2 - 2 // for margin
-	widthOneFourthH2Box := widthOneFourthH2 - 2 // for margin
-
-	m.viewport.Width = widthThreeFourthH1 + 2
+	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
 	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
-
-	// --------------------------------------
 
 	allGoodRows := backend.GetOSPFMetrics()
 	anomalyRows := backend.GetOSPFAnomalies()
 
-	advertisingRouteTitle1 := styles.H2TitleStyle.
-		Width(widthThreeFourthH2).
+	advertisingRouteTitle1 := styles.H2TitleStyle().
+		Width(styles.WidthTwoH2ThreeFourth).
 		Render("Area 0.0.0.0, Router LSAs (Type 1)")
 
-	advertisingRouteTitle2 := styles.H2TitleStyle.
-		Width(widthThreeFourthH2).
+	advertisingRouteTitle2 := styles.H2TitleStyle().
+		Width(styles.WidthTwoH2ThreeFourth).
 		Render("Area 0.0.0.0, Autonomous System External LSAs (Type 5)")
 
 	ospfTable := table.New().
@@ -75,7 +54,7 @@ func (m *Model) renderOSPFDashboard() string {
 				return styles.NormalCellStyle
 			}
 		}).
-		Width(widthThreeFourthH1Box).
+		Width(styles.WidthTwoH2ThreeFourthBox).
 		//Headers("Advertising Route", "LSA Type", "Status").
 		Rows(allGoodRows...)
 
@@ -90,18 +69,18 @@ func (m *Model) renderOSPFDashboard() string {
 				return styles.BadCellStyle
 			}
 		}).
-		Width(widthThreeFourthH1Box).
+		Width(styles.WidthTwoH2ThreeFourthBox).
 		Headers("Advertised Route", "Anomaly Type", "Details", "Troubleshot").
 		Rows(anomalyRows...)
 
 	// in future either show ospfTable (=no anomaly) or ospfBadTable when anomaly is detected
 	verticalTables := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H1TitleStyle.Width(widthThreeFourthH1).Render("All OSPF Routes are advertised as Expected"),
+		styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).Render("All OSPF Routes are advertised as Expected"),
 		advertisingRouteTitle1,
 		ospfTable.Render(),
 		advertisingRouteTitle2,
 		ospfTable.Render(),
-		styles.H1TitleStyle.Width(widthThreeFourthH1).Render("OSPF Anomaly Detected"),
+		styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).Render("OSPF Anomaly Detected"),
 		ospfBadTable.Render(),
 	)
 
@@ -121,20 +100,22 @@ func (m *Model) renderOSPFDashboard() string {
 	}
 
 	cpuStatistics := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H2TitleStyle.Width(widthOneFourthH2).Render("CPU Metrics"),
-		styles.H2ContentBoxStyleP1101.Width(widthOneFourthH2Box).Render(
+		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("CPU Metrics"),
+		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
 			"CPU Usage: "+cpuUsageString+"\n"+
 				"Cores: "+cpuAmountString),
+		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2OneFourth).Render(""),
 	)
 
 	memoryStatistics := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H2TitleStyle.Width(widthOneFourthH2).Render("Memory Metrics"),
-		styles.H2ContentBoxStyleP1101.Width(widthOneFourthH2Box).Render(
+		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Memory Metrics"),
+		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
 			"Memory Usage: "+memoryString),
+		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2OneFourth).Render(""),
 	)
 
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H1TitleStyle.Width(widthOneFourthH1).Render("System Resources"),
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resources"),
 		cpuStatistics,
 		memoryStatistics,
 	)
