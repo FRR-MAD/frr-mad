@@ -164,3 +164,26 @@ func GetOSPFMetrics() [][]string {
 
 	return allGoodRows
 }
+
+func GetRouterName() (string, string, error) {
+	response, err := SendMessage("frr", "routerData", nil)
+	if err != nil {
+		return "", "", err
+	}
+
+	routerData := response.Data.GetFrrRouterData()
+
+	routerName := routerData.RouterName
+	ospfRouterId := routerData.OspfRouterId
+
+	return routerName, ospfRouterId, nil
+}
+
+func GetLSDB() (*frrProto.OSPFDatabase, error) {
+	response, err := SendMessage("ospf", "database", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfDatabase(), nil
+}

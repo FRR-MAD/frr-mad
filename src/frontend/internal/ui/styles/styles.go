@@ -161,6 +161,10 @@ var GeneralBoxStyle = lipgloss.NewStyle().
 	Margin(0, 1).
 	Padding(0, 1)
 
+var GeneralBoxStyleP0M0 = GeneralBoxStyle.
+	Margin(0).
+	Padding(0)
+
 var BadBoxStyle = GeneralBoxStyle.
 	BorderForeground(lipgloss.Color(BadRed))
 
@@ -187,6 +191,11 @@ func H2ContentBoxStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Margin(0, 4).
 		Padding(0, 1)
+}
+
+func H2ContentBoxCenterStyle() lipgloss.Style {
+	return H2ContentBoxStyle().
+		Align(lipgloss.Center)
 }
 
 func H2OneContentBoxStyle() lipgloss.Style {
