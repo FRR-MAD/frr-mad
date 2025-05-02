@@ -25,7 +25,9 @@ const (
 )
 
 var (
-	WidthBasis int
+	WidthBasis                    int
+	roundingCorrectionOneFourthH1 int
+	roundingCorrectionOneFourthH2 int
 
 	WidthOneH1               int
 	WidthOneH1Box            int
@@ -48,24 +50,26 @@ var (
 
 func SetWindowSizes(window common.WindowSize) {
 	WidthBasis = window.Width - ErrorPreventionContentBox - BorderContentBox - PaddingContentBox
+	roundingCorrectionOneFourthH1 = window.Width % 4
+	roundingCorrectionOneFourthH2 = window.Width%4 - 2
 
 	WidthOneH1 = WidthBasis - BoxBorder
 	WidthOneH1Box = WidthBasis - BoxBorder - MarginX2
 	WidthTwoH1 = (WidthBasis - 2*BoxBorder) / 2
 	WidthTwoH1Box = (WidthBasis - 2*MarginX2) / 2
-	WidthTwoH1OneFourth = WidthTwoH1 / 2
-	WidthTwoH1OneFourthBox = WidthTwoH1Box / 2
-	WidthTwoH1ThreeFourth = WidthTwoH1 / 2 * 3
-	WidthTwoH1ThreeFourthBox = WidthTwoH1Box / 2 * 3
+	WidthTwoH1OneFourth = (WidthBasis-2*BoxBorder)/4 + roundingCorrectionOneFourthH1
+	WidthTwoH1OneFourthBox = (WidthBasis-2*MarginX2)/4 + roundingCorrectionOneFourthH1
+	WidthTwoH1ThreeFourth = WidthBasis - 2*BoxBorder - WidthTwoH1OneFourth
+	WidthTwoH1ThreeFourthBox = WidthBasis - 2*MarginX2 - WidthTwoH1OneFourthBox
 
 	WidthOneH2 = WidthBasis - BoxBorder - MarginX2
 	WidthOneH2Box = WidthBasis - BoxBorder - MarginX4
 	WidthTwoH2 = (WidthBasis - 2*MarginX2 - 2*BoxBorder) / 2
 	WidthTwoH2Box = (WidthBasis - 2*MarginX4) / 2
-	WidthTwoH2OneFourth = (WidthBasis-2*MarginX2-2*BoxBorder)/4 - 2 // -2 due to rounding
-	WidthTwoH2OneFourthBox = (WidthBasis - 2*MarginX4) / 4
-	WidthTwoH2ThreeFourth = (WidthBasis-2*MarginX2-2*BoxBorder)*3/4 + 2 // +2 due to rounding
-	WidthTwoH2ThreeFourthBox = (WidthBasis - 2*MarginX4) * 3 / 4
+	WidthTwoH2OneFourth = (WidthBasis-2*MarginX2-2*BoxBorder)/4 + roundingCorrectionOneFourthH2
+	WidthTwoH2OneFourthBox = (WidthBasis-2*MarginX4)/4 + roundingCorrectionOneFourthH2
+	WidthTwoH2ThreeFourth = WidthBasis - 2*MarginX2 - 2*BoxBorder - WidthTwoH2OneFourth
+	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
 }
 
 // ======================================== //
