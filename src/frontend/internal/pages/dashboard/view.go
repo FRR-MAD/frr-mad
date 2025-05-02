@@ -2,6 +2,8 @@ package dashboard
 
 import (
 	"fmt"
+	"sort"
+
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
@@ -82,11 +84,28 @@ func (m *Model) renderOSPFDashboard() string {
 func getOspfDashboardLsdbSelf() string {
 	var lsdbSelfBlocks []string
 
+	dashboardHeader := styles.H1TitleStyle().
+		Width(styles.WidthTwoH1ThreeFourth).
+		BorderBottom(true).
+		Render("All OSPF Routes are advertised as Expected")
+
+	lsdbSelfBlocks = append(lsdbSelfBlocks, dashboardHeader)
+
 	lsdb, _ := backend.GetLSDB()
+
+	// extract and sort the map keys
+	lsdbAreas := make([]string, 0, len(lsdb.Areas))
+	for area := range lsdb.Areas {
+		lsdbAreas = append(lsdbAreas, area)
+	}
+	sort.Strings(lsdbAreas)
+
 	_, routerOSPFID, _ := backend.GetRouterName()
 
 	// ===== OSPF Internal LSAs (Type 1-4) =====
-	for area, lsaTypes := range lsdb.Areas {
+	for _, areaID := range lsdbAreas {
+		lsaTypes := lsdb.Areas[areaID]
+
 		var routerLinkStateTableData [][]string
 		var networkLinkStateTableData [][]string
 		var summaryLinkStateTableData [][]string
@@ -157,6 +176,20 @@ func getOspfDashboardLsdbSelf() string {
 		//	amountOfAsSummaryLS = strconv.Itoa(int(lsaTypes.AsbrSummaryLinkStatesCount))
 		//}
 
+		// Order all Table Data
+		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
+			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
+		})
+		sort.Slice(networkLinkStateTableData, func(i, j int) bool {
+			return networkLinkStateTableData[i][0] < networkLinkStateTableData[j][0]
+		})
+		sort.Slice(summaryLinkStateTableData, func(i, j int) bool {
+			return summaryLinkStateTableData[i][0] < summaryLinkStateTableData[j][0]
+		})
+		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
+			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
+		})
+
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
 		routerLinkStateTable := components.NewOspfMonitorTable(
@@ -213,12 +246,8 @@ func getOspfDashboardLsdbSelf() string {
 			asbrSummaryLinkStateTable = asbrSummaryLinkStateTable.Row(r...)
 		}
 
-		dashboardHeader := styles.H1TitleStyle().
-			Width(styles.WidthTwoH1ThreeFourth).
-			BorderBottom(true).
-			Render("All OSPF Routes are advertised as Expected")
 		areaHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).
-			Render(fmt.Sprintf("Link State Database (Self): Area %s", area))
+			Render(fmt.Sprintf("Link State Database (Self): Area %s", areaID))
 
 		// create styled boxes for each LSA Type (type 1-4)
 		routerTableBox := lipgloss.JoinVertical(lipgloss.Left,
@@ -266,7 +295,6 @@ func getOspfDashboardLsdbSelf() string {
 		)
 
 		completeAreaLSDBSelf := lipgloss.JoinVertical(lipgloss.Left,
-			dashboardHeader,
 			areaHeader,
 			routerTableBox,
 			completeType2To4LsdbSelf,

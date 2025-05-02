@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"google.golang.org/protobuf/encoding/protojson"
+	"sort"
 	"strconv"
 
 	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -42,8 +43,17 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	lsdb, _ := getLSDB()
 
+	// extract and sort the map keys
+	lsdbAreas := make([]string, 0, len(lsdb.Areas))
+	for area := range lsdb.Areas {
+		lsdbAreas = append(lsdbAreas, area)
+	}
+	sort.Strings(lsdbAreas)
+
 	// ===== OSPF Internal LSAs (Type 1-4) =====
-	for area, lsaTypes := range lsdb.Areas {
+	for _, areaID := range lsdbAreas {
+		lsaTypes := lsdb.Areas[areaID]
+
 		var routerLinkStateTableData [][]string
 		var networkLinkStateTableData [][]string
 		var summaryLinkStateTableData [][]string
@@ -106,6 +116,20 @@ func (m *Model) renderLsdbMonitorTab() string {
 			amountOfAsSummaryLS = strconv.Itoa(int(lsaTypes.AsbrSummaryLinkStatesCount))
 		}
 
+		// Order all Table Data
+		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
+			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
+		})
+		sort.Slice(networkLinkStateTableData, func(i, j int) bool {
+			return networkLinkStateTableData[i][0] < networkLinkStateTableData[j][0]
+		})
+		sort.Slice(summaryLinkStateTableData, func(i, j int) bool {
+			return summaryLinkStateTableData[i][0] < summaryLinkStateTableData[j][0]
+		})
+		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
+			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
+		})
+
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
 		routerLinkStateTable := components.NewOspfMonitorTable(
@@ -162,7 +186,7 @@ func (m *Model) renderLsdbMonitorTab() string {
 			asbrSummaryLinkStateTable = asbrSummaryLinkStateTable.Row(r...)
 		}
 
-		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Link State Database: Area %s", area))
+		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Link State Database: Area %s", areaID))
 
 		// create styled boxes for each LSA Type (type 1-4)
 		routerTableBox := lipgloss.JoinVertical(lipgloss.Left,
@@ -260,8 +284,16 @@ func (m *Model) renderRouterMonitorTab() string {
 	ospfNeighbors := getOspfNeighborInterfaces()
 	routerLSASelf, _ := getOspfRouterData()
 
+	// extract and sort the map keys (areas)
+	routerLSAAreas := make([]string, 0, len(routerLSASelf.RouterStates))
+	for area := range routerLSASelf.RouterStates {
+		routerLSAAreas = append(routerLSAAreas, area)
+	}
+	sort.Strings(routerLSAAreas)
+
 	var routerLSABlocks []string
-	for area, areaData := range routerLSASelf.RouterStates {
+	for _, areaID := range routerLSAAreas {
+		areaData := routerLSASelf.RouterStates[areaID]
 		var transitData [][]string
 		var stubData [][]string
 
@@ -288,6 +320,14 @@ func (m *Model) renderRouterMonitorTab() string {
 			}
 		}
 
+		// Order all Table Data
+		sort.Slice(transitData, func(i, j int) bool {
+			return transitData[i][0] < transitData[j][0]
+		})
+		sort.Slice(stubData, func(i, j int) bool {
+			return stubData[i][0] < stubData[j][0]
+		})
+
 		rowsTransit := len(transitData)
 		transitTable := components.NewOspfMonitorTable(
 			[]string{
@@ -313,7 +353,7 @@ func (m *Model) renderRouterMonitorTab() string {
 			stubTable = stubTable.Row(r...)
 		}
 
-		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", area))
+		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", areaID))
 
 		transitTableBox := lipgloss.JoinVertical(lipgloss.Left,
 			styles.H2TitleStyleForTwo().Render("Transit Networks"),
@@ -366,6 +406,11 @@ func (m *Model) renderExternalMonitorTab() string {
 		})
 	}
 
+	// Order all Table Data
+	sort.Slice(externalTableData, func(i, j int) bool {
+		return externalTableData[i][0] < externalTableData[j][0]
+	})
+
 	rowsExternal := len(externalTableData)
 	externalTable := ltable.New().
 		Border(lipgloss.NormalBorder()).
@@ -406,8 +451,6 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	var nssaExternalTableData [][]string
 	for area, areaData := range nssaExternalDataSelf.NssaExternalLinkStates {
-		// var nssaExternalTableDataExpanded [][]string
-
 		for _, lsaData := range areaData.Data {
 			nssaExternalTableData = append(nssaExternalTableData, []string{
 				lsaData.LinkStateId,
@@ -416,27 +459,22 @@ func (m *Model) renderExternalMonitorTab() string {
 				lsaData.NssaForwardAddress,
 			})
 		}
-		rowsNssaExternal := len(nssaExternalTableData)
-		nssaExternalTable := ltable.New().
-			Border(lipgloss.NormalBorder()).
-			BorderTop(true).
-			BorderBottom(true).
-			BorderLeft(true).
-			BorderRight(true).
-			BorderHeader(true).
-			BorderColumn(true).
-			Headers("Link State ID", "CIDR", "Metric Type", "Forwarding Address").
-			StyleFunc(func(row, col int) lipgloss.Style {
-				switch {
-				case row == ltable.HeaderRow:
-					return styles.HeaderStyle
-				case row == rowsNssaExternal-1:
-					return styles.NormalCellStyle.BorderBottom(true)
-				default:
-					return styles.NormalCellStyle
-				}
-			})
 
+		// Order all Table Data
+		sort.Slice(nssaExternalTableData, func(i, j int) bool {
+			return nssaExternalTableData[i][0] < nssaExternalTableData[j][0]
+		})
+
+		rowsNssaExternal := len(nssaExternalTableData)
+		nssaExternalTable := components.NewOspfMonitorTable(
+			[]string{
+				"Link State ID",
+				"CIDR",
+				"Metric Type",
+				"Forwarding Address",
+			},
+			rowsNssaExternal,
+		)
 		for _, r := range nssaExternalTableData {
 			nssaExternalTable = nssaExternalTable.Row(r...)
 		}
