@@ -39,9 +39,8 @@ func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analy
 
 func (s *Socket) Start() error {
 	os.Remove(s.socketPath)
-	fmt.Println(s.socketPath)
 
-	l, err := net.ListenUnix("unix", &net.UnixAddr{s.socketPath, "unix"})
+	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: s.socketPath, Net: "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)
 		//s.logger.Error(fmt.Sprintf("Error listening on socket: %w", err))
@@ -78,7 +77,7 @@ func (s *Socket) handleConnection(conn net.Conn) {
 	sizeBuf := make([]byte, 4)
 	_, err := io.ReadFull(conn, sizeBuf)
 	if err != nil {
-		fmt.Printf("Error reading message size :%s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error reading message size :%s\n", err.Error()))
 		return
 	}
 
@@ -109,7 +108,7 @@ func (s *Socket) handleConnection(conn net.Conn) {
 
 	responseData, err := proto.Marshal(protoResponse)
 	if err != nil {
-		fmt.Printf("Error marshaling response: %s\n", err.Error())
+		//fmt.Printf("Error marshaling response: %s\n", err.Error())
 		s.logger.Error(fmt.Sprintf("Error marshaling response: %s\n", err.Error()))
 		return
 	}

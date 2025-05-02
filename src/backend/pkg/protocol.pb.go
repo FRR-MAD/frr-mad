@@ -5004,75 +5004,7 @@ func (x *Nexthop) GetWeight() int32 {
 	return 0
 }
 
-// Main message containing all anomaly types
-type Anomalies struct {
-	state                 protoimpl.MessageState         `protogen:"open.v1"`
-	OveradvertisedRoutes  []*AnomalyOveradvertisedRoute  `protobuf:"bytes,1,rep,name=overadvertised_routes,json=overadvertisedRoutes,proto3" json:"overadvertised_routes,omitempty"`
-	UnderadvertisedRoutes []*AnomalyUnderadvertisedRoute `protobuf:"bytes,2,rep,name=underadvertised_routes,json=underadvertisedRoutes,proto3" json:"underadvertised_routes,omitempty"`
-	DuplicateRoutes       []*AnomalyDuplicateRoute       `protobuf:"bytes,3,rep,name=duplicate_routes,json=duplicateRoutes,proto3" json:"duplicate_routes,omitempty"`
-	MisconfiguredRoutes   []*AnomalyMisconfiguredRoute   `protobuf:"bytes,4,rep,name=misconfigured_routes,json=misconfiguredRoutes,proto3" json:"misconfigured_routes,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
-}
-
-func (x *Anomalies) Reset() {
-	*x = Anomalies{}
-	mi := &file_protocol_proto_msgTypes[59]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Anomalies) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Anomalies) ProtoMessage() {}
-
-func (x *Anomalies) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[59]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Anomalies.ProtoReflect.Descriptor instead.
-func (*Anomalies) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{59}
-}
-
-func (x *Anomalies) GetOveradvertisedRoutes() []*AnomalyOveradvertisedRoute {
-	if x != nil {
-		return x.OveradvertisedRoutes
-	}
-	return nil
-}
-
-func (x *Anomalies) GetUnderadvertisedRoutes() []*AnomalyUnderadvertisedRoute {
-	if x != nil {
-		return x.UnderadvertisedRoutes
-	}
-	return nil
-}
-
-func (x *Anomalies) GetDuplicateRoutes() []*AnomalyDuplicateRoute {
-	if x != nil {
-		return x.DuplicateRoutes
-	}
-	return nil
-}
-
-func (x *Anomalies) GetMisconfiguredRoutes() []*AnomalyMisconfiguredRoute {
-	if x != nil {
-		return x.MisconfiguredRoutes
-	}
-	return nil
-}
-
+// new
 type AnomalyAnalysis struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	RouterAnomaly       *AnomalyDetection      `protobuf:"bytes,1,opt,name=router_anomaly,json=routerAnomaly,proto3" json:"router_anomaly,omitempty"`
@@ -5084,7 +5016,7 @@ type AnomalyAnalysis struct {
 
 func (x *AnomalyAnalysis) Reset() {
 	*x = AnomalyAnalysis{}
-	mi := &file_protocol_proto_msgTypes[60]
+	mi := &file_protocol_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5096,7 +5028,7 @@ func (x *AnomalyAnalysis) String() string {
 func (*AnomalyAnalysis) ProtoMessage() {}
 
 func (x *AnomalyAnalysis) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[60]
+	mi := &file_protocol_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5109,7 +5041,7 @@ func (x *AnomalyAnalysis) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyAnalysis.ProtoReflect.Descriptor instead.
 func (*AnomalyAnalysis) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{60}
+	return file_protocol_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *AnomalyAnalysis) GetRouterAnomaly() *AnomalyDetection {
@@ -5139,7 +5071,7 @@ type AnomalyDetection struct {
 	HasUnderAdvertisedPrefixes bool                   `protobuf:"varint,2,opt,name=HasUnderAdvertisedPrefixes,proto3" json:"HasUnderAdvertisedPrefixes,omitempty"`
 	HasDuplicatePrefixes       bool                   `protobuf:"varint,3,opt,name=HasDuplicatePrefixes,proto3" json:"HasDuplicatePrefixes,omitempty"`
 	HasMisconfiguredPrefixes   bool                   `protobuf:"varint,4,opt,name=HasMisconfiguredPrefixes,proto3" json:"HasMisconfiguredPrefixes,omitempty"`
-	ExtraEntries               []*Advertisement       `protobuf:"bytes,5,rep,name=extra_entries,json=extraEntries,proto3" json:"extra_entries,omitempty"`
+	SuperfluousEntries         []*Advertisement       `protobuf:"bytes,5,rep,name=superfluous_entries,json=superfluousEntries,proto3" json:"superfluous_entries,omitempty"`
 	MissingEntries             []*Advertisement       `protobuf:"bytes,6,rep,name=missing_entries,json=missingEntries,proto3" json:"missing_entries,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
@@ -5147,7 +5079,7 @@ type AnomalyDetection struct {
 
 func (x *AnomalyDetection) Reset() {
 	*x = AnomalyDetection{}
-	mi := &file_protocol_proto_msgTypes[61]
+	mi := &file_protocol_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5159,7 +5091,7 @@ func (x *AnomalyDetection) String() string {
 func (*AnomalyDetection) ProtoMessage() {}
 
 func (x *AnomalyDetection) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[61]
+	mi := &file_protocol_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5172,7 +5104,7 @@ func (x *AnomalyDetection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyDetection.ProtoReflect.Descriptor instead.
 func (*AnomalyDetection) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{61}
+	return file_protocol_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *AnomalyDetection) GetHasOverAdvertisedPrefixes() bool {
@@ -5203,9 +5135,9 @@ func (x *AnomalyDetection) GetHasMisconfiguredPrefixes() bool {
 	return false
 }
 
-func (x *AnomalyDetection) GetExtraEntries() []*Advertisement {
+func (x *AnomalyDetection) GetSuperfluousEntries() []*Advertisement {
 	if x != nil {
-		return x.ExtraEntries
+		return x.SuperfluousEntries
 	}
 	return nil
 }
@@ -5229,7 +5161,7 @@ type Advertisement struct {
 
 func (x *Advertisement) Reset() {
 	*x = Advertisement{}
-	mi := &file_protocol_proto_msgTypes[62]
+	mi := &file_protocol_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5241,7 +5173,7 @@ func (x *Advertisement) String() string {
 func (*Advertisement) ProtoMessage() {}
 
 func (x *Advertisement) ProtoReflect() protoreflect.Message {
-	mi := &file_protocol_proto_msgTypes[62]
+	mi := &file_protocol_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5254,7 +5186,7 @@ func (x *Advertisement) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Advertisement.ProtoReflect.Descriptor instead.
 func (*Advertisement) Descriptor() ([]byte, []int) {
-	return file_protocol_proto_rawDescGZIP(), []int{62}
+	return file_protocol_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *Advertisement) GetInterfaceAddress() string {
@@ -5283,6 +5215,76 @@ func (x *Advertisement) GetLinkType() string {
 		return x.LinkType
 	}
 	return ""
+}
+
+// old
+// Main message containing all anomaly types
+type Anomalies struct {
+	state                 protoimpl.MessageState         `protogen:"open.v1"`
+	OveradvertisedRoutes  []*AnomalyOveradvertisedRoute  `protobuf:"bytes,1,rep,name=overadvertised_routes,json=overadvertisedRoutes,proto3" json:"overadvertised_routes,omitempty"`
+	UnderadvertisedRoutes []*AnomalyUnderadvertisedRoute `protobuf:"bytes,2,rep,name=underadvertised_routes,json=underadvertisedRoutes,proto3" json:"underadvertised_routes,omitempty"`
+	DuplicateRoutes       []*AnomalyDuplicateRoute       `protobuf:"bytes,3,rep,name=duplicate_routes,json=duplicateRoutes,proto3" json:"duplicate_routes,omitempty"`
+	MisconfiguredRoutes   []*AnomalyMisconfiguredRoute   `protobuf:"bytes,4,rep,name=misconfigured_routes,json=misconfiguredRoutes,proto3" json:"misconfigured_routes,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *Anomalies) Reset() {
+	*x = Anomalies{}
+	mi := &file_protocol_proto_msgTypes[62]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Anomalies) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Anomalies) ProtoMessage() {}
+
+func (x *Anomalies) ProtoReflect() protoreflect.Message {
+	mi := &file_protocol_proto_msgTypes[62]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Anomalies.ProtoReflect.Descriptor instead.
+func (*Anomalies) Descriptor() ([]byte, []int) {
+	return file_protocol_proto_rawDescGZIP(), []int{62}
+}
+
+func (x *Anomalies) GetOveradvertisedRoutes() []*AnomalyOveradvertisedRoute {
+	if x != nil {
+		return x.OveradvertisedRoutes
+	}
+	return nil
+}
+
+func (x *Anomalies) GetUnderadvertisedRoutes() []*AnomalyUnderadvertisedRoute {
+	if x != nil {
+		return x.UnderadvertisedRoutes
+	}
+	return nil
+}
+
+func (x *Anomalies) GetDuplicateRoutes() []*AnomalyDuplicateRoute {
+	if x != nil {
+		return x.DuplicateRoutes
+	}
+	return nil
+}
+
+func (x *Anomalies) GetMisconfiguredRoutes() []*AnomalyMisconfiguredRoute {
+	if x != nil {
+		return x.MisconfiguredRoutes
+	}
+	return nil
 }
 
 // Router information
@@ -6505,28 +6507,28 @@ const file_protocol_proto_rawDesc = "" +
 	"\x0einterface_name\x18\b \x01(\tR\rinterfaceName\x12\x16\n" +
 	"\x06active\x18\t \x01(\bR\x06active\x12\x16\n" +
 	"\x06weight\x18\n" +
-	" \x01(\x05R\x06weight\"\xfc\x02\n" +
-	"\tAnomalies\x12^\n" +
-	"\x15overadvertised_routes\x18\x01 \x03(\v2).communication.AnomalyOveradvertisedRouteR\x14overadvertisedRoutes\x12a\n" +
-	"\x16underadvertised_routes\x18\x02 \x03(\v2*.communication.AnomalyUnderadvertisedRouteR\x15underadvertisedRoutes\x12O\n" +
-	"\x10duplicate_routes\x18\x03 \x03(\v2$.communication.AnomalyDuplicateRouteR\x0fduplicateRoutes\x12[\n" +
-	"\x14misconfigured_routes\x18\x04 \x03(\v2(.communication.AnomalyMisconfiguredRouteR\x13misconfiguredRoutes\"\xfa\x01\n" +
+	" \x01(\x05R\x06weight\"\xfa\x01\n" +
 	"\x0fAnomalyAnalysis\x12F\n" +
 	"\x0erouter_anomaly\x18\x01 \x01(\v2\x1f.communication.AnomalyDetectionR\rrouterAnomaly\x12J\n" +
 	"\x10external_anomaly\x18\x02 \x01(\v2\x1f.communication.AnomalyDetectionR\x0fexternalAnomaly\x12S\n" +
-	"\x15nssa_external_anomaly\x18\x03 \x01(\v2\x1f.communication.AnomalyDetectionR\x13nssaExternalAnomaly\"\x8a\x03\n" +
+	"\x15nssa_external_anomaly\x18\x03 \x01(\v2\x1f.communication.AnomalyDetectionR\x13nssaExternalAnomaly\"\x96\x03\n" +
 	"\x10AnomalyDetection\x12<\n" +
 	"\x19HasOverAdvertisedPrefixes\x18\x01 \x01(\bR\x19HasOverAdvertisedPrefixes\x12>\n" +
 	"\x1aHasUnderAdvertisedPrefixes\x18\x02 \x01(\bR\x1aHasUnderAdvertisedPrefixes\x122\n" +
 	"\x14HasDuplicatePrefixes\x18\x03 \x01(\bR\x14HasDuplicatePrefixes\x12:\n" +
-	"\x18HasMisconfiguredPrefixes\x18\x04 \x01(\bR\x18HasMisconfiguredPrefixes\x12A\n" +
-	"\rextra_entries\x18\x05 \x03(\v2\x1c.communication.AdvertisementR\fextraEntries\x12E\n" +
+	"\x18HasMisconfiguredPrefixes\x18\x04 \x01(\bR\x18HasMisconfiguredPrefixes\x12M\n" +
+	"\x13superfluous_entries\x18\x05 \x03(\v2\x1c.communication.AdvertisementR\x12superfluousEntries\x12E\n" +
 	"\x0fmissing_entries\x18\x06 \x03(\v2\x1c.communication.AdvertisementR\x0emissingEntries\"\x9d\x01\n" +
 	"\rAdvertisement\x12*\n" +
 	"\x10InterfaceAddress\x18\x01 \x01(\tR\x10InterfaceAddress\x12 \n" +
 	"\vLinkStateId\x18\x02 \x01(\tR\vLinkStateId\x12\"\n" +
 	"\fPrefixLength\x18\x03 \x01(\tR\fPrefixLength\x12\x1a\n" +
-	"\bLinkType\x18\x04 \x01(\tR\bLinkType\"O\n" +
+	"\bLinkType\x18\x04 \x01(\tR\bLinkType\"\xfc\x02\n" +
+	"\tAnomalies\x12^\n" +
+	"\x15overadvertised_routes\x18\x01 \x03(\v2).communication.AnomalyOveradvertisedRouteR\x14overadvertisedRoutes\x12a\n" +
+	"\x16underadvertised_routes\x18\x02 \x03(\v2*.communication.AnomalyUnderadvertisedRouteR\x15underadvertisedRoutes\x12O\n" +
+	"\x10duplicate_routes\x18\x03 \x03(\v2$.communication.AnomalyDuplicateRouteR\x0fduplicateRoutes\x12[\n" +
+	"\x14misconfigured_routes\x18\x04 \x03(\v2(.communication.AnomalyMisconfiguredRouteR\x13misconfiguredRoutes\"O\n" +
 	"\x0fRouterAttribute\x12\x1f\n" +
 	"\vrouter_name\x18\x01 \x01(\tR\n" +
 	"routerName\x12\x1b\n" +
@@ -6674,10 +6676,10 @@ var file_protocol_proto_goTypes = []any{
 	(*RouteEntry)(nil),                  // 56: communication.RouteEntry
 	(*Route)(nil),                       // 57: communication.Route
 	(*Nexthop)(nil),                     // 58: communication.Nexthop
-	(*Anomalies)(nil),                   // 59: communication.Anomalies
-	(*AnomalyAnalysis)(nil),             // 60: communication.AnomalyAnalysis
-	(*AnomalyDetection)(nil),            // 61: communication.AnomalyDetection
-	(*Advertisement)(nil),               // 62: communication.Advertisement
+	(*AnomalyAnalysis)(nil),             // 59: communication.AnomalyAnalysis
+	(*AnomalyDetection)(nil),            // 60: communication.AnomalyDetection
+	(*Advertisement)(nil),               // 61: communication.Advertisement
+	(*Anomalies)(nil),                   // 62: communication.Anomalies
 	(*RouterAttribute)(nil),             // 63: communication.RouterAttribute
 	(*AnomalyOveradvertisedRoute)(nil),  // 64: communication.AnomalyOveradvertisedRoute
 	(*AnomalyUnderadvertisedRoute)(nil), // 65: communication.AnomalyUnderadvertisedRoute
@@ -6717,8 +6719,8 @@ var file_protocol_proto_depIdxs = []int32{
 	72,  // 0: communication.Message.params:type_name -> communication.Message.ParamsEntry
 	73,  // 1: communication.Command.params:type_name -> communication.Command.ParamsEntry
 	3,   // 2: communication.Response.data:type_name -> communication.ResponseValue
-	59,  // 3: communication.ResponseValue.anomalies:type_name -> communication.Anomalies
-	61,  // 4: communication.ResponseValue.anomaly:type_name -> communication.AnomalyDetection
+	62,  // 3: communication.ResponseValue.anomalies:type_name -> communication.Anomalies
+	60,  // 4: communication.ResponseValue.anomaly:type_name -> communication.AnomalyDetection
 	38,  // 5: communication.ResponseValue.ospf_database:type_name -> communication.OSPFDatabase
 	25,  // 6: communication.ResponseValue.ospf_network_data:type_name -> communication.OSPFNetworkData
 	29,  // 7: communication.ResponseValue.ospf_summary_data:type_name -> communication.OSPFSummaryData
@@ -6795,15 +6797,15 @@ var file_protocol_proto_depIdxs = []int32{
 	92,  // 78: communication.RoutingInformationBase.routes:type_name -> communication.RoutingInformationBase.RoutesEntry
 	57,  // 79: communication.RouteEntry.routes:type_name -> communication.Route
 	58,  // 80: communication.Route.nexthops:type_name -> communication.Nexthop
-	64,  // 81: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
-	65,  // 82: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
-	66,  // 83: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
-	67,  // 84: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
-	61,  // 85: communication.AnomalyAnalysis.router_anomaly:type_name -> communication.AnomalyDetection
-	61,  // 86: communication.AnomalyAnalysis.external_anomaly:type_name -> communication.AnomalyDetection
-	61,  // 87: communication.AnomalyAnalysis.nssa_external_anomaly:type_name -> communication.AnomalyDetection
-	62,  // 88: communication.AnomalyDetection.extra_entries:type_name -> communication.Advertisement
-	62,  // 89: communication.AnomalyDetection.missing_entries:type_name -> communication.Advertisement
+	60,  // 81: communication.AnomalyAnalysis.router_anomaly:type_name -> communication.AnomalyDetection
+	60,  // 82: communication.AnomalyAnalysis.external_anomaly:type_name -> communication.AnomalyDetection
+	60,  // 83: communication.AnomalyAnalysis.nssa_external_anomaly:type_name -> communication.AnomalyDetection
+	61,  // 84: communication.AnomalyDetection.superfluous_entries:type_name -> communication.Advertisement
+	61,  // 85: communication.AnomalyDetection.missing_entries:type_name -> communication.Advertisement
+	64,  // 86: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
+	65,  // 87: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
+	66,  // 88: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
+	67,  // 89: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
 	96,  // 90: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
 	63,  // 91: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
 	96,  // 92: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp

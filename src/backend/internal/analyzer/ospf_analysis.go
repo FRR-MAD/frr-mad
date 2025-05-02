@@ -10,10 +10,16 @@ import (
 
 func (a *Analyzer) routerAnomalyAnalysis(accessList map[string]accessList, shouldState *intraAreaLsa, isState *intraAreaLsa) {
 	if isState == nil || shouldState == nil {
+		fmt.Println("nil!")
 		return
 	}
 
-	result := frrProto.AnomalyDetection{}
+	result := &frrProto.AnomalyDetection{
+		HasDuplicatePrefixes:     false,
+		HasMisconfiguredPrefixes: false,
+		SuperfluousEntries:       []*frrProto.Advertisement{},
+		MissingEntries:           []*frrProto.Advertisement{},
+	}
 
 	isStateMap := make(map[string]*frrProto.Advertisement)
 	shouldStateMap := make(map[string]*frrProto.Advertisement)
@@ -44,19 +50,25 @@ func (a *Analyzer) routerAnomalyAnalysis(accessList map[string]accessList, shoul
 
 	for key, isLink := range isStateMap {
 		if _, exists := shouldStateMap[key]; !exists {
-			result.ExtraEntries = append(result.ExtraEntries, isLink)
+			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
-	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = writeBoolTarget(result.HasUnderAdvertisedPrefixes)
-	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = writeBoolTarget(result.HasOverAdvertisedPrefixes)
+	//a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = writeBoolTarget(result.HasUnderAdvertisedPrefixes)
+	//a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = writeBoolTarget(result.HasOverAdvertisedPrefixes)
+
+	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = writeBoolTarget(result.HasDuplicatePrefixes)
 	a.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes = writeBoolTarget(result.HasMisconfiguredPrefixes)
+	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
+	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
+
 }
 
 func writeBoolTarget(source bool) bool {
 	if source {
-		return true
+		return source
 	}
 	return false
 }
@@ -98,7 +110,7 @@ func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isS
 	//result := &frrProto.AnomalyAnalysis{
 	//	AnomalyDetection: &frrProto.AnomalyDetection{},
 	//	MissingEntries:   []*frrProto.Advertisement{},
-	//	ExtraEntries:     []*frrProto.Advertisement{},
+	//	SuperfluousEntries:     []*frrProto.Advertisement{},
 	//}
 
 	if isState == nil || shouldState == nil {

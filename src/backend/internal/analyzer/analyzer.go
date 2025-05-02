@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
-
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
@@ -158,6 +156,9 @@ type OspfRedistribution struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
+	//fmt.Println("---------------------------")
+	//fmt.Printf("%+v\n", c.metrics.StaticFrrConfiguration)
+	//fmt.Println("---------------------------")
 	// required to know what routes are distributed
 	accessList := getAccessLists(c.metrics.StaticFrrConfiguration)
 
@@ -181,7 +182,6 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	// if router is an ABR/ASBR, lsa type 5 is important
 	if len(staticRouteMap) > 0 || isNssa {
-		fmt.Println("LSA Type 5 is checked")
 		externalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
 	}
 
@@ -307,12 +307,12 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 	//fmt.Println(result)
 	//fmt.Printf("%+v\n", config.GetRouterStates())
 	var advertisementList []frrProto.Advertisement
-	fmt.Println("########### Start New Print ###########")
+	//fmt.Println("########### Start New Print ###########")
 	for _, area := range config.GetRouterStates() {
-		fmt.Println("--------- Value ---------")
+		//fmt.Println("--------- Value ---------")
 		//fmt.Println(value.LsaEntries["lsa_type"])
 		for _, entry := range area.LsaEntries {
-			fmt.Println("--------- entry ---------")
+			//fmt.Println("--------- entry ---------")
 			for _, link := range entry.RouterLinks {
 				if link.GetNetworkAddress() != "" {
 					adv := frrProto.Advertisement{
@@ -327,7 +327,7 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 				//fmt.Println(link)
 			}
 			//fmt.Println(entry)
-			fmt.Println(advertisementList)
+			//fmt.Println(advertisementList)
 		}
 	}
 	//fmt.Println(advertisementList)
@@ -474,7 +474,7 @@ func getStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 	result := map[string]*StaticList{}
 
 	for _, route := range config.StaticRoutes {
-		fmt.Println(route)
+		//fmt.Println(route)
 		result[route.IpPrefix.GetIpAddress()] = &StaticList{
 			IpAddress:    route.IpPrefix.GetIpAddress(),
 			PrefixLength: int(route.IpPrefix.GetPrefixLength()),

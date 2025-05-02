@@ -557,14 +557,7 @@ message Nexthop {
 
 // ================ Analyzer payload Messages ================
 
-// Main message containing all anomaly types
-message Anomalies {
-  repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
-  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
-  repeated AnomalyDuplicateRoute duplicate_routes = 3;
-  repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
-}
-
+// new
 message AnomalyAnalysis {
   AnomalyDetection router_anomaly= 1;
   AnomalyDetection external_anomaly = 2;
@@ -576,7 +569,7 @@ message AnomalyDetection {
   bool HasUnderAdvertisedPrefixes = 2;
   bool HasDuplicatePrefixes = 3;
   bool HasMisconfiguredPrefixes = 4;
-  repeated Advertisement extra_entries = 5;
+  repeated Advertisement superfluous_entries = 5;
   repeated Advertisement missing_entries = 6;
 }
 
@@ -585,6 +578,15 @@ message Advertisement {
   string LinkStateId = 2;
   string PrefixLength = 3;
   string LinkType = 4;
+}
+
+// old
+// Main message containing all anomaly types
+message Anomalies {
+  repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
+  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
+  repeated AnomalyDuplicateRoute duplicate_routes = 3;
+  repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
 }
 
 // Router information
@@ -601,6 +603,7 @@ message AnomalyOveradvertisedRoute {
   string should_advertised = 4;
   RouterAttribute router = 5;
 }
+
 
 // Route should be advertised but is not
 message AnomalyUnderadvertisedRoute {

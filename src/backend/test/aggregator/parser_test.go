@@ -16,6 +16,7 @@ func TestParseStaticFRRConfig(t *testing.T) {
 	configPathR112 := "./mock-files/r112.conf"
 	configPathR203 := "./mock-files/r203.conf"
 	configR101, err := aggregator.ParseStaticFRRConfig(configPathR101)
+
 	if err != nil {
 		t.Fatalf("ParseStaticFRRConfig configR101 failed: %v", err)
 	}
