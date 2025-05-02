@@ -672,10 +672,12 @@ func (m *Model) renderOSPFTab1() string {
 }
 
 func (m *Model) renderRunningConfigTab() string {
+	/* uncomment the width values you need */
+
 	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
 	widthForOneH1 := m.windowSize.Width - 10
 	// -2 (for border)
-	widthForTwoH1 := (widthForOneH1 - 2) / 2
+	widthForTwoH1 := (widthForOneH1 - 4) / 2
 	// -4 (for margin) (-2 for borders already subtracted in widthForOneH1)
 	// widthForOneH2 := widthForOneH1 - 4
 	// -4 (for margin) -2 (for border)
@@ -685,6 +687,8 @@ func (m *Model) renderRunningConfigTab() string {
 	widthForTwoH1Box := widthForTwoH1 - 2 // -4 (for margin) +2 (has no border)
 	// widthForOneH2Box := widthForOneH2 - 2 // -4 (for margin) +2 (has no border)
 	// widthForTwoH2Box := widthForTwoH2 - 2 // -4 (for margin) +2 (has no border)
+
+	/* ================================== */
 
 	runningConfigTitle := styles.H1TitleStyle.Width(widthForTwoH1).Render("Running Config")
 	formatedRunningConfigOutput := strings.Join(m.runningConfig, "\n")
@@ -708,7 +712,7 @@ func (m *Model) renderRunningConfigTab() string {
 
 	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
 	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = widthForOneH1 + 2
+	m.viewport.Width = widthForOneH1 + 4
 	m.viewport.Height = outputMaxHeight
 	m.viewport.SetContent(completeContent)
 

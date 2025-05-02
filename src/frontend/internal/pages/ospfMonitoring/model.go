@@ -19,7 +19,7 @@ type Model struct {
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize) *Model {
-	boxWidthForOne := windowSize.Width - 8
+	boxWidthForOne := windowSize.Width - 6
 	if boxWidthForOne < 20 {
 		boxWidthForOne = 20
 	}

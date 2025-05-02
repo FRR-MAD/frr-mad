@@ -86,7 +86,7 @@ var InactiveBoxStyle = GeneralBoxStyle.
 	BorderForeground(lipgloss.Color(Grey))
 
 var H1ContentBoxStyle = lipgloss.NewStyle().
-	Margin(0, 3).
+	Margin(0, 2).
 	Padding(0, 1)
 
 var H2ContentBoxStyle = lipgloss.NewStyle().
