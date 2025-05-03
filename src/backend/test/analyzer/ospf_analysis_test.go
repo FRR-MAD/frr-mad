@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetAccessList1(t *testing.T) {
+func TestRouterLsa1(t *testing.T) {
 
 	ana := initAnalyzer()
 
@@ -352,6 +352,87 @@ func TestGetAccessList1(t *testing.T) {
 
 }
 
+func TestExternalLsa1(t *testing.T) {
+	// what do I need?
+	/*
+		- frrMetrics.OspfExternalData
+		- frrMetrics.StaticFrrConfiguration
+		- accessList
+		- predictedExternalLSDB
+		- runtimeExternalLSDB
+
+		runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+		predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+
+		if len(staticRouteMap) > 0 || isNssa {
+			ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+		}
+	*/
+	// what will be tested?
+	/*
+		- actualExternalLSDB -> GetRuntimeExternalRouterData
+		- predictedExternalLSDB
+
+		- runtimeExternalLSDB
+	*/
+	less := func(a, b string) bool { return a < b }
+	frrMetrics := getR101FRRdata()
+	expectedPredictedExternalLSDB := &frrProto.InterAreaLsa{
+		Hostname: frrMetrics.StaticFrrConfiguration.Hostname,
+		RouterId: frrMetrics.StaticFrrConfiguration.OspfConfig.RouterId,
+		Areas: []*frrProto.AreaAnalyzer{
+
+			{
+				AreaName: "0.0.0.0",
+				LsaType:  "AS-external-LSA",
+				//AreaType: "",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.1.0", //   str
+						PrefixLength: "24",          //  str
+						LinkType:     "external",    // str
+					},
+				},
+			},
+		},
+	}
+	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration)
+
+	// - actualExternalLSDB -> GetRuntimeExternalRouterData
+	// - predictedExternalLSDB
+	t.Run("TestExternalDataStaticShouldAndIs", func(t *testing.T) {
+
+		assert.Equal(t, expectedPredictedExternalLSDB.Hostname, actualPredictedExternalLSDB.Hostname)
+		assert.Equal(t, expectedPredictedExternalLSDB.RouterId, actualPredictedExternalLSDB.RouterId)
+		expectedAreaMapTmp := make(map[string][]string)
+		expectedAreaListTmp := []string{}
+		for _, area := range expectedPredictedExternalLSDB.Areas {
+			expectedAreaListTmp = append(expectedAreaListTmp, area.AreaName)
+			for _, adv := range area.Links {
+				expectedAreaMapTmp[area.AreaName] = append(expectedAreaMapTmp[area.AreaName], adv.LinkStateId)
+			}
+		}
+		actualAreaMapTmp := make(map[string][]string)
+		actualAreaListTmp := []string{}
+		for _, area := range expectedPredictedExternalLSDB.Areas {
+			actualAreaListTmp = append(actualAreaListTmp, area.AreaName)
+			for _, adv := range area.Links {
+				actualAreaMapTmp[area.AreaName] = append(actualAreaMapTmp[area.AreaName], adv.LinkStateId)
+			}
+		}
+
+		assert.Equal(t, len(expectedAreaListTmp), len(actualAreaListTmp))
+		for _, value := range expectedAreaListTmp {
+			assert.True(t, cmp.Diff(expectedAreaMapTmp[value], actualAreaMapTmp[value], cmpopts.SortSlices(less)) == "")
+		}
+	})
+
+	//- runtimeExternalLSDB
+	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
+
+	})
+}
+
 // func TestGetAccessList2(t *testing.T) {
 
 // 	frrMetrics := getR102FRRdata()
@@ -412,4 +493,20 @@ func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertis
 	}
 
 	return result, keyResult
+}
+
+func uniqueNonEmptyElementsOf(s []string) []string {
+	unique := make(map[string]bool, len(s))
+	us := make([]string, len(unique))
+	for _, elem := range s {
+		if len(elem) != 0 {
+			if !unique[elem] {
+				us = append(us, elem)
+				unique[elem] = true
+			}
+		}
+	}
+
+	return us
+
 }

@@ -349,9 +349,76 @@ func getR101FRRdata() *frrProto.FullFRRData {
 		},
 	}
 
+	ospfExternalData := &frrProto.OSPFExternalData{
+		RouterId: "65.0.1.1",
+		AsExternalLinkStates: map[string]*frrProto.ExternalLSA{
+			"10.20.0.0": {
+				LsaAge:            277,
+				Options:           "*|-|-|-|-|-|E|-",
+				LsaFlags:          11,
+				LsaType:           "AS-external-LSA",
+				LinkStateId:       "10.20.0.0",
+				AdvertisingRouter: "65.0.1.1",
+				LsaSeqNumber:      "80000001",
+				Checksum:          "5c81",
+				Length:            36,
+				NetworkMask:       24,
+				MetricType:        "E1",
+				Metric:            20,
+				ForwardAddress:    "0.0.0.0",
+			},
+			"10.20.3.0": {
+				LsaAge:            317,
+				Options:           "*|-|-|-|-|-|E|-",
+				LsaFlags:          11,
+				LsaType:           "AS-external-LSA",
+				LinkStateId:       "10.20.3.0",
+				AdvertisingRouter: "65.0.1.1",
+				LsaSeqNumber:      "80000001",
+				Checksum:          "3b9f",
+				Length:            36,
+				NetworkMask:       24,
+				MetricType:        "E1",
+				Metric:            20,
+				ForwardAddress:    "0.0.0.0",
+			},
+			"10.20.4.0": {
+				LsaAge:            312,
+				Options:           "*|-|-|-|-|-|E|-",
+				LsaFlags:          11,
+				LsaType:           "AS-external-LSA",
+				LinkStateId:       "10.20.4.0",
+				AdvertisingRouter: "65.0.1.1",
+				LsaSeqNumber:      "80000001",
+				Checksum:          "30a9",
+				Length:            36,
+				NetworkMask:       24,
+				MetricType:        "E1",
+				Metric:            20,
+				ForwardAddress:    "0.0.0.0",
+			},
+			"192.168.1.0": {
+				LsaAge:            331,
+				Options:           "*|-|-|-|-|-|E|-",
+				LsaFlags:          11,
+				LsaType:           "AS-external-LSA",
+				LinkStateId:       "192.168.1.0",
+				AdvertisingRouter: "65.0.1.1",
+				LsaSeqNumber:      "80000001",
+				Checksum:          "137e",
+				Length:            36,
+				NetworkMask:       24,
+				MetricType:        "E1",
+				Metric:            20,
+				ForwardAddress:    "0.0.0.0",
+			},
+		},
+	}
+
 	metrics := &frrProto.FullFRRData{
 		StaticFrrConfiguration: staticFRRConfiguration,
 		OspfRouterData:         ospfRouterData,
+		OspfExternalData:       ospfExternalData,
 	}
 
 	return metrics
