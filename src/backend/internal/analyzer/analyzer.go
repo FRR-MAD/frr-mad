@@ -172,8 +172,15 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	// should state
 	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration)
 	predictedNssaExternalLSDB := getStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
+	fmt.Println("---------------------------")
+	fmt.Println("predictedExternalLSDB ")
+	fmt.Printf("%+v\n", predictedExternalLSDB)
+	fmt.Println("---------------------------")
+	fmt.Println("predictedNssaExternalLSDB ")
+	fmt.Printf("%+v\n", predictedNssaExternalLSDB)
+	fmt.Println("---------------------------")
 
 	// is state
 
@@ -184,12 +191,14 @@ func (c *Analyzer) AnomalyAnalysis() {
 	runtimeRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
 	fmt.Println("---------------------------")
 	fmt.Println("OspfExternalData")
-	fmt.Printf("%+v\n", c.metrics.OspfRouterData)
+	fmt.Printf("%+v\n", c.metrics.OspfExternalData)
 	fmt.Println("---------------------------")
 	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	fmt.Println("runtimeExternalLSDB")
 	fmt.Println("---------------------------")
+	fmt.Printf("%+v\n", runtimeExternalLSDB)
 	fmt.Println("OspfNssaExternalData")
-	fmt.Printf("%+v\n", c.metrics.OspfRouterData)
+	fmt.Printf("%+v\n", c.metrics.OspfNssaExternalData)
 	fmt.Println("---------------------------")
 	runtimeNssaExternalLSDB := GetNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 

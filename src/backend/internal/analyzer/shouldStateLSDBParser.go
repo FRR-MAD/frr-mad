@@ -155,7 +155,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 	return isNssa, result
 }
 
-func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
+func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
@@ -189,67 +189,126 @@ func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProt
 		}
 	}
 
-	// For regular AS-external-LSAs (type 5), only if we're not in a stub/nssa only router
-	externalArea := frrProto.AreaAnalyzer{
-		AreaName: "External",
-		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []*frrProto.Advertisement{},
-	}
-
-	// Add connected interfaces not in NSSA areas
+	// Find all areas
+	areaMap := make(map[string]bool)
+	areaNssaMap := make(map[string]bool)
+	areaList := []string{}
 	for _, iface := range config.Interfaces {
-		// Skip interfaces in NSSA areas, they'll generate type 7 LSAs instead
-		if nssaAreas[iface.Area] {
-			continue
+		areaNssaMap[iface.Area] = false
+		//if iface.Area != "" && !nssaAreas[iface.Area] {
+		if iface.Area != "" {
+			if _, exists := areaMap[iface.Area]; !exists {
+				areaMap[iface.Area] = true
+				areaList = append(areaList, iface.Area)
+			}
 		}
 
-		for _, ipPrefix := range iface.InterfaceIpPrefixes {
-			if ipPrefix.IpPrefix != nil {
+	}
+
+	staticRedistMap := make(map[string]bool)
+	routeMap := make(map[string]bool)
+
+	for _, redist := range config.OspfConfig.Redistribution {
+		if redist.Type != "" && redist.Type == "static" {
+			if _, exists := config.RouteMap[redist.RouteMap]; exists {
+				if _, exists := staticRedistMap[redist.Type]; !exists && config.RouteMap[redist.RouteMap].Permit {
+					staticRedistMap[redist.Type] = true
+					for _, access := range config.AccessList[config.RouteMap[redist.RouteMap].AccessList].AccessListItems {
+						if access.AccessControl == "permit" {
+							if ipPrefixDest, ok := access.Destination.(*frrProto.AccessListItem_IpPrefix); ok {
+								routeMap[ipPrefixDest.IpPrefix.IpAddress] = true
+							}
+						}
+					}
+				}
+			}
+
+		}
+	}
+
+	for _, area := range config.OspfConfig.Area {
+		if area.Type == "nssa" {
+			areaNssaMap[area.Name] = true
+		}
+	}
+	// fmt.Println("====================")
+	// fmt.Println(areaNssaMap)
+
+	// For regular AS-external-LSAs (type 5), only if we're not in a stub/nssa only router
+
+	for _, area := range areaList {
+		if areaNssaMap[area] {
+			// fmt.Printf("FAIL: %v\n", area)
+			continue
+		}
+		externalArea := frrProto.AreaAnalyzer{
+			AreaName: area,
+			LsaType:  "AS-external-LSA", // Type 5
+			Links:    []*frrProto.Advertisement{},
+		}
+
+		// Add connected interfaces not in NSSA areas
+		//for _, iface := range config.Interfaces {
+		//// Skip interfaces in NSSA areas, they'll generate type 7 LSAs instead
+		//if nssaAreas[iface.Area] {
+		//continue
+		//}
+
+		//if iface.Area != "" && iface.Area == area {
+		//for _, ipPrefix := range iface.InterfaceIpPrefixes {
+		////if ipPrefix. != nil && iface.area == area {
+		//if ipPrefix.IpPrefix != nil {
+		//adv := frrProto.Advertisement{
+		//LinkStateId:  ipPrefix.IpPrefix.IpAddress,
+		//PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
+		//LinkType:     "external",
+		//}
+		//externalArea.Links = append(externalArea.Links, &adv)
+		//}
+		//}
+		//}
+		//}
+
+		// Add static routes (will be advertised as type 5 in regular areas)
+		for _, staticRoute := range config.StaticRoutes {
+			if staticRoute.IpPrefix != nil && routeMap[staticRoute.IpPrefix.IpAddress] {
 				adv := frrProto.Advertisement{
-					LinkStateId:  ipPrefix.IpPrefix.IpAddress,
-					PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
+					LinkStateId:  staticRoute.IpPrefix.IpAddress,
+					PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
 					LinkType:     "external",
 				}
 				externalArea.Links = append(externalArea.Links, &adv)
 			}
 		}
-	}
 
-	// Add static routes (will be advertised as type 5 in regular areas)
-	for _, staticRoute := range config.StaticRoutes {
-		if staticRoute.IpPrefix != nil {
-			adv := frrProto.Advertisement{
-				LinkStateId:  staticRoute.IpPrefix.IpAddress,
-				PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
-				LinkType:     "external",
-			}
-			externalArea.Links = append(externalArea.Links, &adv)
-		}
-	}
+		//fmt.Println("Before externalArea")
+		//fmt.Println(externalArea)
 
-	// Add external area to the result if it has any links
-	if len(externalArea.Links) > 0 {
-		// Ensure no NSSA-only router (a router with only NSSA areas doesn't generate type 5 LSAs)
-		// Check if router has any non-NSSA areas
-		hasNonNssaArea := false
-		for _, ospfArea := range config.OspfConfig.Area {
-			if ospfArea.Type != "nssa" {
-				hasNonNssaArea = true
-				break
-			}
-		}
+		// Add external area to the result if it has any links
+		if len(externalArea.Links) > 0 {
+			// Ensure no NSSA-only router (a router with only NSSA areas doesn't generate type 5 LSAs)
+			// Check if router has any non-NSSA areas
+			//hasNonNssaArea := false
+			//for _, ospfArea := range config.OspfConfig.Area {
+			//	if ospfArea.Type != "nssa" {
+			//		hasNonNssaArea = true
+			//		break
+			//	}
+			//}
 
-		// Only add type 5 LSAs if router has at least one non-NSSA area
-		if hasNonNssaArea || len(config.OspfConfig.Area) == 0 {
+			//// Only add type 5 LSAs if router has at least one non-NSSA area
+			//if hasNonNssaArea || len(config.OspfConfig.Area) == 0 {
+			//	result.Areas = append(result.Areas, &externalArea)
+			//}
 			result.Areas = append(result.Areas, &externalArea)
 		}
 	}
-
 	// If no areas were added, return nil (no external LSAs predicted)
 	if len(result.Areas) == 0 {
 		return nil
 	}
 
+	// fmt.Println("===================")
 	return result
 }
 
