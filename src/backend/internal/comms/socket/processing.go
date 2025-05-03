@@ -44,7 +44,7 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 		}
 	default:
 		response.Status = "error"
-		response.Message = fmt.Sprintf("Unknown service: %s", message.Command)
+		response.Message = fmt.Sprintf("Unknown service: %s", message.Service)
 		return &response
 	}
 }

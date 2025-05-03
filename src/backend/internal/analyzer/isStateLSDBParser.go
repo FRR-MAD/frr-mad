@@ -7,24 +7,24 @@ import (
 )
 
 // lsa type 5 parsing
-func getRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *interAreaLsa {
+func GetRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
 
 	// TODO: check if redistribute has a route-map and only if compare to route-map lists
-	result := &interAreaLsa{
+	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
 		RouterId: config.RouterId,
-		Areas:    []area{},
+		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
 	// Since AS-external-LSA (type 5) doesn't belong to a specific area,
 	// we'll create a single "area" to represent the AS external links
-	externalArea := area{
+	externalArea := frrProto.AreaAnalyzer{
 		AreaName: "External",
 		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []frrProto.Advertisement{},
+		Links:    []*frrProto.Advertisement{},
 	}
 
 	for _, lsa := range config.AsExternalLinkStates {
@@ -34,31 +34,31 @@ func getRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname st
 			LinkType:     "external",
 		}
 
-		externalArea.Links = append(externalArea.Links, adv)
+		externalArea.Links = append(externalArea.Links, &adv)
 	}
 
-	result.Areas = append(result.Areas, externalArea)
+	result.Areas = append(result.Areas, &externalArea)
 
 	return result
 }
 
 // lsa type 7 parsing
-func getNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostname string) *interAreaLsa {
+func GetNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
 
-	result := &interAreaLsa{
+	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
 		RouterId: config.RouterId,
-		Areas:    []area{},
+		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
 	for areaId, nssaArea := range config.NssaExternalLinkStates {
-		nssaAreaObj := area{
+		nssaAreaObj := frrProto.AreaAnalyzer{
 			AreaName: areaId,
 			LsaType:  "NSSA-LSA",
-			Links:    []frrProto.Advertisement{},
+			Links:    []*frrProto.Advertisement{},
 		}
 
 		for _, lsa := range nssaArea.Data {
@@ -68,40 +68,40 @@ func getNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostname s
 				LinkType:     "nssa-external",
 			}
 
-			nssaAreaObj.Links = append(nssaAreaObj.Links, adv)
+			nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 		}
 
-		result.Areas = append(result.Areas, nssaAreaObj)
+		result.Areas = append(result.Areas, &nssaAreaObj)
 	}
 
 	return result
 }
 
 // lsa type 1 parsing
-func getRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *intraAreaLsa {
-	result := intraAreaLsa{
+func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
+	result := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
-		Areas:    []area{},
+		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
 	for areaName, routerArea := range config.RouterStates {
 		for _, lsaEntry := range routerArea.LsaEntries {
-			var currentArea *area
+			var currentArea *frrProto.AreaAnalyzer
 			for i := range result.Areas {
 				if result.Areas[i].AreaName == areaName {
-					currentArea = &result.Areas[i]
+					currentArea = result.Areas[i]
 					break
 				}
 			}
 
 			if currentArea == nil {
-				newArea := area{
+				newArea := frrProto.AreaAnalyzer{
 					AreaName: areaName,
 					LsaType:  lsaEntry.LsaType,
-					Links:    []frrProto.Advertisement{},
+					Links:    []*frrProto.Advertisement{},
 				}
-				result.Areas = append(result.Areas, newArea)
-				currentArea = &result.Areas[len(result.Areas)-1]
+				result.Areas = append(result.Areas, &newArea)
+				currentArea = result.Areas[len(result.Areas)-1]
 			}
 
 			for _, routerLink := range lsaEntry.RouterLinks {
@@ -133,7 +133,7 @@ func getRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *int
 					adv.PrefixLength = prefixLength
 				}
 
-				currentArea.Links = append(currentArea.Links, adv)
+				currentArea.Links = append(currentArea.Links, &adv)
 			}
 		}
 	}

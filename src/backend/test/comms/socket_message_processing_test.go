@@ -78,7 +78,7 @@ func TestMessageProcessing(t *testing.T) {
 		response := sendRequestAndGetResponse(t, request, "/tmp/test-message-socket")
 
 		assert.Equal(t, "error", response.Status)
-		assert.Contains(t, response.Message, "Unknown command")
+		assert.Contains(t, response.Message, "Unknown service: invalid")
 	})
 
 	socketInstance.Close()

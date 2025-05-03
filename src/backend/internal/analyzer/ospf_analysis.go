@@ -8,7 +8,7 @@ import (
 	// "google.golang.org/protobuf/proto"
 )
 
-func (a *Analyzer) routerAnomalyAnalysis(accessList map[string]accessList, shouldState *intraAreaLsa, isState *intraAreaLsa) {
+func (a *Analyzer) RouterAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
 	if isState == nil || shouldState == nil {
 		fmt.Println("nil!")
 		return
@@ -26,7 +26,7 @@ func (a *Analyzer) routerAnomalyAnalysis(accessList map[string]accessList, shoul
 
 	for _, area := range isState.Areas {
 		for i := range area.Links {
-			link := &area.Links[i]
+			link := area.Links[i]
 			key := getadvertisementKey(link)
 			isStateMap[key] = link
 		}
@@ -34,7 +34,7 @@ func (a *Analyzer) routerAnomalyAnalysis(accessList map[string]accessList, shoul
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
-			link := &area.Links[i]
+			link := area.Links[i]
 			key := getadvertisementKey(link)
 			shouldStateMap[key] = link
 		}
@@ -80,9 +80,9 @@ func getadvertisementKey(adv *frrProto.Advertisement) string {
 	return normalizeNetworkAddress(adv.LinkStateId)
 }
 
-func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]accessList) bool {
+func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]frrProto.AccessListAnalyzer) bool {
 	for _, acl := range accessLists {
-		for _, entry := range acl.aclEntry {
+		for _, entry := range acl.AclEntry {
 			if !entry.IsPermit {
 				if entry.Any {
 					return true
@@ -99,12 +99,12 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	return false
 }
 
-func externalAnomalyAnalysis(accessList map[string]accessList, isState *interAreaLsa, shouldState *interAreaLsa) {
+func ExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 }
 
-// func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isState *interAreaLsa, shouldState *interAreaLsa) {
+// func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 
-func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isState *interAreaLsa, shouldState *interAreaLsa) {
+func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 	result := frrProto.AnomalyDetection{}
 
 	//result := &frrProto.AnomalyAnalysis{
@@ -122,7 +122,7 @@ func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isS
 
 	for _, area := range isState.Areas {
 		for i := range area.Links {
-			link := &area.Links[i]
+			link := area.Links[i]
 			key := normalizeNetworkAddress(link.LinkStateId)
 			isStateMap[key] = link
 		}
@@ -130,7 +130,7 @@ func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isS
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
-			link := &area.Links[i]
+			link := area.Links[i]
 			key := normalizeNetworkAddress(link.LinkStateId)
 			shouldStateMap[key] = link
 		}
@@ -138,7 +138,7 @@ func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isS
 
 	accessListNetworks := make(map[string]bool)
 	for _, acl := range accessList {
-		for _, entry := range acl.aclEntry {
+		for _, entry := range acl.AclEntry {
 			if entry.IsPermit {
 				network := fmt.Sprintf("%s/%d", entry.IPAddress, entry.PrefixLength)
 				accessListNetworks[normalizeNetworkAddress(network)] = true
@@ -163,11 +163,11 @@ func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]accessList, isS
 	result.HasMisconfiguredPrefixes = true
 }
 
-func isInAccessList(network string, accessLists map[string]accessList) bool {
+func isInAccessList(network string, accessLists map[string]frrProto.AccessListAnalyzer) bool {
 	ip := strings.Split(network, "/")[0]
 
 	for _, acl := range accessLists {
-		for _, entry := range acl.aclEntry {
+		for _, entry := range acl.AclEntry {
 			if entry.IsPermit && entry.IPAddress == ip {
 				return true
 			}
@@ -181,7 +181,7 @@ func normalizeNetworkAddress(address string) string {
 	return strings.ToLower(strings.TrimSpace(address))
 }
 
-func nssaExternalAnomalyAnalysis(accessList map[string]accessList, shouldState *interAreaLsa, isState *interAreaLsa) {
+func NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
 
 	//fmt.Println(accessList)
 	//fmt.Println(shouldState)

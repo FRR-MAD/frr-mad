@@ -88,3 +88,9 @@ hmr/stop:
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
 	docker network prune -f
+
+
+### Testing
+.PHONY: test/backend
+test/backend:
+	cd src/backend && go test -v ./test/...

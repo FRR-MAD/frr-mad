@@ -8,21 +8,21 @@ import (
 )
 
 // lsa type 1 prediction parsing
-func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *intraAreaLsa) {
+func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
 	if config == nil || config.OspfConfig == nil {
 		return false, nil
 	}
 
 	isNssa := false
 
-	result := &intraAreaLsa{
+	result := &frrProto.IntraAreaLsa{
 		Hostname: config.Hostname,
 		RouterId: config.OspfConfig.GetRouterId(),
-		Areas:    []area{},
+		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
 	// Map to store unique areas
-	areaMap := make(map[string]*area)
+	areaMap := make(map[string]*frrProto.AreaAnalyzer)
 
 	// Process all interfaces
 	for _, iface := range config.Interfaces {
@@ -40,10 +40,10 @@ func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *in
 		// Get or create area entry
 		a, exists := areaMap[iface.Area]
 		if !exists {
-			newArea := area{
+			newArea := frrProto.AreaAnalyzer{
 				AreaName: iface.Area,
 				LsaType:  "router-LSA",
-				Links:    []frrProto.Advertisement{},
+				Links:    []*frrProto.Advertisement{},
 			}
 			areaMap[iface.Area] = &newArea
 			a = &newArea
@@ -78,7 +78,7 @@ func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *in
 				adv.LinkType = "point-to-point"
 			}
 
-			a.Links = append(a.Links, adv)
+			a.Links = append(a.Links, &adv)
 		}
 	}
 
@@ -95,11 +95,11 @@ func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *in
 				a, exists := areaMap[ospfArea.Name]
 				if !exists {
 					// If area doesn't exist in the map yet, create it
-					newArea := area{
+					newArea := frrProto.AreaAnalyzer{
 						AreaName: ospfArea.Name,
 						LsaType:  "router-LSA",
 						AreaType: "normal",
-						Links:    []frrProto.Advertisement{},
+						Links:    []*frrProto.Advertisement{},
 					}
 					areaMap[ospfArea.Name] = &newArea
 					a = &newArea
@@ -111,7 +111,7 @@ func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *in
 					LinkType:    "virtual link",
 				}
 
-				a.Links = append(a.Links, adv)
+				a.Links = append(a.Links, &adv)
 			}
 
 			// check if is nssa
@@ -130,7 +130,7 @@ func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *in
 	// Convert map to slice for the final result
 	for _, a := range areaMap {
 		if len(a.Links) > 0 {
-			result.Areas = append(result.Areas, *a)
+			result.Areas = append(result.Areas, a)
 		}
 	}
 
@@ -155,17 +155,16 @@ func getStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *in
 	return isNssa, result
 }
 
-func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *interAreaLsa {
+func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
 
-	// Create a new interAreaLsa instance
-	result := &interAreaLsa{
+	// Create a new frrProto.InterAreaLsa instance
+	result := &frrProto.InterAreaLsa{
 		Hostname: config.Hostname,
 		RouterId: config.OspfConfig.RouterId,
-		Areas:    []area{},
-	}
+		Areas:    []*frrProto.AreaAnalyzer{}}
 
 	// Check for OSPF redistribution (potential external advertisements)
 	hasRedistribution := false
@@ -191,10 +190,10 @@ func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *interAr
 	}
 
 	// For regular AS-external-LSAs (type 5), only if we're not in a stub/nssa only router
-	externalArea := area{
+	externalArea := frrProto.AreaAnalyzer{
 		AreaName: "External",
 		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []frrProto.Advertisement{},
+		Links:    []*frrProto.Advertisement{},
 	}
 
 	// Add connected interfaces not in NSSA areas
@@ -211,7 +210,7 @@ func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *interAr
 					PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
 					LinkType:     "external",
 				}
-				externalArea.Links = append(externalArea.Links, adv)
+				externalArea.Links = append(externalArea.Links, &adv)
 			}
 		}
 	}
@@ -224,7 +223,7 @@ func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *interAr
 				PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
 				LinkType:     "external",
 			}
-			externalArea.Links = append(externalArea.Links, adv)
+			externalArea.Links = append(externalArea.Links, &adv)
 		}
 	}
 
@@ -242,7 +241,7 @@ func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *interAr
 
 		// Only add type 5 LSAs if router has at least one non-NSSA area
 		if hasNonNssaArea || len(config.OspfConfig.Area) == 0 {
-			result.Areas = append(result.Areas, externalArea)
+			result.Areas = append(result.Areas, &externalArea)
 		}
 	}
 
@@ -254,16 +253,16 @@ func getStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *interAr
 	return result
 }
 
-func getStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *interAreaLsa {
+func getStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
 
-	// Create a new interAreaLsa instance
-	result := &interAreaLsa{
+	// Create a new frrProto.InterAreaLsa instance
+	result := &frrProto.InterAreaLsa{
 		Hostname: config.Hostname,
 		RouterId: config.OspfConfig.RouterId,
-		Areas:    []area{},
+		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
 	// Check for OSPF redistribution (potential external advertisements)
@@ -304,10 +303,10 @@ func getStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *int
 
 	// Process each NSSA area
 	for nssaArea := range nssaAreas {
-		nssaAreaObj := area{
+		nssaAreaObj := frrProto.AreaAnalyzer{
 			AreaName: nssaArea,
 			LsaType:  "NSSA-LSA", // Type 7
-			Links:    []frrProto.Advertisement{},
+			Links:    []*frrProto.Advertisement{},
 		}
 
 		// Add connected interfaces in this NSSA area
@@ -321,7 +320,7 @@ func getStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *int
 								PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
 								LinkType:     "nssa-external",
 							}
-							nssaAreaObj.Links = append(nssaAreaObj.Links, adv)
+							nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 						}
 					}
 				}
@@ -336,13 +335,13 @@ func getStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *int
 					PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
 					LinkType:     "nssa-external",
 				}
-				nssaAreaObj.Links = append(nssaAreaObj.Links, adv)
+				nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 			}
 		}
 
 		// Add NSSA area to the result if it has any links
 		if len(nssaAreaObj.Links) > 0 {
-			result.Areas = append(result.Areas, nssaAreaObj)
+			result.Areas = append(result.Areas, &nssaAreaObj)
 		}
 	}
 
