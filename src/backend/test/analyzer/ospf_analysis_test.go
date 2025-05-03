@@ -1,0 +1,415 @@
+package analyzer_test
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
+	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGetAccessList1(t *testing.T) {
+
+	ana := initAnalyzer()
+
+	frrMetrics := getR101FRRdata()
+
+	expectedAccessList := map[string]frrProto.AccessListAnalyzer{
+		"localsite": {
+			AccessList: "localsite",
+			AclEntry: []*frrProto.ACLEntry{
+				{
+					IPAddress:    "192.168.1.0",
+					PrefixLength: 24,
+					IsPermit:     true,
+					Sequence:     15,
+				},
+			},
+		},
+		"term": {
+			AccessList: "term",
+			AclEntry: []*frrProto.ACLEntry{
+				{
+					IPAddress:    "127.0.0.1",
+					PrefixLength: 32,
+					IsPermit:     true,
+					Sequence:     5,
+				},
+				{
+					IPAddress:    "any",
+					PrefixLength: 0,
+					IsPermit:     false,
+					Any:          true,
+					Sequence:     10,
+				},
+			},
+		},
+	}
+
+	expectedRuntimeRouterLSDB := frrProto.InterAreaLsa{
+		RouterId: "65.0.1.1",
+		Hostname: "r101",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",
+				LsaType:  "router-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.0.12.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "Stub Network",
+					},
+					{
+						InterfaceAddress: "10.0.14.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.15.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "Stub Network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.13.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						LinkType:         "a Transit Network",
+					},
+				},
+			},
+		},
+	}
+
+	expectedPredictedRouterLSDB := frrProto.IntraAreaLsa{
+		Hostname: "r101",
+		RouterId: "65.0.1.1",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",    //  string
+				LsaType:  "router-LSA", //     string
+				AreaType: "normal",     //     string
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.0.12.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.0.13.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.0.14.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.15.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+				},
+			},
+		},
+	}
+
+	fmt.Println(expectedPredictedRouterLSDB)
+
+	actualAccessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+
+	less := func(a, b string) bool { return a < b }
+
+	var actualAccessListKeys []string
+	for k, _ := range actualAccessList {
+		actualAccessListKeys = append(actualAccessListKeys, k)
+	}
+	var expectedAccessListKeys []string
+	for k, _ := range actualAccessList {
+		expectedAccessListKeys = append(expectedAccessListKeys, k)
+	}
+
+	expectedStaticList := map[string]*frrProto.StaticList{
+		"192.168.1.0": {
+			IpAddress:    "192.168.1.0",
+			PrefixLength: 24,
+			NextHop:      "192.168.100.91",
+		},
+	}
+
+	actualStaticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, actualAccessList)
+
+	var actualStaticListKeys []string
+	for k, _ := range actualStaticList {
+		actualStaticListKeys = append(actualStaticListKeys, k)
+	}
+	var expectedStaticListKeys []string
+	for k, _ := range actualStaticList {
+		expectedStaticListKeys = append(expectedStaticListKeys, k)
+	}
+
+	//t.Logf("%v\n", expectedStaticList)
+	//t.Logf("%v\n", actualStaticList)
+
+	// Runtime parsing of router
+
+	actualRuntimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+
+	expectedRuntimeRouterLSDBAreaLength := len(expectedRuntimeRouterLSDB.Areas)
+	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
+
+	expectedRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
+	expectedRuntimeRouterLSDBAreas := []string{}
+	expectedRuntimeRouterLSDBLsaType := map[string]string{}
+	for _, area := range expectedRuntimeRouterLSDB.Areas {
+		expectedRuntimeRouterLSDBAreas = append(expectedRuntimeRouterLSDBAreas, area.AreaName)
+		expectedRuntimeRouterLSDBLsaType[area.AreaName] = area.LsaType
+		for _, link := range area.Links {
+			expectedRuntimeRouterLSDBAreaMap[area.AreaName] = append(expectedRuntimeRouterLSDBAreaMap[area.AreaName], link)
+		}
+	}
+
+	actualRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
+	actualRuntimeRouterLSDBAreas := []string{}
+	actualRuntimeRouterLSDBLsaType := map[string]string{}
+	for _, area := range actualRuntimeRouterLSDB.Areas {
+		actualRuntimeRouterLSDBAreas = append(actualRuntimeRouterLSDBAreas, area.AreaName)
+		actualRuntimeRouterLSDBLsaType[area.AreaName] = area.LsaType
+		for _, link := range area.Links {
+			actualRuntimeRouterLSDBAreaMap[area.AreaName] = append(actualRuntimeRouterLSDBAreaMap[area.AreaName], link)
+		}
+	}
+
+	t.Run("TestRuntimeRouterParsing", func(t *testing.T) {
+		assert.Equal(t, expectedRuntimeRouterLSDB.RouterId, actualRuntimeRouterLSDB.RouterId)
+		assert.Equal(t, expectedRuntimeRouterLSDB.Hostname, actualRuntimeRouterLSDB.Hostname)
+		assert.Equal(t, expectedRuntimeRouterLSDBAreaLength, actualRuntimeRouterLSDBAreaLength)
+		assert.True(t, cmp.Diff(expectedRuntimeRouterLSDBAreas, actualRuntimeRouterLSDBAreas, cmpopts.SortSlices(less)) == "")
+		for _, key := range expectedRuntimeRouterLSDBAreas {
+			assert.Equal(t, expectedRuntimeRouterLSDBLsaType[key], actualRuntimeRouterLSDBLsaType[key])
+		}
+		//for _, key := range expectedRuntimeRouterLSDBAreas {
+		//	t.Logf("%v\n", actualRuntimeRouterLSDBAreaMap[key])
+
+		//}
+
+	})
+
+	// test should state Static File Router Data
+	//expectedPredictedRouterLSDB := &frrProto.IntraAreaLsa{}
+
+	isNssa, actualPredictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+
+	// Write Router Testing now, because parsing of static config, router config, static list and access list is successful
+
+	ana.RouterAnomalyAnalysis(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
+
+	t.Run("TestRouterAdvertisment", func(t *testing.T) {
+		//ana.RouterAnomalyAnalysis(actualAccessList, )
+	})
+
+	//analyzer.RouterAnomalyAnalysis(accessList, shouldState, isState)
+	t.Run("TestGetAccessList", func(t *testing.T) {
+		assert.Equal(t, len(expectedAccessList), len(actualAccessList))
+		assert.True(t, cmp.Diff(expectedAccessListKeys, actualAccessListKeys, cmpopts.SortSlices(less)) == "")
+		for _, v := range actualAccessListKeys {
+			assert.Equal(t, actualAccessList[v], expectedAccessList[v])
+		}
+	})
+
+	t.Run("TestGetStaticRouteList", func(t *testing.T) {
+		assert.Equal(t, len(expectedStaticList), len(actualStaticList))
+		assert.Equal(t, expectedStaticListKeys, actualStaticListKeys)
+		for _, v := range actualStaticListKeys {
+			assert.Equal(t, actualStaticList[v], expectedStaticList[v])
+		}
+	})
+
+	// test GetStaticFileRouterData
+	expectedPredictedRouterLSDBAreas := []string{} //done
+	actualPredictedRouterLSDBAreas := []string{}
+
+	expectedPredictedRouterLSDBLsaTypePerArea := make(map[string]string) //done
+	actualPredictedRouterLSDBLsaTypePerArea := make(map[string]string)
+
+	expectedPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
+	actualPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
+
+	for _, area := range expectedPredictedRouterLSDB.Areas {
+		tmp := []*frrProto.Advertisement{}
+		expectedPredictedRouterLSDBAreas = append(expectedPredictedRouterLSDBAreas, area.AreaName)
+		expectedPredictedRouterLSDBLsaTypePerArea[area.GetAreaName()] = area.LsaType
+		for _, iface := range area.Links {
+			tmp = append(tmp, iface)
+		}
+		expectedPredictedRouterLSDBIntPerArea[area.AreaName] = tmp
+	}
+
+	for _, area := range actualPredictedRouterLSDB.Areas {
+		tmp := []*frrProto.Advertisement{}
+		actualPredictedRouterLSDBAreas = append(actualPredictedRouterLSDBAreas, area.AreaName)
+		actualPredictedRouterLSDBLsaTypePerArea[area.GetAreaName()] = area.LsaType
+		for _, iface := range area.Links {
+			tmp = append(tmp, iface)
+		}
+		actualPredictedRouterLSDBIntPerArea[area.AreaName] = tmp
+	}
+
+	t.Run("TestStaticFileRouterDataFunction", func(t *testing.T) {
+		assert.False(t, isNssa)
+		assert.Equal(t, expectedPredictedRouterLSDB.Hostname, actualPredictedRouterLSDB.Hostname)
+		assert.Equal(t, expectedPredictedRouterLSDB.RouterId, actualPredictedRouterLSDB.RouterId)
+		assert.Equal(t, len(expectedPredictedRouterLSDBAreas), len(actualPredictedRouterLSDBAreas))
+		assert.True(t, cmp.Diff(expectedPredictedRouterLSDBAreas, actualPredictedRouterLSDBAreas, cmpopts.SortSlices(less)) == "")
+
+		for _, key := range expectedPredictedRouterLSDBAreas {
+			assert.Equal(t, expectedPredictedRouterLSDBLsaTypePerArea[key], actualPredictedRouterLSDBLsaTypePerArea[key])
+		}
+		// expectedPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
+		// actualPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
+
+		for _, key := range expectedPredictedRouterLSDBAreas {
+			assert.Equal(t, expectedPredictedRouterLSDBLsaTypePerArea[key], actualPredictedRouterLSDBLsaTypePerArea[key])
+		}
+
+		for _, key := range expectedPredictedRouterLSDBAreas {
+			expectedIfaceMap, expectedIfaceList := getIfaceMap(expectedPredictedRouterLSDBIntPerArea[key])
+			actualIfaceMap, actualIfaceList := getIfaceMap(actualPredictedRouterLSDBIntPerArea[key])
+			assert.Equal(t, len(expectedIfaceList), len(actualIfaceList))
+			assert.True(t, cmp.Diff(expectedIfaceList, actualIfaceList, cmpopts.SortSlices(less)) == "")
+
+			for _, ifaceKey := range expectedIfaceList {
+				assert.Equal(t, expectedIfaceMap[ifaceKey], actualIfaceMap[ifaceKey])
+			}
+		}
+	})
+
+	// test GetStaticFileExternalData
+
+	// test GetStaticFileNssaExternalData
+
+	t.Run("TestStaticListEqualACL", func(t *testing.T) {
+
+	})
+
+	t.Run("TestStaticRoute", func(t *testing.T) {
+
+	})
+
+}
+
+// func TestGetAccessList2(t *testing.T) {
+
+// 	frrMetrics := getR102FRRdata()
+
+// 	expectedResult := map[string]frrProto.AccessListAnalyzer{
+// 		"localsite": {
+// 			AccessList: "localsite",
+// 			AclEntry: []*frrProto.ACLEntry{
+// 				{
+// 					IPAddress:    "192.168.11.0",
+// 					PrefixLength: 24,
+// 					IsPermit:     true,
+// 					Sequence:     15,
+// 				},
+// 			},
+// 		},
+// 		"term": {
+// 			AccessList: "term",
+// 			AclEntry: []*frrProto.ACLEntry{
+// 				{
+// 					IPAddress:    "127.0.0.1",
+// 					PrefixLength: 32,
+// 					IsPermit:     true,
+// 					Sequence:     5,
+// 				},
+// 				{
+// 					IPAddress:    "any",
+// 					PrefixLength: 0,
+// 					IsPermit:     true,
+// 					Any:          true,
+// 					Sequence:     10,
+// 				},
+// 			},
+// 		},
+// 	}
+
+// 	result := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+
+// 	//assert.Equal(t, expectedResult, result)
+// 	t.Log()
+// 	t.Logf("%v\n", expectedResult)
+// 	t.Log()
+// 	t.Logf("%v\n", result)
+
+// }
+
+func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertisement, []string) {
+	result := make(map[string]*frrProto.Advertisement)
+	keyResult := []string{}
+
+	for _, iface := range value {
+		keyResult = append(keyResult, iface.InterfaceAddress)
+		result[iface.InterfaceAddress] = &frrProto.Advertisement{
+			InterfaceAddress: iface.InterfaceAddress,
+			PrefixLength:     iface.PrefixLength,
+			LinkType:         iface.LinkType,
+		}
+	}
+
+	return result, keyResult
+}

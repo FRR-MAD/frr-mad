@@ -79,44 +79,44 @@ Method of finding out what kind of Router we are dealing with:
 
 */
 
-type intraAreaLsa struct {
-	Hostname   string `json:"hostname"`
-	RouterId   string `json:"router_id"`
-	RouterType string `json:"router_type"` // normal, asbr, asbr
-	Areas      []area `json:"areas"`
-}
+// type intraAreaLsa struct {
+// Hostname   string `json:"hostname"`
+// RouterId   string `json:"router_id"`
+// RouterType string `json:"router_type"` // normal, asbr, asbr
+// Areas      []area `json:"areas"`
+// }
+//
+// type interAreaLsa struct {
+// Hostname   string `json:"hostname"`
+// RouterId   string `json:"router_id"`
+// RouterType string `json:"router_type"` // normal, asbr, asbr
+// Areas      []area `json:"areas"`
+// }
+//
+// type area struct {
+// AreaName string                   `json:"name"`
+// LsaType  string                   `json:"lsa_type"`
+// AreaType string                   `json:"area_type"` //
+// Links    []frrProto.Advertisement `json:"links"`
+// }
 
-type interAreaLsa struct {
-	Hostname   string `json:"hostname"`
-	RouterId   string `json:"router_id"`
-	RouterType string `json:"router_type"` // normal, asbr, asbr
-	Areas      []area `json:"areas"`
-}
+// type ACLEntry struct {
+// IPAddress    string `json:"ip_address,omitempty"`
+// PrefixLength int    `json:"prefix_length,omitempty"`
+// IsPermit     bool   `json:"is_permit"`
+// Any          bool   `json:"any,omitempty"`
+// Sequence     int    `json:"sequence"`
+// }
 
-type area struct {
-	AreaName string                   `json:"name"`
-	LsaType  string                   `json:"lsa_type"`
-	AreaType string                   `json:"area_type"` //
-	Links    []frrProto.Advertisement `json:"links"`
-}
+// type accessList struct {
+// 	accessListName string     `json:"access_list_name"`
+// 	aclEntry       []ACLEntry `json:"acl_entries"`
+// }
 
-type ACLEntry struct {
-	IPAddress    string `json:"ip_address,omitempty"`
-	PrefixLength int    `json:"prefix_length,omitempty"`
-	IsPermit     bool   `json:"is_permit"`
-	Any          bool   `json:"any,omitempty"`
-	Sequence     int    `json:"sequence"`
-}
-
-type accessList struct {
-	accessListName string     `json:"access_list_name"`
-	aclEntry       []ACLEntry `json:"acl_entries"`
-}
-
-type StaticList struct {
-	IpAddress    string `json:"ip_address"`
-	PrefixLength int    `json:"prefix_length"`
-}
+// type StaticList struct {
+// IpAddress    string `json:"ip_address"`
+// PrefixLength int    `json:"prefix_length"`
+// }
 
 type RedistributedRoute struct {
 	IPPrefix     string `json:"ip_prefix"`
@@ -158,37 +158,53 @@ type OspfRedistribution struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
+	fmt.Println("---------------------------")
+	fmt.Println("StaticFRRConfiguration")
+	fmt.Printf("%+v\n", c.metrics.StaticFrrConfiguration)
+	fmt.Println("---------------------------")
 	// required to know what routes are distributed
-	accessList := getAccessLists(c.metrics.StaticFrrConfiguration)
+	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
 
 	// required to know what static routes there are
 	// very important for the stakeholder anomaly
 	// lsa type 1, 5 and 7 relevant
-	staticRouteMap := getStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
+	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
 	// should state
-	isNssa, predictedRouterLSDB := getStaticFileRouterData(c.metrics.StaticFrrConfiguration)
+	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 	predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
 	predictedNssaExternalLSDB := getStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
 	// is state
-	runtimeRouterLSDB := getRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
-	runtimeExternalLSDB := getRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	runtimeNssaExternalLSDB := getNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+
+	fmt.Println("---------------------------")
+	fmt.Println("OspfRouterData")
+	fmt.Printf("%+v\n", c.metrics.OspfRouterData)
+	fmt.Println("---------------------------")
+	runtimeRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	fmt.Println("---------------------------")
+	fmt.Println("OspfExternalData")
+	fmt.Printf("%+v\n", c.metrics.OspfRouterData)
+	fmt.Println("---------------------------")
+	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	fmt.Println("---------------------------")
+	fmt.Println("OspfNssaExternalData")
+	fmt.Printf("%+v\n", c.metrics.OspfRouterData)
+	fmt.Println("---------------------------")
+	runtimeNssaExternalLSDB := GetNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
 	// lsa type 1 always needs to be checked
-	c.routerAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+	c.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
 	// if router is an ABR/ASBR, lsa type 5 is important
 	if len(staticRouteMap) > 0 || isNssa {
-		fmt.Println("LSA Type 5 is checked")
-		externalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+		ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
 	}
 
 	// if router is in a NSSA area, this one is important
 	// currently it does nothing
 	if isNssa {
-		nssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+		NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
 	}
 
 }
@@ -247,8 +263,8 @@ func maskToPrefixLength(mask string) string {
 	return "32" // Default to /32 if mask is unknown
 }
 
-func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessList {
-	result := make(map[string]accessList)
+func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]frrProto.AccessListAnalyzer {
+	result := make(map[string]frrProto.AccessListAnalyzer)
 
 	if config == nil || config.AccessList == nil {
 		return result
@@ -259,23 +275,23 @@ func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessLi
 			continue
 		}
 
-		var entries []ACLEntry
+		var entries []*frrProto.ACLEntry
 
 		for _, item := range aclConfig.AccessListItems {
 			if item == nil {
 				continue
 			}
 
-			entry := ACLEntry{
+			entry := frrProto.ACLEntry{
 				IsPermit: item.AccessControl == "permit",
-				Sequence: int(item.Sequence),
+				Sequence: int32(item.Sequence),
 			}
 
 			switch dest := item.Destination.(type) {
 			case *frrProto.AccessListItem_IpPrefix:
 				if dest != nil && dest.IpPrefix != nil {
 					entry.IPAddress = dest.IpPrefix.IpAddress
-					entry.PrefixLength = int(dest.IpPrefix.PrefixLength)
+					entry.PrefixLength = int32(dest.IpPrefix.PrefixLength)
 				}
 			case *frrProto.AccessListItem_Any:
 				entry.IPAddress = "any"
@@ -283,12 +299,12 @@ func getAccessLists(config *frrProto.StaticFRRConfiguration) map[string]accessLi
 				entry.PrefixLength = 0
 			}
 
-			entries = append(entries, entry)
+			entries = append(entries, &entry)
 		}
 
-		result[name] = accessList{
-			accessListName: name,
-			aclEntry:       entries,
+		result[name] = frrProto.AccessListAnalyzer{
+			AccessList: name,
+			AclEntry:   entries,
 		}
 	}
 
@@ -307,12 +323,12 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 	//fmt.Println(result)
 	//fmt.Printf("%+v\n", config.GetRouterStates())
 	var advertisementList []frrProto.Advertisement
-	fmt.Println("########### Start New Print ###########")
+	//fmt.Println("########### Start New Print ###########")
 	for _, area := range config.GetRouterStates() {
-		fmt.Println("--------- Value ---------")
+		//fmt.Println("--------- Value ---------")
 		//fmt.Println(value.LsaEntries["lsa_type"])
 		for _, entry := range area.LsaEntries {
-			fmt.Println("--------- entry ---------")
+			//fmt.Println("--------- entry ---------")
 			for _, link := range entry.RouterLinks {
 				if link.GetNetworkAddress() != "" {
 					adv := frrProto.Advertisement{
@@ -327,7 +343,7 @@ func convertToMagicalStateRuntime(config *frrProto.OSPFRouterData) {
 				//fmt.Println(link)
 			}
 			//fmt.Println(entry)
-			fmt.Println(advertisementList)
+			//fmt.Println(advertisementList)
 		}
 	}
 	//fmt.Println(advertisementList)
@@ -466,18 +482,19 @@ func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
 	return subnet.IpAddress == network.IpAddress && subnet.PrefixLength >= network.PrefixLength
 }
 
-func getStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]accessList) map[string]*StaticList {
+func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
 	if len(config.StaticRoutes) == 0 {
 		return nil
 	}
 
-	result := map[string]*StaticList{}
+	result := map[string]*frrProto.StaticList{}
 
 	for _, route := range config.StaticRoutes {
-		fmt.Println(route)
-		result[route.IpPrefix.GetIpAddress()] = &StaticList{
+		//fmt.Println(route)
+		result[route.IpPrefix.GetIpAddress()] = &frrProto.StaticList{
 			IpAddress:    route.IpPrefix.GetIpAddress(),
-			PrefixLength: int(route.IpPrefix.GetPrefixLength()),
+			PrefixLength: int32(route.IpPrefix.GetPrefixLength()),
+			NextHop:      route.NextHop,
 		}
 	}
 

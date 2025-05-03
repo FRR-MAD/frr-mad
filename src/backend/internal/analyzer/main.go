@@ -14,14 +14,16 @@ type Analyzer struct {
 	AnalysisResult *frrProto.AnomalyAnalysis
 	metrics        *frrProto.FullFRRData
 	Logger         *logger.Logger
+	config         interface{}
 }
 
 func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
 	//anomalies := &frrProto.Anomalies{}
+
 	anomalyAnalysis := &frrProto.AnomalyAnalysis{
-		RouterAnomaly:       &frrProto.AnomalyDetection{},
-		ExternalAnomaly:     &frrProto.AnomalyDetection{},
-		NssaExternalAnomaly: &frrProto.AnomalyDetection{},
+		RouterAnomaly:       initAnomalyDetection(),
+		ExternalAnomaly:     initAnomalyDetection(),
+		NssaExternalAnomaly: initAnomalyDetection(),
 	}
 
 	return &Analyzer{
@@ -29,6 +31,7 @@ func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *log
 		AnalysisResult: anomalyAnalysis,
 		metrics:        metrics,
 		Logger:         logger,
+		config:         config,
 	}
 }
 
@@ -42,4 +45,15 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 		}
 	}()
 
+}
+
+func initAnomalyDetection() *frrProto.AnomalyDetection {
+	return &frrProto.AnomalyDetection{
+		HasOverAdvertisedPrefixes:  false,
+		HasUnderAdvertisedPrefixes: false,
+		HasDuplicatePrefixes:       false,
+		HasMisconfiguredPrefixes:   false,
+		SuperfluousEntries:         []*frrProto.Advertisement{},
+		MissingEntries:             []*frrProto.Advertisement{},
+	}
 }

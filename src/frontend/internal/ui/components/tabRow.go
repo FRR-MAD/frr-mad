@@ -43,7 +43,7 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	}
 
 	// in future call backend to query router name
-	routerName, routerOSPFID, _ := getRouterName()
+	routerName, routerOSPFID, _ := backend.GetRouterName()
 	routerNameWidth := lipgloss.Width(routerName)
 	routerNameString := "Router Name: "
 	routerNameStringWidth := lipgloss.Width(routerNameString)
@@ -71,16 +71,16 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	return lipgloss.JoinVertical(lipgloss.Left, horizontalTabs, horizontalSubTabs)
 }
 
-func getRouterName() (string, string, error) {
-	response, err := backend.SendMessage("frr", "routerData", nil)
-	if err != nil {
-		return "", "", err
-	}
-
-	routerData := response.Data.GetFrrRouterData()
-
-	routerName := routerData.RouterName
-	ospfRouterId := routerData.OspfRouterId
-
-	return routerName, ospfRouterId, nil
-}
+//func getRouterName() (string, string, error) {
+//	response, err := backend.SendMessage("frr", "routerData", nil)
+//	if err != nil {
+//		return "", "", err
+//	}
+//
+//	routerData := response.Data.GetFrrRouterData()
+//
+//	routerName := routerData.RouterName
+//	ospfRouterId := routerData.OspfRouterId
+//
+//	return routerName, ospfRouterId, nil
+//}

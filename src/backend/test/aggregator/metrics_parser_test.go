@@ -6,7 +6,6 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestParseOSPFRouterLSA(t *testing.T) {
@@ -70,17 +69,17 @@ func TestParseOSPFRouterLSA(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.RouterStates != nil {
 				for areaID, expectedArea := range tt.expected.RouterStates {
 					resultArea, ok := result.RouterStates[areaID]
-					require.True(t, ok, "missing area %s", areaID)
+					assert.True(t, ok, "missing area %s", areaID)
 
 					for lsaID, expectedLSA := range expectedArea.LsaEntries {
 						resultLSA, ok := resultArea.LsaEntries[lsaID]
-						require.True(t, ok, "missing LSA %s", lsaID)
+						assert.True(t, ok, "missing LSA %s", lsaID)
 
 						assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
 						assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
@@ -143,17 +142,17 @@ func TestParseOSPFNetworkLSA(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.NetStates != nil {
 				for areaID, expectedArea := range tt.expected.NetStates {
 					resultArea, ok := result.NetStates[areaID]
-					require.True(t, ok, "missing area %s", areaID)
+					assert.True(t, ok, "missing area %s", areaID)
 
 					for lsaID, expectedLSA := range expectedArea.LsaEntries {
 						resultLSA, ok := resultArea.LsaEntries[lsaID]
-						require.True(t, ok, "missing LSA %s", lsaID)
+						assert.True(t, ok, "missing LSA %s", lsaID)
 
 						assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
 						assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
@@ -216,17 +215,17 @@ func TestParseOSPFSummaryLSA(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.SummaryStates != nil {
 				for areaID, expectedArea := range tt.expected.SummaryStates {
 					resultArea, ok := result.SummaryStates[areaID]
-					require.True(t, ok, "missing area %s", areaID)
+					assert.True(t, ok, "missing area %s", areaID)
 
 					for lsaID, expectedLSA := range expectedArea.LsaEntries {
 						resultLSA, ok := resultArea.LsaEntries[lsaID]
-						require.True(t, ok, "missing LSA %s", lsaID)
+						assert.True(t, ok, "missing LSA %s", lsaID)
 
 						assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
 						assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
@@ -289,17 +288,17 @@ func TestParseOSPFAsbrSummaryLSA(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.AsbrSummaryStates != nil {
 				for areaID, expectedArea := range tt.expected.AsbrSummaryStates {
 					resultArea, ok := result.AsbrSummaryStates[areaID]
-					require.True(t, ok, "missing area %s", areaID)
+					assert.True(t, ok, "missing area %s", areaID)
 
 					for lsaID, expectedLSA := range expectedArea.LsaEntries {
 						resultLSA, ok := resultArea.LsaEntries[lsaID]
-						require.True(t, ok, "missing LSA %s", lsaID)
+						assert.True(t, ok, "missing LSA %s", lsaID)
 
 						assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
 						assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
@@ -356,13 +355,13 @@ func TestParseOSPFExternalLSA(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.AsExternalLinkStates != nil {
 				for lsaID, expectedLSA := range tt.expected.AsExternalLinkStates {
 					resultLSA, ok := result.AsExternalLinkStates[lsaID]
-					require.True(t, ok, "missing LSA %s", lsaID)
+					assert.True(t, ok, "missing LSA %s", lsaID)
 
 					assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
 					assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
@@ -424,17 +423,17 @@ func TestParseOSPFNssaExternalLSA(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.NssaExternalLinkStates != nil {
 				for areaID, expectedArea := range tt.expected.NssaExternalLinkStates {
 					resultArea, ok := result.NssaExternalLinkStates[areaID]
-					require.True(t, ok, "missing area %s", areaID)
+					assert.True(t, ok, "missing area %s", areaID)
 
 					for lsaID, expectedLSA := range expectedArea.Data {
 						resultLSA, ok := resultArea.Data[lsaID]
-						require.True(t, ok, "missing LSA %s", lsaID)
+						assert.True(t, ok, "missing LSA %s", lsaID)
 
 						assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
 						assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
@@ -499,13 +498,13 @@ func TestParseFullOSPFDatabase(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.Areas != nil {
 				for areaID, expectedArea := range tt.expected.Areas {
 					resultArea, ok := result.Areas[areaID]
-					require.True(t, ok, "missing area %s", areaID)
+					assert.True(t, ok, "missing area %s", areaID)
 
 					assert.Equal(t, len(expectedArea.RouterLinkStates), len(resultArea.RouterLinkStates))
 					for i, expectedLSA := range expectedArea.RouterLinkStates {
@@ -563,7 +562,7 @@ func TestParseOSPFDuplicates(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
 			if tt.expected.AsExternalLinkStates != nil {
@@ -625,12 +624,12 @@ func TestParseOSPFNeighbors(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			if tt.expected.Neighbors != nil {
 				for iface, expectedNeighbors := range tt.expected.Neighbors {
 					resultNeighbors, ok := result.Neighbors[iface]
-					require.True(t, ok, "missing interface %s", iface)
+					assert.True(t, ok, "missing interface %s", iface)
 
 					assert.Equal(t, len(expectedNeighbors.Neighbors), len(resultNeighbors.Neighbors))
 					for i, expectedNeighbor := range expectedNeighbors.Neighbors {
@@ -682,12 +681,12 @@ func TestParseInterfaceStatus(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			if tt.expected.Interfaces != nil {
 				for ifaceName, expectedIface := range tt.expected.Interfaces {
 					resultIface, ok := result.Interfaces[ifaceName]
-					require.True(t, ok, "missing interface %s", ifaceName)
+					assert.True(t, ok, "missing interface %s", ifaceName)
 
 					assert.Equal(t, expectedIface.AdministrativeStatus, resultIface.AdministrativeStatus)
 					assert.Equal(t, expectedIface.OperationalStatus, resultIface.OperationalStatus)
@@ -742,12 +741,12 @@ func TestParseRib(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			if tt.expected.Routes != nil {
 				for prefix, expectedEntry := range tt.expected.Routes {
 					resultEntry, ok := result.Routes[prefix]
-					require.True(t, ok, "missing prefix %s", prefix)
+					assert.True(t, ok, "missing prefix %s", prefix)
 
 					assert.Equal(t, len(expectedEntry.Routes), len(resultEntry.Routes))
 					for i, expectedRoute := range expectedEntry.Routes {

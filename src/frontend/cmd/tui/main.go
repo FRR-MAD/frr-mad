@@ -146,6 +146,10 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize.Width = msg.Width
 		m.windowSize.Height = msg.Height
+		styles.SetWindowSizes(common.WindowSize{
+			Width:  msg.Width,
+			Height: msg.Height,
+		})
 	}
 
 	// Delegate Update to active module

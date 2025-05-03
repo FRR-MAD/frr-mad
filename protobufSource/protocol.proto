@@ -557,14 +557,7 @@ message Nexthop {
 
 // ================ Analyzer payload Messages ================
 
-// Main message containing all anomaly types
-message Anomalies {
-  repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
-  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
-  repeated AnomalyDuplicateRoute duplicate_routes = 3;
-  repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
-}
-
+// new
 message AnomalyAnalysis {
   AnomalyDetection router_anomaly= 1;
   AnomalyDetection external_anomaly = 2;
@@ -576,7 +569,7 @@ message AnomalyDetection {
   bool HasUnderAdvertisedPrefixes = 2;
   bool HasDuplicatePrefixes = 3;
   bool HasMisconfiguredPrefixes = 4;
-  repeated Advertisement extra_entries = 5;
+  repeated Advertisement superfluous_entries = 5;
   repeated Advertisement missing_entries = 6;
 }
 
@@ -585,6 +578,58 @@ message Advertisement {
   string LinkStateId = 2;
   string PrefixLength = 3;
   string LinkType = 4;
+}
+
+
+message AccessListAnalyzer {
+  string AccessList = 1;
+  repeated ACLEntry acl_entry = 2;
+}
+
+message ACLEntry {
+  string IPAddress = 1; 
+  int32 PrefixLength = 2;
+  bool IsPermit = 3;
+  bool Any = 4; 
+  int32 Sequence = 5;
+}
+
+message StaticList {
+	string IpAddress = 1;
+	int32 PrefixLength = 2;
+  string NextHop = 3;
+}
+
+
+message IntraAreaLsa {
+  string hostname = 1;
+  string router_id = 2;
+  string router_type = 3;
+  repeated AreaAnalyzer areas = 4;
+}
+
+message InterAreaLsa {
+  string hostname = 1;
+  string router_id = 2;
+  string router_type = 3;
+  repeated AreaAnalyzer areas = 4;
+}
+
+message AreaAnalyzer {
+  string area_name = 1;
+  string lsa_type = 2;
+  string area_type = 3;
+  repeated Advertisement links = 4;
+}
+
+
+// old
+// Main message containing all anomaly types
+message Anomalies {
+  repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
+  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
+  repeated AnomalyDuplicateRoute duplicate_routes = 3;
+  repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
 }
 
 // Router information
@@ -601,6 +646,7 @@ message AnomalyOveradvertisedRoute {
   string should_advertised = 4;
   RouterAttribute router = 5;
 }
+
 
 // Route should be advertised but is not
 message AnomalyUnderadvertisedRoute {

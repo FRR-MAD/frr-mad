@@ -44,7 +44,7 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 		}
 	default:
 		response.Status = "error"
-		response.Message = fmt.Sprintf("Unknown service: %s", message.Command)
+		response.Message = fmt.Sprintf("Unknown service: %s", message.Service)
 		return &response
 	}
 }
@@ -90,11 +90,12 @@ func (s *Socket) analysisProcessing(command string) *frrProto.Response {
 	case "router":
 		return s.getRouterAnomaly()
 	case "external":
-		response.Status = "success"
-		response.Message = "Here your external anomalies"
+		return s.getExternalAnomaly()
 	case "nssaExternal":
-		response.Status = "success"
-		response.Message = "Here your nssa external anomalies"
+		return s.getNssaExternalAnomaly()
+
+	case "dummyRouterOne":
+		return getRouterAnomalyDummy1()
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", command)
