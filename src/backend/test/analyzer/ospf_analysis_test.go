@@ -1,7 +1,6 @@
 package analyzer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
@@ -168,7 +167,7 @@ func TestRouterLsa1(t *testing.T) {
 		},
 	}
 
-	fmt.Println(expectedPredictedRouterLSDB)
+	//fmt.Println(expectedPredictedRouterLSDB)
 
 	actualAccessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 
@@ -532,6 +531,11 @@ func TestAnomalyAnalysis1(t *testing.T) {
 		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries)
 		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.DuplicateEntries)
 	})
+
+	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
+
+	})
+
 }
 
 func TestAnomalyAnalysisLsaFive1(t *testing.T) {

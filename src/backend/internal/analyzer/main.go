@@ -55,5 +55,6 @@ func initAnomalyDetection() *frrProto.AnomalyDetection {
 		HasMisconfiguredPrefixes:   false,
 		SuperfluousEntries:         []*frrProto.Advertisement{},
 		MissingEntries:             []*frrProto.Advertisement{},
+		DuplicateEntries:           []*frrProto.Advertisement{},
 	}
 }

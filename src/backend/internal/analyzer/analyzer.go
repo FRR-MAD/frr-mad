@@ -158,67 +158,31 @@ type OspfRedistribution struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
-	// fmt.Println("---------------------------")
-	// fmt.Println("StaticFRRConfiguration")
-	// fmt.Printf("%+v\n", c.metrics.StaticFrrConfiguration)
-	// fmt.Println("---------------------------")
-	// required to know what routes are distributed
 	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
 
-	// required to know what static routes there are
-	// very important for the stakeholder anomaly
-	// lsa type 1, 5 and 7 relevant
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
-	//areaNssaMap := GetAreaNssaType(c.metrics.StaticFrrConfiguration, accessList)
-	//GetAreaNssaType(c.metrics.StaticFrrConfiguration, accessList)
-
-	// should state
+	// parse frr configuration file
 	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+
+	// TODO: testing and correction, mino
 	predictedNssaExternalLSDB := getStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
-	// fmt.Println("---------------------------")
-	// fmt.Println("predictedExternalLSDB ")
-	// fmt.Printf("%+v\n", predictedExternalLSDB)
-	// fmt.Println("---------------------------")
-	// fmt.Println("predictedNssaExternalLSDB ")
-	// fmt.Printf("%+v\n", predictedNssaExternalLSDB)
-	// fmt.Println("---------------------------")
 
-	// is state
-
-	// fmt.Println("---------------------------")
-	// fmt.Println("OspfRouterData")
-	// fmt.Printf("%+v\n", c.metrics.OspfRouterData)
-	// fmt.Println("---------------------------")
 	runtimeRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
-	// fmt.Println("---------------------------")
-	// fmt.Println("runtimeRouterLSDB")
-	// fmt.Println(runtimeRouterLSDB)
-	//fmt.Println("OspfExternalData")
-	//fmt.Printf("%+v\n", c.metrics.OspfExternalData)
-	//fmt.Println("---------------------------")
+
 	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
-	// fmt.Println("runtimeExternalLSDB")
-	// fmt.Printf("%+v\n", runtimeExternalLSDB)
-	// fmt.Println("Interfaces")
-	// fmt.Printf("%v\n", c.metrics.Interfaces)
-	// fmt.Println("---------------------------")
-	// fmt.Println("OspfNssaExternalData")
-	// fmt.Printf("%+v\n", c.metrics.OspfNssaExternalData)
-	// fmt.Println("---------------------------")
+
+	// TODO: testing, mino
 	runtimeNssaExternalLSDB := GetNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
-	// lsa type 1 always needs to be checked
 	c.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
-	// if router is an ABR/ASBR, lsa type 5 is important
 	if len(staticRouteMap) > 0 || isNssa {
 		ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
 	}
 
-	// if router is in a NSSA area, this one is important
-	// currently it does nothing
+	// TODO: implement, mino
 	if isNssa {
 		NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
 	}
@@ -498,6 +462,7 @@ func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
 	return subnet.IpAddress == network.IpAddress && subnet.PrefixLength >= network.PrefixLength
 }
 
+// TODO: check with accesslist if it is redistributed in ospf
 func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
 	if len(config.StaticRoutes) == 0 {
 		return nil
