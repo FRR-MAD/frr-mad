@@ -7,10 +7,14 @@ import (
 )
 
 // lsa type 5 parsing
-func GetRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname string) *frrProto.InterAreaLsa {
+// this will only return static routes, as BGP routes aren't useful in ospf analysis
+func GetRuntimeExternalRouterData(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
+
+	//fmt.Println("staticRotueMap")
+	//fmt.Println(staticRouteMap)
 
 	// TODO: check if redistribute has a route-map and only if compare to route-map lists
 	result := &frrProto.InterAreaLsa{
@@ -22,12 +26,15 @@ func GetRuntimeExternalRouterData(config *frrProto.OSPFExternalData, hostname st
 	// Since AS-external-LSA (type 5) doesn't belong to a specific area,
 	// we'll create a single "area" to represent the AS external links
 	externalArea := frrProto.AreaAnalyzer{
-		AreaName: "External",
-		LsaType:  "AS-external-LSA", // Type 5
-		Links:    []*frrProto.Advertisement{},
+		//AreaName: "External",
+		LsaType: "AS-external-LSA", // Type 5
+		Links:   []*frrProto.Advertisement{},
 	}
 
-	for _, lsa := range config.AsExternalLinkStates {
+	for key, lsa := range config.AsExternalLinkStates {
+		if _, exists := staticRouteMap[key]; !exists {
+			continue
+		}
 		adv := frrProto.Advertisement{
 			LinkStateId:  lsa.LinkStateId,
 			PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
@@ -84,6 +91,10 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
+	//for _, value := range config.RouterStates {
+	//	fmt.Println(value)
+	//}
+
 	for areaName, routerArea := range config.RouterStates {
 		for _, lsaEntry := range routerArea.LsaEntries {
 			var currentArea *frrProto.AreaAnalyzer
@@ -108,10 +119,12 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 				var ipAddress, prefixLength string
 				isStub := false
 				if routerLink.LinkType == "Stub Network" {
+					routerLink.LinkType = "stub network"
 					ipAddress = routerLink.NetworkAddress
 					isStub = true
 					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
 				} else if routerLink.LinkType == "a Transit Network" {
+					routerLink.LinkType = "transit network"
 					ipAddress = routerLink.RouterInterfaceAddress
 					//prefixLength = "24" // Assuming a /24 for transit links
 				} else {
@@ -127,7 +140,11 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 
 				adv := frrProto.Advertisement{}
 				adv.InterfaceAddress = ipAddress
-				adv.LinkType = routerLink.LinkType
+				if routerLink.LinkType == "another Router (point-to-point)" {
+					adv.LinkType = "point-to-point"
+				} else {
+					adv.LinkType = routerLink.LinkType
+				}
 
 				if isStub {
 					adv.PrefixLength = prefixLength

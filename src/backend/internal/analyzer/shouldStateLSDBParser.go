@@ -43,6 +43,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 			newArea := frrProto.AreaAnalyzer{
 				AreaName: iface.Area,
 				LsaType:  "router-LSA",
+				AreaType: "normal",
 				Links:    []*frrProto.Advertisement{},
 			}
 			areaMap[iface.Area] = &newArea
@@ -241,10 +242,11 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProt
 			// fmt.Printf("FAIL: %v\n", area)
 			continue
 		}
+		// TODO: I would like for AreaName to be useful, but I'm not sure it is
 		externalArea := frrProto.AreaAnalyzer{
-			AreaName: area,
-			LsaType:  "AS-external-LSA", // Type 5
-			Links:    []*frrProto.Advertisement{},
+			//AreaName: area,
+			LsaType: "AS-external-LSA", // Type 5
+			Links:   []*frrProto.Advertisement{},
 		}
 
 		// Add connected interfaces not in NSSA areas

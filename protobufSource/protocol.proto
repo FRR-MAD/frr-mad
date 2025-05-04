@@ -571,6 +571,7 @@ message AnomalyDetection {
   bool HasMisconfiguredPrefixes = 4;
   repeated Advertisement superfluous_entries = 5;
   repeated Advertisement missing_entries = 6;
+  repeated Advertisement duplicate_entries = 7;
 }
 
 message Advertisement {
@@ -598,6 +599,7 @@ message StaticList {
 	string IpAddress = 1;
 	int32 PrefixLength = 2;
   string NextHop = 3;
+  string Area =4;
 }
 
 

@@ -158,10 +158,10 @@ type OspfRedistribution struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
-	fmt.Println("---------------------------")
-	fmt.Println("StaticFRRConfiguration")
-	fmt.Printf("%+v\n", c.metrics.StaticFrrConfiguration)
-	fmt.Println("---------------------------")
+	// fmt.Println("---------------------------")
+	// fmt.Println("StaticFRRConfiguration")
+	// fmt.Printf("%+v\n", c.metrics.StaticFrrConfiguration)
+	// fmt.Println("---------------------------")
 	// required to know what routes are distributed
 	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
 
@@ -170,36 +170,43 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// lsa type 1, 5 and 7 relevant
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
+	//areaNssaMap := GetAreaNssaType(c.metrics.StaticFrrConfiguration, accessList)
+	//GetAreaNssaType(c.metrics.StaticFrrConfiguration, accessList)
+
 	// should state
 	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration)
 	predictedNssaExternalLSDB := getStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
-	fmt.Println("---------------------------")
-	fmt.Println("predictedExternalLSDB ")
-	fmt.Printf("%+v\n", predictedExternalLSDB)
-	fmt.Println("---------------------------")
-	fmt.Println("predictedNssaExternalLSDB ")
-	fmt.Printf("%+v\n", predictedNssaExternalLSDB)
-	fmt.Println("---------------------------")
+	// fmt.Println("---------------------------")
+	// fmt.Println("predictedExternalLSDB ")
+	// fmt.Printf("%+v\n", predictedExternalLSDB)
+	// fmt.Println("---------------------------")
+	// fmt.Println("predictedNssaExternalLSDB ")
+	// fmt.Printf("%+v\n", predictedNssaExternalLSDB)
+	// fmt.Println("---------------------------")
 
 	// is state
 
-	fmt.Println("---------------------------")
-	fmt.Println("OspfRouterData")
-	fmt.Printf("%+v\n", c.metrics.OspfRouterData)
-	fmt.Println("---------------------------")
+	// fmt.Println("---------------------------")
+	// fmt.Println("OspfRouterData")
+	// fmt.Printf("%+v\n", c.metrics.OspfRouterData)
+	// fmt.Println("---------------------------")
 	runtimeRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
-	fmt.Println("---------------------------")
-	fmt.Println("OspfExternalData")
-	fmt.Printf("%+v\n", c.metrics.OspfExternalData)
-	fmt.Println("---------------------------")
-	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	fmt.Println("runtimeExternalLSDB")
-	fmt.Println("---------------------------")
-	fmt.Printf("%+v\n", runtimeExternalLSDB)
-	fmt.Println("OspfNssaExternalData")
-	fmt.Printf("%+v\n", c.metrics.OspfNssaExternalData)
-	fmt.Println("---------------------------")
+	// fmt.Println("---------------------------")
+	// fmt.Println("runtimeRouterLSDB")
+	// fmt.Println(runtimeRouterLSDB)
+	//fmt.Println("OspfExternalData")
+	//fmt.Printf("%+v\n", c.metrics.OspfExternalData)
+	//fmt.Println("---------------------------")
+	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	// fmt.Println("runtimeExternalLSDB")
+	// fmt.Printf("%+v\n", runtimeExternalLSDB)
+	// fmt.Println("Interfaces")
+	// fmt.Printf("%v\n", c.metrics.Interfaces)
+	// fmt.Println("---------------------------")
+	// fmt.Println("OspfNssaExternalData")
+	// fmt.Printf("%+v\n", c.metrics.OspfNssaExternalData)
+	// fmt.Println("---------------------------")
 	runtimeNssaExternalLSDB := GetNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
 	// lsa type 1 always needs to be checked
@@ -508,4 +515,27 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 	}
 
 	return result
+}
+
+func GetAreaNssaType(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) {
+
+	fmt.Println(accessList)
+
+	/*
+		Identify all static routes in the router configuration
+		For each static route:
+
+		Check if the route is matched by any route-map referenced in a "redistribute static" command
+		If matched, check the area type where the route will be advertised
+		If the area is a regular area (not stub, NSSA, etc.), it will receive LSA type 5
+		If the area is NSSA, it will receive LSA type 7 (which may be converted to type 5 at ABRs)
+		If the area is a stub or totally stubby area, it won't receive external routes
+
+
+		Follow the redistribution path:
+
+		Regular areas (area 0 or non-zero regular areas) directly receive LSA type 5
+		NSSA areas receive LSA type 7, which may be converted to type 5 at ABRs
+		Stub areas don't receive external routes (no LSA type 5)
+	*/
 }

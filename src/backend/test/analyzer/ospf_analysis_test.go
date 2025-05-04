@@ -377,14 +377,17 @@ func TestExternalLsa1(t *testing.T) {
 	*/
 	less := func(a, b string) bool { return a < b }
 	frrMetrics := getR101FRRdata()
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	staticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
+
 	expectedPredictedExternalLSDB := &frrProto.InterAreaLsa{
 		Hostname: frrMetrics.StaticFrrConfiguration.Hostname,
 		RouterId: frrMetrics.StaticFrrConfiguration.OspfConfig.RouterId,
 		Areas: []*frrProto.AreaAnalyzer{
 
 			{
-				AreaName: "0.0.0.0",
-				LsaType:  "AS-external-LSA",
+				//AreaName: "0.0.0.0",
+				LsaType: "AS-external-LSA",
 				//AreaType: "",
 				Links: []*frrProto.Advertisement{
 					{
@@ -428,10 +431,114 @@ func TestExternalLsa1(t *testing.T) {
 	})
 
 	//- runtimeExternalLSDB
-	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
+	expectedRuntimeExternalLSDB := &frrProto.InterAreaLsa{
+		Hostname: "r101",
+		RouterId: "65.0.1.1",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				LsaType: "AS-external-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.1.0",
+						PrefixLength: "24",
+						LinkType:     "external",
+					},
+				},
+			},
+		},
+	}
+	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalRouterData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
+	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
+	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
+		assert.Equal(t, expectedRuntimeExternalLSDB.Hostname, actualRuntimeExternalLSDB.Hostname)
+		assert.Equal(t, expectedRuntimeExternalLSDB.RouterId, actualRuntimeExternalLSDB.RouterId)
+
+		assert.Equal(t, len(expectedRuntimeExternalLSDB.Areas), len(actualRuntimeExternalLSDB.Areas))
+		expectedTotalLinks := 0
+		actualTotalLinks := 0
+
+		for _, area := range expectedRuntimeExternalLSDB.Areas {
+			expectedTotalLinks += len(area.Links)
+		}
+		for _, area := range actualRuntimeExternalLSDB.Areas {
+			actualTotalLinks += len(area.Links)
+		}
+
+		assert.Equal(t, expectedTotalLinks, actualTotalLinks)
+
+		// Create maps with LinkStateId as keys for comparison
+		expectedTmp := map[string][]*frrProto.Advertisement{}
+		actualTmp := map[string][]*frrProto.Advertisement{}
+
+		// Populate the map for expected data
+		for _, area := range expectedRuntimeExternalLSDB.Areas {
+			for _, link := range area.Links {
+				expectedTmp[link.LinkStateId] = append(expectedTmp[link.LinkStateId], link)
+			}
+		}
+
+		// Populate the map for actual data
+		for _, area := range actualRuntimeExternalLSDB.Areas {
+			for _, link := range area.Links {
+				actualTmp[link.LinkStateId] = append(actualTmp[link.LinkStateId], link)
+			}
+		}
+
+		// Assert that both maps have the same keys
+		assert.Equal(t, len(expectedTmp), len(actualTmp), "Expected and actual maps should have the same number of LinkStateIds")
+
+		// Assert that for each key, both maps have the same advertisements
+		for linkStateId, expectedAdvs := range expectedTmp {
+			actualAdvs, exists := actualTmp[linkStateId]
+			assert.True(t, exists, "LinkStateId %s should exist in actual data", linkStateId)
+			assert.Equal(t, len(expectedAdvs), len(actualAdvs), "Expected and actual should have same number of advertisements for LinkStateId %s", linkStateId)
+
+			// Additional assertions could be added here to compare specific fields of each advertisement
+			// Create maps to compare advertisements by PrefixLength and LinkType
+			for _, expectedAdv := range expectedAdvs {
+				foundMatch := false
+				for _, actualAdv := range actualAdvs {
+					if expectedAdv.PrefixLength == actualAdv.PrefixLength &&
+						expectedAdv.LinkType == actualAdv.LinkType {
+						foundMatch = true
+						break
+					}
+				}
+				assert.True(t, foundMatch, "No matching advertisement found for LinkStateId %s with PrefixLength %s and LinkType %s",
+					linkStateId, expectedAdv.PrefixLength, expectedAdv.LinkType)
+			}
+
+		}
 	})
 }
+
+func TestAnomalyAnalysis1(t *testing.T) {
+
+	ana := initAnalyzer()
+	frrMetrics := getR101FRRdata()
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	runtimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+
+	_, predictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+	ana.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+
+	t.Run("TestRouterLSAAnomalyTesting", func(t *testing.T) {
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes)
+		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.MissingEntries)
+		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries)
+		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.DuplicateEntries)
+	})
+}
+
+func TestAnomalyAnalysisLsaFive1(t *testing.T) {
+
+}
+
+// TODO: TestNssaExternalLsa1
 
 // func TestGetAccessList2(t *testing.T) {
 
@@ -478,35 +585,3 @@ func TestExternalLsa1(t *testing.T) {
 // 	t.Logf("%v\n", result)
 
 // }
-
-func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertisement, []string) {
-	result := make(map[string]*frrProto.Advertisement)
-	keyResult := []string{}
-
-	for _, iface := range value {
-		keyResult = append(keyResult, iface.InterfaceAddress)
-		result[iface.InterfaceAddress] = &frrProto.Advertisement{
-			InterfaceAddress: iface.InterfaceAddress,
-			PrefixLength:     iface.PrefixLength,
-			LinkType:         iface.LinkType,
-		}
-	}
-
-	return result, keyResult
-}
-
-func uniqueNonEmptyElementsOf(s []string) []string {
-	unique := make(map[string]bool, len(s))
-	us := make([]string, len(unique))
-	for _, elem := range s {
-		if len(elem) != 0 {
-			if !unique[elem] {
-				us = append(us, elem)
-				unique[elem] = true
-			}
-		}
-	}
-
-	return us
-
-}

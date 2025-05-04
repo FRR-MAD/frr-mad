@@ -5073,6 +5073,7 @@ type AnomalyDetection struct {
 	HasMisconfiguredPrefixes   bool                   `protobuf:"varint,4,opt,name=HasMisconfiguredPrefixes,proto3" json:"HasMisconfiguredPrefixes,omitempty"`
 	SuperfluousEntries         []*Advertisement       `protobuf:"bytes,5,rep,name=superfluous_entries,json=superfluousEntries,proto3" json:"superfluous_entries,omitempty"`
 	MissingEntries             []*Advertisement       `protobuf:"bytes,6,rep,name=missing_entries,json=missingEntries,proto3" json:"missing_entries,omitempty"`
+	DuplicateEntries           []*Advertisement       `protobuf:"bytes,7,rep,name=duplicate_entries,json=duplicateEntries,proto3" json:"duplicate_entries,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -5145,6 +5146,13 @@ func (x *AnomalyDetection) GetSuperfluousEntries() []*Advertisement {
 func (x *AnomalyDetection) GetMissingEntries() []*Advertisement {
 	if x != nil {
 		return x.MissingEntries
+	}
+	return nil
+}
+
+func (x *AnomalyDetection) GetDuplicateEntries() []*Advertisement {
+	if x != nil {
+		return x.DuplicateEntries
 	}
 	return nil
 }
@@ -5350,6 +5358,7 @@ type StaticList struct {
 	IpAddress     string                 `protobuf:"bytes,1,opt,name=IpAddress,proto3" json:"IpAddress,omitempty"`
 	PrefixLength  int32                  `protobuf:"varint,2,opt,name=PrefixLength,proto3" json:"PrefixLength,omitempty"`
 	NextHop       string                 `protobuf:"bytes,3,opt,name=NextHop,proto3" json:"NextHop,omitempty"`
+	Area          string                 `protobuf:"bytes,4,opt,name=Area,proto3" json:"Area,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5401,6 +5410,13 @@ func (x *StaticList) GetPrefixLength() int32 {
 func (x *StaticList) GetNextHop() string {
 	if x != nil {
 		return x.NextHop
+	}
+	return ""
+}
+
+func (x *StaticList) GetArea() string {
+	if x != nil {
+		return x.Area
 	}
 	return ""
 }
@@ -6903,14 +6919,15 @@ const file_protocol_proto_rawDesc = "" +
 	"\x0fAnomalyAnalysis\x12F\n" +
 	"\x0erouter_anomaly\x18\x01 \x01(\v2\x1f.communication.AnomalyDetectionR\rrouterAnomaly\x12J\n" +
 	"\x10external_anomaly\x18\x02 \x01(\v2\x1f.communication.AnomalyDetectionR\x0fexternalAnomaly\x12S\n" +
-	"\x15nssa_external_anomaly\x18\x03 \x01(\v2\x1f.communication.AnomalyDetectionR\x13nssaExternalAnomaly\"\x96\x03\n" +
+	"\x15nssa_external_anomaly\x18\x03 \x01(\v2\x1f.communication.AnomalyDetectionR\x13nssaExternalAnomaly\"\xe1\x03\n" +
 	"\x10AnomalyDetection\x12<\n" +
 	"\x19HasOverAdvertisedPrefixes\x18\x01 \x01(\bR\x19HasOverAdvertisedPrefixes\x12>\n" +
 	"\x1aHasUnderAdvertisedPrefixes\x18\x02 \x01(\bR\x1aHasUnderAdvertisedPrefixes\x122\n" +
 	"\x14HasDuplicatePrefixes\x18\x03 \x01(\bR\x14HasDuplicatePrefixes\x12:\n" +
 	"\x18HasMisconfiguredPrefixes\x18\x04 \x01(\bR\x18HasMisconfiguredPrefixes\x12M\n" +
 	"\x13superfluous_entries\x18\x05 \x03(\v2\x1c.communication.AdvertisementR\x12superfluousEntries\x12E\n" +
-	"\x0fmissing_entries\x18\x06 \x03(\v2\x1c.communication.AdvertisementR\x0emissingEntries\"\x9d\x01\n" +
+	"\x0fmissing_entries\x18\x06 \x03(\v2\x1c.communication.AdvertisementR\x0emissingEntries\x12I\n" +
+	"\x11duplicate_entries\x18\a \x03(\v2\x1c.communication.AdvertisementR\x10duplicateEntries\"\x9d\x01\n" +
 	"\rAdvertisement\x12*\n" +
 	"\x10InterfaceAddress\x18\x01 \x01(\tR\x10InterfaceAddress\x12 \n" +
 	"\vLinkStateId\x18\x02 \x01(\tR\vLinkStateId\x12\"\n" +
@@ -6926,12 +6943,13 @@ const file_protocol_proto_rawDesc = "" +
 	"\fPrefixLength\x18\x02 \x01(\x05R\fPrefixLength\x12\x1a\n" +
 	"\bIsPermit\x18\x03 \x01(\bR\bIsPermit\x12\x10\n" +
 	"\x03Any\x18\x04 \x01(\bR\x03Any\x12\x1a\n" +
-	"\bSequence\x18\x05 \x01(\x05R\bSequence\"h\n" +
+	"\bSequence\x18\x05 \x01(\x05R\bSequence\"|\n" +
 	"\n" +
 	"StaticList\x12\x1c\n" +
 	"\tIpAddress\x18\x01 \x01(\tR\tIpAddress\x12\"\n" +
 	"\fPrefixLength\x18\x02 \x01(\x05R\fPrefixLength\x12\x18\n" +
-	"\aNextHop\x18\x03 \x01(\tR\aNextHop\"\x9b\x01\n" +
+	"\aNextHop\x18\x03 \x01(\tR\aNextHop\x12\x12\n" +
+	"\x04Area\x18\x04 \x01(\tR\x04Area\"\x9b\x01\n" +
 	"\fIntraAreaLsa\x12\x1a\n" +
 	"\bhostname\x18\x01 \x01(\tR\bhostname\x12\x1b\n" +
 	"\trouter_id\x18\x02 \x01(\tR\brouterId\x12\x1f\n" +
@@ -7233,54 +7251,55 @@ var file_protocol_proto_depIdxs = []int32{
 	60,  // 83: communication.AnomalyAnalysis.nssa_external_anomaly:type_name -> communication.AnomalyDetection
 	61,  // 84: communication.AnomalyDetection.superfluous_entries:type_name -> communication.Advertisement
 	61,  // 85: communication.AnomalyDetection.missing_entries:type_name -> communication.Advertisement
-	63,  // 86: communication.AccessListAnalyzer.acl_entry:type_name -> communication.ACLEntry
-	67,  // 87: communication.IntraAreaLsa.areas:type_name -> communication.AreaAnalyzer
-	67,  // 88: communication.InterAreaLsa.areas:type_name -> communication.AreaAnalyzer
-	61,  // 89: communication.AreaAnalyzer.links:type_name -> communication.Advertisement
-	70,  // 90: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
-	71,  // 91: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
-	72,  // 92: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
-	73,  // 93: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
-	102, // 94: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
-	69,  // 95: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
-	102, // 96: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
-	69,  // 97: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
-	102, // 98: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
-	69,  // 99: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
-	102, // 100: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
-	69,  // 101: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
-	99,  // 102: communication.OspfRouterInfo.router_link_states:type_name -> communication.OspfRouterInfo.RouterLinkStatesEntry
-	100, // 103: communication.AreaLinkStates.router_lsas:type_name -> communication.AreaLinkStates.RouterLsasEntry
-	101, // 104: communication.RouterLSA.router_links:type_name -> communication.RouterLSA.RouterLinksEntry
-	3,   // 105: communication.Message.ParamsEntry.value:type_name -> communication.ResponseValue
-	3,   // 106: communication.Command.ParamsEntry.value:type_name -> communication.ResponseValue
-	10,  // 107: communication.StaticFRRConfiguration.RouteMapEntry.value:type_name -> communication.RouteMap
-	11,  // 108: communication.StaticFRRConfiguration.AccessListEntry.value:type_name -> communication.AccessList
-	22,  // 109: communication.OSPFRouterData.RouterStatesEntry.value:type_name -> communication.OSPFRouterArea
-	23,  // 110: communication.OSPFRouterArea.LsaEntriesEntry.value:type_name -> communication.OSPFRouterLSA
-	24,  // 111: communication.OSPFRouterLSA.RouterLinksEntry.value:type_name -> communication.OSPFRouterLSALink
-	26,  // 112: communication.OSPFNetworkData.NetStatesEntry.value:type_name -> communication.NetAreaState
-	27,  // 113: communication.NetAreaState.LsaEntriesEntry.value:type_name -> communication.NetworkLSA
-	28,  // 114: communication.NetworkLSA.AttachedRoutersEntry.value:type_name -> communication.AttachedRouter
-	26,  // 115: communication.OSPFSummaryData.NetStatesEntry.value:type_name -> communication.NetAreaState
-	30,  // 116: communication.OSPFSummaryData.SummaryStatesEntry.value:type_name -> communication.SummaryAreaState
-	31,  // 117: communication.SummaryAreaState.LsaEntriesEntry.value:type_name -> communication.SummaryLSA
-	30,  // 118: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry.value:type_name -> communication.SummaryAreaState
-	34,  // 119: communication.OSPFExternalData.AsExternalLinkStatesEntry.value:type_name -> communication.ExternalLSA
-	36,  // 120: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
-	37,  // 121: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
-	39,  // 122: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
-	49,  // 123: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
-	52,  // 124: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
-	56,  // 125: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry
-	75,  // 126: communication.OspfRouterInfo.RouterLinkStatesEntry.value:type_name -> communication.AreaLinkStates
-	76,  // 127: communication.AreaLinkStates.RouterLsasEntry.value:type_name -> communication.RouterLSA
-	77,  // 128: communication.RouterLSA.RouterLinksEntry.value:type_name -> communication.RouterLink
-	129, // [129:129] is the sub-list for method output_type
-	129, // [129:129] is the sub-list for method input_type
-	129, // [129:129] is the sub-list for extension type_name
-	129, // [129:129] is the sub-list for extension extendee
-	0,   // [0:129] is the sub-list for field type_name
+	61,  // 86: communication.AnomalyDetection.duplicate_entries:type_name -> communication.Advertisement
+	63,  // 87: communication.AccessListAnalyzer.acl_entry:type_name -> communication.ACLEntry
+	67,  // 88: communication.IntraAreaLsa.areas:type_name -> communication.AreaAnalyzer
+	67,  // 89: communication.InterAreaLsa.areas:type_name -> communication.AreaAnalyzer
+	61,  // 90: communication.AreaAnalyzer.links:type_name -> communication.Advertisement
+	70,  // 91: communication.Anomalies.overadvertised_routes:type_name -> communication.AnomalyOveradvertisedRoute
+	71,  // 92: communication.Anomalies.underadvertised_routes:type_name -> communication.AnomalyUnderadvertisedRoute
+	72,  // 93: communication.Anomalies.duplicate_routes:type_name -> communication.AnomalyDuplicateRoute
+	73,  // 94: communication.Anomalies.misconfigured_routes:type_name -> communication.AnomalyMisconfiguredRoute
+	102, // 95: communication.AnomalyOveradvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	69,  // 96: communication.AnomalyOveradvertisedRoute.router:type_name -> communication.RouterAttribute
+	102, // 97: communication.AnomalyUnderadvertisedRoute.timestamp:type_name -> google.protobuf.Timestamp
+	69,  // 98: communication.AnomalyUnderadvertisedRoute.router:type_name -> communication.RouterAttribute
+	102, // 99: communication.AnomalyDuplicateRoute.timestamp:type_name -> google.protobuf.Timestamp
+	69,  // 100: communication.AnomalyDuplicateRoute.router:type_name -> communication.RouterAttribute
+	102, // 101: communication.AnomalyMisconfiguredRoute.timestamp:type_name -> google.protobuf.Timestamp
+	69,  // 102: communication.AnomalyMisconfiguredRoute.router:type_name -> communication.RouterAttribute
+	99,  // 103: communication.OspfRouterInfo.router_link_states:type_name -> communication.OspfRouterInfo.RouterLinkStatesEntry
+	100, // 104: communication.AreaLinkStates.router_lsas:type_name -> communication.AreaLinkStates.RouterLsasEntry
+	101, // 105: communication.RouterLSA.router_links:type_name -> communication.RouterLSA.RouterLinksEntry
+	3,   // 106: communication.Message.ParamsEntry.value:type_name -> communication.ResponseValue
+	3,   // 107: communication.Command.ParamsEntry.value:type_name -> communication.ResponseValue
+	10,  // 108: communication.StaticFRRConfiguration.RouteMapEntry.value:type_name -> communication.RouteMap
+	11,  // 109: communication.StaticFRRConfiguration.AccessListEntry.value:type_name -> communication.AccessList
+	22,  // 110: communication.OSPFRouterData.RouterStatesEntry.value:type_name -> communication.OSPFRouterArea
+	23,  // 111: communication.OSPFRouterArea.LsaEntriesEntry.value:type_name -> communication.OSPFRouterLSA
+	24,  // 112: communication.OSPFRouterLSA.RouterLinksEntry.value:type_name -> communication.OSPFRouterLSALink
+	26,  // 113: communication.OSPFNetworkData.NetStatesEntry.value:type_name -> communication.NetAreaState
+	27,  // 114: communication.NetAreaState.LsaEntriesEntry.value:type_name -> communication.NetworkLSA
+	28,  // 115: communication.NetworkLSA.AttachedRoutersEntry.value:type_name -> communication.AttachedRouter
+	26,  // 116: communication.OSPFSummaryData.NetStatesEntry.value:type_name -> communication.NetAreaState
+	30,  // 117: communication.OSPFSummaryData.SummaryStatesEntry.value:type_name -> communication.SummaryAreaState
+	31,  // 118: communication.SummaryAreaState.LsaEntriesEntry.value:type_name -> communication.SummaryLSA
+	30,  // 119: communication.OSPFAsbrSummaryData.AsbrSummaryStatesEntry.value:type_name -> communication.SummaryAreaState
+	34,  // 120: communication.OSPFExternalData.AsExternalLinkStatesEntry.value:type_name -> communication.ExternalLSA
+	36,  // 121: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
+	37,  // 122: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
+	39,  // 123: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
+	49,  // 124: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
+	52,  // 125: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
+	56,  // 126: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry
+	75,  // 127: communication.OspfRouterInfo.RouterLinkStatesEntry.value:type_name -> communication.AreaLinkStates
+	76,  // 128: communication.AreaLinkStates.RouterLsasEntry.value:type_name -> communication.RouterLSA
+	77,  // 129: communication.RouterLSA.RouterLinksEntry.value:type_name -> communication.RouterLink
+	130, // [130:130] is the sub-list for method output_type
+	130, // [130:130] is the sub-list for method input_type
+	130, // [130:130] is the sub-list for extension type_name
+	130, // [130:130] is the sub-list for extension extendee
+	0,   // [0:130] is the sub-list for field type_name
 }
 
 func init() { file_protocol_proto_init() }

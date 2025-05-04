@@ -8,38 +8,66 @@ import (
 	// "google.golang.org/protobuf/proto"
 )
 
+// TODO: Find a fix for point-to-point. The representation of p2p in frr is unclear to me. Thus it's removed from any testing
 func (a *Analyzer) RouterAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
 	if isState == nil || shouldState == nil {
-		fmt.Println("nil!")
+		//fmt.Println("nil!")
 		return
 	}
 
 	result := &frrProto.AnomalyDetection{
-		HasDuplicatePrefixes:     false,
 		HasMisconfiguredPrefixes: false,
 		SuperfluousEntries:       []*frrProto.Advertisement{},
 		MissingEntries:           []*frrProto.Advertisement{},
+		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
 	isStateMap := make(map[string]*frrProto.Advertisement)
+	isStateCounter := make(map[string]int)
 	shouldStateMap := make(map[string]*frrProto.Advertisement)
+	shouldStateCounter := make(map[string]int)
 
 	for _, area := range isState.Areas {
 		for i := range area.Links {
-			link := area.Links[i]
-			key := getadvertisementKey(link)
-			isStateMap[key] = link
+			if area.Links[i].LinkType != "point-to-point" {
+				link := area.Links[i]
+				key := getadvertisementKey(link)
+				isStateMap[key] = &frrProto.Advertisement{
+					InterfaceAddress: link.InterfaceAddress,
+					LinkType:         link.LinkType,
+				}
+				if link.LinkType == "Stub Network" {
+					isStateMap[key].PrefixLength = link.PrefixLength
+				}
+				if _, exist := isStateCounter[link.InterfaceAddress]; !exist {
+					isStateCounter[link.InterfaceAddress] = 0
+				}
+				isStateCounter[link.InterfaceAddress] += 1
+			}
 		}
 	}
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
-			link := area.Links[i]
-			key := getadvertisementKey(link)
-			shouldStateMap[key] = link
+			if area.Links[i].LinkType != "point-to-point" {
+				link := area.Links[i]
+				key := getadvertisementKey(link)
+				shouldStateMap[key] = &frrProto.Advertisement{
+					InterfaceAddress: link.InterfaceAddress,
+					LinkType:         link.LinkType,
+				}
+				if link.LinkType == "Stub Network" {
+					shouldStateMap[key].PrefixLength = link.PrefixLength
+				}
+				if _, exist := shouldStateCounter[link.InterfaceAddress]; !exist {
+					shouldStateCounter[link.InterfaceAddress] = 0
+				}
+				shouldStateCounter[link.InterfaceAddress] += 1
+			}
 		}
 	}
 
+	// check for missing prefixes -> underadvertised
 	for key, shouldLink := range shouldStateMap {
 		if _, exists := isStateMap[key]; !exists {
 			if !isExcludedByAccessList(shouldLink, accessList) {
@@ -48,21 +76,34 @@ func (a *Analyzer) RouterAnomalyAnalysis(accessList map[string]frrProto.AccessLi
 		}
 	}
 
+	// check for to many advertisements -> overadvertised
 	for key, isLink := range isStateMap {
 		if _, exists := shouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
+	// check for duplicates
+	for prefix, counter := range isStateCounter {
+		if counter > 1 {
+			result.SuperfluousEntries = append(result.DuplicateEntries, isStateMap[prefix])
+		}
+	}
+
+	// fmt.Println(isStateMap)
+	// fmt.Println(shouldStateMap)
+
 	//a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = writeBoolTarget(result.HasUnderAdvertisedPrefixes)
 	//a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = writeBoolTarget(result.HasOverAdvertisedPrefixes)
 
-	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
-	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
-	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = writeBoolTarget(result.HasDuplicatePrefixes)
-	a.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes = writeBoolTarget(result.HasMisconfiguredPrefixes)
+	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
+	//writeBoolTarget(result.HasDuplicatePrefixes)
+	//a.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes = writeBoolTarget(result.HasMisconfiguredPrefixes)
 	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
+	a.AnalysisResult.RouterAnomaly.DuplicateEntries = result.DuplicateEntries
 
 }
 
@@ -187,4 +228,66 @@ func NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyz
 	//fmt.Println(shouldState)
 	//fmt.Println(isState)
 
+}
+
+// TODO: Find a fix for point-to-point. The representation of p2p in frr is unclear to me. Thus it's removed from any testing
+func checkAdvertisement(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (bool, bool, bool) {
+
+	overAdvertised := false
+	underAdvertised := false
+	duplicateAdvertised := false
+	shouldLsaPrefixes := []string{}
+	for _, lsa := range shouldState.Areas {
+		for _, link := range lsa.Links {
+			if link.LinkType != "point-to-point" {
+				shouldLsaPrefixes = append(shouldLsaPrefixes, link.InterfaceAddress)
+			}
+		}
+	}
+
+	isLsaPrefixes := []string{}
+	for _, lsa := range isState.Areas {
+		for _, link := range lsa.Links {
+			if link.LinkType != "point-to-point" {
+				isLsaPrefixes = append(isLsaPrefixes, link.InterfaceAddress)
+			}
+		}
+	}
+
+	// Check for Overadvertisement of prefixes
+
+	isOveradvertisedMap := make(map[string]bool)
+	shouldPrefixMap := make(map[string]bool)
+
+	// Convert shouldLsaPrefixes to a map for O(1) lookups
+	for _, shouldPrefix := range shouldLsaPrefixes {
+		shouldPrefixMap[shouldPrefix] = true
+	}
+
+	// Check if prefix is NOT in shouldLsaPrefixes
+	for _, prefix := range isLsaPrefixes {
+		if !shouldPrefixMap[prefix] {
+			isOveradvertisedMap[prefix] = true
+			overAdvertised = true
+		}
+	}
+
+	// Check for Underadvertisement of prefixes
+	isUnderdvertisedMap := make(map[string]bool)
+	isPrefixMap := make(map[string]bool)
+
+	// Convert shouldLsaPrefixes to a map for O(1) lookups
+	for _, isPrefix := range isLsaPrefixes {
+		isPrefixMap[isPrefix] = true
+	}
+
+	// Check if prefix is NOT in shouldLsaPrefixes
+	for _, prefix := range shouldLsaPrefixes {
+		if !isPrefixMap[prefix] {
+			isUnderdvertisedMap[prefix] = true
+			underAdvertised = true
+		}
+	}
+
+	return overAdvertised, underAdvertised, duplicateAdvertised
 }
