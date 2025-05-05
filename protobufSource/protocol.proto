@@ -358,6 +358,8 @@ message OSPFDatabaseArea {
   int32 summary_link_states_count = 6;
   repeated ASBRSummaryLSA asbr_summary_link_states = 7;
   int32 asbr_summary_link_states_count = 8;
+  repeated NSSAExternalLSA nssa_external_states = 9;
+  int32 nssa_external_states_count = 10;
 }
 
 message BaseLSA {
@@ -384,6 +386,13 @@ message SummaryDataLSA {
 
 message ASBRSummaryLSA {
   BaseLSA base = 1;
+}
+
+message NSSAExternalLSA {
+  BaseLSA base = 1;
+  string metric_type = 2;
+  string route = 3;
+  int32 tag = 4;
 }
 
 message ASExternalLSA {

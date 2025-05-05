@@ -337,6 +337,15 @@ func ParseFullOSPFDatabase(jsonData []byte) (*frrProto.OSPFDatabase, error) {
 				transformedArea["asbr_summary_link_states_count"] = areaDataMap["asbrSummaryLinkStatesCount"]
 			}
 
+			if nssaExternalLSAs, ok := areaDataMap["nssaExternalLinkStates"].([]interface{}); ok {
+				transformedNSSALSAs := make([]interface{}, len(nssaExternalLSAs))
+				for i, lsa := range nssaExternalLSAs {
+					transformedNSSALSAs[i] = transformDatabaseNSSAExternalLSA(lsa.(map[string]interface{}))
+				}
+				transformedArea["nssa_external_link_states"] = transformedNSSALSAs
+				transformedArea["nssa_external_link_states_count"] = areaDataMap["nssaExternalLinkStatesCount"]
+			}
+
 			transformedAreas[areaID] = transformedArea
 		}
 		transformedMap["areas"] = transformedAreas
@@ -1177,6 +1186,24 @@ func transformDatabaseSummaryLSA(lsaData map[string]interface{}) map[string]inte
 func transformDatabaseASBRSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
 	addDatabaseLSABaseParameters(transformed, lsaData)
+	return transformed
+}
+
+func transformDatabaseNSSAExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	if v, ok := lsaData["metricType"]; ok {
+		transformed["metric_type"] = v
+	}
+
+	if v, ok := lsaData["route"]; ok {
+		transformed["route"] = v
+	}
+
+	if v, ok := lsaData["tag"]; ok {
+		transformed["tag"] = v
+	}
+
 	return transformed
 }
 
