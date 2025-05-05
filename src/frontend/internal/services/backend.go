@@ -70,7 +70,7 @@ func SendMessage(
 func openSocket(path string) (net.Conn, error) {
 	conn, err := net.DialTimeout("unix", path, socketDialTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("unable to connect to %q: %w", path, err)
+		return nil, fmt.Errorf("unable to connect to %q:\n\nBackend message:\n%w", path, err)
 	}
 	return conn, nil
 }

@@ -26,7 +26,7 @@ func HasAnyAnomaly(a *frrProto.AnomalyDetection) bool {
 
 func PrintBackendError(err error, functionName string) string {
 	return fmt.Sprintf(
-		"Error: %v\nNo data received from backend for '%s()'. Press 'r' to reload...",
+		"Error: \n%v\n\nNo data received from backend for '%s()'. Press 'r' to reload...",
 		err, functionName,
 	)
 }
