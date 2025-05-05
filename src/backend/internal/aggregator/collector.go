@@ -50,7 +50,8 @@ func initFullFrrData() *frrProto.FullFRRData {
 		OspfAsbrSummaryData:    &frrProto.OSPFAsbrSummaryData{},
 		OspfExternalData:       &frrProto.OSPFExternalData{},
 		OspfNssaExternalData:   &frrProto.OSPFNssaExternalData{},
-		OspfDuplicates:         &frrProto.OSPFDuplicates{},
+		OspfExternalAll:        &frrProto.OSPFExternalAll{},
+		OspfNssaExternalAll:    &frrProto.OSPFNssaExternalAll{},
 		OspfNeighbors:          &frrProto.OSPFNeighbors{},
 		Interfaces:             &frrProto.InterfaceList{},
 		RoutingInformationBase: &frrProto.RoutingInformationBase{},
@@ -170,8 +171,12 @@ func (c *Collector) Collect() error {
 		return FetchFullOSPFDatabase(executor)
 	})
 
-	fetchAndMerge("OSPFDuplicateCandidates", c.FullFrrData.OspfDuplicates, func() (proto.Message, error) {
-		return FetchOSPFDuplicateCandidates(executor)
+	fetchAndMerge("OSPFExternalAll", c.FullFrrData.OspfExternalAll, func() (proto.Message, error) {
+		return FetchOSPFExternalAll(executor)
+	})
+
+	fetchAndMerge("OSPFNssaExternalAll", c.FullFrrData.OspfNssaExternalAll, func() (proto.Message, error) {
+		return FetchOSPFNssaExternalAll(executor)
 	})
 
 	fetchAndMerge("OSPFNeighbors", c.FullFrrData.OspfNeighbors, func() (proto.Message, error) {
@@ -234,8 +239,12 @@ func (c *Collector) ensureFieldsInitialized() {
 		c.FullFrrData.OspfDatabase = &frrProto.OSPFDatabase{}
 	}
 
-	if c.FullFrrData.OspfDuplicates == nil {
-		c.FullFrrData.OspfDuplicates = &frrProto.OSPFDuplicates{}
+	if c.FullFrrData.OspfExternalAll == nil {
+		c.FullFrrData.OspfExternalAll = &frrProto.OSPFExternalAll{}
+	}
+
+	if c.FullFrrData.OspfNssaExternalAll == nil {
+		c.FullFrrData.OspfNssaExternalAll = &frrProto.OSPFNssaExternalAll{}
 	}
 
 	if c.FullFrrData.OspfNeighbors == nil {
