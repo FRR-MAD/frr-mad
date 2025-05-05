@@ -273,12 +273,98 @@ func normalizeNetworkAddress(address string) string {
 	return strings.ToLower(strings.TrimSpace(address))
 }
 
-func NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
+func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
+	if isState == nil || shouldState == nil {
+		return
+	}
 
-	//fmt.Println(accessList)
-	//fmt.Println(shouldState)
-	//fmt.Println(isState)
+	result := &frrProto.AnomalyDetection{
+		HasMisconfiguredPrefixes: false,
+		SuperfluousEntries:       []*frrProto.Advertisement{},
+		MissingEntries:           []*frrProto.Advertisement{},
+		DuplicateEntries:         []*frrProto.Advertisement{},
+	}
 
+	// Maps to track expected and actual NSSA-external routes
+	isStateMap := make(map[string]map[string]*frrProto.Advertisement) // area -> prefix -> advertisement
+	shouldStateMap := make(map[string]map[string]*frrProto.Advertisement)
+	duplicateTracker := make(map[string]map[string]int) // area -> prefix -> count
+
+	// Process actual NSSA-external routes (isState)
+	for _, area := range isState.Areas {
+		if area.LsaType != "NSSA-LSA" {
+			continue // Skip non-NSSA areas
+		}
+
+		if isStateMap[area.AreaName] == nil {
+			isStateMap[area.AreaName] = make(map[string]*frrProto.Advertisement)
+		}
+		if duplicateTracker[area.AreaName] == nil {
+			duplicateTracker[area.AreaName] = make(map[string]int)
+		}
+
+		for _, link := range area.Links {
+			key := link.LinkStateId + "/" + link.PrefixLength
+			isStateMap[area.AreaName][key] = link
+
+			// Track duplicates
+			duplicateTracker[area.AreaName][key]++
+			if duplicateTracker[area.AreaName][key] > 1 {
+				result.DuplicateEntries = append(result.DuplicateEntries, link)
+			}
+		}
+	}
+
+	// Process expected NSSA-external routes (shouldState)
+	for _, area := range shouldState.Areas {
+		if area.LsaType != "NSSA-LSA" {
+			continue // Skip non-NSSA areas
+		}
+
+		if shouldStateMap[area.AreaName] == nil {
+			shouldStateMap[area.AreaName] = make(map[string]*frrProto.Advertisement)
+		}
+
+		for _, link := range area.Links {
+			key := link.LinkStateId + "/" + link.PrefixLength
+			shouldStateMap[area.AreaName][key] = link
+		}
+	}
+
+	// Check for missing routes (under-advertised)
+	for areaName, shouldRoutes := range shouldStateMap {
+		for key, route := range shouldRoutes {
+			// Check if route exists in isState for this area
+			if isStateMap[areaName] == nil || isStateMap[areaName][key] == nil {
+				// Check if route is excluded by access list
+				if !isExcludedByAccessList(route, accessList) {
+					result.MissingEntries = append(result.MissingEntries, route)
+				}
+			}
+		}
+	}
+
+	// Check for superfluous routes (over-advertised)
+	for areaName, isRoutes := range isStateMap {
+		for key, route := range isRoutes {
+			// Check if route exists in shouldState for this area
+			if shouldStateMap[areaName] == nil || shouldStateMap[areaName][key] == nil {
+				result.SuperfluousEntries = append(result.SuperfluousEntries, route)
+			}
+		}
+	}
+
+	// Check for P-bit issues (NSSA-external routes not being translated)
+	// This requires comparing Type 7 LSAs in NSSA with Type 5 LSAs in backbone
+	// You'll need to implement this separately by comparing NSSA and external databases
+
+	// Update analysis result
+	a.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
+	a.AnalysisResult.NssaExternalAnomaly.MissingEntries = result.MissingEntries
+	a.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
+	a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries = result.DuplicateEntries
 }
 
 // TODO: Find a fix for point-to-point. The representation of p2p in frr is unclear to me. Thus it's removed from any testing
