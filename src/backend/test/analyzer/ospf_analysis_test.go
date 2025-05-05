@@ -351,29 +351,30 @@ func TestRouterLsa1(t *testing.T) {
 
 }
 
+// what do I need?
+/*
+	- frrMetrics.OspfExternalData
+	- frrMetrics.StaticFrrConfiguration
+	- accessList
+	- predictedExternalLSDB
+	- runtimeExternalLSDB
+
+	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+
+	if len(staticRouteMap) > 0 || isNssa {
+		ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	}
+*/
+// what will be tested?
+/*
+	- actualExternalLSDB -> GetRuntimeExternalRouterData
+	- predictedExternalLSDB
+
+	- runtimeExternalLSDB
+*/
 func TestExternalLsa1(t *testing.T) {
-	// what do I need?
-	/*
-		- frrMetrics.OspfExternalData
-		- frrMetrics.StaticFrrConfiguration
-		- accessList
-		- predictedExternalLSDB
-		- runtimeExternalLSDB
 
-		runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-		predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
-
-		if len(staticRouteMap) > 0 || isNssa {
-			ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
-		}
-	*/
-	// what will be tested?
-	/*
-		- actualExternalLSDB -> GetRuntimeExternalRouterData
-		- predictedExternalLSDB
-
-		- runtimeExternalLSDB
-	*/
 	less := func(a, b string) bool { return a < b }
 	frrMetrics := getR101FRRdata()
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
@@ -398,7 +399,7 @@ func TestExternalLsa1(t *testing.T) {
 			},
 		},
 	}
-	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalDataOld(frrMetrics.StaticFrrConfiguration)
+	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 
 	// - actualExternalLSDB -> GetRuntimeExternalRouterData
 	// - predictedExternalLSDB
@@ -517,6 +518,8 @@ func TestAnomalyAnalysis1(t *testing.T) {
 	ana := initAnalyzer()
 	frrMetrics := getR101FRRdata()
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
+
 	runtimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	_, predictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
@@ -532,8 +535,20 @@ func TestAnomalyAnalysis1(t *testing.T) {
 		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.DuplicateEntries)
 	})
 
-	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
+	//
 
+	predictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	ana.ExternalAnomalyAnalysis(predictedExternalLSDB, runtimeExternalLSDB)
+
+	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes)
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasMisconfiguredPrefixes)
+		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.MissingEntries)
+		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries)
+		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.DuplicateEntries)
 	})
 
 }

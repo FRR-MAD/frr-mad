@@ -147,9 +147,8 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 
 // func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 
-func (a *Analyzer) ExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
+func (a *Analyzer) ExternalAnomalyAnalysis(isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
-		//fmt.Println("nil!")
 		return
 	}
 
@@ -160,73 +159,88 @@ func (a *Analyzer) ExternalAnomalyAnalysis(accessList map[string]frrProto.Access
 		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
-	//fmt.Println(accessList)
-	//fmt.Println(isState)
-	//fmt.Println(shouldState)
+	isStateMap := make(map[string]map[string]*frrProto.Advertisement)
+	shouldStateMap := make(map[string]map[string]*frrProto.Advertisement)
 
-	a.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
-	a.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	shouldStateCounts := make(map[string]map[string]int)
+
+	// Process isState links
+	for _, area := range isState.Areas {
+		for _, link := range area.Links {
+			key := link.LinkStateId + "/" + link.PrefixLength
+
+			if isStateMap[area.LsaType] == nil {
+				isStateMap[area.LsaType] = make(map[string]*frrProto.Advertisement)
+			}
+
+			isStateMap[area.LsaType][key] = &frrProto.Advertisement{
+				InterfaceAddress: link.LinkStateId,
+				LinkStateId:      link.LinkStateId,
+				PrefixLength:     link.PrefixLength,
+				LinkType:         link.LinkType,
+			}
+		}
+	}
+
+	// Process shouldState links
+	for _, area := range shouldState.Areas {
+		for _, link := range area.Links {
+			key := link.LinkStateId + "/" + link.PrefixLength
+
+			if shouldStateMap[area.LsaType] == nil {
+				shouldStateMap[area.LsaType] = make(map[string]*frrProto.Advertisement)
+			}
+
+			if shouldStateCounts[area.LsaType] == nil {
+				shouldStateCounts[area.LsaType] = make(map[string]int)
+			}
+
+			shouldStateCounts[area.LsaType][key]++
+
+			// Create an advertisement for the duplicate
+			if shouldStateCounts[area.LsaType][key] > 1 {
+				result.DuplicateEntries = append(result.DuplicateEntries, &frrProto.Advertisement{
+					InterfaceAddress: link.LinkStateId,
+					LinkStateId:      link.LinkStateId,
+					PrefixLength:     link.PrefixLength,
+					LinkType:         link.LinkType,
+				})
+			}
+
+			shouldStateMap[area.LsaType][key] = &frrProto.Advertisement{
+				InterfaceAddress: link.LinkStateId,
+				LinkStateId:      link.LinkStateId,
+				PrefixLength:     link.PrefixLength,
+				LinkType:         link.LinkType,
+			}
+		}
+	}
+
+	// Find superfluous entries (in isState but not in shouldState)
+	for areaType, links := range isStateMap {
+		for key, link := range links {
+			if shouldStateMap[areaType] == nil || shouldStateMap[areaType][key] == nil {
+				result.SuperfluousEntries = append(result.SuperfluousEntries, link)
+			}
+		}
+	}
+
+	// Find missing entries (in shouldState but not in isState)
+	for areaType, links := range shouldStateMap {
+		for key, link := range links {
+			if isStateMap[areaType] == nil || isStateMap[areaType][key] == nil {
+				result.MissingEntries = append(result.MissingEntries, link)
+			}
+		}
+	}
+
+	a.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
-	//writeBoolTarget(result.HasDuplicatePrefixes)
-	//a.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes = writeBoolTarget(result.HasMisconfiguredPrefixes)
 	a.AnalysisResult.ExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.ExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.ExternalAnomaly.DuplicateEntries = result.DuplicateEntries
 
-	//result := &frrProto.AnomalyAnalysis{
-	//	AnomalyDetection: &frrProto.AnomalyDetection{},
-	//	MissingEntries:   []*frrProto.Advertisement{},
-	//	SuperfluousEntries:     []*frrProto.Advertisement{},
-	//}
-
-	// if isState == nil || shouldState == nil {
-	// 	return
-	// }
-
-	// isStateMap := make(map[string]*frrProto.Advertisement)
-	// shouldStateMap := make(map[string]*frrProto.Advertisement)
-
-	// for _, area := range isState.Areas {
-	// 	for i := range area.Links {
-	// 		link := area.Links[i]
-	// 		key := normalizeNetworkAddress(link.LinkStateId)
-	// 		isStateMap[key] = link
-	// 	}
-	// }
-
-	// for _, area := range shouldState.Areas {
-	// 	for i := range area.Links {
-	// 		link := area.Links[i]
-	// 		key := normalizeNetworkAddress(link.LinkStateId)
-	// 		shouldStateMap[key] = link
-	// 	}
-	// }
-
-	// accessListNetworks := make(map[string]bool)
-	// for _, acl := range accessList {
-	// 	for _, entry := range acl.AclEntry {
-	// 		if entry.IsPermit {
-	// 			network := fmt.Sprintf("%s/%d", entry.IPAddress, entry.PrefixLength)
-	// 			accessListNetworks[normalizeNetworkAddress(network)] = true
-	// 		}
-	// 	}
-	// }
-
-	// for key, shouldLink := range shouldStateMap {
-	// 	if _, exists := isStateMap[key]; !exists {
-	// 		networkWithPrefix := fmt.Sprintf("%s/%s", shouldLink.LinkStateId, shouldLink.PrefixLength)
-	// 		normalizedNetwork := normalizeNetworkAddress(networkWithPrefix)
-
-	// 		if accessListNetworks[normalizedNetwork] || isInAccessList(shouldLink.LinkStateId, accessList) {
-	// 			result.MissingEntries = append(result.MissingEntries, shouldLink)
-	// 		}
-	// 	}
-	// }
-
-	// result.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
-	// result.HasOverAdvertisedPrefixes = false
-	// result.HasDuplicatePrefixes = false
-	// result.HasMisconfiguredPrefixes = true
 }
 
 func isInAccessList(network string, accessLists map[string]frrProto.AccessListAnalyzer) bool {

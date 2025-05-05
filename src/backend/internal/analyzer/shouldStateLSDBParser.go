@@ -188,16 +188,21 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 			// Check if this route is allowed by any access list
 			isAllowed := false
 
-			for _, aclAnalyzer := range accessList {
+			// TODO: does this really cover all scenarios?
+			if len(accessList) == 0 {
+				isAllowed = true
+			} else {
+				for _, aclAnalyzer := range accessList {
 
-				for _, item := range aclAnalyzer.AclEntry {
-					if item.IPAddress == ipAddr && item.IsPermit {
-						isAllowed = true
+					for _, item := range aclAnalyzer.AclEntry {
+						if item.IPAddress == ipAddr && item.IsPermit {
+							isAllowed = true
+							break
+						}
+					}
+					if isAllowed {
 						break
 					}
-				}
-				if isAllowed {
-					break
 				}
 			}
 
