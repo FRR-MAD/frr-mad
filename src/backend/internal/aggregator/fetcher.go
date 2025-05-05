@@ -128,12 +128,12 @@ func FetchOSPFExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSP
 	return ParseOSPFExternalAll(output)
 }
 
-func FetchOSPFNssaExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNssaExternalData, error) {
+func FetchOSPFNssaExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNssaExternalAll, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf database nssa-external json")
 	if err != nil {
 		return nil, err
 	}
-	return ParseOSPFNssaExternalLSA(output)
+	return ParseOSPFNssaExternalAll(output)
 }
 
 func FetchOSPFNeighbors(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNeighbors, error) {

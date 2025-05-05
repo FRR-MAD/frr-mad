@@ -227,47 +227,29 @@ func ParseOSPFExternalLSA(jsonData []byte) (*frrProto.OSPFExternalData, error) {
 	return &result, nil
 }
 
-func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, error) {
-	var rawData map[string]interface{}
-	if err := json.Unmarshal(jsonData, &rawData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
-	}
-
-	transformed := make(map[string]interface{})
-
-	if routerID, ok := rawData["routerId"]; ok {
-		transformed["router_id"] = routerID
-	}
-
-	if nssaStates, ok := rawData["NSSA-external Link States"].(map[string]interface{}); ok {
-		areas := make(map[string]interface{})
-
-		for areaID, areaData := range nssaStates {
-			areaDataMap, ok := areaData.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			lsas := make(map[string]interface{})
-			for lsaID, lsaData := range areaDataMap {
-				lsaDataMap, ok := lsaData.(map[string]interface{})
-				if !ok {
-					continue
-				}
-				lsas[lsaID] = transformNssaExternalLSA(lsaDataMap)
-			}
-
-			areas[areaID] = map[string]interface{}{
-				"data": lsas,
-			}
-		}
-
-		transformed["nssa_external_link_states"] = areas
-	}
-
-	transformedJSON, err := json.Marshal(transformed)
+func ParseOSPFNssaExternalAll(jsonData []byte) (*frrProto.OSPFNssaExternalAll, error) {
+	transformedJSON, err := transformNssaExternalJSON(jsonData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal transformed data: %w", err)
+		return nil, err
+	}
+
+	var result frrProto.OSPFNssaExternalAll
+	opts := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+
+	if err := opts.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
+}
+
+func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, error) {
+	transformedJSON, err := transformNssaExternalJSON(jsonData)
+	if err != nil {
+		return nil, err
 	}
 
 	var result frrProto.OSPFNssaExternalData
@@ -969,6 +951,52 @@ func (c *Collector) ReadConfig() (string, error) {
 	}
 
 	return strings.Join(staticConfig, "\n"), nil
+}
+
+func transformNssaExternalJSON(jsonData []byte) ([]byte, error) {
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(jsonData, &rawData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	transformed := make(map[string]interface{})
+
+	if routerID, ok := rawData["routerId"]; ok {
+		transformed["router_id"] = routerID
+	}
+
+	if nssaStates, ok := rawData["NSSA-external Link States"].(map[string]interface{}); ok {
+		areas := make(map[string]interface{})
+
+		for areaID, areaData := range nssaStates {
+			areaDataMap, ok := areaData.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			lsas := make(map[string]interface{})
+			for lsaID, lsaData := range areaDataMap {
+				lsaDataMap, ok := lsaData.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				lsas[lsaID] = transformNssaExternalLSA(lsaDataMap)
+			}
+
+			areas[areaID] = map[string]interface{}{
+				"data": lsas,
+			}
+		}
+
+		transformed["nssa_external_link_states"] = areas
+	}
+
+	transformedJSON, err := json.Marshal(transformed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed data: %w", err)
+	}
+
+	return transformedJSON, nil
 }
 
 func transformRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
