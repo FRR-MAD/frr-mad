@@ -8,6 +8,13 @@ import (
 )
 
 // TODO: Find a fix for point-to-point. The representation of p2p in frr is unclear to me. Thus it's removed from any testing
+
+// TODO: LSA Type 1, 3, cross check with FIB (not rib)
+/*
+	- if it is in FIB, it's good
+	- if it is NOT in FIB, it's no good
+*/
+
 func (a *Analyzer) RouterAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
 	if isState == nil || shouldState == nil {
 		//fmt.Println("nil!")
@@ -85,7 +92,7 @@ func (a *Analyzer) RouterAnomalyAnalysis(accessList map[string]frrProto.AccessLi
 	// check for duplicates
 	for prefix, counter := range isStateCounter {
 		if counter > 1 {
-			result.SuperfluousEntries = append(result.DuplicateEntries, isStateMap[prefix])
+			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
 		}
 	}
 
@@ -147,6 +154,11 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 
 // func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 
+// TODO: Check what is received by BGP, cross check with FIB (not rib)
+/*
+	- if it is in FIB, it's good
+	- if it is NOT in FIB, it's no good
+*/
 func (a *Analyzer) ExternalAnomalyAnalysis(isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
