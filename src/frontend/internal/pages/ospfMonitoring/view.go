@@ -3,7 +3,6 @@ package ospfMonitoring
 import (
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-	"google.golang.org/protobuf/encoding/protojson"
 	"sort"
 	"strconv"
 
@@ -11,7 +10,6 @@ import (
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
-	"github.com/ba2025-ysmprc/frr-tui/pkg"
 	// "github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
@@ -41,7 +39,10 @@ func (m *Model) View() string {
 func (m *Model) renderLsdbMonitorTab() string {
 	var lsdbBlocks []string
 
-	lsdb, _ := getLSDB()
+	lsdb, err := backend.GetLSDB()
+	if err != nil {
+		return common.PrintBackendError(err, "GetLSDB")
+	}
 
 	// extract and sort the map keys
 	lsdbAreas := make([]string, 0, len(lsdb.Areas))
@@ -281,8 +282,14 @@ func (m *Model) renderLsdbMonitorTab() string {
 }
 
 func (m *Model) renderRouterMonitorTab() string {
-	ospfNeighbors := getOspfNeighborInterfaces()
-	routerLSASelf, _ := getOspfRouterData()
+	ospfNeighbors, err := backend.GetOspfNeighborInterfaces()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
+	}
+	routerLSASelf, err := backend.GetOspfRouterData()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfRouterData")
+	}
 
 	// extract and sort the map keys (areas)
 	routerLSAAreas := make([]string, 0, len(routerLSASelf.RouterStates))
@@ -386,8 +393,14 @@ func (m *Model) renderExternalMonitorTab() string {
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
 
-	externalLSASelf, _ := getOspfExternalData()
-	nssaExternalDataSelf, _ := getOspfNssaExternalData()
+	externalLSASelf, err := backend.GetOspfExternalData()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfExternalData")
+	}
+	nssaExternalDataSelf, err := backend.GetOspfNssaExternalData()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfNssaExternalData")
+	}
 
 	var externalTableData [][]string
 	var externalTableDataExpanded [][]string // for future  feature
@@ -671,7 +684,10 @@ func (m *Model) renderRunningConfigTab() string {
 	)
 
 	staticFRRConfigTitle := styles.H1TitleStyleForTwo().Render("Parsed Running Config")
-	staticFRRConfiguration := getStaticFRRConfigurationPretty()
+	staticFRRConfiguration, err := backend.GetStaticFRRConfigurationPretty()
+	if err != nil {
+		return common.PrintBackendError(err, "GetStaticFRRConfigurationPretty")
+	}
 	staticFileBox := styles.H1TwoContentBoxesStyle().Render(staticFRRConfiguration)
 	completeStaticConfig := lipgloss.JoinVertical(lipgloss.Left,
 		staticFRRConfigTitle,
@@ -696,79 +712,79 @@ func (m *Model) renderRunningConfigTab() string {
 // HELPERS: BACKEND CALLS         //
 // ============================== //
 
-func getLSDB() (*pkg.OSPFDatabase, error) {
-	response, err := backend.SendMessage("ospf", "database", nil)
-	if err != nil {
-		return nil, err
-	}
+//func getLSDB() (*pkg.OSPFDatabase, error) {
+//	response, err := backend.SendMessage("ospf", "database", nil)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return response.Data.GetOspfDatabase(), nil
+//}
 
-	return response.Data.GetOspfDatabase(), nil
-}
+//func getOspfRouterData() (*pkg.OSPFRouterData, error) {
+//	response, err := backend.SendMessage("ospf", "router", nil)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return response.Data.GetOspfRouterData(), nil
+//}
+//
+//func getOspfNeighborInterfaces() []string {
+//	response, err := backend.SendMessage("ospf", "neighbors", nil)
+//	if err != nil {
+//		return nil
+//	}
+//	ospfNeighbors := response.Data.GetOspfNeighbors()
+//
+//	var neighborAddresses []string
+//	for _, neighborGroup := range ospfNeighbors.Neighbors {
+//		for _, neighbor := range neighborGroup.Neighbors {
+//			neighborAddresses = append(neighborAddresses, neighbor.IfaceAddress)
+//		}
+//	}
+//
+//	return neighborAddresses
+//}
 
-func getOspfRouterData() (*pkg.OSPFRouterData, error) {
-	response, err := backend.SendMessage("ospf", "router", nil)
-	if err != nil {
-		return nil, err
-	}
+//func getOspfExternalData() (*pkg.OSPFExternalData, error) {
+//	response, err := backend.SendMessage("ospf", "externalData", nil)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return response.Data.GetOspfExternalData(), nil
+//}
+//
+//func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
+//	response, err := backend.SendMessage("ospf", "nssaExternalData", nil)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return response.Data.GetOspfNssaExternalData(), nil
+//}
 
-	return response.Data.GetOspfRouterData(), nil
-}
-
-func getOspfNeighborInterfaces() []string {
-	response, err := backend.SendMessage("ospf", "neighbors", nil)
-	if err != nil {
-		return nil
-	}
-	ospfNeighbors := response.Data.GetOspfNeighbors()
-
-	var neighborAddresses []string
-	for _, neighborGroup := range ospfNeighbors.Neighbors {
-		for _, neighbor := range neighborGroup.Neighbors {
-			neighborAddresses = append(neighborAddresses, neighbor.IfaceAddress)
-		}
-	}
-
-	return neighborAddresses
-}
-
-func getOspfExternalData() (*pkg.OSPFExternalData, error) {
-	response, err := backend.SendMessage("ospf", "externalData", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetOspfExternalData(), nil
-}
-
-func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
-	response, err := backend.SendMessage("ospf", "nssaExternalData", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetOspfNssaExternalData(), nil
-}
-
-func getStaticFRRConfigurationPretty() string {
-	response, err := backend.SendMessage("ospf", "staticConfig", nil)
-	if err != nil {
-		return ""
-	}
-
-	var prettyJson string
-
-	// Pretty‑print the protobuf into nice indented JSON
-	marshaler := protojson.MarshalOptions{
-		Multiline:     true,
-		Indent:        "  ",
-		UseProtoNames: true,
-	}
-	pretty, perr := marshaler.Marshal(response.Data)
-	if perr != nil {
-		prettyJson = response.Data.String()
-	} else {
-		prettyJson = string(pretty)
-	}
-
-	return prettyJson
-}
+//func getStaticFRRConfigurationPretty() string {
+//	response, err := backend.SendMessage("ospf", "staticConfig", nil)
+//	if err != nil {
+//		return ""
+//	}
+//
+//	var prettyJson string
+//
+//	// Pretty‑print the protobuf into nice indented JSON
+//	marshaler := protojson.MarshalOptions{
+//		Multiline:     true,
+//		Indent:        "  ",
+//		UseProtoNames: true,
+//	}
+//	pretty, perr := marshaler.Marshal(response.Data)
+//	if perr != nil {
+//		prettyJson = response.Data.String()
+//	} else {
+//		prettyJson = string(pretty)
+//	}
+//
+//	return prettyJson
+//}

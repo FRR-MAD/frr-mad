@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/binary"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"io"
 	"net"
 	"time"
@@ -134,6 +135,25 @@ func GetRouterName() (string, string, error) {
 	return routerName, ospfRouterId, nil
 }
 
+func GetSystemResources() (int64, float64, float64, error) {
+
+	response, err := SendMessage("system", "allResources", nil)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
+	}
+	if response.Status != "success" {
+		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
+	}
+
+	systemMetrics := response.Data.GetSystemMetrics()
+
+	cores := systemMetrics.CpuAmount
+	cpuUsage := systemMetrics.CpuUsage
+	memoryUsage := systemMetrics.MemoryUsage
+
+	return cores, cpuUsage, memoryUsage, nil
+}
+
 func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	response, err := SendMessage("ospf", "database", nil)
 	if err != nil {
@@ -141,6 +161,74 @@ func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	}
 
 	return response.Data.GetOspfDatabase(), nil
+}
+
+func GetOspfRouterData() (*frrProto.OSPFRouterData, error) {
+	response, err := SendMessage("ospf", "router", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfRouterData(), nil
+}
+
+func GetOspfNeighborInterfaces() ([]string, error) {
+	response, err := SendMessage("ospf", "neighbors", nil)
+	if err != nil {
+		return nil, err
+	}
+	ospfNeighbors := response.Data.GetOspfNeighbors()
+
+	var neighborAddresses []string
+	for _, neighborGroup := range ospfNeighbors.Neighbors {
+		for _, neighbor := range neighborGroup.Neighbors {
+			neighborAddresses = append(neighborAddresses, neighbor.IfaceAddress)
+		}
+	}
+
+	return neighborAddresses, nil
+}
+
+func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
+	response, err := SendMessage("ospf", "externalData", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfExternalData(), nil
+}
+
+func GetOspfNssaExternalData() (*frrProto.OSPFNssaExternalData, error) {
+	response, err := SendMessage("ospf", "nssaExternalData", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfNssaExternalData(), nil
+}
+
+func GetStaticFRRConfigurationPretty() (string, error) {
+	response, err := SendMessage("ospf", "staticConfig", nil)
+	if err != nil {
+		return "", err
+	}
+
+	var prettyJson string
+
+	// Pretty‑print the protobuf into nice indented JSON
+	marshaler := protojson.MarshalOptions{
+		Multiline:     true,
+		Indent:        "  ",
+		UseProtoNames: true,
+	}
+	pretty, perr := marshaler.Marshal(response.Data)
+	if perr != nil {
+		prettyJson = response.Data.String()
+	} else {
+		prettyJson = string(pretty)
+	}
+
+	return prettyJson, nil
 }
 
 func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {

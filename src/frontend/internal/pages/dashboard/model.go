@@ -30,7 +30,7 @@ func New(windowSize *common.WindowSize) *Model {
 
 	return &Model{
 		title:              "Dashboard",
-		subTabs:            []string{"OSPF", "TBD"},
+		subTabs:            []string{"OSPF", "BGP"},
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
 		windowSize:         windowSize,
@@ -51,7 +51,8 @@ func (m *Model) GetSubTabsLength() int {
 
 func (m *Model) GetFooterOptions() common.FooterOption {
 	keyBoardOptions := []string{
-		"[r] refresh dashboard",
+		"[r] refresh",
+		"[↑/↓] scroll",
 		// "[e] export everything",
 	}
 	return common.FooterOption{

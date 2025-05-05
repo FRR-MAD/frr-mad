@@ -1,6 +1,9 @@
 package common
 
-import frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
+import (
+	"fmt"
+	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
+)
 
 func ContainsString(slice []string, s string) bool {
 	for _, v := range slice {
@@ -19,4 +22,11 @@ func HasAnyAnomaly(a *frrProto.AnomalyDetection) bool {
 		a.HasOverAdvertisedPrefixes ||
 		a.HasDuplicatePrefixes ||
 		a.HasMisconfiguredPrefixes
+}
+
+func PrintBackendError(err error, functionName string) string {
+	return fmt.Sprintf(
+		"Error: %v\nNo data received from backend for '%s()'. Press 'r' to reload...",
+		err, functionName,
+	)
 }

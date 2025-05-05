@@ -29,7 +29,7 @@ func (m *Model) View() string {
 		m.detectAnomaly()
 		return m.renderOSPFDashboard()
 	} else if currentSubTabLocal == 1 {
-		return ""
+		return "TBD"
 	}
 	return m.renderOSPFDashboard()
 }
@@ -47,7 +47,7 @@ func (m *Model) renderOSPFDashboard() string {
 		m.viewport.SetContent(ospfDashboardLsdbSelf)
 	}
 
-	cpuAmount, cpuUsage, memoryUsage, err := getSystemResources()
+	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources()
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
 		cpuAmountString = "N/A"
@@ -98,7 +98,10 @@ func getOspfDashboardLsdbSelf() string {
 
 	lsdbSelfBlocks = append(lsdbSelfBlocks, dashboardHeader)
 
-	lsdb, _ := backend.GetLSDB()
+	lsdb, err := backend.GetLSDB()
+	if err != nil {
+		return common.PrintBackendError(err, "GetLSDB")
+	}
 
 	// extract and sort the map keys
 	lsdbAreas := make([]string, 0, len(lsdb.Areas))
@@ -107,7 +110,10 @@ func getOspfDashboardLsdbSelf() string {
 	}
 	sort.Strings(lsdbAreas)
 
-	_, routerOSPFID, _ := backend.GetRouterName()
+	_, routerOSPFID, err := backend.GetRouterName()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterName")
+	}
 
 	// ===== OSPF Internal LSAs (Type 1-4) =====
 	for _, areaID := range lsdbAreas {
@@ -369,9 +375,18 @@ func getOspfDashboardLsdbSelf() string {
 }
 
 func getOspfDashboardAnomalies() string {
-	ospfRouterAnomalies, _ := backend.GetRouterAnomalies()
-	ospfExternalAnomalies, _ := backend.GetExternalAnomalies()
-	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies()
+	ospfRouterAnomalies, err := backend.GetRouterAnomalies()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterAnomalies")
+	}
+	ospfExternalAnomalies, err := backend.GetExternalAnomalies()
+	if err != nil {
+		return common.PrintBackendError(err, "GetExternalAnomalies")
+	}
+	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies()
+	if err != nil {
+		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
+	}
 
 	var routerAnomalyTable string
 	if common.HasAnyAnomaly(ospfRouterAnomalies) {
@@ -466,24 +481,24 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 // HELPERS: BACKEND CALLS         //
 // ============================== //
 
-func getSystemResources() (int64, float64, float64, error) {
-
-	response, err := backend.SendMessage("system", "allResources", nil)
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
-	}
-	if response.Status != "success" {
-		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
-	}
-
-	systemMetrics := response.Data.GetSystemMetrics()
-
-	cores := systemMetrics.CpuAmount
-	cpuUsage := systemMetrics.CpuUsage
-	memoryUsage := systemMetrics.MemoryUsage
-
-	return cores, cpuUsage, memoryUsage, nil
-}
+//func GetSystemResources() (int64, float64, float64, error) {
+//
+//	response, err := backend.SendMessage("system", "allResources", nil)
+//	if err != nil {
+//		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
+//	}
+//	if response.Status != "success" {
+//		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
+//	}
+//
+//	systemMetrics := response.Data.GetSystemMetrics()
+//
+//	cores := systemMetrics.CpuAmount
+//	cpuUsage := systemMetrics.CpuUsage
+//	memoryUsage := systemMetrics.MemoryUsage
+//
+//	return cores, cpuUsage, memoryUsage, nil
+//}
 
 //func getLSDB() (*pkg.OSPFDatabase, error) {
 //	response, err := backend.SendMessage("ospf", "database", nil)
