@@ -165,7 +165,6 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// parse frr configuration file
 	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 
-	GetStaticFileExternalDataOld(c.metrics.StaticFrrConfiguration)
 	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	// TODO: testing and correction, mino
@@ -183,7 +182,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	//if len(staticRouteMap) > 0 || isNssa {
 	//fmt.Println(predictedExternalLSDB)
 
-	c.ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	c.ExternalAnomalyAnalysis(predictedExternalLSDB, runtimeExternalLSDB)
 	//}
 
 	// TODO: implement, mino
