@@ -3153,19 +3153,19 @@ func (x *OSPFDatabase) GetAsExternalCount() int32 {
 }
 
 type OSPFDatabaseArea struct {
-	state                      protoimpl.MessageState `protogen:"open.v1"`
-	RouterLinkStates           []*RouterDataLSA       `protobuf:"bytes,1,rep,name=router_link_states,json=routerLinkStates,proto3" json:"router_link_states,omitempty"`
-	RouterLinkStatesCount      int32                  `protobuf:"varint,2,opt,name=router_link_states_count,json=routerLinkStatesCount,proto3" json:"router_link_states_count,omitempty"`
-	NetworkLinkStates          []*NetworkDataLSA      `protobuf:"bytes,3,rep,name=network_link_states,json=networkLinkStates,proto3" json:"network_link_states,omitempty"`
-	NetworkLinkStatesCount     int32                  `protobuf:"varint,4,opt,name=network_link_states_count,json=networkLinkStatesCount,proto3" json:"network_link_states_count,omitempty"`
-	SummaryLinkStates          []*SummaryDataLSA      `protobuf:"bytes,5,rep,name=summary_link_states,json=summaryLinkStates,proto3" json:"summary_link_states,omitempty"`
-	SummaryLinkStatesCount     int32                  `protobuf:"varint,6,opt,name=summary_link_states_count,json=summaryLinkStatesCount,proto3" json:"summary_link_states_count,omitempty"`
-	AsbrSummaryLinkStates      []*ASBRSummaryLSA      `protobuf:"bytes,7,rep,name=asbr_summary_link_states,json=asbrSummaryLinkStates,proto3" json:"asbr_summary_link_states,omitempty"`
-	AsbrSummaryLinkStatesCount int32                  `protobuf:"varint,8,opt,name=asbr_summary_link_states_count,json=asbrSummaryLinkStatesCount,proto3" json:"asbr_summary_link_states_count,omitempty"`
-	NssaExternalStates         []*NSSAExternalLSA     `protobuf:"bytes,9,rep,name=nssa_external_states,json=nssaExternalStates,proto3" json:"nssa_external_states,omitempty"`
-	NssaExternalStatesCount    int32                  `protobuf:"varint,10,opt,name=nssa_external_states_count,json=nssaExternalStatesCount,proto3" json:"nssa_external_states_count,omitempty"`
-	unknownFields              protoimpl.UnknownFields
-	sizeCache                  protoimpl.SizeCache
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	RouterLinkStates            []*RouterDataLSA       `protobuf:"bytes,1,rep,name=router_link_states,json=routerLinkStates,proto3" json:"router_link_states,omitempty"`
+	RouterLinkStatesCount       int32                  `protobuf:"varint,2,opt,name=router_link_states_count,json=routerLinkStatesCount,proto3" json:"router_link_states_count,omitempty"`
+	NetworkLinkStates           []*NetworkDataLSA      `protobuf:"bytes,3,rep,name=network_link_states,json=networkLinkStates,proto3" json:"network_link_states,omitempty"`
+	NetworkLinkStatesCount      int32                  `protobuf:"varint,4,opt,name=network_link_states_count,json=networkLinkStatesCount,proto3" json:"network_link_states_count,omitempty"`
+	SummaryLinkStates           []*SummaryDataLSA      `protobuf:"bytes,5,rep,name=summary_link_states,json=summaryLinkStates,proto3" json:"summary_link_states,omitempty"`
+	SummaryLinkStatesCount      int32                  `protobuf:"varint,6,opt,name=summary_link_states_count,json=summaryLinkStatesCount,proto3" json:"summary_link_states_count,omitempty"`
+	AsbrSummaryLinkStates       []*ASBRSummaryLSA      `protobuf:"bytes,7,rep,name=asbr_summary_link_states,json=asbrSummaryLinkStates,proto3" json:"asbr_summary_link_states,omitempty"`
+	AsbrSummaryLinkStatesCount  int32                  `protobuf:"varint,8,opt,name=asbr_summary_link_states_count,json=asbrSummaryLinkStatesCount,proto3" json:"asbr_summary_link_states_count,omitempty"`
+	NssaExternalLinkStates      []*NSSAExternalLSAData `protobuf:"bytes,9,rep,name=nssa_external_link_states,json=nssaExternalLinkStates,proto3" json:"nssa_external_link_states,omitempty"`
+	NssaExternalLinkStatesCount int32                  `protobuf:"varint,10,opt,name=nssa_external_link_states_count,json=nssaExternalLinkStatesCount,proto3" json:"nssa_external_link_states_count,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *OSPFDatabaseArea) Reset() {
@@ -3254,16 +3254,16 @@ func (x *OSPFDatabaseArea) GetAsbrSummaryLinkStatesCount() int32 {
 	return 0
 }
 
-func (x *OSPFDatabaseArea) GetNssaExternalStates() []*NSSAExternalLSA {
+func (x *OSPFDatabaseArea) GetNssaExternalLinkStates() []*NSSAExternalLSAData {
 	if x != nil {
-		return x.NssaExternalStates
+		return x.NssaExternalLinkStates
 	}
 	return nil
 }
 
-func (x *OSPFDatabaseArea) GetNssaExternalStatesCount() int32 {
+func (x *OSPFDatabaseArea) GetNssaExternalLinkStatesCount() int32 {
 	if x != nil {
-		return x.NssaExternalStatesCount
+		return x.NssaExternalLinkStatesCount
 	}
 	return 0
 }
@@ -3536,7 +3536,7 @@ func (x *ASBRSummaryLSA) GetBase() *BaseLSA {
 	return nil
 }
 
-type NSSAExternalLSA struct {
+type NSSAExternalLSAData struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Base          *BaseLSA               `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
 	MetricType    string                 `protobuf:"bytes,2,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"`
@@ -3546,20 +3546,20 @@ type NSSAExternalLSA struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *NSSAExternalLSA) Reset() {
-	*x = NSSAExternalLSA{}
+func (x *NSSAExternalLSAData) Reset() {
+	*x = NSSAExternalLSAData{}
 	mi := &file_protocol_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *NSSAExternalLSA) String() string {
+func (x *NSSAExternalLSAData) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NSSAExternalLSA) ProtoMessage() {}
+func (*NSSAExternalLSAData) ProtoMessage() {}
 
-func (x *NSSAExternalLSA) ProtoReflect() protoreflect.Message {
+func (x *NSSAExternalLSAData) ProtoReflect() protoreflect.Message {
 	mi := &file_protocol_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3571,33 +3571,33 @@ func (x *NSSAExternalLSA) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NSSAExternalLSA.ProtoReflect.Descriptor instead.
-func (*NSSAExternalLSA) Descriptor() ([]byte, []int) {
+// Deprecated: Use NSSAExternalLSAData.ProtoReflect.Descriptor instead.
+func (*NSSAExternalLSAData) Descriptor() ([]byte, []int) {
 	return file_protocol_proto_rawDescGZIP(), []int{45}
 }
 
-func (x *NSSAExternalLSA) GetBase() *BaseLSA {
+func (x *NSSAExternalLSAData) GetBase() *BaseLSA {
 	if x != nil {
 		return x.Base
 	}
 	return nil
 }
 
-func (x *NSSAExternalLSA) GetMetricType() string {
+func (x *NSSAExternalLSAData) GetMetricType() string {
 	if x != nil {
 		return x.MetricType
 	}
 	return ""
 }
 
-func (x *NSSAExternalLSA) GetRoute() string {
+func (x *NSSAExternalLSAData) GetRoute() string {
 	if x != nil {
 		return x.Route
 	}
 	return ""
 }
 
-func (x *NSSAExternalLSA) GetTag() int32 {
+func (x *NSSAExternalLSAData) GetTag() int32 {
 	if x != nil {
 		return x.Tag
 	}
@@ -3883,11 +3883,11 @@ func (x *ASExternalLinkState) GetExternalRouteTag() int32 {
 
 // ================ OSPF Nssa External All ================
 type OSPFNssaExternalAll struct {
-	state                  protoimpl.MessageState       `protogen:"open.v1"`
-	RouterId               string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
-	NssaExternalLinkStates map[string]*NssaExternalArea `protobuf:"bytes,2,rep,name=nssa_external_link_states,json=NSSA-External Link States,proto3" json:"nssa_external_link_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state                     protoimpl.MessageState       `protogen:"open.v1"`
+	RouterId                  string                       `protobuf:"bytes,1,opt,name=router_id,json=routerId,proto3" json:"router_id,omitempty"`
+	NssaExternalAllLinkStates map[string]*NssaExternalArea `protobuf:"bytes,2,rep,name=nssa_external_all_link_states,json=NSSA-External Link States,proto3" json:"nssa_external_all_link_states,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *OSPFNssaExternalAll) Reset() {
@@ -3927,9 +3927,9 @@ func (x *OSPFNssaExternalAll) GetRouterId() string {
 	return ""
 }
 
-func (x *OSPFNssaExternalAll) GetNssaExternalLinkStates() map[string]*NssaExternalArea {
+func (x *OSPFNssaExternalAll) GetNssaExternalAllLinkStates() map[string]*NssaExternalArea {
 	if x != nil {
-		return x.NssaExternalLinkStates
+		return x.NssaExternalAllLinkStates
 	}
 	return nil
 }
@@ -6880,7 +6880,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\n" +
 	"AreasEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x125\n" +
-	"\x05value\x18\x02 \x01(\v2\x1f.communication.OSPFDatabaseAreaR\x05value:\x028\x01\"\xd6\x05\n" +
+	"\x05value\x18\x02 \x01(\v2\x1f.communication.OSPFDatabaseAreaR\x05value:\x028\x01\"\xec\x05\n" +
 	"\x10OSPFDatabaseArea\x12J\n" +
 	"\x12router_link_states\x18\x01 \x03(\v2\x1c.communication.RouterDataLSAR\x10routerLinkStates\x127\n" +
 	"\x18router_link_states_count\x18\x02 \x01(\x05R\x15routerLinkStatesCount\x12M\n" +
@@ -6889,10 +6889,10 @@ const file_protocol_proto_rawDesc = "" +
 	"\x13summary_link_states\x18\x05 \x03(\v2\x1d.communication.SummaryDataLSAR\x11summaryLinkStates\x129\n" +
 	"\x19summary_link_states_count\x18\x06 \x01(\x05R\x16summaryLinkStatesCount\x12V\n" +
 	"\x18asbr_summary_link_states\x18\a \x03(\v2\x1d.communication.ASBRSummaryLSAR\x15asbrSummaryLinkStates\x12B\n" +
-	"\x1easbr_summary_link_states_count\x18\b \x01(\x05R\x1aasbrSummaryLinkStatesCount\x12P\n" +
-	"\x14nssa_external_states\x18\t \x03(\v2\x1e.communication.NSSAExternalLSAR\x12nssaExternalStates\x12;\n" +
-	"\x1anssa_external_states_count\x18\n" +
-	" \x01(\x05R\x17nssaExternalStatesCount\"\xa9\x01\n" +
+	"\x1easbr_summary_link_states_count\x18\b \x01(\x05R\x1aasbrSummaryLinkStatesCount\x12]\n" +
+	"\x19nssa_external_link_states\x18\t \x03(\v2\".communication.NSSAExternalLSADataR\x16nssaExternalLinkStates\x12D\n" +
+	"\x1fnssa_external_link_states_count\x18\n" +
+	" \x01(\x05R\x1bnssaExternalLinkStatesCount\"\xa9\x01\n" +
 	"\aBaseLSA\x12\x13\n" +
 	"\x05ls_id\x18\x01 \x01(\tR\x04lsId\x12+\n" +
 	"\x11advertised_router\x18\x02 \x01(\tR\x10advertisedRouter\x12\x17\n" +
@@ -6908,8 +6908,8 @@ const file_protocol_proto_rawDesc = "" +
 	"\x04base\x18\x01 \x01(\v2\x16.communication.BaseLSAR\x04base\x12'\n" +
 	"\x0fsummary_address\x18\x02 \x01(\tR\x0esummaryAddress\"<\n" +
 	"\x0eASBRSummaryLSA\x12*\n" +
-	"\x04base\x18\x01 \x01(\v2\x16.communication.BaseLSAR\x04base\"\x86\x01\n" +
-	"\x0fNSSAExternalLSA\x12*\n" +
+	"\x04base\x18\x01 \x01(\v2\x16.communication.BaseLSAR\x04base\"\x8a\x01\n" +
+	"\x13NSSAExternalLSAData\x12*\n" +
 	"\x04base\x18\x01 \x01(\v2\x16.communication.BaseLSAR\x04base\x12\x1f\n" +
 	"\vmetric_type\x18\x02 \x01(\tR\n" +
 	"metricType\x12\x14\n" +
@@ -6941,11 +6941,11 @@ const file_protocol_proto_rawDesc = "" +
 	"\x03tos\x18\f \x01(\x05R\x03tos\x12\x16\n" +
 	"\x06metric\x18\r \x01(\x05R\x06metric\x12'\n" +
 	"\x0fforward_address\x18\x0e \x01(\tR\x0eforwardAddress\x12,\n" +
-	"\x12external_route_tag\x18\x0f \x01(\x05R\x10externalRouteTag\"\x9c\x02\n" +
+	"\x12external_route_tag\x18\x0f \x01(\x05R\x10externalRouteTag\"\xa7\x02\n" +
 	"\x13OSPFNssaExternalAll\x12\x1b\n" +
-	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12|\n" +
-	"\x19nssa_external_link_states\x18\x02 \x03(\v2>.communication.OSPFNssaExternalAll.NssaExternalLinkStatesEntryR\x19NSSA-External Link States\x1aj\n" +
-	"\x1bNssaExternalLinkStatesEntry\x12\x10\n" +
+	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12\x83\x01\n" +
+	"\x1dnssa_external_all_link_states\x18\x02 \x03(\v2A.communication.OSPFNssaExternalAll.NssaExternalAllLinkStatesEntryR\x19NSSA-External Link States\x1am\n" +
+	"\x1eNssaExternalAllLinkStatesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x125\n" +
 	"\x05value\x18\x02 \x01(\v2\x1f.communication.NssaExternalAreaR\x05value:\x028\x01\"\xb5\x01\n" +
 	"\rOSPFNeighbors\x12I\n" +
@@ -7283,7 +7283,7 @@ var file_protocol_proto_goTypes = []any{
 	(*NetworkDataLSA)(nil),              // 42: communication.NetworkDataLSA
 	(*SummaryDataLSA)(nil),              // 43: communication.SummaryDataLSA
 	(*ASBRSummaryLSA)(nil),              // 44: communication.ASBRSummaryLSA
-	(*NSSAExternalLSA)(nil),             // 45: communication.NSSAExternalLSA
+	(*NSSAExternalLSAData)(nil),         // 45: communication.NSSAExternalLSAData
 	(*ASExternalLSA)(nil),               // 46: communication.ASExternalLSA
 	(*OSPFExternalAll)(nil),             // 47: communication.OSPFExternalAll
 	(*ASExternalLinkState)(nil),         // 48: communication.ASExternalLinkState
@@ -7336,7 +7336,7 @@ var file_protocol_proto_goTypes = []any{
 	nil,                                 // 95: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry
 	nil,                                 // 96: communication.NssaExternalArea.DataEntry
 	nil,                                 // 97: communication.OSPFDatabase.AreasEntry
-	nil,                                 // 98: communication.OSPFNssaExternalAll.NssaExternalLinkStatesEntry
+	nil,                                 // 98: communication.OSPFNssaExternalAll.NssaExternalAllLinkStatesEntry
 	nil,                                 // 99: communication.OSPFNeighbors.NeighborsEntry
 	nil,                                 // 100: communication.InterfaceList.InterfacesEntry
 	nil,                                 // 101: communication.RoutingInformationBase.RoutesEntry
@@ -7415,15 +7415,15 @@ var file_protocol_proto_depIdxs = []int32{
 	42,  // 66: communication.OSPFDatabaseArea.network_link_states:type_name -> communication.NetworkDataLSA
 	43,  // 67: communication.OSPFDatabaseArea.summary_link_states:type_name -> communication.SummaryDataLSA
 	44,  // 68: communication.OSPFDatabaseArea.asbr_summary_link_states:type_name -> communication.ASBRSummaryLSA
-	45,  // 69: communication.OSPFDatabaseArea.nssa_external_states:type_name -> communication.NSSAExternalLSA
+	45,  // 69: communication.OSPFDatabaseArea.nssa_external_link_states:type_name -> communication.NSSAExternalLSAData
 	40,  // 70: communication.RouterDataLSA.base:type_name -> communication.BaseLSA
 	40,  // 71: communication.NetworkDataLSA.base:type_name -> communication.BaseLSA
 	40,  // 72: communication.SummaryDataLSA.base:type_name -> communication.BaseLSA
 	40,  // 73: communication.ASBRSummaryLSA.base:type_name -> communication.BaseLSA
-	40,  // 74: communication.NSSAExternalLSA.base:type_name -> communication.BaseLSA
+	40,  // 74: communication.NSSAExternalLSAData.base:type_name -> communication.BaseLSA
 	40,  // 75: communication.ASExternalLSA.base:type_name -> communication.BaseLSA
 	48,  // 76: communication.OSPFExternalAll.as_external_link_states:type_name -> communication.ASExternalLinkState
-	98,  // 77: communication.OSPFNssaExternalAll.nssa_external_link_states:type_name -> communication.OSPFNssaExternalAll.NssaExternalLinkStatesEntry
+	98,  // 77: communication.OSPFNssaExternalAll.nssa_external_all_link_states:type_name -> communication.OSPFNssaExternalAll.NssaExternalAllLinkStatesEntry
 	99,  // 78: communication.OSPFNeighbors.neighbors:type_name -> communication.OSPFNeighbors.NeighborsEntry
 	52,  // 79: communication.NeighborList.neighbors:type_name -> communication.Neighbor
 	100, // 80: communication.InterfaceList.interfaces:type_name -> communication.InterfaceList.InterfacesEntry
@@ -7475,7 +7475,7 @@ var file_protocol_proto_depIdxs = []int32{
 	36,  // 126: communication.OSPFNssaExternalData.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
 	37,  // 127: communication.NssaExternalArea.DataEntry.value:type_name -> communication.NssaExternalLSA
 	39,  // 128: communication.OSPFDatabase.AreasEntry.value:type_name -> communication.OSPFDatabaseArea
-	36,  // 129: communication.OSPFNssaExternalAll.NssaExternalLinkStatesEntry.value:type_name -> communication.NssaExternalArea
+	36,  // 129: communication.OSPFNssaExternalAll.NssaExternalAllLinkStatesEntry.value:type_name -> communication.NssaExternalArea
 	51,  // 130: communication.OSPFNeighbors.NeighborsEntry.value:type_name -> communication.NeighborList
 	54,  // 131: communication.InterfaceList.InterfacesEntry.value:type_name -> communication.SingleInterface
 	58,  // 132: communication.RoutingInformationBase.RoutesEntry.value:type_name -> communication.RouteEntry

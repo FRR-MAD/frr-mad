@@ -602,7 +602,7 @@ func TestParseOSPFNssaExternalAll(t *testing.T) {
 			}`,
 			expected: &frrProto.OSPFNssaExternalAll{
 				RouterId: "1.1.1.1",
-				NssaExternalLinkStates: map[string]*frrProto.NssaExternalArea{
+				NssaExternalAllLinkStates: map[string]*frrProto.NssaExternalArea{
 					"0.0.0.1": {
 						Data: map[string]*frrProto.NssaExternalLSA{
 							"6.6.6.6": {
@@ -631,8 +631,8 @@ func TestParseOSPFNssaExternalAll(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.RouterId, result.RouterId)
 
-			if tt.expected.NssaExternalLinkStates != nil {
-				for areaID, expectedArea := range tt.expected.NssaExternalLinkStates {
+			if tt.expected.NssaExternalAllLinkStates != nil {
+				for areaID, expectedArea := range tt.expected.NssaExternalAllLinkStates {
 					resultArea, ok := result.NssaExternalLinkStates[areaID]
 					assert.True(t, ok, "missing area %s", areaID)
 

@@ -358,8 +358,8 @@ message OSPFDatabaseArea {
   int32 summary_link_states_count = 6;
   repeated ASBRSummaryLSA asbr_summary_link_states = 7;
   int32 asbr_summary_link_states_count = 8;
-  repeated NSSAExternalLSA nssa_external_states = 9;
-  int32 nssa_external_states_count = 10;
+  repeated NSSAExternalLSAData nssa_external_link_states = 9;
+  int32 nssa_external_link_states_count = 10;
 }
 
 message BaseLSA {
@@ -388,7 +388,7 @@ message ASBRSummaryLSA {
   BaseLSA base = 1;
 }
 
-message NSSAExternalLSA {
+message NSSAExternalLSAData {
   BaseLSA base = 1;
   string metric_type = 2;
   string route = 3;
@@ -429,7 +429,7 @@ message ASExternalLinkState {
 // ================ OSPF Nssa External All ================
 message OSPFNssaExternalAll {
   string router_id = 1 [json_name = "routerId"];
-  map<string, NssaExternalArea> nssa_external_link_states = 2 [json_name = "NSSA-External Link States"];
+  map<string, NssaExternalArea> nssa_external_all_link_states = 2 [json_name = "NSSA-External Link States"];
 }
 
 // ================ OSPF Neighbors ================
