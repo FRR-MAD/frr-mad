@@ -164,23 +164,27 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	// parse frr configuration file
 	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration)
+
+	GetStaticFileExternalDataOld(c.metrics.StaticFrrConfiguration)
+	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	// TODO: testing and correction, mino
 	predictedNssaExternalLSDB := getStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
 	runtimeRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
 
-	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
 	// TODO: testing, mino
-	runtimeNssaExternalLSDB := GetNssaExternalRouterData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
+	runtimeNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
 	c.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
-	if len(staticRouteMap) > 0 || isNssa {
-		ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
-	}
+	//if len(staticRouteMap) > 0 || isNssa {
+	//fmt.Println(predictedExternalLSDB)
+
+	c.ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	//}
 
 	// TODO: implement, mino
 	if isNssa {

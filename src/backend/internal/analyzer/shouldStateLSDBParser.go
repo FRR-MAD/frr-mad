@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -156,11 +157,70 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 	return isNssa, result
 }
 
-func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
+func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
 
+	result := &frrProto.InterAreaLsa{
+		Hostname: config.Hostname,
+		RouterId: config.OspfConfig.RouterId,
+		Areas:    []*frrProto.AreaAnalyzer{},
+	}
+
+	//fmt.Println(accessList)
+	//fmt.Println(config)
+
+	// Create a single AreaAnalyzer for all routes
+	area := &frrProto.AreaAnalyzer{
+		LsaType: "AS-external-LSA",
+		Links:   []*frrProto.Advertisement{},
+	}
+	result.Areas = append(result.Areas, area)
+
+	// Loop through static routes in the configuration
+	for _, staticRoute := range config.StaticRoutes {
+		ipAddr := staticRoute.IpPrefix.IpAddress
+		prefixLen := staticRoute.IpPrefix.PrefixLength
+
+		// Check if this static route is in the staticRouteMap
+		if _, exists := staticRouteMap[ipAddr]; exists {
+			// Check if this route is allowed by any access list
+			isAllowed := false
+
+			for _, aclAnalyzer := range accessList {
+
+				for _, item := range aclAnalyzer.AclEntry {
+					if item.IPAddress == ipAddr && item.IsPermit {
+						isAllowed = true
+						break
+					}
+				}
+				if isAllowed {
+					break
+				}
+			}
+
+			if isAllowed {
+				// Create an advertisement for this route
+				advert := &frrProto.Advertisement{
+					LinkStateId:  ipAddr,
+					PrefixLength: fmt.Sprintf("%d", prefixLen),
+					LinkType:     "external",
+				}
+				area.Links = append(area.Links, advert)
+			}
+		}
+	}
+
+	return result
+
+}
+
+func GetStaticFileExternalDataOld(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
+	if config == nil || config.OspfConfig == nil {
+		return nil
+	}
 	// Create a new frrProto.InterAreaLsa instance
 	result := &frrProto.InterAreaLsa{
 		Hostname: config.Hostname,
@@ -248,29 +308,6 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProt
 			LsaType: "AS-external-LSA", // Type 5
 			Links:   []*frrProto.Advertisement{},
 		}
-
-		// Add connected interfaces not in NSSA areas
-		//for _, iface := range config.Interfaces {
-		//// Skip interfaces in NSSA areas, they'll generate type 7 LSAs instead
-		//if nssaAreas[iface.Area] {
-		//continue
-		//}
-
-		//if iface.Area != "" && iface.Area == area {
-		//for _, ipPrefix := range iface.InterfaceIpPrefixes {
-		////if ipPrefix. != nil && iface.area == area {
-		//if ipPrefix.IpPrefix != nil {
-		//adv := frrProto.Advertisement{
-		//LinkStateId:  ipPrefix.IpPrefix.IpAddress,
-		//PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
-		//LinkType:     "external",
-		//}
-		//externalArea.Links = append(externalArea.Links, &adv)
-		//}
-		//}
-		//}
-		//}
-
 		// Add static routes (will be advertised as type 5 in regular areas)
 		for _, staticRoute := range config.StaticRoutes {
 			if staticRoute.IpPrefix != nil && routeMap[staticRoute.IpPrefix.IpAddress] {
@@ -305,6 +342,8 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration) *frrProt
 			result.Areas = append(result.Areas, &externalArea)
 		}
 	}
+
+	//fmt.Println(result)
 	// If no areas were added, return nil (no external LSAs predicted)
 	if len(result.Areas) == 0 {
 		return nil

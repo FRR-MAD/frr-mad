@@ -398,7 +398,7 @@ func TestExternalLsa1(t *testing.T) {
 			},
 		},
 	}
-	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration)
+	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalDataOld(frrMetrics.StaticFrrConfiguration)
 
 	// - actualExternalLSDB -> GetRuntimeExternalRouterData
 	// - predictedExternalLSDB
@@ -446,7 +446,7 @@ func TestExternalLsa1(t *testing.T) {
 			},
 		},
 	}
-	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalRouterData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {

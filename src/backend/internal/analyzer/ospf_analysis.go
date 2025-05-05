@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -140,13 +139,39 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	return false
 }
 
-func ExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
-}
+// func ExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
+// 	fmt.Println(accessList)
+// 	fmt.Println(isState)
+// 	fmt.Println(shouldState)
+// }
 
 // func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 
-func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
-	result := frrProto.AnomalyDetection{}
+func (a *Analyzer) ExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
+	if isState == nil || shouldState == nil {
+		//fmt.Println("nil!")
+		return
+	}
+
+	result := &frrProto.AnomalyDetection{
+		HasMisconfiguredPrefixes: false,
+		SuperfluousEntries:       []*frrProto.Advertisement{},
+		MissingEntries:           []*frrProto.Advertisement{},
+		DuplicateEntries:         []*frrProto.Advertisement{},
+	}
+
+	//fmt.Println(accessList)
+	//fmt.Println(isState)
+	//fmt.Println(shouldState)
+
+	a.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
+	//writeBoolTarget(result.HasDuplicatePrefixes)
+	//a.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes = writeBoolTarget(result.HasMisconfiguredPrefixes)
+	a.AnalysisResult.ExternalAnomaly.MissingEntries = result.MissingEntries
+	a.AnalysisResult.ExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
+	a.AnalysisResult.ExternalAnomaly.DuplicateEntries = result.DuplicateEntries
 
 	//result := &frrProto.AnomalyAnalysis{
 	//	AnomalyDetection: &frrProto.AnomalyDetection{},
@@ -154,54 +179,54 @@ func (a *Analyzer) externalAnomalyAnalysis(accessList map[string]frrProto.Access
 	//	SuperfluousEntries:     []*frrProto.Advertisement{},
 	//}
 
-	if isState == nil || shouldState == nil {
-		return
-	}
+	// if isState == nil || shouldState == nil {
+	// 	return
+	// }
 
-	isStateMap := make(map[string]*frrProto.Advertisement)
-	shouldStateMap := make(map[string]*frrProto.Advertisement)
+	// isStateMap := make(map[string]*frrProto.Advertisement)
+	// shouldStateMap := make(map[string]*frrProto.Advertisement)
 
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := normalizeNetworkAddress(link.LinkStateId)
-			isStateMap[key] = link
-		}
-	}
+	// for _, area := range isState.Areas {
+	// 	for i := range area.Links {
+	// 		link := area.Links[i]
+	// 		key := normalizeNetworkAddress(link.LinkStateId)
+	// 		isStateMap[key] = link
+	// 	}
+	// }
 
-	for _, area := range shouldState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := normalizeNetworkAddress(link.LinkStateId)
-			shouldStateMap[key] = link
-		}
-	}
+	// for _, area := range shouldState.Areas {
+	// 	for i := range area.Links {
+	// 		link := area.Links[i]
+	// 		key := normalizeNetworkAddress(link.LinkStateId)
+	// 		shouldStateMap[key] = link
+	// 	}
+	// }
 
-	accessListNetworks := make(map[string]bool)
-	for _, acl := range accessList {
-		for _, entry := range acl.AclEntry {
-			if entry.IsPermit {
-				network := fmt.Sprintf("%s/%d", entry.IPAddress, entry.PrefixLength)
-				accessListNetworks[normalizeNetworkAddress(network)] = true
-			}
-		}
-	}
+	// accessListNetworks := make(map[string]bool)
+	// for _, acl := range accessList {
+	// 	for _, entry := range acl.AclEntry {
+	// 		if entry.IsPermit {
+	// 			network := fmt.Sprintf("%s/%d", entry.IPAddress, entry.PrefixLength)
+	// 			accessListNetworks[normalizeNetworkAddress(network)] = true
+	// 		}
+	// 	}
+	// }
 
-	for key, shouldLink := range shouldStateMap {
-		if _, exists := isStateMap[key]; !exists {
-			networkWithPrefix := fmt.Sprintf("%s/%s", shouldLink.LinkStateId, shouldLink.PrefixLength)
-			normalizedNetwork := normalizeNetworkAddress(networkWithPrefix)
+	// for key, shouldLink := range shouldStateMap {
+	// 	if _, exists := isStateMap[key]; !exists {
+	// 		networkWithPrefix := fmt.Sprintf("%s/%s", shouldLink.LinkStateId, shouldLink.PrefixLength)
+	// 		normalizedNetwork := normalizeNetworkAddress(networkWithPrefix)
 
-			if accessListNetworks[normalizedNetwork] || isInAccessList(shouldLink.LinkStateId, accessList) {
-				result.MissingEntries = append(result.MissingEntries, shouldLink)
-			}
-		}
-	}
+	// 		if accessListNetworks[normalizedNetwork] || isInAccessList(shouldLink.LinkStateId, accessList) {
+	// 			result.MissingEntries = append(result.MissingEntries, shouldLink)
+	// 		}
+	// 	}
+	// }
 
-	result.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
-	result.HasOverAdvertisedPrefixes = false
-	result.HasDuplicatePrefixes = false
-	result.HasMisconfiguredPrefixes = true
+	// result.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
+	// result.HasOverAdvertisedPrefixes = false
+	// result.HasDuplicatePrefixes = false
+	// result.HasMisconfiguredPrefixes = true
 }
 
 func isInAccessList(network string, accessLists map[string]frrProto.AccessListAnalyzer) bool {

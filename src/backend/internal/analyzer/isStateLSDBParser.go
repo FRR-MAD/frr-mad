@@ -8,7 +8,7 @@ import (
 
 // lsa type 5 parsing
 // this will only return static routes, as BGP routes aren't useful in ospf analysis
-func GetRuntimeExternalRouterData(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
+func GetRuntimeExternalData(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
@@ -50,7 +50,7 @@ func GetRuntimeExternalRouterData(config *frrProto.OSPFExternalData, staticRoute
 }
 
 // lsa type 7 parsing
-func GetNssaExternalRouterData(config *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
+func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
