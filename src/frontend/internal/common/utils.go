@@ -12,6 +12,9 @@ func ContainsString(slice []string, s string) bool {
 }
 
 func HasAnyAnomaly(a *frrProto.AnomalyDetection) bool {
+	if a == nil {
+		return false
+	}
 	return a.HasUnderAdvertisedPrefixes ||
 		a.HasOverAdvertisedPrefixes ||
 		a.HasDuplicatePrefixes ||
