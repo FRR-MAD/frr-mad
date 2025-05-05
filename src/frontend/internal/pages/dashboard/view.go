@@ -9,13 +9,13 @@ import (
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 	"github.com/charmbracelet/lipgloss"
 	"strconv"
 )
 
 var (
 	currentSubTabLocal = -1
-	hasAnomalyDetected = false
 )
 
 // DashboardView is the updated View function. This allows to call View with an argument.
@@ -39,7 +39,7 @@ func (m *Model) renderOSPFDashboard() string {
 	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
 	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
 
-	if hasAnomalyDetected {
+	if m.hasAnomalyDetected {
 		ospfDashboardAnomalies := getOspfDashboardAnomalies()
 		m.viewport.SetContent(ospfDashboardAnomalies)
 	} else {
@@ -345,12 +345,12 @@ func getOspfDashboardLsdbSelf() string {
 	}
 
 	externalHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).
-		Render("Link State Database (Self): AS External LSAs")
+		Render("Link State Database (Self): AS External")
 
 	// create styled boxes for each external LSA Type (type 5 & 7)
 	externalTableBox := lipgloss.JoinVertical(lipgloss.Left,
 		styles.H2TitleStyle().Width(styles.WidthTwoH2ThreeFourth).
-			Render("Self-Originating AS External Link States"),
+			Render("Self-Originating AS External Link States (Type 5)"),
 		styles.H2ContentBoxCenterStyle().Width(styles.WidthTwoH2ThreeFourthBox).
 			Render(asExternalLinkStateTable.String()),
 		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2ThreeFourth).Render(""),
@@ -369,24 +369,97 @@ func getOspfDashboardLsdbSelf() string {
 }
 
 func getOspfDashboardAnomalies() string {
-	// ospfAnomalies, _ := backend.GetRouterAnomalies()
-
-	return "Anomaly"
-}
-
-func (m *Model) detectAnomaly() {
 	ospfRouterAnomalies, _ := backend.GetRouterAnomalies()
 	ospfExternalAnomalies, _ := backend.GetExternalAnomalies()
 	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies()
 
-	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
-		common.HasAnyAnomaly(ospfExternalAnomalies) ||
-		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
-
-		hasAnomalyDetected = true
-	} else {
-		hasAnomalyDetected = false
+	var routerAnomalyTable string
+	if common.HasAnyAnomaly(ospfRouterAnomalies) {
+		routerAnomalyTable = createAnomalyTable(
+			ospfRouterAnomalies,
+			"Router Anomalies (Type 1 LSAs)",
+		)
 	}
+
+	var externalAnomalyTable string
+	if common.HasAnyAnomaly(ospfExternalAnomalies) {
+		externalAnomalyTable = createAnomalyTable(
+			ospfExternalAnomalies,
+			"External Link State Anomalies (Type 5 LSAs)",
+		)
+	}
+
+	var nssaExternalAnomalyTable string
+	if common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		nssaExternalAnomalyTable = createAnomalyTable(
+			ospfNSSAExternalAnomalies,
+			"NSSA External Link State Anomalies (Type 7 LSAs)",
+		)
+	}
+
+	allAnomalies := lipgloss.JoinVertical(lipgloss.Left,
+		routerAnomalyTable,
+		externalAnomalyTable,
+		nssaExternalAnomalyTable,
+	)
+
+	return allAnomalies
+}
+
+func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) string {
+	// extract data for tables
+	var tableData [][]string
+
+	for _, superfluousEntry := range a.SuperfluousEntries {
+		tableData = append(tableData, []string{
+			superfluousEntry.InterfaceAddress,
+			"/" + superfluousEntry.PrefixLength,
+			superfluousEntry.LinkStateId,
+			superfluousEntry.LinkType,
+			"Overadvertised Route",
+		})
+	}
+	for _, missingEntry := range a.MissingEntries {
+		tableData = append(tableData, []string{
+			missingEntry.InterfaceAddress,
+			"/" + missingEntry.PrefixLength,
+			missingEntry.LinkStateId,
+			missingEntry.LinkType,
+			"Underadvertised Route",
+		})
+	}
+
+	// Order all Table Data
+	sort.Slice(tableData, func(i, j int) bool {
+		return tableData[i][0] < tableData[j][0]
+	})
+
+	// create the tables and fill it with collected data
+	rows := len(tableData)
+	table := components.NewAnomalyTable(
+		[]string{
+			"Interface Address",
+			"CIDR",
+			"Link State ID",
+			"Link Type",
+			"Anomaly Type",
+		},
+		rows,
+	)
+	for _, r := range tableData {
+		table = table.Row(r...)
+	}
+
+	// style the output
+	// anomalyHeader := styles.H1BadTitleStyle().Width(styles.WidthTwoH1ThreeFourth).Render("Router (Type 1) Anomalies")
+
+	tableBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1BadTitleStyle().Width(styles.WidthTwoH1ThreeFourth).Render(lsaTypeHeader),
+		styles.H1ContentBoxCenterStyle().Width(styles.WidthTwoH1ThreeFourthBox).Render(table.String()),
+		styles.H1BadBoxBottomBorderStyle().Width(styles.WidthTwoH1ThreeFourth).Render(""),
+	)
+
+	return tableBox
 }
 
 // ============================== //

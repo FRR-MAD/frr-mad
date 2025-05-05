@@ -105,7 +105,7 @@ var TextOutputStyle = lipgloss.NewStyle().
 
 func H1TitleStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
+		Border(lipgloss.ThickBorder()).
 		BorderForeground(lipgloss.Color(NormalBeige)).
 		BorderBottom(false).
 		Margin(0, 0, 1, 0).
@@ -125,10 +125,14 @@ func H1TitleStyleForTwo() lipgloss.Style {
 }
 
 func H2TitleStyle() lipgloss.Style {
-	return H1TitleStyle().
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(Grey)).
+		BorderBottom(false).
 		Margin(0, 2).
 		Padding(0, 1).
-		BorderForeground(lipgloss.Color(Grey))
+		Align(lipgloss.Center).
+		Bold(true)
 }
 
 func H2TitleStyleForOne() lipgloss.Style {
@@ -145,6 +149,17 @@ var AlignCenterAndM02P01 = lipgloss.NewStyle().
 	Margin(0, 2).
 	Padding(0, 1).
 	Align(lipgloss.Center)
+
+func H1BadTitleStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color(BadRed)).
+		BorderBottom(false).
+		Margin(0, 0, 1, 0).
+		Padding(1, 0, 0, 0).
+		Align(lipgloss.Center).
+		Bold(true)
+}
 
 // ----------------------------
 // Box Styling
@@ -175,6 +190,11 @@ func H1ContentBoxStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Margin(0, 2).
 		Padding(0, 1)
+}
+
+func H1ContentBoxCenterStyle() lipgloss.Style {
+	return H1ContentBoxStyle().
+		Align(lipgloss.Center)
 }
 
 func H1OneContentBoxStyle() lipgloss.Style {
@@ -424,6 +444,12 @@ func BuildTableStyles() table.Styles {
 
 func H1BoxBottomBorderStyle() lipgloss.Style {
 	return H1TitleStyle().
+		BorderBottom(true).
+		BorderTop(false)
+}
+
+func H1BadBoxBottomBorderStyle() lipgloss.Style {
+	return H1BadTitleStyle().
 		BorderBottom(true).
 		BorderTop(false)
 }

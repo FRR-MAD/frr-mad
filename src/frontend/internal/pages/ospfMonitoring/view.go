@@ -390,7 +390,7 @@ func (m *Model) renderExternalMonitorTab() string {
 	nssaExternalDataSelf, _ := getOspfNssaExternalData()
 
 	var externalTableData [][]string
-	var externalTableDataExpanded [][]string
+	var externalTableDataExpanded [][]string // for future  feature
 	for externalLinkState, linkStateData := range externalLSASelf.AsExternalLinkStates {
 		externalTableData = append(externalTableData, []string{
 			linkStateData.LinkStateId,

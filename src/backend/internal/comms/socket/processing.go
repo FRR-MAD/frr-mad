@@ -96,6 +96,10 @@ func (s *Socket) analysisProcessing(command string) *frrProto.Response {
 
 	case "dummyRouterOne":
 		return getRouterAnomalyDummy1()
+	case "dummyExternalOne":
+		return getExternalAnomalyDummy1()
+	case "dummyNSSAExternalOne":
+		return getNSSAExternalAnomalyDummy1()
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", command)

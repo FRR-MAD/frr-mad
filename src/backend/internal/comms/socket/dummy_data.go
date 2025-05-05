@@ -12,9 +12,29 @@ func getRouterAnomalyDummy1() *frrProto.Response {
 			PrefixLength:     "24",       // string
 			LinkType:         "",         // string
 		},
+		{
+			InterfaceAddress: "10.200.155.254", // string
+			LinkStateId:      "",               // string
+			PrefixLength:     "32",             // string
+			LinkType:         "Point-to-Point", // string
+		},
 	}
 
-	adv2 := []*frrProto.Advertisement{}
+	adv2 := []*frrProto.Advertisement{
+		{
+			InterfaceAddress: "172.22.0.0", // string
+			LinkStateId:      "",           // string
+			PrefixLength:     "24",         // string
+			LinkType:         "",           // string
+		},
+		{
+			InterfaceAddress: "172.31.255.254", // string
+			LinkStateId:      "",               // string
+			PrefixLength:     "32",             // string
+			LinkType:         "Point-to-Point", // string
+		},
+	}
+
 	result := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
 			HasOverAdvertisedPrefixes:  true,
@@ -38,4 +58,12 @@ func getRouterAnomalyDummy1() *frrProto.Response {
 		Data:    value,
 	}
 
+}
+
+func getExternalAnomalyDummy1() *frrProto.Response {
+	return getRouterAnomalyDummy1()
+}
+
+func getNSSAExternalAnomalyDummy1() *frrProto.Response {
+	return getRouterAnomalyDummy1()
 }

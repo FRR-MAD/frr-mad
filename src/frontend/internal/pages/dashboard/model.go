@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
 	"time"
@@ -10,12 +11,13 @@ import (
 )
 
 type Model struct {
-	title         string
-	subTabs       []string
-	ospfAnomalies []string
-	windowSize    *common.WindowSize
-	viewport      viewport.Model
-	currentTime   time.Time
+	title              string
+	subTabs            []string
+	ospfAnomalies      []string
+	hasAnomalyDetected bool
+	windowSize         *common.WindowSize
+	viewport           viewport.Model
+	currentTime        time.Time
 }
 
 func New(windowSize *common.WindowSize) *Model {
@@ -27,11 +29,12 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		title:         "Dashboard",
-		subTabs:       []string{"OSPF", "TBD"},
-		ospfAnomalies: []string{"Fetching OSPF data..."},
-		windowSize:    windowSize,
-		viewport:      vp,
+		title:              "Dashboard",
+		subTabs:            []string{"OSPF", "TBD"},
+		ospfAnomalies:      []string{"Fetching OSPF data..."},
+		hasAnomalyDetected: false,
+		windowSize:         windowSize,
+		viewport:           vp,
 	}
 }
 
@@ -63,7 +66,23 @@ func reloadView() tea.Cmd {
 	})
 }
 
+func (m *Model) detectAnomaly() {
+	ospfRouterAnomalies, _ := backend.GetRouterAnomalies()
+	ospfExternalAnomalies, _ := backend.GetExternalAnomalies()
+	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies()
+
+	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
+		common.HasAnyAnomaly(ospfExternalAnomalies) ||
+		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+
+		m.hasAnomalyDetected = true
+	} else {
+		m.hasAnomalyDetected = false
+	}
+}
+
 func (m *Model) Init() tea.Cmd {
+	m.detectAnomaly()
 	return tea.Batch(
 		common.FetchOSPFData(),
 		reloadView(),
