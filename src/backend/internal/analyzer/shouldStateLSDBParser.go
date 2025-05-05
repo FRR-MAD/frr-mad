@@ -358,7 +358,7 @@ func GetStaticFileExternalDataOld(config *frrProto.StaticFRRConfiguration) *frrP
 	return result
 }
 
-func getStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
+func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}

@@ -1,6 +1,7 @@
 package analyzer_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
@@ -604,3 +605,146 @@ func TestAnomalyAnalysisLsaFive1(t *testing.T) {
 // 	t.Logf("%v\n", result)
 
 // }
+
+// Add these test cases to your analyzer_test.go file
+
+func TestNssaExternalLsa1(t *testing.T) {
+	// Setup test data for NSSA-External analysis
+	ana := initAnalyzer()
+	frrMetrics := getNssaRouterFRRdata() // You'll need to implement this mock data function
+
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+
+	// Get predicted and runtime NSSA-external LSDBs
+	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration)
+	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, frrMetrics.StaticFrrConfiguration.Hostname)
+
+	// Run the analysis
+	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+
+	t.Run("TestNssaExternalNormalCase", func(t *testing.T) {
+		// In normal case, there should be no anomalies
+		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes)
+		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
+		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
+		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
+	})
+}
+
+func TestNssaExternalAnomalies(t *testing.T) {
+	// Setup test data with intentional anomalies
+	ana := initAnalyzer()
+	frrMetrics := getNssaRouterFRRdata() // Mock data with anomalies
+
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+
+	// Get predicted and runtime NSSA-external LSDBs
+	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration)
+	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, frrMetrics.StaticFrrConfiguration.Hostname)
+
+	// Run the analysis
+	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+
+	t.Run("TestNssaExternalMissingRoutes", func(t *testing.T) {
+		// Should detect missing routes that should be advertised
+		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
+	})
+
+	t.Run("TestNssaExternalExtraRoutes", func(t *testing.T) {
+		// Should detect extra routes that shouldn't be advertised
+		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
+		assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
+	})
+
+	t.Run("TestNssaExternalDuplicates", func(t *testing.T) {
+		// Should detect duplicate routes
+		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes)
+		assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
+	})
+}
+
+// Helper function to create mock NSSA router data
+func getNssaRouterFRRdata() *frrProto.FullFRRData {
+	return &frrProto.FullFRRData{
+		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{
+			Hostname: "nssa-router",
+			OspfConfig: &frrProto.OSPFConfig{
+				RouterId: "10.0.0.1",
+				Area: []*frrProto.Area{
+					{
+						Name: "0.0.0.1",
+						Type: "nssa",
+					},
+				},
+			},
+			Interfaces: []*frrProto.Interface{
+				{
+					Name: "eth0",
+					Area: "0.0.0.1",
+					InterfaceIpPrefixes: []*frrProto.InterfaceIPPrefix{
+						{
+							IpPrefix: &frrProto.IPPrefix{
+								IpAddress:    "10.1.1.1",
+								PrefixLength: 24,
+							},
+						},
+					},
+				},
+			},
+			StaticRoutes: []*frrProto.StaticRoute{
+				{
+					IpPrefix: &frrProto.IPPrefix{
+						IpAddress:    "192.168.1.0",
+						PrefixLength: 24,
+					},
+					NextHop: "10.1.1.2",
+				},
+			},
+		},
+		OspfNssaExternalData: &frrProto.OSPFNssaExternalData{
+			RouterId: "10.0.0.1",
+			NssaExternalLinkStates: map[string]*frrProto.NssaExternalArea{
+				"0.0.0.1": {
+					Data: map[string]*frrProto.NssaExternalLSA{
+						"6.6.6.6": {
+							LinkStateId: "192.168.1.0",
+							NetworkMask: 24,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+// Complete parser function handling all NssaExternalLSA fields
+func GetNssaExternalData(data *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
+	result := &frrProto.InterAreaLsa{
+		Hostname: hostname,
+		RouterId: data.RouterId,
+		Areas:    []*frrProto.AreaAnalyzer{},
+	}
+
+	for areaID, areaData := range data.NssaExternalLinkStates {
+		area := &frrProto.AreaAnalyzer{
+			AreaName: areaID,
+			LsaType:  "NSSA-LSA",
+			Links:    []*frrProto.Advertisement{},
+		}
+
+		for _, lsa := range areaData.Data {
+			area.Links = append(area.Links, &frrProto.Advertisement{
+				LinkStateId:  lsa.LinkStateId,
+				PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
+				LinkType:     "nssa-external",
+			})
+		}
+
+		result.Areas = append(result.Areas, area)
+	}
+
+	return result
+}
