@@ -44,14 +44,15 @@ message ResponseValue {
     OSPFAsbrSummaryData ospf_asbr_summary_data = 7;
     OSPFExternalData ospf_external_data = 8;
     OSPFNssaExternalData ospf_nssa_external_data = 9;
-    OSPFDuplicates ospf_duplicates = 10;
-    OSPFNeighbors ospf_neighbors = 11;
-    InterfaceList interfaces = 12;
-    RoutingInformationBase routing_information_base = 13;
-    StaticFRRConfiguration static_frr_configuration = 14;
-    SystemMetrics system_metrics = 15;
-    FRRRouterData frr_router_data = 16;
-    OSPFRouterData ospf_router_data = 17;
+    OSPFExternalAll ospf_external_all = 10;
+    OSPFNssaExternalAll ospf_nssa_external_all = 11;
+    OSPFNeighbors ospf_neighbors = 12;
+    InterfaceList interfaces = 13;
+    RoutingInformationBase routing_information_base = 14;
+    StaticFRRConfiguration static_frr_configuration = 15;
+    SystemMetrics system_metrics = 16;
+    FRRRouterData frr_router_data = 17;
+    OSPFRouterData ospf_router_data = 18;
   }
 }
 
@@ -172,13 +173,14 @@ message FullFRRData {
   OSPFAsbrSummaryData ospf_asbr_summary_data = 5;
   OSPFExternalData ospf_external_data = 6;
   OSPFNssaExternalData ospf_nssa_external_data = 7;
-  OSPFDuplicates ospf_duplicates = 8;
-  OSPFNeighbors ospf_neighbors = 9;
-  InterfaceList interfaces = 10;
-  RoutingInformationBase routing_information_base = 11;
-  StaticFRRConfiguration static_frr_configuration = 12;
-  SystemMetrics system_metrics = 13;
-  FRRRouterData frr_router_data = 14;
+  OSPFExternalAll ospf_external_all = 8;
+  OSPFNssaExternalAll ospf_nssa_external_all = 9;
+  OSPFNeighbors ospf_neighbors = 10;
+  InterfaceList interfaces = 11;
+  RoutingInformationBase routing_information_base = 12;
+  StaticFRRConfiguration static_frr_configuration = 13;
+  SystemMetrics system_metrics = 14;
+  FRRRouterData frr_router_data = 15;
 }
 
 // ================ Aggregator LSA Router ====================
@@ -391,8 +393,8 @@ message ASExternalLSA {
   int32 tag = 4;
 }
 
-// ================ OSPF Duplicates ================
-message OSPFDuplicates {
+// ================ OSPF External All ================
+message OSPFExternalAll {
   string router_id = 1;
   repeated ASExternalLinkState as_external_link_states = 2;
 }
@@ -413,6 +415,12 @@ message ASExternalLinkState {
   int32 metric = 13;
   string forward_address = 14;
   int32 external_route_tag = 15;
+}
+
+// ================ OSPF Nssa External All ================
+message OSPFNssaExternalAll {
+  string router_id = 1 [json_name = "routerId"];
+  map<string, NssaExternalArea> nssa_external_link_states = 2 [json_name = "NSSA-External Link States"];
 }
 
 // ================ OSPF Neighbors ================

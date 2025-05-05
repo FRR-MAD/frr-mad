@@ -518,11 +518,11 @@ func TestParseFullOSPFDatabase(t *testing.T) {
 	}
 }
 
-func TestParseOSPFDuplicates(t *testing.T) {
+func TestParseOSPFExternalAll(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
-		expected *frrProto.OSPFDuplicates
+		expected *frrProto.OSPFExternalAll
 		wantErr  bool
 	}{
 		{
@@ -538,7 +538,7 @@ func TestParseOSPFDuplicates(t *testing.T) {
 					}
 				]
 			}`,
-			expected: &frrProto.OSPFDuplicates{
+			expected: &frrProto.OSPFExternalAll{
 				RouterId: "1.1.1.1",
 				AsExternalLinkStates: []*frrProto.ASExternalLinkState{
 					{
@@ -555,7 +555,7 @@ func TestParseOSPFDuplicates(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := aggregator.ParseOSPFDuplicates([]byte(tt.input))
+			result, err := aggregator.ParseOSPFExternalAll([]byte(tt.input))
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -572,6 +572,79 @@ func TestParseOSPFDuplicates(t *testing.T) {
 					assert.Equal(t, expectedLSA.LsaType, result.AsExternalLinkStates[i].LsaType)
 					assert.Equal(t, expectedLSA.LinkStateId, result.AsExternalLinkStates[i].LinkStateId)
 					assert.Equal(t, expectedLSA.AdvertisingRouter, result.AsExternalLinkStates[i].AdvertisingRouter)
+				}
+			}
+		})
+	}
+}
+
+func TestParseOSPFNssaExternalAll(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected *frrProto.OSPFNssaExternalAll
+		wantErr  bool
+	}{
+		{
+			name: "basic NSSA external LSA",
+			input: `{
+				"routerId": "1.1.1.1",
+				"NSSA-external Link States": {
+					"0.0.0.1": {
+						"6.6.6.6": {
+							"lsaAge": "2500",
+							"lsaType": "NSSA-External",
+							"linkStateId": "6.6.6.6",
+							"advertisingRouter": "1.1.1.1"
+						}
+					}
+				}
+			}`,
+			expected: &frrProto.OSPFNssaExternalAll{
+				RouterId: "1.1.1.1",
+				NssaExternalLinkStates: map[string]*frrProto.NssaExternalArea{
+					"0.0.0.1": {
+						Data: map[string]*frrProto.NssaExternalLSA{
+							"6.6.6.6": {
+								LsaAge:            2500,
+								LsaType:           "NSSA-External",
+								LinkStateId:       "6.6.6.6",
+								AdvertisingRouter: "1.1.1.1",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := aggregator.ParseOSPFNssaExternalLSA([]byte(tt.input))
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected.RouterId, result.RouterId)
+
+			if tt.expected.NssaExternalLinkStates != nil {
+				for areaID, expectedArea := range tt.expected.NssaExternalLinkStates {
+					resultArea, ok := result.NssaExternalLinkStates[areaID]
+					assert.True(t, ok, "missing area %s", areaID)
+
+					for lsaID, expectedLSA := range expectedArea.Data {
+						resultLSA, ok := resultArea.Data[lsaID]
+						assert.True(t, ok, "missing LSA %s", lsaID)
+
+						assert.Equal(t, expectedLSA.LsaAge, resultLSA.LsaAge)
+						assert.Equal(t, expectedLSA.LsaType, resultLSA.LsaType)
+						assert.Equal(t, expectedLSA.LinkStateId, resultLSA.LinkStateId)
+						assert.Equal(t, expectedLSA.AdvertisingRouter, resultLSA.AdvertisingRouter)
+					}
 				}
 			}
 		})

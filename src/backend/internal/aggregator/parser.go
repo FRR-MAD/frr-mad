@@ -366,7 +366,7 @@ func ParseFullOSPFDatabase(jsonData []byte) (*frrProto.OSPFDatabase, error) {
 	return &result, nil
 }
 
-func ParseOSPFDuplicates(jsonData []byte) (*frrProto.OSPFDuplicates, error) {
+func ParseOSPFExternalAll(jsonData []byte) (*frrProto.OSPFExternalAll, error) {
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
@@ -388,7 +388,7 @@ func ParseOSPFDuplicates(jsonData []byte) (*frrProto.OSPFDuplicates, error) {
 		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
 	}
 
-	var result frrProto.OSPFDuplicates
+	var result frrProto.OSPFExternalAll
 	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
 	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)

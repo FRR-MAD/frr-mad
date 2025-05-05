@@ -138,8 +138,8 @@ func (s *Socket) getOspfNssaExternalData() *frrProto.Response {
 
 func (s *Socket) getOspfDuplicates() *frrProto.Response {
 	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_OspfDuplicates{
-			OspfDuplicates: s.metrics.GetOspfDuplicates(),
+		Kind: &frrProto.ResponseValue_OspfExternalAll{
+			OspfExternalAll: s.metrics.GetOspfExternalAll(),
 		},
 	}
 	return &frrProto.Response{

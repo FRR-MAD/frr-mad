@@ -120,12 +120,20 @@ func FetchFullOSPFDatabase(executor *frrSocket.FRRCommandExecutor) (*frrProto.OS
 	return ParseFullOSPFDatabase(output)
 }
 
-func FetchOSPFDuplicateCandidates(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFDuplicates, error) {
+func FetchOSPFExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFExternalAll, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf database external json")
 	if err != nil {
 		return nil, err
 	}
-	return ParseOSPFDuplicates(output)
+	return ParseOSPFExternalAll(output)
+}
+
+func FetchOSPFNssaExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNssaExternalData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf database nssa-external json")
+	if err != nil {
+		return nil, err
+	}
+	return ParseOSPFNssaExternalLSA(output)
 }
 
 func FetchOSPFNeighbors(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNeighbors, error) {
