@@ -359,17 +359,19 @@ func (m *Model) renderRouterMonitorTab() string {
 					if link.DesignatedRouterAddress == link.RouterInterfaceAddress {
 						name = "self"
 					} else if common.ContainsString(ospfNeighbors, link.DesignatedRouterAddress) {
-						name = "Direct Neighbor"
+						name = "Neighbor"
 					}
 					transitData = append(transitData, []string{
 						link.DesignatedRouterAddress,
 						name,
 						link.RouterInterfaceAddress,
+						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				} else if strings.Contains(link.LinkType, "Stub Network") {
 					stubData = append(stubData, []string{
 						link.NetworkAddress,
 						link.NetworkMask,
+						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				}
 			}
@@ -386,9 +388,10 @@ func (m *Model) renderRouterMonitorTab() string {
 		rowsTransit := len(transitData)
 		transitTable := components.NewOspfMonitorTable(
 			[]string{
-				"Link ID (DR Adr.)",
-				"Designated Router",
-				"Link Data (own Adr.)",
+				"DR Address",
+				"DR",
+				"Interface Address",
+				"LSA Age",
 			},
 			rowsTransit,
 		)
@@ -401,6 +404,7 @@ func (m *Model) renderRouterMonitorTab() string {
 			[]string{
 				"Network Address",
 				"Network Mask",
+				"LSA Age",
 			},
 			rowsStub,
 		)
@@ -459,6 +463,7 @@ func (m *Model) renderExternalMonitorTab() string {
 			"/" + strconv.Itoa(int(linkStateData.NetworkMask)),
 			linkStateData.MetricType,
 			linkStateData.ForwardAddress,
+			strconv.Itoa(int(linkStateData.LsaAge)),
 		})
 
 		externalTableDataExpanded = append(externalTableDataExpanded, []string{
@@ -479,6 +484,7 @@ func (m *Model) renderExternalMonitorTab() string {
 		"CIDR",
 		"Metric Type",
 		"Forwarding Address",
+		"LSA Age",
 	},
 		rowsExternal,
 	)
@@ -507,48 +513,57 @@ func (m *Model) renderExternalMonitorTab() string {
 	}
 	sort.Strings(nssaAreas)
 
-	var nssaExternalTableData [][]string
+	hasNssaExternalLSAs := false
 	for _, area := range nssaAreas {
 		areaData := nssaExternalDataSelf.NssaExternalLinkStates[area]
-		for _, lsaData := range areaData.Data {
-			nssaExternalTableData = append(nssaExternalTableData, []string{
-				lsaData.LinkStateId,
-				"/" + strconv.Itoa(int(lsaData.NetworkMask)),
-				lsaData.MetricType,
-				lsaData.NssaForwardAddress,
+
+		if areaData.Data != nil {
+			var nssaExternalTableData [][]string
+			for _, lsaData := range areaData.Data {
+				nssaExternalTableData = append(nssaExternalTableData, []string{
+					lsaData.LinkStateId,
+					"/" + strconv.Itoa(int(lsaData.NetworkMask)),
+					lsaData.MetricType,
+					lsaData.NssaForwardAddress,
+					strconv.Itoa(int(lsaData.LsaAge)),
+				})
+			}
+
+			// Order all Table Data
+			sort.Slice(nssaExternalTableData, func(i, j int) bool {
+				return nssaExternalTableData[i][0] < nssaExternalTableData[j][0]
 			})
+
+			// create table for NSSA Exernal Link States with extracted data (nssaExternalTableData)
+			rowsNssaExternal := len(nssaExternalTableData)
+			nssaExternalTable := components.NewOspfMonitorTable(
+				[]string{
+					"Link State ID",
+					"CIDR",
+					"Metric Type",
+					"Forwarding Address",
+					"LSA Age",
+				},
+				rowsNssaExternal,
+			)
+			for _, r := range nssaExternalTableData {
+				nssaExternalTable = nssaExternalTable.Row(r...)
+			}
+
+			nssaExternalHeader := styles.H1TitleStyleForOne().Render("NSSA External LSAs (Type 7) in Area " + area)
+
+			nssaExternalDataBox := lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForOne().Render("Self Originating"),
+				styles.H2OneContentBoxCenterStyle().Render(nssaExternalTable.String()),
+				styles.H2OneBoxBottomBorderStyle().Render(""),
+			)
+			// var completeNssaExternalBox string
+			completeNssaExternalBox := lipgloss.JoinVertical(lipgloss.Left, nssaExternalHeader, nssaExternalDataBox)
+
+			nssaExternalLsaBlock = append(nssaExternalLsaBlock, completeNssaExternalBox+"\n\n")
+
+			hasNssaExternalLSAs = true
 		}
-
-		// Order all Table Data
-		sort.Slice(nssaExternalTableData, func(i, j int) bool {
-			return nssaExternalTableData[i][0] < nssaExternalTableData[j][0]
-		})
-
-		rowsNssaExternal := len(nssaExternalTableData)
-		nssaExternalTable := components.NewOspfMonitorTable(
-			[]string{
-				"Link State ID",
-				"CIDR",
-				"Metric Type",
-				"Forwarding Address",
-			},
-			rowsNssaExternal,
-		)
-		for _, r := range nssaExternalTableData {
-			nssaExternalTable = nssaExternalTable.Row(r...)
-		}
-
-		nssaExternalHeader := styles.H1TitleStyleForOne().Render("NSSA External LSAs (Type 7) in Area " + area)
-
-		nssaExternalDataBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForOne().Render("Self Originating"),
-			styles.H2OneContentBoxCenterStyle().Render(nssaExternalTable.String()),
-			styles.H2OneBoxBottomBorderStyle().Render(""),
-		)
-		// var completeNssaExternalBox string
-		completeNssaExternalBox := lipgloss.JoinVertical(lipgloss.Left, nssaExternalHeader, nssaExternalDataBox)
-
-		nssaExternalLsaBlock = append(nssaExternalLsaBlock, completeNssaExternalBox+"\n\n")
 	}
 
 	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
@@ -556,7 +571,7 @@ func (m *Model) renderExternalMonitorTab() string {
 	m.viewport.Height = contentMaxHeight
 
 	var allLsaBlocks []string
-	if nssaExternalTableData == nil {
+	if hasNssaExternalLSAs == false {
 		if externalTableData == nil {
 			allLsaBlocks = allLsaBlocks[:0]
 			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
@@ -574,150 +589,6 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	return m.viewport.View()
 }
-
-//func (m *Model) renderAdvertisementTab() string {
-//	// on this view:
-//	// show three advertisement boxes: based on vtysh LSA queries / based on file analysis / based on FIB analysis
-//
-//	boxWidthForTwo := (m.windowSize.Width - 10) / 2 // - 6 (padding+margin content) - 2 (for gap) - 2 (for border)
-//	if boxWidthForTwo < 20 {
-//		boxWidthForTwo = 20 // Minimum width to ensure readability
-//	}
-//
-//	shouldAdvertisedTitle := styles.BoxTitleStyle.Render("Should be Advertised")
-//
-//	shouldAdvertisedContent := "Area 0.0.0.0: \n"
-//
-//	shouldAdvertisedRouterLSA := styles.H1TitleStyle.
-//		Width(boxWidthForTwo - 2).
-//		Render("Area 0.0.0.0, Router LSAs (Type 1)")
-//	shouldAdvertisedContent += shouldAdvertisedRouterLSA
-//
-//	shouldAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, shouldAdvertisedTitle, shouldAdvertisedContent)
-//	shouldAdvertisedBox := lipgloss.NewStyle().Render(shouldAdvertisedVerticalStyle)
-//
-//	// ----------------------------------------------------
-//	gap := 2
-//	// ----------------------------------------------------
-//
-//	isAdvertisedTitle := styles.BoxTitleStyle.Render("Is Advertised")
-//
-//	isAdvertisedContent := "Area 0.0.0.0: \n"
-//
-//	// for each area create area box --> need length of areas
-//
-//	isAdvertisedRouterLSA := styles.H1TitleStyle.
-//		Width(boxWidthForTwo - 2).
-//		Render("Area 0.0.0.0, Router LSAs (Type 1)")
-//	isAdvertisedContent += isAdvertisedRouterLSA
-//
-//	isAdvertisedVerticalStyle := lipgloss.JoinVertical(lipgloss.Left, isAdvertisedTitle, isAdvertisedContent)
-//	isAdvertisedBox := lipgloss.NewStyle().Render(isAdvertisedVerticalStyle)
-//	// returnString := "Advertisement"
-//
-//	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top,
-//		isAdvertisedBox,
-//		lipgloss.NewStyle().Width(gap).Render(""),
-//		shouldAdvertisedBox,
-//	)
-//
-//	return horizontalBoxes
-//}
-
-//func (m *Model) renderOSPFTab0() string {
-//	// Calculate box width dynamically for four horizontal boxes based on terminal width
-//	boxWidthForFour := (m.windowSize.Width - 16) / 4 // - 6 (padding+margin content) - 10 (for each border)
-//	if boxWidthForFour < 20 {
-//		boxWidthForFour = 20 // Minimum width to ensure readability
-//	}
-//
-//	ospfAnomalyOne := styles.GeneralBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly One") + "\n" + "Call Backend...☎\nEverything Good! amount")
-//
-//	ospfAnomalyTwo := styles.GeneralBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Two") + "\n" + "Call Backend...☎\nEverything Good!")
-//
-//	ospfAnomalyThree := styles.BadBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Three") + "\n" + "Call Backend...☎\nVery Bad Anomaly Detected!\n\nReport...\nReport...\nReport...\nReport...\nReport...\n")
-//
-//	ospfAnomalyFour := styles.GeneralBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Four") + "\n" + "Call Backend...☎\nEverything Good!")
-//
-//	ospfAnomalies := []struct {
-//		Title   string
-//		Content string
-//		Style   lipgloss.Style
-//	}{
-//		{
-//			Title:   "OSPF Anomaly One",
-//			Content: "Call Backend...☎\nVery Bad Anomaly Detected!\n\nReport...\nReport...\nReport...\nReport...\nReport...\n",
-//			Style:   styles.BadBoxStyle,
-//		},
-//		{
-//			Title:   "OSPF Anomaly Two",
-//			Content: "Call Backend...☎\nEverything Good!",
-//			Style:   styles.GeneralBoxStyle,
-//		},
-//		{
-//			Title:   "OSPF Anomaly Three",
-//			Content: "Call Backend...☎\nEverything Good!",
-//			Style:   styles.GeneralBoxStyle,
-//		},
-//		{
-//			Title:   "OSPF Anomaly Four",
-//			Content: "Call Backend...☎\nEverything Good!",
-//			Style:   styles.GeneralBoxStyle,
-//		},
-//	}
-//
-//	// Build anomaly boxes using the new component
-//	var ospfAnomalyBoxes []string
-//	for _, a := range ospfAnomalies {
-//		box := components.NewAnomalyBox(a.Title, a.Content, a.Style, boxWidthForFour)
-//		ospfAnomalyBoxes = append(ospfAnomalyBoxes, box.Render())
-//	}
-//
-//	horizontalBoxes := lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyOne, ospfAnomalyTwo, ospfAnomalyThree, ospfAnomalyFour)
-//	horizontalBoxes2 := lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyBoxes...)
-//
-//	//infoBox := styles.InfoTextStyle.
-//	//	Width(m.windowSize.Width - 12).
-//	//	Render("press 'r' to refresh ospf anomalies")
-//	//
-//	//return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, infoBox)
-//
-//	return lipgloss.JoinVertical(lipgloss.Left, horizontalBoxes, horizontalBoxes2)
-//}
-
-//func (m *Model) renderOSPFTab1() string {
-//	// Calculate box width dynamically for four horizontal boxes based on terminal width
-//	boxWidthForFour := (m.windowSize.Width - 16) / 4 // - 6 (padding+margin content) - 10 (for each border)
-//	if boxWidthForFour < 20 {
-//		boxWidthForFour = 20 // Minimum width to ensure readability
-//	}
-//
-//	ospfAnomalyOne := styles.GeneralBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly One") + "\n" + "Call Backend...☎\nEverything Good! amount")
-//
-//	ospfAnomalyTwo := styles.GeneralBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Two") + "\n" + "Call Backend...☎\nEverything Good!")
-//
-//	ospfAnomalyThree := styles.BadBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Three") + "\n" + "Call Backend...☎\nVery Bad Anomaly Detected!\n\nReport...\nReport...\nReport...\nReport...\nReport...\n")
-//
-//	ospfAnomalyFour := styles.GeneralBoxStyle.
-//		Width(boxWidthForFour).
-//		Render(styles.BoxTitleStyle.Render("OSPF Anomaly Four") + "\n" + "Call Backend...☎\nEverything Good!")
-//
-//	return lipgloss.JoinHorizontal(lipgloss.Top, ospfAnomalyThree, ospfAnomalyOne, ospfAnomalyTwo, ospfAnomalyFour)
-//}
 
 func (m *Model) renderRunningConfigTab() string {
 	runningConfigTitle := styles.H1TitleStyleForTwo().Render("Running Config")
@@ -753,84 +624,3 @@ func (m *Model) renderRunningConfigTab() string {
 
 	return m.viewport.View()
 }
-
-// ============================== //
-// HELPERS: BACKEND CALLS         //
-// ============================== //
-
-//func getLSDB() (*pkg.OSPFDatabase, error) {
-//	response, err := backend.SendMessage("ospf", "database", nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return response.Data.GetOspfDatabase(), nil
-//}
-
-//func getOspfRouterData() (*pkg.OSPFRouterData, error) {
-//	response, err := backend.SendMessage("ospf", "router", nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return response.Data.GetOspfRouterData(), nil
-//}
-//
-//func getOspfNeighborInterfaces() []string {
-//	response, err := backend.SendMessage("ospf", "neighbors", nil)
-//	if err != nil {
-//		return nil
-//	}
-//	ospfNeighbors := response.Data.GetOspfNeighbors()
-//
-//	var neighborAddresses []string
-//	for _, neighborGroup := range ospfNeighbors.Neighbors {
-//		for _, neighbor := range neighborGroup.Neighbors {
-//			neighborAddresses = append(neighborAddresses, neighbor.IfaceAddress)
-//		}
-//	}
-//
-//	return neighborAddresses
-//}
-
-//func getOspfExternalData() (*pkg.OSPFExternalData, error) {
-//	response, err := backend.SendMessage("ospf", "externalData", nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return response.Data.GetOspfExternalData(), nil
-//}
-//
-//func getOspfNssaExternalData() (*pkg.OSPFNssaExternalData, error) {
-//	response, err := backend.SendMessage("ospf", "nssaExternalData", nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return response.Data.GetOspfNssaExternalData(), nil
-//}
-
-//func getStaticFRRConfigurationPretty() string {
-//	response, err := backend.SendMessage("ospf", "staticConfig", nil)
-//	if err != nil {
-//		return ""
-//	}
-//
-//	var prettyJson string
-//
-//	// Pretty‑print the protobuf into nice indented JSON
-//	marshaler := protojson.MarshalOptions{
-//		Multiline:     true,
-//		Indent:        "  ",
-//		UseProtoNames: true,
-//	}
-//	pretty, perr := marshaler.Marshal(response.Data)
-//	if perr != nil {
-//		prettyJson = response.Data.String()
-//	} else {
-//		prettyJson = string(pretty)
-//	}
-//
-//	return prettyJson
-//}
