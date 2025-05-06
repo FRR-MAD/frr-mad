@@ -1,6 +1,8 @@
 package analyzer
 
 import (
+	"fmt"
+
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
@@ -179,6 +181,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
 	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
+	fmt.Println(isRouterLSDB)
+	fmt.Println(shouldRouterLSDB)
 
 	//if len(staticRouteMap) > 0 || isNssa {
 	//fmt.Println(predictedExternalLSDB)

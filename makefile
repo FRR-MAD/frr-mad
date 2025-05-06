@@ -85,6 +85,9 @@ hmr/run:
 hmr/stop: 
 	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
 
+
+hmr/restart: hmr/stop hmr/run
+
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
 	docker network prune -f
