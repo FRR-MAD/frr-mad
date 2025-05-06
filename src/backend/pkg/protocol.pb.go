@@ -5171,6 +5171,7 @@ type AnomalyAnalysis struct {
 	RouterAnomaly       *AnomalyDetection      `protobuf:"bytes,1,opt,name=router_anomaly,json=routerAnomaly,proto3" json:"router_anomaly,omitempty"`
 	ExternalAnomaly     *AnomalyDetection      `protobuf:"bytes,2,opt,name=external_anomaly,json=externalAnomaly,proto3" json:"external_anomaly,omitempty"`
 	NssaExternalAnomaly *AnomalyDetection      `protobuf:"bytes,3,opt,name=nssa_external_anomaly,json=nssaExternalAnomaly,proto3" json:"nssa_external_anomaly,omitempty"`
+	FibAnomaly          *AnomalyDetection      `protobuf:"bytes,4,opt,name=fib_anomaly,json=fibAnomaly,proto3" json:"fib_anomaly,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -5222,6 +5223,13 @@ func (x *AnomalyAnalysis) GetExternalAnomaly() *AnomalyDetection {
 func (x *AnomalyAnalysis) GetNssaExternalAnomaly() *AnomalyDetection {
 	if x != nil {
 		return x.NssaExternalAnomaly
+	}
+	return nil
+}
+
+func (x *AnomalyAnalysis) GetFibAnomaly() *AnomalyDetection {
+	if x != nil {
+		return x.FibAnomaly
 	}
 	return nil
 }
@@ -7093,11 +7101,13 @@ const file_protocol_proto_rawDesc = "" +
 	"\x0einterface_name\x18\b \x01(\tR\rinterfaceName\x12\x16\n" +
 	"\x06active\x18\t \x01(\bR\x06active\x12\x16\n" +
 	"\x06weight\x18\n" +
-	" \x01(\x05R\x06weight\"\xfa\x01\n" +
+	" \x01(\x05R\x06weight\"\xbc\x02\n" +
 	"\x0fAnomalyAnalysis\x12F\n" +
 	"\x0erouter_anomaly\x18\x01 \x01(\v2\x1f.communication.AnomalyDetectionR\rrouterAnomaly\x12J\n" +
 	"\x10external_anomaly\x18\x02 \x01(\v2\x1f.communication.AnomalyDetectionR\x0fexternalAnomaly\x12S\n" +
-	"\x15nssa_external_anomaly\x18\x03 \x01(\v2\x1f.communication.AnomalyDetectionR\x13nssaExternalAnomaly\"\xe1\x03\n" +
+	"\x15nssa_external_anomaly\x18\x03 \x01(\v2\x1f.communication.AnomalyDetectionR\x13nssaExternalAnomaly\x12@\n" +
+	"\vfib_anomaly\x18\x04 \x01(\v2\x1f.communication.AnomalyDetectionR\n" +
+	"fibAnomaly\"\xe1\x03\n" +
 	"\x10AnomalyDetection\x12<\n" +
 	"\x19HasOverAdvertisedPrefixes\x18\x01 \x01(\bR\x19HasOverAdvertisedPrefixes\x12>\n" +
 	"\x1aHasUnderAdvertisedPrefixes\x18\x02 \x01(\bR\x1aHasUnderAdvertisedPrefixes\x122\n" +

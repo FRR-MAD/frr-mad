@@ -256,7 +256,7 @@ func TestRouterLsa1(t *testing.T) {
 
 	// Write Router Testing now, because parsing of static config, router config, static list and access list is successful
 
-	ana.RouterAnomalyAnalysis(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
+	ana.RouterAnomalyAnalysisLSDB(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
 
 	t.Run("TestRouterAdvertisment", func(t *testing.T) {
 		//ana.RouterAnomalyAnalysis(actualAccessList, )
@@ -524,7 +524,7 @@ func TestAnomalyAnalysis1(t *testing.T) {
 	runtimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	_, predictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-	ana.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+	ana.RouterAnomalyAnalysisLSDB(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
 	t.Run("TestRouterLSAAnomalyTesting", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
@@ -540,7 +540,7 @@ func TestAnomalyAnalysis1(t *testing.T) {
 
 	predictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
-	ana.ExternalAnomalyAnalysis(predictedExternalLSDB, runtimeExternalLSDB)
+	ana.ExternalAnomalyAnalysisLSDB(predictedExternalLSDB, runtimeExternalLSDB)
 
 	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)

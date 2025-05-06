@@ -24,6 +24,7 @@ func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *log
 		RouterAnomaly:       initAnomalyDetection(),
 		ExternalAnomaly:     initAnomalyDetection(),
 		NssaExternalAnomaly: initAnomalyDetection(),
+		FibAnomaly:          initAnomalyDetection(),
 	}
 
 	return &Analyzer{

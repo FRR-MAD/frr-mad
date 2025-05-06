@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -15,7 +16,11 @@ import (
 	- if it is NOT in FIB, it's no good
 */
 
-func (a *Analyzer) RouterAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
+func (a *Analyzer) AnomalyAnalysisFIB() {
+	fmt.Println("foobar")
+}
+
+func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
 	if isState == nil || shouldState == nil {
 		//fmt.Println("nil!")
 		return
@@ -159,7 +164,7 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	- if it is in FIB, it's good
 	- if it is NOT in FIB, it's no good
 */
-func (a *Analyzer) ExternalAnomalyAnalysis(isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
+func (a *Analyzer) ExternalAnomalyAnalysisLSDB(isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
 	}

@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
-
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
@@ -167,6 +165,9 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
+	// Parse RIB to get FIB
+	GetFIB(c.metrics.RoutingInformationBase)
+
 	// TODO: testing and correction, mino
 	predictedNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
@@ -177,18 +178,20 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// TODO: testing, mino
 	runtimeNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, c.metrics.StaticFrrConfiguration.Hostname)
 
-	c.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+	c.RouterAnomalyAnalysisLSDB(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
 	//if len(staticRouteMap) > 0 || isNssa {
 	//fmt.Println(predictedExternalLSDB)
 
-	c.ExternalAnomalyAnalysis(predictedExternalLSDB, runtimeExternalLSDB)
+	c.ExternalAnomalyAnalysisLSDB(predictedExternalLSDB, runtimeExternalLSDB)
 	//}
 
 	// TODO: implement, mino
 	if isNssa {
 		c.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
 	}
+
+	//c.AnomalyAnalysisFIB()
 
 }
 
@@ -487,7 +490,7 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 
 func GetAreaNssaType(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) {
 
-	fmt.Println(accessList)
+	//fmt.Println(accessList)
 
 	/*
 		Identify all static routes in the router configuration
