@@ -123,13 +123,14 @@ func getOspfDashboardLsdbSelf() string {
 		var networkLinkStateTableData [][]string
 		var summaryLinkStateTableData [][]string
 		var asbrSummaryLinkStateTableData [][]string
+		var nssaExternalLinkStateTableData [][]string
 
 		//var amountOfRouterLS string
 		//var amountOfNetworkLS string
 		//var amountOfSummaryLS string
 		//var amountOfAsSummaryLS string
 
-		// loop through LSAs (type 1-4) and extract self-originating data for tables
+		// loop through LSAs (type 1-4 + Type 7) and extract self-originating data for tables
 		for _, routerLinkState := range lsaTypes.RouterLinkStates {
 			if routerLinkState.Base.AdvertisedRouter == routerOSPFID {
 				routerLinkStateTableData = append(routerLinkStateTableData, []string{
@@ -189,6 +190,15 @@ func getOspfDashboardLsdbSelf() string {
 		//	amountOfAsSummaryLS = strconv.Itoa(int(lsaTypes.AsbrSummaryLinkStatesCount))
 		//}
 
+		for _, nssaExternalLinkStates := range lsaTypes.NssaExternalLinkStates {
+			nssaExternalLinkStateTableData = append(nssaExternalLinkStateTableData, []string{
+				nssaExternalLinkStates.Route,
+				nssaExternalLinkStates.MetricType,
+				nssaExternalLinkStates.Base.AdvertisedRouter,
+				strconv.Itoa(int(nssaExternalLinkStates.Base.LsaAge)),
+			})
+		}
+
 		// Order all Table Data
 		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
 			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
@@ -201,6 +211,9 @@ func getOspfDashboardLsdbSelf() string {
 		})
 		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
 			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
+		})
+		sort.Slice(nssaExternalLinkStateTableData, func(i, j int) bool {
+			return nssaExternalLinkStateTableData[i][0] < nssaExternalLinkStateTableData[j][0]
 		})
 
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
@@ -259,6 +272,21 @@ func getOspfDashboardLsdbSelf() string {
 			asbrSummaryLinkStateTable = asbrSummaryLinkStateTable.Row(r...)
 		}
 
+		// Create Table for NSSA External Link States and Fill with extracted nssaExternalLinkStateTableData
+		rowsNSSAExternal := len(nssaExternalLinkStateTableData)
+		nssaExternalLinkStateTable := components.NewOspfMonitorTable(
+			[]string{
+				"External Route",
+				"Metric Type",
+				"Advertising Router ID",
+				"LSA Age",
+			},
+			rowsNSSAExternal,
+		)
+		for _, r := range nssaExternalLinkStateTableData {
+			nssaExternalLinkStateTable = nssaExternalLinkStateTable.Row(r...)
+		}
+
 		areaHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).
 			Render(fmt.Sprintf("Link State Database (Self): Area %s", areaID))
 
@@ -291,26 +319,36 @@ func getOspfDashboardLsdbSelf() string {
 				Render(asbrSummaryLinkStateTable.String()),
 			styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2ThreeFourth).Render(""),
 		)
+		nssaExternalTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.H2TitleStyle().Width(styles.WidthTwoH2ThreeFourth).
+				Render("Self-Originating NSSA External Link States (Type 7)"),
+			styles.H2ContentBoxCenterStyle().Width(styles.WidthTwoH2ThreeFourthBox).
+				Render(nssaExternalLinkStateTable.String()),
+			styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2ThreeFourth).Render(""),
+		)
 
-		var completeType2To4LsdbSelfList []string
+		var optionalLSATypesList []string
 		if networkLinkStateTableData != nil {
-			completeType2To4LsdbSelfList = append(completeType2To4LsdbSelfList, networkTableBox)
+			optionalLSATypesList = append(optionalLSATypesList, networkTableBox)
 		}
 		if summaryLinkStateTableData != nil {
-			completeType2To4LsdbSelfList = append(completeType2To4LsdbSelfList, summaryTableBox)
+			optionalLSATypesList = append(optionalLSATypesList, summaryTableBox)
 		}
 		if asbrSummaryLinkStateTableData != nil {
-			completeType2To4LsdbSelfList = append(completeType2To4LsdbSelfList, asbrSummaryTableBox)
+			optionalLSATypesList = append(optionalLSATypesList, asbrSummaryTableBox)
+		}
+		if nssaExternalLinkStateTableData != nil {
+			optionalLSATypesList = append(optionalLSATypesList, nssaExternalTableBox)
 		}
 
-		completeType2To4LsdbSelf := lipgloss.JoinVertical(lipgloss.Left,
-			completeType2To4LsdbSelfList...,
+		activeOptionalLSATypes := lipgloss.JoinVertical(lipgloss.Left,
+			optionalLSATypesList...,
 		)
 
 		completeAreaLSDBSelf := lipgloss.JoinVertical(lipgloss.Left,
 			areaHeader,
 			routerTableBox,
-			completeType2To4LsdbSelf,
+			activeOptionalLSATypes,
 		)
 
 		lsdbSelfBlocks = append(lsdbSelfBlocks, completeAreaLSDBSelf+"\n\n")
@@ -353,7 +391,7 @@ func getOspfDashboardLsdbSelf() string {
 	externalHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1ThreeFourth).
 		Render("Link State Database (Self): AS External")
 
-	// create styled boxes for each external LSA Type (type 5 & 7)
+	// create styled boxes for external LSA Type (type 5)
 	externalTableBox := lipgloss.JoinVertical(lipgloss.Left,
 		styles.H2TitleStyle().Width(styles.WidthTwoH2ThreeFourth).
 			Render("Self-Originating AS External Link States (Type 5)"),
@@ -412,11 +450,19 @@ func getOspfDashboardAnomalies() string {
 		)
 	}
 
-	allAnomalies := lipgloss.JoinVertical(lipgloss.Left,
-		routerAnomalyTable,
-		externalAnomalyTable,
-		nssaExternalAnomalyTable,
-	)
+	// prevents printing empty strings
+	var allAnomaliesList []string
+	if routerAnomalyTable != "" {
+		allAnomaliesList = append(allAnomaliesList, routerAnomalyTable)
+	}
+	if externalAnomalyTable != "" {
+		allAnomaliesList = append(allAnomaliesList, externalAnomalyTable)
+	}
+	if nssaExternalAnomalyTable != "" {
+		allAnomaliesList = append(allAnomaliesList, nssaExternalAnomalyTable)
+	}
+
+	allAnomalies := lipgloss.JoinVertical(lipgloss.Left, allAnomaliesList...)
 
 	return allAnomalies
 }
