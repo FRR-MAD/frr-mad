@@ -31,10 +31,10 @@ func NewAnomalyExporter(anomalies *frrProto.Anomalies, registry prometheus.Regis
 		name string
 		help string
 	}{
-		{"ospf_overadvertised_route_present", "1 if overadvertised routes exist, 0 otherwise"},
-		{"ospf_underadvertised_route_present", "1 if underadvertised routes exist, 0 otherwise"},
-		{"ospf_duplicate_route_present", "1 if duplicate routes exist, 0 otherwise"},
-		{"ospf_misconfigured_route_present", "1 if misconfigured routes exist, 0 otherwise"},
+		{"ospf_overadvertised_route_present", "1: overadvertised routes exist, 0: otherwise"},
+		{"ospf_underadvertised_route_present", "1: underadvertised routes exist, 0: otherwise"},
+		{"ospf_duplicate_route_present", "1: duplicate routes exist, 0: otherwise"},
+		{"ospf_misconfigured_route_present", "1: misconfigured routes exist, 0: otherwise"},
 	}
 
 	for _, at := range anomalyTypes {
