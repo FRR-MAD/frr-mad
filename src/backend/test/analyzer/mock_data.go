@@ -1055,3 +1055,212 @@ func getRXXXFRRData() *frrProto.FullFRRData {
 func FoobarTesting(t *testing.T) {
 
 }
+
+func getExpectedIsRouterLSDBr101Happy() frrProto.InterAreaLsa {
+	return frrProto.InterAreaLsa{
+		RouterId: "65.0.1.1",
+		Hostname: "r101",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",
+				LsaType:  "router-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.0.12.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "Stub Network",
+					},
+					{
+						InterfaceAddress: "10.0.14.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.15.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "Stub Network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.13.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						LinkType:         "a Transit Network",
+					},
+				},
+			},
+		},
+	}
+}
+
+func getExpectedShouldRouterLSDBHappy() frrProto.IntraAreaLsa {
+	return frrProto.IntraAreaLsa{
+		Hostname: "r101",
+		RouterId: "65.0.1.1",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",    //  string
+				LsaType:  "router-LSA", //     string
+				AreaType: "normal",     //     string
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.0.12.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.0.13.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.0.14.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.15.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+				},
+			},
+		},
+	}
+
+}
+
+func getExpectedAccessListHappy() map[string]frrProto.AccessListAnalyzer {
+	return map[string]frrProto.AccessListAnalyzer{
+		"localsite": {
+			AccessList: "localsite",
+			AclEntry: []*frrProto.ACLEntry{
+				{
+					IPAddress:    "192.168.1.0",
+					PrefixLength: 24,
+					IsPermit:     true,
+					Sequence:     15,
+				},
+			},
+		},
+		"term": {
+			AccessList: "term",
+			AclEntry: []*frrProto.ACLEntry{
+				{
+					IPAddress:    "127.0.0.1",
+					PrefixLength: 32,
+					IsPermit:     true,
+					Sequence:     5,
+				},
+				{
+					IPAddress:    "any",
+					PrefixLength: 0,
+					IsPermit:     false,
+					Any:          true,
+					Sequence:     10,
+				},
+			},
+		},
+	}
+}
+
+func getExpectedStaticListHappy() map[string]*frrProto.StaticList {
+	return map[string]*frrProto.StaticList{
+		"192.168.1.0": {
+			IpAddress:    "192.168.1.0",
+			PrefixLength: 24,
+			NextHop:      "192.168.100.91",
+		},
+	}
+}
+
+func getExpectedShouldExternalLSDB(hostname, routerId string) *frrProto.InterAreaLsa {
+	return &frrProto.InterAreaLsa{
+		Hostname: hostname,
+		RouterId: routerId,
+		Areas: []*frrProto.AreaAnalyzer{
+
+			{
+				//AreaName: "0.0.0.0",
+				LsaType: "AS-external-LSA",
+				//AreaType: "",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.1.0", //   str
+						PrefixLength: "24",          //  str
+						LinkType:     "external",    // str
+					},
+				},
+			},
+		},
+	}
+}
+
+func getExpectedIsExternalLSDB() *frrProto.InterAreaLsa {
+	return &frrProto.InterAreaLsa{
+		Hostname: "r101",
+		RouterId: "65.0.1.1",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				LsaType: "AS-external-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.1.0",
+						PrefixLength: "24",
+						LinkType:     "external",
+					},
+				},
+			},
+		},
+	}
+}
