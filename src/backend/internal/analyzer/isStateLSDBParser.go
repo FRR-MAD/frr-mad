@@ -50,7 +50,7 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalData, staticRouteMap ma
 }
 
 // lsa type 7 parsing
-func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
+func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
@@ -68,7 +68,10 @@ func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, hostname string)
 			Links:    []*frrProto.Advertisement{},
 		}
 
-		for _, lsa := range nssaArea.Data {
+		for key, lsa := range nssaArea.Data {
+			if _, exists := staticRouteMap[key]; !exists {
+				continue
+			}
 			adv := frrProto.Advertisement{
 				LinkStateId:  lsa.LinkStateId,
 				PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),

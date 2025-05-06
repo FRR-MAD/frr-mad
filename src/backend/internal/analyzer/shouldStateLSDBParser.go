@@ -370,18 +370,16 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frr
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	// Check for OSPF redistribution (potential external advertisements)
-	hasRedistribution := false
+	// Check for specific OSPF redistribution types
+	redistributionTypes := make(map[string]bool)
 	for _, redist := range config.OspfConfig.Redistribution {
-		// BGP, connected, static, etc. redistribution means the router will advertise external routes
 		if redist.Type != "" {
-			hasRedistribution = true
-			break
+			redistributionTypes[redist.Type] = true
 		}
 	}
 
 	// If no redistribution is configured, router won't generate NSSA external LSAs
-	if !hasRedistribution {
+	if len(redistributionTypes) == 0 {
 		return nil
 	}
 
@@ -398,7 +396,7 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frr
 		return nil
 	}
 
-	// Find interfaces in NSSA areas
+	// Find interfaces in NSSA areas for reference
 	interfacesByArea := make(map[string][]string)
 	for _, iface := range config.Interfaces {
 		if iface.Area != "" {
@@ -414,33 +412,37 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frr
 			Links:    []*frrProto.Advertisement{},
 		}
 
-		// Add connected interfaces in this NSSA area
-		for _, ifaceName := range interfacesByArea[nssaArea] {
-			for _, iface := range config.Interfaces {
-				if iface.Name == ifaceName {
-					for _, ipPrefix := range iface.InterfaceIpPrefixes {
-						if ipPrefix.IpPrefix != nil {
-							adv := frrProto.Advertisement{
-								LinkStateId:  ipPrefix.IpPrefix.IpAddress,
-								PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
-								LinkType:     "nssa-external",
+		// Only include connected interfaces if "connected" is being redistributed
+		if redistributionTypes["connected"] {
+			for _, ifaceName := range interfacesByArea[nssaArea] {
+				for _, iface := range config.Interfaces {
+					if iface.Name == ifaceName {
+						for _, ipPrefix := range iface.InterfaceIpPrefixes {
+							if ipPrefix.IpPrefix != nil {
+								adv := frrProto.Advertisement{
+									LinkStateId:  ipPrefix.IpPrefix.IpAddress,
+									PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
+									LinkType:     "nssa-external",
+								}
+								nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 							}
-							nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 						}
 					}
 				}
 			}
 		}
 
-		// Add static routes (will be advertised as type 7 in NSSA areas)
-		for _, staticRoute := range config.StaticRoutes {
-			if staticRoute.IpPrefix != nil {
-				adv := frrProto.Advertisement{
-					LinkStateId:  staticRoute.IpPrefix.IpAddress,
-					PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
-					LinkType:     "nssa-external",
+		// Add static routes if static redistribution is enabled
+		if redistributionTypes["static"] {
+			for _, staticRoute := range config.StaticRoutes {
+				if staticRoute.IpPrefix != nil {
+					adv := frrProto.Advertisement{
+						LinkStateId:  staticRoute.IpPrefix.IpAddress,
+						PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
+						LinkType:     "nssa-external",
+					}
+					nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 				}
-				nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 			}
 		}
 

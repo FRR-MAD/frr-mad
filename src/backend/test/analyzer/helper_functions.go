@@ -1,6 +1,8 @@
 package analyzer_test
 
 import (
+	"strconv"
+
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
@@ -34,4 +36,32 @@ func uniqueNonEmptyElementsOf(s []string) []string {
 
 	return us
 
+}
+
+func GetNssaExternalData(data *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
+	result := &frrProto.InterAreaLsa{
+		Hostname: hostname,
+		RouterId: data.RouterId,
+		Areas:    []*frrProto.AreaAnalyzer{},
+	}
+
+	for areaID, areaData := range data.NssaExternalLinkStates {
+		area := &frrProto.AreaAnalyzer{
+			AreaName: areaID,
+			LsaType:  "NSSA-LSA",
+			Links:    []*frrProto.Advertisement{},
+		}
+
+		for _, lsa := range areaData.Data {
+			area.Links = append(area.Links, &frrProto.Advertisement{
+				LinkStateId:  lsa.LinkStateId,
+				PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),
+				LinkType:     "nssa-external",
+			})
+		}
+
+		result.Areas = append(result.Areas, area)
+	}
+
+	return result
 }
