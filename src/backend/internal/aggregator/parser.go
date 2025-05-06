@@ -987,7 +987,7 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			area.Type = parts[2]
 			for i, part := range parts {
 				if part == "virtual-link" && i+1 < len(parts) {
-					area.Type = "transit"
+					area.Type = "transit (virtual-link)"
 					config.OspfConfig.VirtualLinkNeighbor = parts[i+1]
 					break
 				}

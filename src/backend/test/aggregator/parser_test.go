@@ -446,7 +446,7 @@ func testOSPFConfig(
 	if ospfConfigR103.Area[0].Name != "0.0.0.2" {
 		t.Errorf("Expected ospf area type transit, got '%s'", ospfConfigR103.Area[0].Type)
 	}
-	if ospfConfigR103.Area[0].Type != "transit" {
+	if ospfConfigR103.Area[0].Type != "transit (virtual-link)" {
 		t.Errorf("Expected ospf area type transit, got '%s'", ospfConfigR103.Area[0].Type)
 	}
 	if ospfConfigR103.VirtualLinkNeighbor != "65.0.1.22" {

@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
-
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
@@ -163,32 +161,37 @@ func (c *Analyzer) AnomalyAnalysis() {
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
 	// parse frr configuration file
-	isNssa, predictedRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
+	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 
-	predictedExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+
+	// Parse RIB to get FIB
+	ribMap := GetFIB(c.metrics.RoutingInformationBase)
 
 	// TODO: testing and correction, mino
-	predictedNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
+	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
-	runtimeRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
 
-	runtimeExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	isExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
 	// TODO: testing, mino
-	runtimeNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
-	c.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 
 	//if len(staticRouteMap) > 0 || isNssa {
 	//fmt.Println(predictedExternalLSDB)
 
-	c.ExternalAnomalyAnalysis(predictedExternalLSDB, runtimeExternalLSDB)
+	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	//}
 
 	// TODO: implement, mino
 	if isNssa {
-		c.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB)
 	}
+
+	c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
 
 }
 
@@ -487,7 +490,7 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 
 func GetAreaNssaType(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) {
 
-	fmt.Println(accessList)
+	//fmt.Println(accessList)
 
 	/*
 		Identify all static routes in the router configuration

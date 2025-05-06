@@ -1055,3 +1055,472 @@ func getRXXXFRRData() *frrProto.FullFRRData {
 func FoobarTesting(t *testing.T) {
 
 }
+
+func getExpectedIsRouterLSDBr101Happy() frrProto.InterAreaLsa {
+	return frrProto.InterAreaLsa{
+		RouterId: "65.0.1.1",
+		Hostname: "r101",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",
+				LsaType:  "router-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.0.12.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "Stub Network",
+					},
+					{
+						InterfaceAddress: "10.0.14.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.15.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "Stub Network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.13.1",
+						LinkType:         "a Transit Network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						LinkType:         "a Transit Network",
+					},
+				},
+			},
+		},
+	}
+}
+
+func getExpectedShouldRouterLSDBHappy() frrProto.IntraAreaLsa {
+	return frrProto.IntraAreaLsa{
+		Hostname: "r101",
+		RouterId: "65.0.1.1",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",    //  string
+				LsaType:  "router-LSA", //     string
+				AreaType: "normal",     //     string
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.0.12.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.0.13.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.0.14.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.15.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						PrefixLength:     "24",
+						LinkType:         "transit network",
+					},
+				},
+			},
+		},
+	}
+
+}
+
+func getExpectedAccessListHappy() map[string]frrProto.AccessListAnalyzer {
+	return map[string]frrProto.AccessListAnalyzer{
+		"localsite": {
+			AccessList: "localsite",
+			AclEntry: []*frrProto.ACLEntry{
+				{
+					IPAddress:    "192.168.1.0",
+					PrefixLength: 24,
+					IsPermit:     true,
+					Sequence:     15,
+				},
+			},
+		},
+		"term": {
+			AccessList: "term",
+			AclEntry: []*frrProto.ACLEntry{
+				{
+					IPAddress:    "127.0.0.1",
+					PrefixLength: 32,
+					IsPermit:     true,
+					Sequence:     5,
+				},
+				{
+					IPAddress:    "any",
+					PrefixLength: 0,
+					IsPermit:     false,
+					Any:          true,
+					Sequence:     10,
+				},
+			},
+		},
+	}
+}
+
+func getExpectedStaticListHappy() map[string]*frrProto.StaticList {
+	return map[string]*frrProto.StaticList{
+		"192.168.1.0": {
+			IpAddress:    "192.168.1.0",
+			PrefixLength: 24,
+			NextHop:      "192.168.100.91",
+		},
+	}
+}
+
+func getExpectedShouldExternalLSDB(hostname, routerId string) *frrProto.InterAreaLsa {
+	return &frrProto.InterAreaLsa{
+		Hostname: hostname,
+		RouterId: routerId,
+		Areas: []*frrProto.AreaAnalyzer{
+
+			{
+				//AreaName: "0.0.0.0",
+				LsaType: "AS-external-LSA",
+				//AreaType: "",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.1.0", //   str
+						PrefixLength: "24",          //  str
+						LinkType:     "external",    // str
+					},
+				},
+			},
+		},
+	}
+}
+
+func getExpectedIsExternalLSDB() *frrProto.InterAreaLsa {
+	return &frrProto.InterAreaLsa{
+		Hostname: "r101",
+		RouterId: "65.0.1.1",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				LsaType: "AS-external-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.1.0",
+						PrefixLength: "24",
+						LinkType:     "external",
+					},
+				},
+			},
+		},
+	}
+}
+
+func getNssaRouterFRRdataHappy1() *frrProto.FullFRRData {
+	return &frrProto.FullFRRData{
+		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{
+			Hostname: "nssa-router",
+			OspfConfig: &frrProto.OSPFConfig{
+				RouterId: "10.0.0.1",
+				Area: []*frrProto.Area{
+					{
+						Name: "0.0.0.1",
+						Type: "nssa",
+					},
+				},
+				Redistribution: []*frrProto.Redistribution{
+					{
+						Type:     "static",
+						Metric:   "20",
+						RouteMap: "nssa-routes",
+					},
+					{
+						Type:   "connected",
+						Metric: "10",
+					},
+				},
+			},
+			Interfaces: []*frrProto.Interface{
+				{
+					Name: "eth1",
+					InterfaceIpPrefixes: []*frrProto.InterfaceIPPrefix{
+						{
+							IpPrefix: &frrProto.IPPrefix{
+								IpAddress:    "192.168.100.1",
+								PrefixLength: 24,
+							},
+						},
+					},
+				},
+			},
+			StaticRoutes: []*frrProto.StaticRoute{
+				{
+					IpPrefix: &frrProto.IPPrefix{
+						IpAddress:    "192.168.1.0",
+						PrefixLength: 24,
+					},
+					NextHop: "192.168.100.100",
+				},
+			},
+			RouteMap: map[string]*frrProto.RouteMap{
+				"nssa-routes": {
+					Permit:     true,
+					Sequence:   "10",
+					Match:      "ip address",
+					AccessList: "nssa-acl",
+				},
+			},
+			AccessList: map[string]*frrProto.AccessList{
+				"nssa-acl": {
+					AccessListItems: []*frrProto.AccessListItem{
+						{
+							Sequence:      10,
+							AccessControl: "permit",
+							Destination: &frrProto.AccessListItem_IpPrefix{
+								IpPrefix: &frrProto.IPPrefix{
+									IpAddress:    "192.168.1.0",
+									PrefixLength: 24,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		OspfNssaExternalData: &frrProto.OSPFNssaExternalData{
+			RouterId: "10.0.0.1",
+			NssaExternalLinkStates: map[string]*frrProto.NssaExternalArea{
+				"0.0.0.1": {
+					Data: map[string]*frrProto.NssaExternalLSA{
+						"192.168.1.0": {
+							LinkStateId: "192.168.1.0",
+							NetworkMask: 24,
+						},
+					},
+				},
+			},
+		},
+		OspfRouterData: &frrProto.OSPFRouterData{
+			RouterId: "10.0.0.1",
+			RouterStates: map[string]*frrProto.OSPFRouterArea{
+				"0.0.0.1": {
+					LsaEntries: map[string]*frrProto.OSPFRouterLSA{
+						"10.0.0.1": {
+							LsaAge:            300,
+							Options:           "*|-|-|-|N/P|-|-|-",
+							LsaFlags:          3,
+							Flags:             3,
+							Asbr:              true,
+							LsaType:           "router-LSA",
+							LinkStateId:       "10.0.0.1",
+							AdvertisingRouter: "10.0.0.1",
+							LsaSeqNumber:      "80000002",
+							Checksum:          "abcd",
+							Length:            48,
+							NumOfLinks:        2,
+							RouterLinks: map[string]*frrProto.OSPFRouterLSALink{
+								"link0": {
+									LinkType:                "a Transit Network",
+									DesignatedRouterAddress: "10.1.1.1",
+									RouterInterfaceAddress:  "10.1.1.1",
+									Tos0Metric:              10,
+								},
+								"link1": {
+									LinkType:       "Stub Network",
+									NetworkAddress: "10.1.1.0",
+									NetworkMask:    "255.255.255.0",
+									Tos0Metric:     10,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
+	return &frrProto.FullFRRData{
+		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{
+			Hostname: "nssa-router",
+			OspfConfig: &frrProto.OSPFConfig{
+				RouterId: "10.0.0.1",
+				Area: []*frrProto.Area{
+					{
+						Name: "0.0.0.1",
+						Type: "nssa",
+					},
+				},
+				Redistribution: []*frrProto.Redistribution{
+					{
+						Type:     "static",
+						Metric:   "20",
+						RouteMap: "nssa-routes",
+					},
+					{
+						Type:   "connected",
+						Metric: "10",
+					},
+				},
+			},
+			Interfaces: []*frrProto.Interface{
+				{
+					Name: "eth0",
+					Area: "0.0.0.1",
+					InterfaceIpPrefixes: []*frrProto.InterfaceIPPrefix{
+						{
+							IpPrefix: &frrProto.IPPrefix{
+								IpAddress:    "10.1.1.1",
+								PrefixLength: 24,
+							},
+						},
+					},
+				},
+				{
+					Name: "eth1",
+					InterfaceIpPrefixes: []*frrProto.InterfaceIPPrefix{
+						{
+							IpPrefix: &frrProto.IPPrefix{
+								IpAddress:    "192.168.100.1",
+								PrefixLength: 24,
+							},
+						},
+					},
+				},
+			},
+			StaticRoutes: []*frrProto.StaticRoute{
+				{
+					IpPrefix: &frrProto.IPPrefix{
+						IpAddress:    "192.168.1.0",
+						PrefixLength: 24,
+					},
+					NextHop: "192.168.100.100",
+				},
+			},
+			RouteMap: map[string]*frrProto.RouteMap{
+				"nssa-routes": {
+					Permit:     true,
+					Sequence:   "10",
+					Match:      "ip address",
+					AccessList: "nssa-acl",
+				},
+			},
+			AccessList: map[string]*frrProto.AccessList{
+				"nssa-acl": {
+					AccessListItems: []*frrProto.AccessListItem{
+						{
+							Sequence:      10,
+							AccessControl: "permit",
+							Destination: &frrProto.AccessListItem_IpPrefix{
+								IpPrefix: &frrProto.IPPrefix{
+									IpAddress:    "192.168.1.0",
+									PrefixLength: 24,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		OspfNssaExternalData: &frrProto.OSPFNssaExternalData{
+			RouterId: "10.0.0.1",
+			NssaExternalLinkStates: map[string]*frrProto.NssaExternalArea{
+				"0.0.0.1": {
+					Data: map[string]*frrProto.NssaExternalLSA{
+						"192.168.1.0": {
+							LinkStateId: "192.168.1.0",
+							NetworkMask: 24,
+						},
+					},
+				},
+			},
+		},
+		OspfRouterData: &frrProto.OSPFRouterData{
+			RouterId: "10.0.0.1",
+			RouterStates: map[string]*frrProto.OSPFRouterArea{
+				"0.0.0.1": {
+					LsaEntries: map[string]*frrProto.OSPFRouterLSA{
+						"10.0.0.1": {
+							LsaAge:            300,
+							Options:           "*|-|-|-|N/P|-|-|-",
+							LsaFlags:          3,
+							Flags:             3,
+							Asbr:              true,
+							LsaType:           "router-LSA",
+							LinkStateId:       "10.0.0.1",
+							AdvertisingRouter: "10.0.0.1",
+							LsaSeqNumber:      "80000002",
+							Checksum:          "abcd",
+							Length:            48,
+							NumOfLinks:        2,
+							RouterLinks: map[string]*frrProto.OSPFRouterLSALink{
+								"link0": {
+									LinkType:                "a Transit Network",
+									DesignatedRouterAddress: "10.1.1.1",
+									RouterInterfaceAddress:  "10.1.1.1",
+									Tos0Metric:              10,
+								},
+								"link1": {
+									LinkType:       "Stub Network",
+									NetworkAddress: "10.1.1.0",
+									NetworkMask:    "255.255.255.0",
+									Tos0Metric:     10,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}

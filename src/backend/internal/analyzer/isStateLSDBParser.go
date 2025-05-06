@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"strconv"
+	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
@@ -161,4 +162,30 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 	result.Hostname = hostname
 
 	return &result
+}
+
+func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {
+
+	RibMap := map[string]frrProto.RibPrefixes{}
+	for prefix, routes := range rib.Routes {
+		for _, routeEntry := range routes.Routes {
+			//RibMap[prefix] = RibPrefix{
+			//	Prefix: routeEntry.Prefix,
+			//	PrefixLength: string(routeEntry.PrefixLen),
+			//	Protocol: routeEntry.Protocol,
+			//}
+			for _, route := range routeEntry.Nexthops {
+				if route.Fib {
+					RibMap[prefix] = frrProto.RibPrefixes{
+						Prefix:         strings.Split(routeEntry.Prefix, "/")[0],
+						PrefixLength:   strconv.FormatInt(int64(routeEntry.PrefixLen), 10),
+						NextHopAddress: route.Ip,
+						Protocol:       routeEntry.Protocol,
+					}
+				}
+			}
+		}
+	}
+
+	return RibMap
 }
