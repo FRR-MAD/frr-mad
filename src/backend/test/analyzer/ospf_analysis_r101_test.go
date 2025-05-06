@@ -381,7 +381,7 @@ func TestExternalLsa1(t *testing.T) {
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 	staticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 
-	expectedPredictedExternalLSDB := &frrProto.InterAreaLsa{
+	expectedshouldExternalLSDB := &frrProto.InterAreaLsa{
 		Hostname: frrMetrics.StaticFrrConfiguration.Hostname,
 		RouterId: frrMetrics.StaticFrrConfiguration.OspfConfig.RouterId,
 		Areas: []*frrProto.AreaAnalyzer{
@@ -400,17 +400,25 @@ func TestExternalLsa1(t *testing.T) {
 			},
 		},
 	}
-	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	actualshouldExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 
 	// - actualExternalLSDB -> GetRuntimeExternalRouterData
 	// - predictedExternalLSDB
 	t.Run("TestExternalDataStaticShouldAndIs", func(t *testing.T) {
 
-		assert.Equal(t, expectedPredictedExternalLSDB.Hostname, actualPredictedExternalLSDB.Hostname)
-		assert.Equal(t, expectedPredictedExternalLSDB.RouterId, actualPredictedExternalLSDB.RouterId)
+		assert.Equal(t, expectedshouldExternalLSDB.Hostname, actualshouldExternalLSDB.Hostname)
+		assert.Equal(t, expectedshouldExternalLSDB.RouterId, actualshouldExternalLSDB.RouterId)
 		expectedAreaMapTmp := make(map[string][]string)
 		expectedAreaListTmp := []string{}
-		for _, area := range expectedPredictedExternalLSDB.Areas {
+
+		assert.Equal(t, len(expectedshouldExternalLSDB.Areas), len(actualshouldExternalLSDB.Areas))
+
+		assert.Equal(t, expectedshouldExternalLSDB.Areas[0].LsaType, actualshouldExternalLSDB.Areas[0].LsaType)
+		assert.Equal(t, len(expectedshouldExternalLSDB.Areas[0].Links), len(actualshouldExternalLSDB.Areas[0].Links))
+		assert.Equal(t, expectedshouldExternalLSDB.Areas[0].Links[0].LinkStateId, actualshouldExternalLSDB.Areas[0].Links[0].LinkStateId)
+		assert.Equal(t, expectedshouldExternalLSDB.Areas[0].Links[0].PrefixLength, actualshouldExternalLSDB.Areas[0].Links[0].PrefixLength)
+		assert.Equal(t, expectedshouldExternalLSDB.Areas[0].Links[0].LinkType, actualshouldExternalLSDB.Areas[0].Links[0].LinkType)
+		for _, area := range expectedshouldExternalLSDB.Areas {
 			expectedAreaListTmp = append(expectedAreaListTmp, area.AreaName)
 			for _, adv := range area.Links {
 				expectedAreaMapTmp[area.AreaName] = append(expectedAreaMapTmp[area.AreaName], adv.LinkStateId)
@@ -418,7 +426,7 @@ func TestExternalLsa1(t *testing.T) {
 		}
 		actualAreaMapTmp := make(map[string][]string)
 		actualAreaListTmp := []string{}
-		for _, area := range expectedPredictedExternalLSDB.Areas {
+		for _, area := range expectedshouldExternalLSDB.Areas {
 			actualAreaListTmp = append(actualAreaListTmp, area.AreaName)
 			for _, adv := range area.Links {
 				actualAreaMapTmp[area.AreaName] = append(actualAreaMapTmp[area.AreaName], adv.LinkStateId)

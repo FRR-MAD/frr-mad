@@ -16,8 +16,75 @@ import (
 	- if it is NOT in FIB, it's no good
 */
 
-func (a *Analyzer) AnomalyAnalysisFIB() {
-	fmt.Println("foobar")
+func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, isStateRouter *frrProto.IntraAreaLsa, isStateExternal *frrProto.InterAreaLsa, isStateNssaExternal *frrProto.InterAreaLsa) {
+	//fmt.Println(isStateRouter)
+
+	result := &frrProto.AnomalyDetection{
+		HasMisconfiguredPrefixes: false,
+		SuperfluousEntries:       []*frrProto.Advertisement{},
+		MissingEntries:           []*frrProto.Advertisement{},
+		DuplicateEntries:         []*frrProto.Advertisement{},
+	}
+
+	// check if router lsdb are in rib
+
+	ospfCounter := 0
+	for _, entry := range ribMap {
+		if entry.Protocol == "ospf" {
+			//fmt.Println(entry)
+			ospfCounter += 1
+		}
+	}
+
+	ospfIsStateRouterCounter := 0
+	for _, area := range isStateRouter.Areas {
+		ospfIsStateRouterCounter += len(area.Links)
+	}
+
+	ospfIsStateExternalCounter := 0
+	for _, area := range isStateExternal.Areas {
+		ospfIsStateExternalCounter += len(area.Links)
+	}
+
+	// only  InterfaceAddress contains an entry
+	fmt.Println("isStateRouter")
+	for _, foo := range isStateRouter.Areas {
+		for _, i := range foo.Links {
+			//fmt.Println(i.LinkStateId)
+			fmt.Println(i.InterfaceAddress)
+		}
+	}
+	fmt.Println()
+
+	// only  LinkStateId contains an entry
+	fmt.Println("isStateExternal")
+	for _, foo := range isStateExternal.Areas {
+		for _, i := range foo.Links {
+			fmt.Println(i.LinkStateId)
+			//fmt.Println(i.InterfaceAddress)
+		}
+	}
+	fmt.Println(isStateExternal)
+
+	// only  InterfaceAddress contains an entry
+	fmt.Println("isStateNssaExternal")
+	for _, foo := range isStateNssaExternal.Areas {
+		for _, i := range foo.Links {
+			//fmt.Println(i.LinkStateId)
+			fmt.Println(i.InterfaceAddress)
+		}
+	}
+	fmt.Println()
+	//fmt.Println(ospfCounter)
+	//fmt.Println(ospfIsStateExternalCounter + ospfIsStateRouterCounter)
+
+	a.AnalysisResult.FibAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.FibAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.FibAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
+	a.AnalysisResult.FibAnomaly.MissingEntries = result.MissingEntries
+	a.AnalysisResult.FibAnomaly.SuperfluousEntries = result.SuperfluousEntries
+	a.AnalysisResult.FibAnomaly.DuplicateEntries = result.DuplicateEntries
+
 }
 
 func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
@@ -282,6 +349,9 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 	if isState == nil || shouldState == nil {
 		return
 	}
+
+	//fmt.Println(isState)
+	//fmt.Println(shouldState)
 
 	result := &frrProto.AnomalyDetection{
 		HasMisconfiguredPrefixes: false,

@@ -1,8 +1,8 @@
 package analyzer
 
 import (
-	"fmt"
 	"strconv"
+	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
@@ -161,34 +161,28 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 	return &result
 }
 
-type RibPrefix struct {
-	Prefix        string
-	PrefixLength  string
-	Protocol      string
-	NextHopAdress string
-}
+func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {
 
-func GetFIB(rib *frrProto.RoutingInformationBase) {
-
-	//RibMap := map[string]RibPrefix{}
-	fmt.Println(rib)
-	fmt.Print(len(rib.Routes))
-	for prefix, _ := range rib.Routes {
-		fmt.Println(prefix)
-		//for _, routeEntry := range routes.Routes {
-		//	for _, route := range routeEntry.Nexthops {
-		//		if route.Fib {
-		//			RibMap[prefix] = RibPrefix{
-		//				Prefix:        routeEntry.Prefix,
-		//				PrefixLength:  strconv.FormatInt(int64(routeEntry.PrefixLen), 10),
-		//				NextHopAdress: route.Ip,
-		//				Protocol:      routeEntry.Protocol,
-		//			}
-		//		}
-		//	}
-		//}
+	RibMap := map[string]frrProto.RibPrefixes{}
+	for prefix, routes := range rib.Routes {
+		for _, routeEntry := range routes.Routes {
+			//RibMap[prefix] = RibPrefix{
+			//	Prefix: routeEntry.Prefix,
+			//	PrefixLength: string(routeEntry.PrefixLen),
+			//	Protocol: routeEntry.Protocol,
+			//}
+			for _, route := range routeEntry.Nexthops {
+				if route.Fib {
+					RibMap[prefix] = frrProto.RibPrefixes{
+						Prefix:         strings.Split(routeEntry.Prefix, "/")[0],
+						PrefixLength:   strconv.FormatInt(int64(routeEntry.PrefixLen), 10),
+						NextHopAddress: route.Ip,
+						Protocol:       routeEntry.Protocol,
+					}
+				}
+			}
+		}
 	}
 
-	//fmt.Println(RibMap)
-
+	return RibMap
 }

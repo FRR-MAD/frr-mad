@@ -642,6 +642,12 @@ message AreaAnalyzer {
   repeated Advertisement links = 4;
 }
 
+message RibPrefixes {
+  string prefix = 1;
+  string prefix_length = 2;
+  string protocol = 3;
+  string next_hop_address = 4;
+}
 
 // old
 // Main message containing all anomaly types
