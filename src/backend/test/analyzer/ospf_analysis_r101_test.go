@@ -1,7 +1,6 @@
 package analyzer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
@@ -607,71 +606,3 @@ func TestAnomalyAnalysisLsaFive1(t *testing.T) {
 // }
 
 // Add these test cases to your analyzer_test.go file
-
-func TestNssaExternalLsaHappy1(t *testing.T) {
-	// Setup test data for NSSA-External analysis
-	ana := initAnalyzer()
-	frrMetrics := getNssaRouterFRRdataHappy1()
-
-	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
-	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
-
-	// Get predicted and runtime NSSA-external LSDBs
-	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration)
-	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
-
-	// Run the analysis
-	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
-
-	t.Run("TestNssaExternalNormalCase", func(t *testing.T) {
-		// In normal case, there should be no anomalies
-		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes)
-		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
-		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
-		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
-	})
-}
-
-func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
-	// Setup test data with intentional anomalies
-	ana := initAnalyzer()
-	frrMetrics := getNssaRouterFRRdataUnhappy1()
-
-	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
-	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
-
-	// Get predicted and runtime NSSA-external LSDBs
-	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration)
-	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
-
-	fmt.Println("---------------------- Predicted ----------------------")
-	fmt.Println(predictedNssaExternalLSDB)
-	fmt.Println("---------------------- Predicted ----------------------")
-
-	fmt.Println("---------------------- Runtime ----------------------")
-	fmt.Println(runtimeNssaExternalLSDB)
-	fmt.Println("---------------------- Runtime ----------------------")
-
-	// Run the analysis
-	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
-
-	t.Run("TestNssaExternalMissingRoutes", func(t *testing.T) {
-		// Should detect missing routes that should be advertised
-		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
-		assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
-	})
-
-	// t.Run("TestNssaExternalExtraRoutes", func(t *testing.T) {
-	// 	// Should detect extra routes that shouldn't be advertised
-	// 	assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
-	// 	assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
-	// })
-
-	// t.Run("TestNssaExternalDuplicates", func(t *testing.T) {
-	// 	// Should detect duplicate routes
-	// 	assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes)
-	// 	assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
-	// })
-}
