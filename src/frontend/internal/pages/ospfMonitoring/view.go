@@ -58,13 +58,15 @@ func (m *Model) renderLsdbMonitorTab() string {
 		var networkLinkStateTableData [][]string
 		var summaryLinkStateTableData [][]string
 		var asbrSummaryLinkStateTableData [][]string
+		var nssaExternalLinkStateTableData [][]string
 
 		var amountOfRouterLS string
 		var amountOfNetworkLS string
 		var amountOfSummaryLS string
 		var amountOfAsSummaryLS string
+		var amountOfnssaExternalLS string
 
-		// loop through LSAs (type 1-4) and extract data for tables
+		// loop through LSAs (type 1-4 + type 7) and extract data for tables
 		for _, routerLinkState := range lsaTypes.RouterLinkStates {
 			routerLinkStateTableData = append(routerLinkStateTableData, []string{
 				routerLinkState.Base.AdvertisedRouter,
@@ -116,6 +118,20 @@ func (m *Model) renderLsdbMonitorTab() string {
 			amountOfAsSummaryLS = strconv.Itoa(int(lsaTypes.AsbrSummaryLinkStatesCount))
 		}
 
+		for _, nssaExternalLinkStates := range lsaTypes.NssaExternalLinkStates {
+			nssaExternalLinkStateTableData = append(nssaExternalLinkStateTableData, []string{
+				nssaExternalLinkStates.Route,
+				nssaExternalLinkStates.MetricType,
+				nssaExternalLinkStates.Base.AdvertisedRouter,
+				strconv.Itoa(int(nssaExternalLinkStates.Base.LsaAge)),
+			})
+		}
+		if nssaExternalLinkStateTableData == nil {
+			amountOfnssaExternalLS = "0"
+		} else {
+			amountOfnssaExternalLS = strconv.Itoa(int(lsaTypes.NssaExternalLinkStatesCount))
+		}
+
 		// Order all Table Data
 		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
 			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
@@ -128,6 +144,9 @@ func (m *Model) renderLsdbMonitorTab() string {
 		})
 		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
 			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
+		})
+		sort.Slice(nssaExternalLinkStateTableData, func(i, j int) bool {
+			return nssaExternalLinkStateTableData[i][0] < nssaExternalLinkStateTableData[j][0]
 		})
 
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
@@ -186,11 +205,26 @@ func (m *Model) renderLsdbMonitorTab() string {
 			asbrSummaryLinkStateTable = asbrSummaryLinkStateTable.Row(r...)
 		}
 
+		// Create Table for NSSA External Link States and Fill with extracted nssaExternalLinkStateTableData
+		rowsNSSAExternal := len(nssaExternalLinkStateTableData)
+		nssaExternalLinkStateTable := components.NewOspfMonitorTable(
+			[]string{
+				"External Route",
+				"Metric Type",
+				"Advertising Router ID",
+				"LSA Age",
+			},
+			rowsNSSAExternal,
+		)
+		for _, r := range nssaExternalLinkStateTableData {
+			nssaExternalLinkStateTable = nssaExternalLinkStateTable.Row(r...)
+		}
+
 		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Link State Database: Area %s", areaID))
 
 		// create styled boxes for each LSA Type (type 1-4)
 		routerTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render(amountOfRouterLS+" Router Link States"+strconv.Itoa(styles.WidthTwoH2Box)),
+			styles.H2TitleStyleForTwo().Render(amountOfRouterLS+" Router Link States"),
 			styles.H2TwoContentBoxesCenterStyle().Render(routerLinkStateTable.String()),
 			styles.H2TwoBoxBottomBorderStyle().Render(""),
 		)
@@ -209,17 +243,32 @@ func (m *Model) renderLsdbMonitorTab() string {
 			styles.H2TwoContentBoxesCenterStyle().Render(asbrSummaryLinkStateTable.String()),
 			styles.H2TwoBoxBottomBorderStyle().Render(""),
 		)
+		nssaExternalTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.H2TitleStyleForOne().Render(amountOfnssaExternalLS+" NSSA External Link States"),
+			styles.H2OneContentBoxCenterStyle().Render(nssaExternalLinkStateTable.String()),
+			styles.H2OneBoxBottomBorderStyle().Render(""),
+		)
 
 		horizontalRouterAndNetworkLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, routerTableBox, networkTableBox)
 		horizontalSummaryAndAsbrSummaryLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, summaryTableBox, asbrSummaryTableBox)
+
+		var optionalLSAType7 []string
+		if nssaExternalLinkStateTableData != nil {
+			optionalLSAType7 = append(optionalLSAType7, nssaExternalTableBox)
+		}
+
+		activeOptionalLSATypes := lipgloss.JoinVertical(lipgloss.Left,
+			optionalLSAType7...,
+		)
 
 		completeAreaLSDB := lipgloss.JoinVertical(lipgloss.Left,
 			areaHeader,
 			horizontalRouterAndNetworkLinkStates,
 			horizontalSummaryAndAsbrSummaryLinkStates,
+			activeOptionalLSATypes,
 		)
 
-		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB+"\n\n")
+		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB+"\n")
 	}
 
 	// ===== External LSA =====
@@ -433,25 +482,6 @@ func (m *Model) renderExternalMonitorTab() string {
 	},
 		rowsExternal,
 	)
-	//externalTable := ltable.New().
-	//	Border(lipgloss.NormalBorder()).
-	//	BorderTop(true).
-	//	BorderBottom(true).
-	//	BorderLeft(true).
-	//	BorderRight(true).
-	//	BorderHeader(true).
-	//	BorderColumn(true).
-	//	Headers("Link State ID", "CIDR", "Metric Type", "Forwarding Address").
-	//	StyleFunc(func(row, col int) lipgloss.Style {
-	//		switch {
-	//		case row == ltable.HeaderRow:
-	//			return styles.HeaderStyle
-	//		case row == rowsExternal-1:
-	//			return styles.NormalCellStyle.BorderBottom(true)
-	//		default:
-	//			return styles.NormalCellStyle
-	//		}
-	//	})
 
 	for _, r := range externalTableData {
 		externalTable = externalTable.Row(r...)
