@@ -12,7 +12,6 @@ import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	// "github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
-	ltable "github.com/charmbracelet/lipgloss/table"
 	"strings"
 )
 
@@ -402,6 +401,7 @@ func (m *Model) renderExternalMonitorTab() string {
 		return common.PrintBackendError(err, "GetOspfNssaExternalData")
 	}
 
+	// ===== OSPF External LSAs (Type 5) =====
 	var externalTableData [][]string
 	var externalTableDataExpanded [][]string // for future  feature
 	for externalLinkState, linkStateData := range externalLSASelf.AsExternalLinkStates {
@@ -425,25 +425,33 @@ func (m *Model) renderExternalMonitorTab() string {
 	})
 
 	rowsExternal := len(externalTableData)
-	externalTable := ltable.New().
-		Border(lipgloss.NormalBorder()).
-		BorderTop(true).
-		BorderBottom(true).
-		BorderLeft(true).
-		BorderRight(true).
-		BorderHeader(true).
-		BorderColumn(true).
-		Headers("Link State ID", "CIDR", "Metric Type", "Forwarding Address").
-		StyleFunc(func(row, col int) lipgloss.Style {
-			switch {
-			case row == ltable.HeaderRow:
-				return styles.HeaderStyle
-			case row == rowsExternal-1:
-				return styles.NormalCellStyle.BorderBottom(true)
-			default:
-				return styles.NormalCellStyle
-			}
-		})
+	externalTable := components.NewOspfMonitorTable([]string{
+		"Link State ID",
+		"CIDR",
+		"Metric Type",
+		"Forwarding Address",
+	},
+		rowsExternal,
+	)
+	//externalTable := ltable.New().
+	//	Border(lipgloss.NormalBorder()).
+	//	BorderTop(true).
+	//	BorderBottom(true).
+	//	BorderLeft(true).
+	//	BorderRight(true).
+	//	BorderHeader(true).
+	//	BorderColumn(true).
+	//	Headers("Link State ID", "CIDR", "Metric Type", "Forwarding Address").
+	//	StyleFunc(func(row, col int) lipgloss.Style {
+	//		switch {
+	//		case row == ltable.HeaderRow:
+	//			return styles.HeaderStyle
+	//		case row == rowsExternal-1:
+	//			return styles.NormalCellStyle.BorderBottom(true)
+	//		default:
+	//			return styles.NormalCellStyle
+	//		}
+	//	})
 
 	for _, r := range externalTableData {
 		externalTable = externalTable.Row(r...)
@@ -462,8 +470,16 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	externalLsaBlock = append(externalLsaBlock, completeExternalBox+"\n\n")
 
+	// extract and sort the map keys
+	nssaAreas := make([]string, 0, len(nssaExternalDataSelf.NssaExternalLinkStates))
+	for area := range nssaExternalDataSelf.NssaExternalLinkStates {
+		nssaAreas = append(nssaAreas, area)
+	}
+	sort.Strings(nssaAreas)
+
 	var nssaExternalTableData [][]string
-	for area, areaData := range nssaExternalDataSelf.NssaExternalLinkStates {
+	for _, area := range nssaAreas {
+		areaData := nssaExternalDataSelf.NssaExternalLinkStates[area]
 		for _, lsaData := range areaData.Data {
 			nssaExternalTableData = append(nssaExternalTableData, []string{
 				lsaData.LinkStateId,
