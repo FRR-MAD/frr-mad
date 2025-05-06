@@ -10,11 +10,11 @@ import (
 )
 
 type MetricExporter struct {
-	data    *frrProto.FullFRRData
-	metrics map[string]prometheus.Collector
-	enabled map[string]bool
-	logger  *logger.Logger
-	mutex   sync.RWMutex
+	data           *frrProto.FullFRRData
+	metrics        map[string]prometheus.Collector
+	enabledMetrics map[string]bool
+	logger         *logger.Logger
+	mutex          sync.RWMutex
 }
 
 func NewMetricExporter(
@@ -24,10 +24,10 @@ func NewMetricExporter(
 	flags map[string]configs.ParsedFlag,
 ) *MetricExporter {
 	m := &MetricExporter{
-		data:    data,
-		metrics: make(map[string]prometheus.Collector),
-		enabled: make(map[string]bool),
-		logger:  logger,
+		data:           data,
+		metrics:        make(map[string]prometheus.Collector),
+		enabledMetrics: make(map[string]bool),
+		logger:         logger,
 	}
 
 	// Initialize all metrics based on config flags
@@ -43,7 +43,7 @@ func NewMetricExporter(
 	m.initializeInterfaceMetrics(flags)
 	m.initializeRouteMetrics(flags)
 
-	// Register all enabled metrics
+	// Register all enabledMetrics metrics
 	for _, metric := range m.metrics {
 		registry.MustRegister(metric)
 	}
@@ -53,7 +53,7 @@ func NewMetricExporter(
 
 func (m *MetricExporter) initializeRouterMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFRouterData"]; ok && flag.Enabled {
-		m.enabled["router"] = true
+		m.enabledMetrics["router"] = true
 		m.metrics["ospf_router_links"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_router_links_total",
@@ -66,7 +66,7 @@ func (m *MetricExporter) initializeRouterMetrics(flags map[string]configs.Parsed
 
 func (m *MetricExporter) initializeNetworkMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFNetworkData"]; ok && flag.Enabled {
-		m.enabled["network"] = true
+		m.enabledMetrics["network"] = true
 		m.metrics["ospf_network_attached_routers"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_network_attached_routers_total",
@@ -79,7 +79,7 @@ func (m *MetricExporter) initializeNetworkMetrics(flags map[string]configs.Parse
 
 func (m *MetricExporter) initializeSummaryMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFSummaryData"]; ok && flag.Enabled {
-		m.enabled["summary"] = true
+		m.enabledMetrics["summary"] = true
 		m.metrics["ospf_summary_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_summary_metric",
@@ -92,7 +92,7 @@ func (m *MetricExporter) initializeSummaryMetrics(flags map[string]configs.Parse
 
 func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFAsbrSummaryData"]; ok && flag.Enabled {
-		m.enabled["asbr_summary"] = true
+		m.enabledMetrics["asbr_summary"] = true
 		m.metrics["ospf_asbr_summary_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_asbr_summary_metric",
@@ -105,7 +105,7 @@ func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]configs.P
 
 func (m *MetricExporter) initializeExternalMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFExternalData"]; ok && flag.Enabled {
-		m.enabled["external"] = true
+		m.enabledMetrics["external"] = true
 		m.metrics["ospf_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_external_metric",
@@ -118,7 +118,7 @@ func (m *MetricExporter) initializeExternalMetrics(flags map[string]configs.Pars
 
 func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFNssaExternalData"]; ok && flag.Enabled {
-		m.enabled["nssa_external"] = true
+		m.enabledMetrics["nssa_external"] = true
 		m.metrics["ospf_nssa_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_nssa_external_metric",
@@ -131,7 +131,7 @@ func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]configs.
 
 func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFDatabase"]; ok && flag.Enabled {
-		m.enabled["database"] = true
+		m.enabledMetrics["database"] = true
 		m.metrics["ospf_database_counts"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_database_lsa_count",
@@ -144,7 +144,7 @@ func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]configs.Pars
 
 func (m *MetricExporter) initializeDuplicateMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFDuplicates"]; ok && flag.Enabled {
-		m.enabled["duplicates"] = true
+		m.enabledMetrics["duplicates"] = true
 		m.metrics["ospf_duplicate_lsas"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_duplicate_lsa_count",
@@ -157,7 +157,7 @@ func (m *MetricExporter) initializeDuplicateMetrics(flags map[string]configs.Par
 
 func (m *MetricExporter) initializeNeighborMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["OSPFNeighbors"]; ok && flag.Enabled {
-		m.enabled["neighbors"] = true
+		m.enabledMetrics["neighbors"] = true
 		m.metrics["ospf_neighbor_state"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_neighbor_state",
@@ -177,7 +177,7 @@ func (m *MetricExporter) initializeNeighborMetrics(flags map[string]configs.Pars
 
 func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["InterfaceList"]; ok && flag.Enabled {
-		m.enabled["interfaces"] = true
+		m.enabledMetrics["interfaces"] = true
 		m.metrics["interface_operational_status"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_interface_operational_status",
@@ -197,7 +197,7 @@ func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]configs.Par
 
 func (m *MetricExporter) initializeRouteMetrics(flags map[string]configs.ParsedFlag) {
 	if flag, ok := flags["RouteList"]; ok && flag.Enabled {
-		m.enabled["routes"] = true
+		m.enabledMetrics["routes"] = true
 		m.metrics["route_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_route_metric",
@@ -216,38 +216,38 @@ func (m *MetricExporter) Update() {
 		return
 	}
 
-	// Update all enabled metrics
-	if m.enabled["router"] {
+	// Update all enabledMetrics
+	if m.enabledMetrics["router"] {
 		m.updateRouterMetrics()
 	}
-	if m.enabled["network"] {
+	if m.enabledMetrics["network"] {
 		m.updateNetworkMetrics()
 	}
-	if m.enabled["summary"] {
+	if m.enabledMetrics["summary"] {
 		m.updateSummaryMetrics()
 	}
-	if m.enabled["asbr_summary"] {
+	if m.enabledMetrics["asbr_summary"] {
 		m.updateASBRSummaryMetrics()
 	}
-	if m.enabled["external"] {
+	if m.enabledMetrics["external"] {
 		m.updateExternalMetrics()
 	}
-	if m.enabled["nssa_external"] {
+	if m.enabledMetrics["nssa_external"] {
 		m.updateNSSAExternalMetrics()
 	}
-	if m.enabled["database"] {
+	if m.enabledMetrics["database"] {
 		m.updateDatabaseMetrics()
 	}
-	if m.enabled["duplicates"] {
+	if m.enabledMetrics["duplicates"] {
 		m.updateDuplicateMetrics()
 	}
-	if m.enabled["neighbors"] {
+	if m.enabledMetrics["neighbors"] {
 		m.updateNeighborMetrics()
 	}
-	if m.enabled["interfaces"] {
+	if m.enabledMetrics["interfaces"] {
 		m.updateInterfaceMetrics()
 	}
-	if m.enabled["routes"] {
+	if m.enabledMetrics["routes"] {
 		m.updateRouteMetrics()
 	}
 }
@@ -385,19 +385,19 @@ func (m *MetricExporter) updateInterfaceMetrics() {
 		operVec.Reset()
 		adminVec.Reset()
 
-		for iface, intf := range ifaceData.Interfaces {
+		for interfaceName, interfaceData := range ifaceData.Interfaces {
 			operStatus := 0.0
-			if intf.OperationalStatus == "Up" {
+			if interfaceData.OperationalStatus == "Up" {
 				operStatus = 1.0
 			}
 
 			adminStatus := 0.0
-			if intf.AdministrativeStatus == "Up" {
+			if interfaceData.AdministrativeStatus == "Up" {
 				adminStatus = 1.0
 			}
 
-			operVec.WithLabelValues(iface, intf.VrfName).Set(operStatus)
-			adminVec.WithLabelValues(iface, intf.VrfName).Set(adminStatus)
+			operVec.WithLabelValues(interfaceName, interfaceData.VrfName).Set(operStatus)
+			adminVec.WithLabelValues(interfaceName, interfaceData.VrfName).Set(adminStatus)
 		}
 	}
 }

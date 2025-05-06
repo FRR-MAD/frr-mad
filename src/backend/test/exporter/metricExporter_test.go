@@ -14,7 +14,7 @@ import (
 func TestMetricExporter_WithData(t *testing.T) {
 	// Setup
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/exporter.log")
+	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	flags := map[string]configs.ParsedFlag{
@@ -141,11 +141,11 @@ func TestMetricExporter_WithData(t *testing.T) {
 		},
 	}
 
-	// Create exporter
-	exporter := exporter.NewMetricExporter(data, registry, testLogger, flags)
+	// Create frrMadExporter
+	frrMadExporter := exporter.NewMetricExporter(data, registry, testLogger, flags)
 
 	// Test
-	exporter.Update()
+	frrMadExporter.Update()
 
 	// Verify metrics
 	metrics, err := registry.Gather()
@@ -299,7 +299,7 @@ func TestMetricExporter_WithData(t *testing.T) {
 func TestMetricExporter_DisabledMetrics(t *testing.T) {
 	// Setup
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/exporter.log")
+	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	flags := map[string]configs.ParsedFlag{
@@ -329,11 +329,11 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 		},
 	}
 
-	// Create exporter
-	exporter := exporter.NewMetricExporter(data, registry, testLogger, flags)
+	// Create frrMadExporter
+	frrMadExporter := exporter.NewMetricExporter(data, registry, testLogger, flags)
 
 	// Test
-	exporter.Update()
+	frrMadExporter.Update()
 
 	// Verify no metrics are registered
 	metrics, err := registry.Gather()
