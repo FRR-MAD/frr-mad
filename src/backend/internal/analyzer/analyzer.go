@@ -166,7 +166,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	// Parse RIB to get FIB
-	ribMap := GetFIB(c.metrics.RoutingInformationBase)
+	//ribMap := GetFIB(c.metrics.RoutingInformationBase)
 
 	// TODO: testing and correction, mino
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
@@ -191,7 +191,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB)
 	}
 
-	c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
+	//c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
 
 }
 
