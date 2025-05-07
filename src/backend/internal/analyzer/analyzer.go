@@ -169,6 +169,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	//ribMap := GetFIB(c.metrics.RoutingInformationBase)
 
 	// TODO: testing and correction, mino
+	// TODO: use static route map and accessList, mino
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
 	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)

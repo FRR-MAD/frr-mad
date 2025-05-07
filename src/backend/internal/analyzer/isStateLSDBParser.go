@@ -7,6 +7,82 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
+// lsa type 1 parsing
+func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
+	result := frrProto.IntraAreaLsa{
+		RouterId: config.RouterId,
+		Areas:    []*frrProto.AreaAnalyzer{},
+	}
+
+	//for _, value := range config.RouterStates {
+	//	fmt.Println(value)
+	//}
+
+	for areaName, routerArea := range config.RouterStates {
+		for _, lsaEntry := range routerArea.LsaEntries {
+			var currentArea *frrProto.AreaAnalyzer
+			for i := range result.Areas {
+				if result.Areas[i].AreaName == areaName {
+					currentArea = result.Areas[i]
+					break
+				}
+			}
+
+			if currentArea == nil {
+				newArea := frrProto.AreaAnalyzer{
+					AreaName: areaName,
+					LsaType:  lsaEntry.LsaType,
+					Links:    []*frrProto.Advertisement{},
+				}
+				result.Areas = append(result.Areas, &newArea)
+				currentArea = result.Areas[len(result.Areas)-1]
+			}
+
+			for _, routerLink := range lsaEntry.RouterLinks {
+				var ipAddress, prefixLength string
+				isStub := false
+				if routerLink.LinkType == "Stub Network" {
+					routerLink.LinkType = "stub network"
+					ipAddress = routerLink.NetworkAddress
+					isStub = true
+					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
+				} else if routerLink.LinkType == "a Transit Network" {
+					routerLink.LinkType = "transit network"
+					ipAddress = routerLink.RouterInterfaceAddress
+					//prefixLength = "24" // Assuming a /24 for transit links
+				} else {
+					if routerLink.RouterInterfaceAddress != "" {
+						ipAddress = routerLink.RouterInterfaceAddress
+					} else if routerLink.NetworkAddress != "" {
+						ipAddress = routerLink.NetworkAddress
+						//prefixLength = maskToPrefixLength(routerLink.NetworkMask)
+					} else {
+						continue
+					}
+				}
+
+				adv := frrProto.Advertisement{}
+				adv.InterfaceAddress = ipAddress
+				if routerLink.LinkType == "another Router (point-to-point)" {
+					adv.LinkType = "point-to-point"
+				} else {
+					adv.LinkType = routerLink.LinkType
+				}
+
+				if isStub {
+					adv.PrefixLength = prefixLength
+				}
+
+				currentArea.Links = append(currentArea.Links, &adv)
+			}
+		}
+	}
+
+	result.Hostname = hostname
+
+	return &result
+}
+
 // lsa type 5 parsing
 // this will only return static routes, as BGP routes aren't useful in ospf analysis
 func GetRuntimeExternalData(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
@@ -86,82 +162,6 @@ func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, staticRouteMap m
 	}
 
 	return result
-}
-
-// lsa type 1 parsing
-func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
-	result := frrProto.IntraAreaLsa{
-		RouterId: config.RouterId,
-		Areas:    []*frrProto.AreaAnalyzer{},
-	}
-
-	//for _, value := range config.RouterStates {
-	//	fmt.Println(value)
-	//}
-
-	for areaName, routerArea := range config.RouterStates {
-		for _, lsaEntry := range routerArea.LsaEntries {
-			var currentArea *frrProto.AreaAnalyzer
-			for i := range result.Areas {
-				if result.Areas[i].AreaName == areaName {
-					currentArea = result.Areas[i]
-					break
-				}
-			}
-
-			if currentArea == nil {
-				newArea := frrProto.AreaAnalyzer{
-					AreaName: areaName,
-					LsaType:  lsaEntry.LsaType,
-					Links:    []*frrProto.Advertisement{},
-				}
-				result.Areas = append(result.Areas, &newArea)
-				currentArea = result.Areas[len(result.Areas)-1]
-			}
-
-			for _, routerLink := range lsaEntry.RouterLinks {
-				var ipAddress, prefixLength string
-				isStub := false
-				if routerLink.LinkType == "Stub Network" {
-					routerLink.LinkType = "stub network"
-					ipAddress = routerLink.NetworkAddress
-					isStub = true
-					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-				} else if routerLink.LinkType == "a Transit Network" {
-					routerLink.LinkType = "transit network"
-					ipAddress = routerLink.RouterInterfaceAddress
-					//prefixLength = "24" // Assuming a /24 for transit links
-				} else {
-					if routerLink.RouterInterfaceAddress != "" {
-						ipAddress = routerLink.RouterInterfaceAddress
-					} else if routerLink.NetworkAddress != "" {
-						ipAddress = routerLink.NetworkAddress
-						//prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-					} else {
-						continue
-					}
-				}
-
-				adv := frrProto.Advertisement{}
-				adv.InterfaceAddress = ipAddress
-				if routerLink.LinkType == "another Router (point-to-point)" {
-					adv.LinkType = "point-to-point"
-				} else {
-					adv.LinkType = routerLink.LinkType
-				}
-
-				if isStub {
-					adv.PrefixLength = prefixLength
-				}
-
-				currentArea.Links = append(currentArea.Links, &adv)
-			}
-		}
-	}
-
-	result.Hostname = hostname
-
-	return &result
 }
 
 func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {

@@ -8,7 +8,7 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// lsa type 1 prediction parsing
+// GetStaticFileRouterData makes LSA type 1 prediction parsing
 func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
 	if config == nil || config.OspfConfig == nil {
 		return false, nil
@@ -27,7 +27,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 
 	// Process all interfaces
 	for _, iface := range config.Interfaces {
-		// Skip interfaces without an area
+		// Skip interfaces without an area -> they are not part of OSPF
 		peerInterface := false
 		for _, peer := range iface.InterfaceIpPrefixes {
 			if peer.PeerIpPrefix != nil {
@@ -52,32 +52,28 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 
 		// Create advertisements from IP addresses
-		for _, ipPrefix := range iface.InterfaceIpPrefixes {
-			if ipPrefix.IpPrefix == nil {
+		for _, interfaceIpPrefix := range iface.InterfaceIpPrefixes {
+			if interfaceIpPrefix.IpPrefix == nil {
 				continue
 			}
 
 			adv := frrProto.Advertisement{
-				InterfaceAddress: ipPrefix.IpPrefix.IpAddress,
-				PrefixLength:     strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
+				InterfaceAddress: interfaceIpPrefix.IpPrefix.IpAddress,
+				PrefixLength:     strconv.Itoa(int(interfaceIpPrefix.IpPrefix.PrefixLength)),
 			}
 
 			// Determine link type based on interface properties
-			if ipPrefix.Passive {
+			if interfaceIpPrefix.Passive {
 				adv.LinkType = "stub network"
 				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
+				//yannick: Todo: is 'lo' interface really in OSPF? / I think is already filterd 'if iface.Area == ""' -> 'lo' has no area.
 			} else if strings.Contains(iface.Name, "lo") {
 				// Loopback interfaces
 				adv.LinkType = "stub network"
-			} else {
-				// Default to transit network unless we can determine it's point-to-point
-				// In a real implementation, you would check for ospf network point-to-point configuration
-				adv.LinkType = "transit network"
-
-			}
-
-			if peerInterface {
+			} else if peerInterface {
 				adv.LinkType = "point-to-point"
+			} else {
+				adv.LinkType = "transit network"
 			}
 
 			a.Links = append(a.Links, &adv)
@@ -123,6 +119,9 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 				isNssa = true
 			case "stub":
 				areaMap[ospfArea.Name].AreaType = "stub"
+				//yannick: Todo: i added this case for transit areas
+			case "transit (virtual-link)":
+				areaMap[ospfArea.Name].AreaType = "transit"
 			default:
 				areaMap[ospfArea.Name].AreaType = "normal"
 			}
@@ -147,7 +146,8 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 	if len(result.Areas) == 0 {
 		return false, nil
 	} else if len(result.Areas) == 1 {
-		result.RouterType = "normal"
+		//yannick: Todo: router type is not normal is 'internal router'
+		result.RouterType = "internal router"
 	} else if isASBR {
 		result.RouterType = "asbr"
 	} else {
@@ -157,6 +157,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 	return isNssa, result
 }
 
+// GetStaticFileExternalData makes LSA type 5 prediction parsing
 func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
@@ -275,7 +276,7 @@ func GetStaticFileExternalDataOld(config *frrProto.StaticFRRConfiguration) *frrP
 	routeMap := make(map[string]bool)
 
 	for _, redist := range config.OspfConfig.Redistribution {
-		if redist.Type != "" && redist.Type == "static" {
+		if redist.Type == "static" {
 			if _, exists := config.RouteMap[redist.RouteMap]; exists {
 				if _, exists := staticRedistMap[redist.Type]; !exists && config.RouteMap[redist.RouteMap].Permit {
 					staticRedistMap[redist.Type] = true
@@ -358,6 +359,7 @@ func GetStaticFileExternalDataOld(config *frrProto.StaticFRRConfiguration) *frrP
 	return result
 }
 
+// GetStaticFileNssaExternalData makes LSA type 7 prediction parsing
 func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil

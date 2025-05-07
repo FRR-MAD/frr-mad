@@ -984,7 +984,9 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			}
 			parts := strings.Fields(line)
 			area := &frrProto.Area{Name: parts[1]}
-			area.Type = parts[2]
+			if len(parts) > 2 {
+				area.Type = parts[2]
+			}
 			for i, part := range parts {
 				if part == "virtual-link" && i+1 < len(parts) {
 					area.Type = "transit (virtual-link)"
