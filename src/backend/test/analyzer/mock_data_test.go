@@ -1844,7 +1844,6 @@ func getExpectedShouldRouterLSDBr102SuperfluousEntriesUnhappy() *frrProto.IntraA
 	}
 }
 
-// r102
 func getIsExternalLSDBr101OverUnhappy() *frrProto.InterAreaLsa {
 	return &frrProto.InterAreaLsa{
 		Hostname: "r101",
@@ -1874,6 +1873,55 @@ func getIsExternalLSDBr101UnUnhappy() *frrProto.InterAreaLsa {
 				Links: []*frrProto.Advertisement{
 					{
 						LinkStateId:  "192.168.1.0",
+						PrefixLength: "24",
+						LinkType:     "external",
+					},
+					{
+						LinkStateId:  "192.168.2.0",
+						PrefixLength: "24",
+						LinkType:     "external",
+					},
+				},
+			},
+		},
+	}
+}
+
+// r102
+func getIsExternalLSDBr102OverUnhappy() *frrProto.InterAreaLsa {
+	return &frrProto.InterAreaLsa{
+		Hostname: "r102",
+		RouterId: "65.0.1.2",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				LsaType: "AS-external-LSA",
+				Links:   []*frrProto.Advertisement{
+					// {
+					// 	LinkStateId:  "192.168.11.0",
+					// 	PrefixLength: "24",
+					// 	LinkType:     "external",
+					// },
+					// {
+					// 	LinkStateId:  "192.168.12.0",
+					// 	PrefixLength: "24",
+					// 	LinkType:     "external",
+					// },
+				},
+			},
+		},
+	}
+}
+
+func getIsExternalLSDBr102UnUnhappy() *frrProto.InterAreaLsa {
+	return &frrProto.InterAreaLsa{
+		Hostname: "r102",
+		RouterId: "65.0.1.2",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				LsaType: "AS-external-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						LinkStateId:  "192.168.11.0",
 						PrefixLength: "24",
 						LinkType:     "external",
 					},

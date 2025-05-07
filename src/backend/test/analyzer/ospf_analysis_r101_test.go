@@ -409,7 +409,6 @@ func TestExternalLsaUnhappy1(t *testing.T) {
 
 	})
 
-	// Overadvertised: has isExternalLSDB too many?
 }
 
 func TestAnomalyAnalysisHappy1(t *testing.T) {

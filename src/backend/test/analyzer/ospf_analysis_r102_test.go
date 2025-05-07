@@ -455,6 +455,70 @@ func TestExternalLsaHappy2(t *testing.T) {
 
 }
 
+func TestExternalLsaUnhappy2(t *testing.T) {
+	ana := initAnalyzer()
+	frrMetrics := getR102FRRdata()
+
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	staticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
+
+	shouldExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	isExternalLSDB := getIsExternalLSDBr102OverUnhappy()
+
+	// Unadvertised: isExternalLSDB is empty
+	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
+		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
+		expectedMissingEntrires := []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "192.168.11.0",
+				LinkType:         "external",
+			},
+		}
+
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
+		expectedME := expectedMissingEntrires[0]
+		actualME := ana.AnalysisResult.ExternalAnomaly.MissingEntries[0]
+
+		missingOne := strings.EqualFold(actualME.LinkType, expectedME.LinkType)
+		if !missingOne {
+			missingOne = strings.EqualFold(actualME.InterfaceAddress, expectedME.InterfaceAddress)
+		}
+		assert.True(t, missingOne)
+
+	})
+
+	// Overadvertised: isExternalLSDB is empty
+	ana = initAnalyzer()
+	frrMetrics = getR102FRRdata()
+	isExternalLSDB = getIsExternalLSDBr102UnUnhappy()
+	shouldExternalLSDB = analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
+		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries))
+		expectedMissingEntrires := []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "192.168.11.0",
+				LinkType:         "external",
+			},
+		}
+
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries))
+		expectedME := expectedMissingEntrires[0]
+		actualME := ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries[0]
+
+		missingOne := strings.EqualFold(actualME.LinkType, expectedME.LinkType)
+		if !missingOne {
+			missingOne = strings.EqualFold(actualME.InterfaceAddress, expectedME.InterfaceAddress)
+		}
+		assert.True(t, missingOne)
+	})
+
+}
+
 // todo
 func TestAnomalyAnalysisLsaFive2(t *testing.T) {
 
