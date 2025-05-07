@@ -88,9 +88,9 @@ var NavyBlue = "#3a3a3a"
 //var BadRed = "#160"        // Usage: Box Border when content bad
 //var NavyBlue = "237"
 
-// ----------------------------
-// Text Styling
-// ----------------------------
+// ======================================== //
+// Text Styling                             //
+// ======================================== //
 
 var BoxTitleStyle = lipgloss.NewStyle().
 	Bold(true).
