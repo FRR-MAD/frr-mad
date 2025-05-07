@@ -105,7 +105,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 		for i := range area.Links {
 			if area.Links[i].LinkType != "point-to-point" {
 				link := area.Links[i]
-				key := getadvertisementKey(link)
+				key := getAdvertisementKey(link)
 				isStateMap[key] = &frrProto.Advertisement{
 					InterfaceAddress: link.InterfaceAddress,
 					LinkType:         link.LinkType,
@@ -121,7 +121,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 		for i := range area.Links {
 			if area.Links[i].LinkType != "point-to-point" {
 				link := area.Links[i]
-				key := getadvertisementKey(link)
+				key := getAdvertisementKey(link)
 				shouldStateMap[key] = &frrProto.Advertisement{
 					InterfaceAddress: link.InterfaceAddress,
 					LinkType:         link.LinkType,
@@ -183,7 +183,7 @@ func writeBoolTarget(source bool) bool {
 	return false
 }
 
-func getadvertisementKey(adv *frrProto.Advertisement) string {
+func getAdvertisementKey(adv *frrProto.Advertisement) string {
 	if adv.InterfaceAddress != "" {
 		return normalizeNetworkAddress(adv.InterfaceAddress)
 	}
