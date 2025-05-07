@@ -47,34 +47,28 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 	}
 
 	// only  InterfaceAddress contains an entry
-	fmt.Println("isStateRouter")
 	for _, foo := range isStateRouter.Areas {
 		for _, i := range foo.Links {
 			//fmt.Println(i.LinkStateId)
 			fmt.Println(i.InterfaceAddress)
 		}
 	}
-	fmt.Println()
 
 	// only  LinkStateId contains an entry
-	fmt.Println("isStateExternal")
 	for _, foo := range isStateExternal.Areas {
 		for _, i := range foo.Links {
 			fmt.Println(i.LinkStateId)
 			//fmt.Println(i.InterfaceAddress)
 		}
 	}
-	fmt.Println(isStateExternal)
 
 	// only  InterfaceAddress contains an entry
-	fmt.Println("isStateNssaExternal")
 	for _, foo := range isStateNssaExternal.Areas {
 		for _, i := range foo.Links {
 			//fmt.Println(i.LinkStateId)
 			fmt.Println(i.InterfaceAddress)
 		}
 	}
-	fmt.Println()
 	//fmt.Println(ospfCounter)
 	//fmt.Println(ospfIsStateExternalCounter + ospfIsStateRouterCounter)
 
@@ -87,23 +81,25 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 
 }
 
-func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) {
+func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
 	if isState == nil || shouldState == nil {
 		//fmt.Println("nil!")
-		return
+		return nil, nil
 	}
 
 	result := &frrProto.AnomalyDetection{
-		HasMisconfiguredPrefixes: false,
-		SuperfluousEntries:       []*frrProto.Advertisement{},
-		MissingEntries:           []*frrProto.Advertisement{},
-		DuplicateEntries:         []*frrProto.Advertisement{},
+		HasUnderAdvertisedPrefixes: false,
+		HasOverAdvertisedPrefixes:  false,
+		HasDuplicatePrefixes:       false,
+		HasMisconfiguredPrefixes:   false,
+		SuperfluousEntries:         []*frrProto.Advertisement{},
+		MissingEntries:             []*frrProto.Advertisement{},
+		DuplicateEntries:           []*frrProto.Advertisement{},
 	}
 
 	isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
 	shouldStateMap := make(map[string]*frrProto.Advertisement)
-	shouldStateCounter := make(map[string]int)
 
 	for _, area := range isState.Areas {
 		for i := range area.Links {
@@ -114,13 +110,9 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 					InterfaceAddress: link.InterfaceAddress,
 					LinkType:         link.LinkType,
 				}
-				if link.LinkType == "Stub Network" {
+				if link.LinkType == strings.ToLower("Stub Network") {
 					isStateMap[key].PrefixLength = link.PrefixLength
 				}
-				if _, exist := isStateCounter[link.InterfaceAddress]; !exist {
-					isStateCounter[link.InterfaceAddress] = 0
-				}
-				isStateCounter[link.InterfaceAddress] += 1
 			}
 		}
 	}
@@ -134,13 +126,10 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 					InterfaceAddress: link.InterfaceAddress,
 					LinkType:         link.LinkType,
 				}
-				if link.LinkType == "Stub Network" {
+				if link.LinkType == strings.ToLower("Stub Network") {
 					shouldStateMap[key].PrefixLength = link.PrefixLength
 				}
-				if _, exist := shouldStateCounter[link.InterfaceAddress]; !exist {
-					shouldStateCounter[link.InterfaceAddress] = 0
-				}
-				shouldStateCounter[link.InterfaceAddress] += 1
+
 			}
 		}
 	}
@@ -148,9 +137,10 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 	// check for missing prefixes -> underadvertised
 	for key, shouldLink := range shouldStateMap {
 		if _, exists := isStateMap[key]; !exists {
-			if !isExcludedByAccessList(shouldLink, accessList) {
-				result.MissingEntries = append(result.MissingEntries, shouldLink)
-			}
+			//fmt.Println(shouldLink)
+			result.MissingEntries = append(result.MissingEntries, shouldLink)
+			//if !isExcludedByAccessList(shouldLink, accessList) {
+			//}
 		}
 	}
 
@@ -174,14 +164,15 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 	//a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = writeBoolTarget(result.HasUnderAdvertisedPrefixes)
 	//a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = writeBoolTarget(result.HasOverAdvertisedPrefixes)
 
-	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
-	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
 	//writeBoolTarget(result.HasDuplicatePrefixes)
 	//a.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes = writeBoolTarget(result.HasMisconfiguredPrefixes)
 	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.RouterAnomaly.DuplicateEntries = result.DuplicateEntries
+	return isStateMap, shouldStateMap
 
 }
 
@@ -231,7 +222,7 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	- if it is in FIB, it's good
 	- if it is NOT in FIB, it's no good
 */
-func (a *Analyzer) ExternalAnomalyAnalysisLSDB(isState *frrProto.InterAreaLsa, shouldState *frrProto.InterAreaLsa) {
+func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
 	}
