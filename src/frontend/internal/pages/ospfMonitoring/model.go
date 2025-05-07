@@ -1,6 +1,7 @@
 package ospfMonitoring
 
 import (
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -15,10 +16,11 @@ type Model struct {
 	expandedMode  bool
 	windowSize    *common.WindowSize
 	viewport      viewport.Model
+	logger        *logger.Logger
 }
 
 // New creates and returns a new dashboard Model.
-func New(windowSize *common.WindowSize) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	boxWidthForOne := windowSize.Width - 6
 	if boxWidthForOne < 20 {
 		boxWidthForOne = 20
@@ -38,6 +40,7 @@ func New(windowSize *common.WindowSize) *Model {
 		expandedMode:  false,
 		windowSize:    windowSize,
 		viewport:      vp,
+		logger:        appLogger,
 	}
 }
 
