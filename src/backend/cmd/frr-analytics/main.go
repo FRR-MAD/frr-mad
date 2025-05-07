@@ -13,6 +13,7 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 )
 
@@ -22,7 +23,7 @@ type MadService struct {
 	//AggregateService ServiceActivator
 	Analyzer   *analyzer.Analyzer
 	Aggregator *aggregator.Collector
-	Exporter   string
+	Exporter   *exporter.Exporter
 }
 
 type ServiceActivator struct {
@@ -34,7 +35,7 @@ type ServiceActivator struct {
 type ServiceSelector struct {
 	Analyzer   *analyzer.Analyzer
 	Aggregator *aggregator.Collector
-	Exporter   string
+	Exporter   *exporter.Exporter
 }
 
 func main() {
@@ -85,6 +86,7 @@ func main() {
 
 	if len(serviceList) == 0 {
 		serviceList = append(serviceList, "analyzer")
+		serviceList = append(serviceList, "exporter")
 	}
 
 	for _, service := range serviceList {
@@ -99,11 +101,18 @@ func main() {
 		}
 		if service == "aggregator" {
 		}
+
 		if service == "exporter" {
 			exporterLogger := createNewLogger("exporter", "/tmp/exporter.log")
 			exporterLogger.SetDebugLevel(debugLevel)
-			madService.Exporter = startExporter(analyzerConfig, exporterLogger, pollInterval)
-			fmt.Println(exporterConfig)
+			exporter, err := startExporter(exporterConfig, exporterLogger, pollInterval, madService.Aggregator, madService.Analyzer)
+			if err != nil {
+				exporterLogger.Error(fmt.Sprintf("Failed to start exporter: %v", err))
+				// if not working close everything
+				//os.Exit(1)
+			} else {
+				madService.Exporter = exporter
+			}
 		}
 	}
 
@@ -136,15 +145,17 @@ func startAggregator(config map[string]string, logging *logger.Logger, pollInter
 func startAnalyzer(config map[string]string, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
 	detection := analyzer.InitAnalyzer(config, aggregatorService, logging)
 	analyzer.StartAnalyzer(detection, pollInterval)
+
 	detection.Foobar()
 	return detection
 }
 
-func startExporter(config map[string]string, logging *logger.Logger, pollInterval time.Duration) string {
-	// exporter := exporter.InitExporter(config, logging)
-	// exporter.StartExporter(exporter, pollInterval)
-	// return exporter
-	return "foobar"
+func startExporter(config map[string]string, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector, analyzerService *analyzer.Analyzer) (*exporter.Exporter, error) {
+	exporter, err := exporter.NewExporter(config, logging, pollInterval, aggregatorService.FullFrrData, analyzerService.Cache)
+
+	exporter.Start()
+	// exporter.Stop()
+	return exporter, err
 }
 
 func getEnv(key, defaultValue string) string {

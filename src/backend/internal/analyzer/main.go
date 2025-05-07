@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
@@ -34,7 +33,7 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 		defer ticker.Stop()
 		for range ticker.C {
 			analyzer.AnomalyAnalysis()
-			fmt.Printf("Analyzer: \n%+v\n", analyzer.Collector.FullFrrData.OspfAsbrSummaryData)
+			// fmt.Printf("Analyzer: \n%+v\n", analyzer.Collector.FullFrrData.OspfAsbrSummaryData)
 		}
 	}()
 
