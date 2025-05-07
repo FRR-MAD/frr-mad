@@ -1,0 +1,44 @@
+# Root directory
+root = "/app/src"
+# Temporary directory for builds
+tmp_dir = "/app/tmp"
+
+[build]
+# Command to build your app
+cmd = "cd /app/src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/analyzer_frr ./cmd/frr-analytics && cd /app/src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/frr-tui ./cmd/tui"
+# "
+# Binary file generated
+bin = "/app/tmp/analyzer_frr"
+# How the built app is run
+full_bin = "/app/tmp/analyzer_frr start"
+# Delay before rebuilding after file changes (in milliseconds)
+delay = 500
+# Directories to exclude from watching
+exclude_dir = ["tmp", "vendor"]
+# File extensions to watch
+include_ext = ["go", "proto", "yaml", "yml", "json", "toml", "css", "js", "html", "md", "conf"]
+# Files to exclude from watching
+exclude_file = []
+# Regex pattern to exclude files
+exclude_regex = ["_test\\.go"]
+# Watch recursively through subdirectories
+recursive = true
+
+[log]
+# Add time to log
+time = true
+
+[color]
+# Log colors
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[screen]
+# Clear screen before running app
+clear_on_rebuild = true
+
+[misc]
+# Clean temporary files on exit
+clean_on_exit = true

@@ -1,0 +1,39 @@
+package aggregator
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+)
+
+func InitAggregator(config configs.AggregatorConfig, logger *logger.Logger) *Collector {
+	metricsURL := config.FRRMetricsURL //config["FRRMetricsURL"]
+	configPath := config.FRRConfigPath //config["FRRConfigPath"]
+	socketPath := config.SocketPath    //config["SocketPath"]
+
+	return newCollector(metricsURL, configPath, socketPath, logger)
+}
+
+func StartAggregator(collector *Collector, pollInterval time.Duration) {
+	ticker := time.NewTicker(pollInterval)
+	go func() {
+		defer ticker.Stop()
+
+		for range ticker.C {
+			err := collector.Collect()
+			if err != nil {
+				//log.Printf("Collection error: %v", err)
+				collector.logger.Error(fmt.Sprintf("Collection error: %v", err))
+				continue
+			}
+
+			// TMP logging
+			//log.Printf("Collected state at %v", state.Timestamp.AsTime())
+			//log.Printf("OSPF Neighbors: %d\n", len(state.Ospf.Neighbors))
+			//log.Printf("OSPF Routes: %d\n", len(state.Ospf.Routes))
+			//log.Printf("System CPU: %.1f%%\n", state.System.CpuUsage)
+		}
+	}()
+}

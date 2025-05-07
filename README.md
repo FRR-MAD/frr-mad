@@ -1,4 +1,7 @@
-# frr-tui
+# FRR-MAD
+
+FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) is an intuitive Terminal User Interface for monitoring OSPF states within FRRouting.
+It effectively detects anomalies by comparing static file data with the Link-State Database (LSDB) and the Forwarding Information Base (FIB).
 
 ## Usage
 
@@ -13,11 +16,32 @@
 
 ```
 root/
-├── frontend/               # 
-├── backend/                # 
-│   ├── analytics/          # 
-│   └── collector/          # 
-└── README.md               # Project documentation
+├── archive/                 # 
+├── backend/                 # 
+├── binaries/                # Ready to use Go binaries
+├── protobufSource/          # Protofile for go-types generation
+├── src/                     # Source Code 
+│   ├── backend/             # 
+│   │   ├── internal/        # 
+│   │   │   ├── aggregator/  # Logic to fetch, process and parse data
+│   │   │   ├── analyzer/    # Logic to analyze collected data
+│   │   │   ├── comms/       # Unix Socket creation
+│   │   │   ├── logger/      # Logic for application logging
+│   └── frontend/            # Terminal User Interface using Charmbracelet Libraries
+└── README.md                # Project documentation
+```
+
+### Backend Aggregator Structure
+
+```
+backend
+├──internal/
+│  └── aggregator/          # This is your collector
+│       ├── collector.go     # Main collection logic
+│       ├── fetcher.go       # HTTP metrics fetching
+│       ├── parser.go        # FRR config parsing
+│       ├── types.go         # DTO definitions
+│       └── converter.go     # Metrics to DTO conversion
 ```
 
 1. **Separation by functionality**: UI, distro handling, and configuration are clearly separated
@@ -26,7 +50,26 @@ root/
 4. **Single responsibility**: Each package has a clear purpose
 5. **Testability**: Components are modular and can be tested independently
 
-This is the initial design of the code environment. 
+This is the initial design of the code environment.
+
+### Frontend Structure
+
+```
+root/
+├── src/                           # Source Code 
+│   ├── frontend/                  # 
+│   │   ├── cmd/                   # 
+│   │   │   ├── tui/               # Entry Point (main.go)
+│   │   ├── internal/              # 
+│   │   │   ├── common/            # Shared types, helpers, and utilites across pages
+│   │   │   ├── pages/             # Each Page has it’s own model
+│   │   │   │   ├── examplePage/   #
+│   │   │   │   │   ├── model/     # Bubbletea model
+│   │   │   │   │   ├── update/    # update logic and message handling
+│   │   │   │   │   ├── view/      # UI rendering and Backend data aggregation
+│   │   │   ├── services/          # Backend service layer to call external systems
+│   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
+```
 
 ## development Tools
 

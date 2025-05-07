@@ -20,10 +20,14 @@ __pycache__/
 .env
 .DS_Store
 
+# containerlab
+clab-frr01
+
 # go files
 go.sum
 
 # folders
 binaries
+proto-binary
 
-
+/makefile.yannick
