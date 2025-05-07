@@ -638,9 +638,31 @@ func getR102FRRdata() *frrProto.FullFRRData {
 		},
 	}
 
+	ospfExternalData := &frrProto.OSPFExternalData{
+		RouterId: "65.0.1.2",
+		AsExternalLinkStates: map[string]*frrProto.ExternalLSA{
+			"192.168.11.0": {
+				LsaAge:            549,
+				Options:           "*|-|-|-|-|-|E|-",
+				LsaFlags:          11,
+				LsaType:           "AS-external-LSA",
+				LinkStateId:       "192.168.11.0",
+				AdvertisingRouter: "65.0.1.2",
+				LsaSeqNumber:      "80000022",
+				Checksum:          "5c09",
+				Length:            36,
+				NetworkMask:       24,
+				MetricType:        "E1",
+				Metric:            20,
+				ForwardAddress:    "0.0.0.0",
+			},
+		},
+	}
+
 	metrics := &frrProto.FullFRRData{
 		StaticFrrConfiguration: staticFRRConfiguration,
 		OspfRouterData:         ospfRouterData,
+		OspfExternalData:       ospfExternalData,
 	}
 
 	return metrics

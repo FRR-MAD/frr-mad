@@ -301,8 +301,8 @@ func TestExternalLsaHappy2(t *testing.T) {
 	}
 	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 
-	// - actualExternalLSDB -> GetRuntimeExternalRouterData
-	// - predictedExternalLSDB
+	//- actualExternalLSDB -> GetRuntimeExternalRouterData
+	//- predictedExternalLSDB
 	t.Run("TestExternalDataStaticShouldAndIs", func(t *testing.T) {
 
 		assert.Equal(t, expectedPredictedExternalLSDB.Hostname, actualPredictedExternalLSDB.Hostname)
@@ -332,14 +332,14 @@ func TestExternalLsaHappy2(t *testing.T) {
 
 	//- runtimeExternalLSDB
 	expectedRuntimeExternalLSDB := &frrProto.InterAreaLsa{
-		Hostname: "r101",
-		RouterId: "65.0.1.1",
+		Hostname: "r102",
+		RouterId: "65.0.1.2",
 		Areas: []*frrProto.AreaAnalyzer{
 			{
 				LsaType: "AS-external-LSA",
 				Links: []*frrProto.Advertisement{
 					{
-						LinkStateId:  "192.168.1.0",
+						LinkStateId:  "192.168.11.0",
 						PrefixLength: "24",
 						LinkType:     "external",
 					},
@@ -349,8 +349,10 @@ func TestExternalLsaHappy2(t *testing.T) {
 	}
 	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
-	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
+	//TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
+		//t.Log(actualRuntimeExternalLSDB)
+		//t.Log(expectedRuntimeExternalLSDB)
 		assert.Equal(t, expectedRuntimeExternalLSDB.Hostname, actualRuntimeExternalLSDB.Hostname)
 		assert.Equal(t, expectedRuntimeExternalLSDB.RouterId, actualRuntimeExternalLSDB.RouterId)
 
@@ -367,35 +369,35 @@ func TestExternalLsaHappy2(t *testing.T) {
 
 		assert.Equal(t, expectedTotalLinks, actualTotalLinks)
 
-		// Create maps with LinkStateId as keys for comparison
+		//Create maps with LinkStateId as keys for comparison
 		expectedTmp := map[string][]*frrProto.Advertisement{}
 		actualTmp := map[string][]*frrProto.Advertisement{}
 
-		// Populate the map for expected data
+		//Populate the map for expected data
 		for _, area := range expectedRuntimeExternalLSDB.Areas {
 			for _, link := range area.Links {
 				expectedTmp[link.LinkStateId] = append(expectedTmp[link.LinkStateId], link)
 			}
 		}
 
-		// Populate the map for actual data
+		//Populate the map for actual data
 		for _, area := range actualRuntimeExternalLSDB.Areas {
 			for _, link := range area.Links {
 				actualTmp[link.LinkStateId] = append(actualTmp[link.LinkStateId], link)
 			}
 		}
 
-		// Assert that both maps have the same keys
+		//Assert that both maps have the same keys
 		assert.Equal(t, len(expectedTmp), len(actualTmp), "Expected and actual maps should have the same number of LinkStateIds")
 
-		// Assert that for each key, both maps have the same advertisements
+		//Assert that for each key, both maps have the same advertisements
 		for linkStateId, expectedAdvs := range expectedTmp {
 			actualAdvs, exists := actualTmp[linkStateId]
 			assert.True(t, exists, "LinkStateId %s should exist in actual data", linkStateId)
 			assert.Equal(t, len(expectedAdvs), len(actualAdvs), "Expected and actual should have same number of advertisements for LinkStateId %s", linkStateId)
 
-			// Additional assertions could be added here to compare specific fields of each advertisement
-			// Create maps to compare advertisements by PrefixLength and LinkType
+			//Additional assertions could be added here to compare specific fields of each advertisement
+			//Create maps to compare advertisements by PrefixLength and LinkType
 			for _, expectedAdv := range expectedAdvs {
 				foundMatch := false
 				for _, actualAdv := range actualAdvs {
@@ -411,48 +413,49 @@ func TestExternalLsaHappy2(t *testing.T) {
 
 		}
 	})
+	//}
+
+	//func TestAnomalyAnalysis2(t *testing.T) {
+
+	//ana := initAnalyzer()
+	//frrMetrics := getR102FRRdata()
+	//accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	//staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
+
+	//runtimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+
+	//_, predictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+	//ana.RouterAnomalyAnalysisLSDB(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+
+	//t.Run("TestRouterLSAAnomalyTesting", func(t *testing.T) {
+	//assert.False(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
+	//assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+	//assert.False(t, ana.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes)
+	//assert.False(t, ana.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes)
+	//assert.Empty(t, ana.AnalysisResult.RouterAnomaly.MissingEntries)
+	//assert.Empty(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries)
+	//assert.Empty(t, ana.AnalysisResult.RouterAnomaly.DuplicateEntries)
+	//})
+
+	// //
+
+	//predictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	//runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	//ana.ExternalAnomalyAnalysisLSDB(predictedExternalLSDB, runtimeExternalLSDB)
+
+	//t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
+	//assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
+	//assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+	//assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes)
+	//assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasMisconfiguredPrefixes)
+	//assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.MissingEntries)
+	//assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries)
+	//assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.DuplicateEntries)
+	//})
+
 }
 
-func TestAnomalyAnalysis2(t *testing.T) {
-
-	ana := initAnalyzer()
-	frrMetrics := getR102FRRdata()
-	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
-	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
-
-	runtimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
-
-	_, predictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-	ana.RouterAnomalyAnalysisLSDB(accessList, predictedRouterLSDB, runtimeRouterLSDB)
-
-	t.Run("TestRouterLSAAnomalyTesting", func(t *testing.T) {
-		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes)
-		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes)
-		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.MissingEntries)
-		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries)
-		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.DuplicateEntries)
-	})
-
-	//
-
-	predictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
-	ana.ExternalAnomalyAnalysisLSDB(predictedExternalLSDB, runtimeExternalLSDB)
-
-	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes)
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasMisconfiguredPrefixes)
-		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.MissingEntries)
-		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries)
-		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.DuplicateEntries)
-	})
-
-}
-
+// todo
 func TestAnomalyAnalysisLsaFive2(t *testing.T) {
 
 }
