@@ -25,6 +25,7 @@ clab-frr01
 
 # go files
 go.sum
+vendor
 
 # folders
 binaries
