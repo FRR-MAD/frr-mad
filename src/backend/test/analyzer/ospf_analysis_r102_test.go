@@ -1,6 +1,7 @@
 package analyzer_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
@@ -10,113 +11,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRouterLsa2(t *testing.T) {
+func TestRouterLsaHappy2(t *testing.T) {
 
 	ana := initAnalyzer()
 
 	frrMetrics := getR102FRRdata()
 
-	expectedAccessList := map[string]frrProto.AccessListAnalyzer{
-		"localsite": {
-			AccessList: "localsite",
-			AclEntry: []*frrProto.ACLEntry{
-				{
-					IPAddress:    "192.168.11.0",
-					PrefixLength: 24,
-					IsPermit:     true,
-					Sequence:     15,
-				},
-			},
-		},
-		"term": {
-			AccessList: "term",
-			AclEntry: []*frrProto.ACLEntry{
-				{
-					IPAddress:    "127.0.0.1",
-					PrefixLength: 32,
-					IsPermit:     true,
-					Sequence:     5,
-				},
-				{
-					IPAddress:    "any",
-					PrefixLength: 0,
-					IsPermit:     false,
-					Any:          true,
-					Sequence:     10,
-				},
-			},
-		},
-	}
+	expectedAccessList := getExpectedAccessListr102Happy()
 
-	expectedRuntimeRouterLSDB := frrProto.InterAreaLsa{
-		RouterId: "65.0.1.2",
-		Hostname: "r102",
-		Areas: []*frrProto.AreaAnalyzer{
-			{
-				AreaName: "0.0.0.0",
-				LsaType:  "router-LSA",
-				Links: []*frrProto.Advertisement{
-					{
-						InterfaceAddress: "10.0.12.2",
-						LinkType:         "a Transit Network",
-					},
-					{
-						InterfaceAddress: "10.0.23.2",
-						PrefixLength:     "24",
-						LinkType:         "Stub Network",
-					},
-				},
-			},
-			{
-				AreaName: "0.0.0.1",
-				LsaType:  "router-LSA",
-				Links: []*frrProto.Advertisement{
-					{
-						InterfaceAddress: "10.0.21.2",
-						LinkType:         "a Transit Network",
-					},
-				},
-			},
-		},
-	}
+	expectedIsRouterLSDB := getExpectedIsRouterLSDBr102Happy()
 
-	expectedPredictedRouterLSDB := frrProto.IntraAreaLsa{
-		Hostname: "r102",
-		RouterId: "65.0.1.2",
-		Areas: []*frrProto.AreaAnalyzer{
-			{
-				AreaName: "0.0.0.0",
-				LsaType:  "router-LSA",
-				AreaType: "normal",
-				Links: []*frrProto.Advertisement{
-					{
-						InterfaceAddress: "10.0.12.2",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.23.2",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-				},
-			},
-			{
-				AreaName: "0.0.0.1",
-				LsaType:  "router-LSA",
-				AreaType: "normal",
-				Links: []*frrProto.Advertisement{
-					{
-						InterfaceAddress: "10.1.21.2",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-				},
-			},
-		},
-	}
-
-	//fmt.Println(expectedPredictedRouterLSDB)
+	expectedShouldRouterLSDB := getExpectedShouldRouterLSDBr102Happy()
 
 	actualAccessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 
@@ -150,20 +55,16 @@ func TestRouterLsa2(t *testing.T) {
 		expectedStaticListKeys = append(expectedStaticListKeys, k)
 	}
 
-	//t.Logf("%v\n", expectedStaticList)
-	//t.Logf("%v\n", actualStaticList)
-
 	// Runtime parsing of router
-
 	actualRuntimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
 
-	expectedRuntimeRouterLSDBAreaLength := len(expectedRuntimeRouterLSDB.Areas)
+	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
 
 	expectedRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
 	expectedRuntimeRouterLSDBAreas := []string{}
 	expectedRuntimeRouterLSDBLsaType := map[string]string{}
-	for _, area := range expectedRuntimeRouterLSDB.Areas {
+	for _, area := range expectedIsRouterLSDB.Areas {
 		expectedRuntimeRouterLSDBAreas = append(expectedRuntimeRouterLSDBAreas, area.AreaName)
 		expectedRuntimeRouterLSDBLsaType[area.AreaName] = area.LsaType
 		for _, link := range area.Links {
@@ -185,8 +86,8 @@ func TestRouterLsa2(t *testing.T) {
 	t.Run("TestRuntimeRouterParsing", func(t *testing.T) {
 		//t.Logf("%v\n", expectedRuntimeRouterLSDB)
 		//t.Logf("%v\n", actualRuntimeRouterLSDB)
-		assert.Equal(t, expectedRuntimeRouterLSDB.RouterId, actualRuntimeRouterLSDB.RouterId)
-		assert.Equal(t, expectedRuntimeRouterLSDB.Hostname, actualRuntimeRouterLSDB.Hostname)
+		assert.Equal(t, expectedIsRouterLSDB.RouterId, actualRuntimeRouterLSDB.RouterId)
+		assert.Equal(t, expectedIsRouterLSDB.Hostname, actualRuntimeRouterLSDB.Hostname)
 		assert.Equal(t, expectedRuntimeRouterLSDBAreaLength, actualRuntimeRouterLSDBAreaLength)
 		assert.True(t, cmp.Diff(expectedRuntimeRouterLSDBAreas, actualRuntimeRouterLSDBAreas, cmpopts.SortSlices(less)) == "")
 		for _, key := range expectedRuntimeRouterLSDBAreas {
@@ -239,7 +140,7 @@ func TestRouterLsa2(t *testing.T) {
 	expectedPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
 	actualPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
 
-	for _, area := range expectedPredictedRouterLSDB.Areas {
+	for _, area := range expectedShouldRouterLSDB.Areas {
 		tmp := []*frrProto.Advertisement{}
 		expectedPredictedRouterLSDBAreas = append(expectedPredictedRouterLSDBAreas, area.AreaName)
 		expectedPredictedRouterLSDBLsaTypePerArea[area.GetAreaName()] = area.LsaType
@@ -261,8 +162,8 @@ func TestRouterLsa2(t *testing.T) {
 
 	t.Run("TestStaticFileRouterDataFunction", func(t *testing.T) {
 		assert.True(t, isNssa)
-		assert.Equal(t, expectedPredictedRouterLSDB.Hostname, actualPredictedRouterLSDB.Hostname)
-		assert.Equal(t, expectedPredictedRouterLSDB.RouterId, actualPredictedRouterLSDB.RouterId)
+		assert.Equal(t, expectedShouldRouterLSDB.Hostname, actualPredictedRouterLSDB.Hostname)
+		assert.Equal(t, expectedShouldRouterLSDB.RouterId, actualPredictedRouterLSDB.RouterId)
 		assert.Equal(t, len(expectedPredictedRouterLSDBAreas), len(actualPredictedRouterLSDBAreas))
 		assert.True(t, cmp.Diff(expectedPredictedRouterLSDBAreas, actualPredictedRouterLSDBAreas, cmpopts.SortSlices(less)) == "")
 
@@ -303,29 +204,76 @@ func TestRouterLsa2(t *testing.T) {
 
 }
 
-// what do I need?
-/*
-	- frrMetrics.OspfExternalData
-	- frrMetrics.StaticFrrConfiguration
-	- accessList
-	- predictedExternalLSDB
-	- runtimeExternalLSDB
+func TestRouterLsaUnhappy2(t *testing.T) {
 
-	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
-
-	if len(staticRouteMap) > 0 || isNssa {
-		ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	ana := initAnalyzer()
+	frrMetrics := getR102FRRdata()
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	isRouterLSDB := getExpectedIsRouterLSDBr102MissingEntries()
+	shouldRouterLSDB := getExpectedIsRouterLSDBr102Happy()
+	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
+	// unhappy c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	expectedMissingEntrires := []*frrProto.Advertisement{
+		{
+			InterfaceAddress: "10.0.12.2",
+			LinkType:         "a Transit Network",
+		},
 	}
-*/
-// what will be tested?
-/*
-	- actualExternalLSDB -> GetRuntimeExternalRouterData
-	- predictedExternalLSDB
 
-	- runtimeExternalLSDB
-*/
-func TestExternalLsa2(t *testing.T) {
+	t.Run("TestUnderadvertised", func(t *testing.T) {
+
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.Equal(t, 1, len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
+		// t.Log(expectedMissingEntrires)
+
+		//t.Log(ana.AnalysisResult.RouterAnomaly)
+		//t.Log(is)
+		//t.Log(should)
+		//t.Log(isRouterLSDB)
+		//t.Log(shouldRouterLSDB)
+
+		// t.Log(ana.AnalysisResult.RouterAnomaly.MissingEntries)
+		// t.Log(isRouterLSDB)
+		// t.Log(shouldRouterLSDB)
+		//t.Log(analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration))
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
+		missingOne := false
+		if expectedMissingEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress {
+			missingOne = strings.ToLower(expectedMissingEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.MissingEntries[0].LinkType)
+		}
+		assert.True(t, missingOne)
+	})
+
+	// isRouterLSDB2 := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+	// shouldRouterLSDB2 := getExpectedShouldRouterLSDBr102SuperfluousEntriesUnhappy()
+	// expectedSuperfluousEntrires := []*frrProto.Advertisement{
+	// 	{
+	// 		InterfaceAddress: "10.0.2.0",
+	// 		LinkType:         "Stub Network",
+	// 	},
+	// 	{
+	// 		InterfaceAddress: "10.0.12.1",
+	// 		LinkType:         "Stub Network",
+	// 	},
+	// }
+
+	// ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB2, isRouterLSDB2)
+	// t.Run("TestOveradvertised", func(t *testing.T) {
+	// 	assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+	// 	assert.True(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
+	// 	assert.Equal(t, 2, len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
+	// 	assert.Equal(t, len(expectedSuperfluousEntrires), len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
+	// 	missingOne := false
+	// 	if expectedSuperfluousEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress {
+	// 		missingOne = strings.ToLower(expectedSuperfluousEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].LinkType)
+	// 	} else if expectedSuperfluousEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].InterfaceAddress {
+	// 		missingOne = strings.ToLower(expectedSuperfluousEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].LinkType)
+	// 	}
+	// 	assert.True(t, missingOne)
+	// })
+}
+
+func TestExternalLsaHappy2(t *testing.T) {
 
 	less := func(a, b string) bool { return a < b }
 	frrMetrics := getR102FRRdata()

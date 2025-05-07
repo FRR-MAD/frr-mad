@@ -1,6 +1,7 @@
 package analyzer_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
@@ -14,9 +15,9 @@ func TestRouterLsaHappy1(t *testing.T) {
 
 	ana := initAnalyzer()
 	frrMetrics := getR101FRRdata()
-	expectedAccessList := getExpectedAccessListHappy()
+	expectedAccessList := getExpectedAccessListr101Happy()
 	expectedIsRouterLSDB := getExpectedIsRouterLSDBr101Happy()
-	expectedShouldRouterLSDB := getExpectedShouldRouterLSDBHappy()
+	expectedShouldRouterLSDB := getExpectedShouldRouterLSDBr101Happy()
 	actualAccessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 	less := func(a, b string) bool { return a < b }
 
@@ -29,7 +30,7 @@ func TestRouterLsaHappy1(t *testing.T) {
 		expectedAccessListKeys = append(expectedAccessListKeys, k)
 	}
 
-	expectedStaticList := getExpectedStaticListHappy()
+	expectedStaticList := getExpectedStaticListr101Happy()
 	actualStaticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, actualAccessList)
 
 	var actualStaticListKeys []string
@@ -167,28 +168,68 @@ func TestRouterLsaHappy1(t *testing.T) {
 
 }
 
-// what do I need?
-/*
-	- frrMetrics.OspfExternalData
-	- frrMetrics.StaticFrrConfiguration
-	- accessList
-	- predictedExternalLSDB
-	- runtimeExternalLSDB
+func TestRouterLsaUnhappy1(t *testing.T) {
 
-	runtimeExternalLSDB := GetRuntimeExternalRouterData(c.metrics.OspfExternalData, c.metrics.StaticFrrConfiguration.Hostname)
-	predictedExternalLSDB := getStaticFileExternalData(c.metrics.StaticFrrConfiguration)
-
-	if len(staticRouteMap) > 0 || isNssa {
-		ExternalAnomalyAnalysis(accessList, predictedExternalLSDB, runtimeExternalLSDB)
+	ana := initAnalyzer()
+	frrMetrics := getR101FRRdata()
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	isRouterLSDB := getExpectedShouldRouterLSDBr101MissingEntries()
+	shouldRouterLSDB := getExpectedIsRouterLSDBr101Happy()
+	ana.RouterAnomalyAnalysisLSDB(accessList, &shouldRouterLSDB, isRouterLSDB)
+	// unhappy c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	expectedMissingEntrires := []*frrProto.Advertisement{
+		{
+			InterfaceAddress: "10.0.2.0",
+			LinkType:         "Stub Network",
+		},
+		{
+			InterfaceAddress: "10.0.12.1",
+			LinkType:         "Stub Network",
+		},
 	}
-*/
-// what will be tested?
-/*
-	- actualExternalLSDB -> GetRuntimeExternalRouterData
-	- predictedExternalLSDB
 
-	- runtimeExternalLSDB
-*/
+	t.Run("TestUnderadvertised", func(t *testing.T) {
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.Equal(t, 2, len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
+		missingOne := false
+		if expectedMissingEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress {
+			missingOne = strings.ToLower(expectedMissingEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.MissingEntries[0].LinkType)
+		} else if expectedMissingEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.MissingEntries[1].InterfaceAddress {
+			missingOne = strings.ToLower(expectedMissingEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.MissingEntries[1].LinkType)
+		}
+		assert.True(t, missingOne)
+	})
+
+	isRouterLSDB2 := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+	shouldRouterLSDB2 := getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy()
+	expectedSuperfluousEntrires := []*frrProto.Advertisement{
+		{
+			InterfaceAddress: "10.0.2.0",
+			LinkType:         "Stub Network",
+		},
+		{
+			InterfaceAddress: "10.0.12.1",
+			LinkType:         "Stub Network",
+		},
+	}
+
+	ana.RouterAnomalyAnalysisLSDB(accessList, &shouldRouterLSDB2, isRouterLSDB2)
+	t.Run("TestOveradvertised", func(t *testing.T) {
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
+		assert.Equal(t, 2, len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
+		assert.Equal(t, len(expectedSuperfluousEntrires), len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
+		missingOne := false
+		if expectedSuperfluousEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress {
+			missingOne = strings.ToLower(expectedSuperfluousEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].LinkType)
+		} else if expectedSuperfluousEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].InterfaceAddress {
+			missingOne = strings.ToLower(expectedSuperfluousEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].LinkType)
+		}
+		assert.True(t, missingOne)
+	})
+}
+
 func TestExternalLsaHappy1(t *testing.T) {
 
 	less := func(a, b string) bool { return a < b }
@@ -196,7 +237,7 @@ func TestExternalLsaHappy1(t *testing.T) {
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 	staticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 
-	expectedShouldExternalLSDB := getExpectedShouldExternalLSDB(frrMetrics.StaticFrrConfiguration.Hostname, frrMetrics.StaticFrrConfiguration.OspfConfig.RouterId)
+	expectedShouldExternalLSDB := getExpectedShouldExternalLSDBr101(frrMetrics.StaticFrrConfiguration.Hostname, frrMetrics.StaticFrrConfiguration.OspfConfig.RouterId)
 
 	actualshouldExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 
@@ -238,7 +279,7 @@ func TestExternalLsaHappy1(t *testing.T) {
 	})
 
 	//- runtimeExternalLSDB
-	expectedIsExternalLSDB := getExpectedIsExternalLSDB()
+	expectedIsExternalLSDB := getExternalIsExternalLSDBr101()
 	actualIsExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
@@ -303,6 +344,69 @@ func TestExternalLsaHappy1(t *testing.T) {
 
 		}
 	})
+}
+
+func TestExternalLsaUnhappy1(t *testing.T) {
+	ana := initAnalyzer()
+	frrMetrics := getR101FRRdata()
+
+	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
+	staticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
+
+	shouldExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	isExternalLSDB := getIsExternalLSDBr101OverUnhappy()
+
+	// Unadvertised: isExternalLSDB is empty
+	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
+		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
+		expectedMissingEntrires := []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "192.168.1.0",
+				LinkType:         "external",
+			},
+		}
+
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
+		expectedME := expectedMissingEntrires[0]
+		actualME := ana.AnalysisResult.ExternalAnomaly.MissingEntries[0]
+
+		missingOne := strings.EqualFold(actualME.LinkType, expectedME.LinkType)
+		if !missingOne {
+			missingOne = strings.EqualFold(actualME.InterfaceAddress, expectedME.InterfaceAddress)
+		}
+		assert.True(t, missingOne)
+
+	})
+
+	// Overadvertised: isExternalLSDB is empty
+	isExternalLSDB2 := getIsExternalLSDBr101UnUnhappy()
+	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB2)
+	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
+		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries))
+		expectedMissingEntrires := []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "192.168.2.0",
+				LinkType:         "external",
+			},
+		}
+
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
+		expectedME := expectedMissingEntrires[0]
+		actualME := ana.AnalysisResult.ExternalAnomaly.MissingEntries[0]
+
+		missingOne := strings.EqualFold(actualME.LinkType, expectedME.LinkType)
+		if !missingOne {
+			missingOne = strings.EqualFold(actualME.InterfaceAddress, expectedME.InterfaceAddress)
+		}
+		assert.True(t, missingOne)
+
+	})
+
+	// Overadvertised: has isExternalLSDB too many?
 }
 
 func TestAnomalyAnalysisHappy1(t *testing.T) {
