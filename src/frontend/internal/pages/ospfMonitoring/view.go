@@ -2,17 +2,20 @@ package ospfMonitoring
 
 import (
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
 	"strconv"
+
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 
 	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+
 	// "github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/lipgloss"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 var currentSubTabLocal = -1

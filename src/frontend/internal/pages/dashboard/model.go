@@ -1,11 +1,13 @@
 package dashboard
 
 import (
+	"time"
+
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -18,9 +20,10 @@ type Model struct {
 	windowSize         *common.WindowSize
 	viewport           viewport.Model
 	currentTime        time.Time
+	logger             *logger.Logger
 }
 
-func New(windowSize *common.WindowSize) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	boxWidthForOne := windowSize.Width - 6
 	// subtract tab row, footer, and border heights.
 	outputHeight := windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
@@ -35,6 +38,7 @@ func New(windowSize *common.WindowSize) *Model {
 		hasAnomalyDetected: false,
 		windowSize:         windowSize,
 		viewport:           vp,
+		logger:             appLogger,
 	}
 }
 
