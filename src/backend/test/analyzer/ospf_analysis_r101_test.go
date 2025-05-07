@@ -381,8 +381,11 @@ func TestExternalLsaUnhappy1(t *testing.T) {
 	})
 
 	// Overadvertised: isExternalLSDB is empty
-	isExternalLSDB2 := getIsExternalLSDBr101UnUnhappy()
-	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB2)
+	ana = initAnalyzer()
+	frrMetrics = getR101FRRdata()
+	isExternalLSDB = getIsExternalLSDBr101UnUnhappy()
+	shouldExternalLSDB = analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
 		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
@@ -394,9 +397,9 @@ func TestExternalLsaUnhappy1(t *testing.T) {
 			},
 		}
 
-		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
+		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries))
 		expectedME := expectedMissingEntrires[0]
-		actualME := ana.AnalysisResult.ExternalAnomaly.MissingEntries[0]
+		actualME := ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries[0]
 
 		missingOne := strings.EqualFold(actualME.LinkType, expectedME.LinkType)
 		if !missingOne {

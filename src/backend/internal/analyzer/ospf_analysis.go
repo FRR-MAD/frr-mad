@@ -234,78 +234,117 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
-	isStateMap := make(map[string]map[string]*frrProto.Advertisement)
-	shouldStateMap := make(map[string]map[string]*frrProto.Advertisement)
-
-	shouldStateCounts := make(map[string]map[string]int)
+	// isStateMap := make(map[string]map[string]*frrProto.Advertisement)
+	// shouldStateMap := make(map[string]map[string]*frrProto.Advertisement)
+	isStateMap := make(map[string]*frrProto.Advertisement)
+	isStateCounter := make(map[string]int)
+	shouldStateMap := make(map[string]*frrProto.Advertisement)
 
 	// Process isState links
 	for _, area := range isState.Areas {
-		for _, link := range area.Links {
-			key := link.LinkStateId + "/" + link.PrefixLength
-
-			if isStateMap[area.LsaType] == nil {
-				isStateMap[area.LsaType] = make(map[string]*frrProto.Advertisement)
-			}
-
-			isStateMap[area.LsaType][key] = &frrProto.Advertisement{
-				InterfaceAddress: link.LinkStateId,
+		for i := range area.Links {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			isStateMap[key] = &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
 				LinkStateId:      link.LinkStateId,
-				PrefixLength:     link.PrefixLength,
 				LinkType:         link.LinkType,
+				PrefixLength:     link.PrefixLength,
 			}
+
 		}
 	}
+
+	// for _, area := range isState.Areas {
+	// for _, link := range area.Links {
+	// link := area.Links[i]
+	// key := getAdvertisementKey(link)
+	// isStateMap[key] = &frrProto.Advertisement{
+	// InterfaceAddress: link.InterfaceAddress,
+	// LinkType:         link.LinkType,
+	// }
+	// if link.LinkType == strings.ToLower("Stub Network") {
+	// isStateMap[key].PrefixLength = link.PrefixLength
+	// }
+	//
+	// if isStateMap[area.LsaType] == nil {
+	// isStateMap[area.LsaType] = make(map[string]*frrProto.Advertisement)
+	// }
+	//
+	// isStateMap[area.LsaType][key] = &frrProto.Advertisement{
+	// InterfaceAddress: link.LinkStateId,
+	// LinkStateId:      link.LinkStateId,
+	// PrefixLength:     link.PrefixLength,
+	// LinkType:         link.LinkType,
+	// }
+	// }
+	// }
 
 	// Process shouldState links
 	for _, area := range shouldState.Areas {
-		for _, link := range area.Links {
-			key := link.LinkStateId + "/" + link.PrefixLength
-
-			if shouldStateMap[area.LsaType] == nil {
-				shouldStateMap[area.LsaType] = make(map[string]*frrProto.Advertisement)
-			}
-
-			if shouldStateCounts[area.LsaType] == nil {
-				shouldStateCounts[area.LsaType] = make(map[string]int)
-			}
-
-			shouldStateCounts[area.LsaType][key]++
-
-			// Create an advertisement for the duplicate
-			if shouldStateCounts[area.LsaType][key] > 1 {
-				result.DuplicateEntries = append(result.DuplicateEntries, &frrProto.Advertisement{
-					InterfaceAddress: link.LinkStateId,
-					LinkStateId:      link.LinkStateId,
-					PrefixLength:     link.PrefixLength,
-					LinkType:         link.LinkType,
-				})
-			}
-
-			shouldStateMap[area.LsaType][key] = &frrProto.Advertisement{
-				InterfaceAddress: link.LinkStateId,
+		for i := range area.Links {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			shouldStateMap[key] = &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
 				LinkStateId:      link.LinkStateId,
-				PrefixLength:     link.PrefixLength,
 				LinkType:         link.LinkType,
+				PrefixLength:     link.PrefixLength,
 			}
+
+		}
+	}
+	// for _, area := range shouldState.Areas {
+	// 	for _, link := range area.Links {
+	// 		key := link.LinkStateId + "/" + link.PrefixLength
+
+	// 		if shouldStateMap[area.LsaType] == nil {
+	// 			shouldStateMap[area.LsaType] = make(map[string]*frrProto.Advertisement)
+	// 		}
+
+	// 		if shouldStateCounts[area.LsaType] == nil {
+	// 			shouldStateCounts[area.LsaType] = make(map[string]int)
+	// 		}
+
+	// 		shouldStateCounts[area.LsaType][key]++
+
+	// 		// Create an advertisement for the duplicate
+	// 		if shouldStateCounts[area.LsaType][key] > 1 {
+	// 			result.DuplicateEntries = append(result.DuplicateEntries, &frrProto.Advertisement{
+	// 				InterfaceAddress: link.LinkStateId,
+	// 				LinkStateId:      link.LinkStateId,
+	// 				PrefixLength:     link.PrefixLength,
+	// 				LinkType:         link.LinkType,
+	// 			})
+	// 		}
+
+	// 		shouldStateMap[area.LsaType][key] = &frrProto.Advertisement{
+	// 			InterfaceAddress: link.LinkStateId,
+	// 			LinkStateId:      link.LinkStateId,
+	// 			PrefixLength:     link.PrefixLength,
+	// 			LinkType:         link.LinkType,
+	// 		}
+	// 	}
+	// }
+
+	// check for missing prefixes -> underadvertised
+	for key, shouldLink := range shouldStateMap {
+		if _, exists := isStateMap[key]; !exists {
+			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
-	// Find superfluous entries (in isState but not in shouldState)
-	for areaType, links := range isStateMap {
-		for key, link := range links {
-			if shouldStateMap[areaType] == nil || shouldStateMap[areaType][key] == nil {
-				result.SuperfluousEntries = append(result.SuperfluousEntries, link)
-			}
+	// check for to many advertisements -> overadvertised
+	for key, isLink := range isStateMap {
+		if _, exists := shouldStateMap[key]; !exists {
+			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
-	// Find missing entries (in shouldState but not in isState)
-	for areaType, links := range shouldStateMap {
-		for key, link := range links {
-			if isStateMap[areaType] == nil || isStateMap[areaType][key] == nil {
-				result.MissingEntries = append(result.MissingEntries, link)
-			}
+	// check for duplicates
+	for prefix, counter := range isStateCounter {
+		if counter > 1 {
+			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
 		}
 	}
 
