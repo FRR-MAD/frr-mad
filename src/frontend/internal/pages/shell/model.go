@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -21,10 +22,11 @@ type Model struct {
 	activeBackendInput  string
 	backendResponse     string
 	viewport            viewport.Model
+	logger              *logger.Logger
 }
 
 // New creates and returns a new dashboard Model.
-func New(windowSize *common.WindowSize) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	boxWidthForOne := windowSize.Width - 10
 	if boxWidthForOne < 20 {
 		boxWidthForOne = 20
@@ -44,6 +46,7 @@ func New(windowSize *common.WindowSize) *Model {
 		backendCommandInput: "",
 		activeBackendInput:  "service",
 		viewport:            vp,
+		logger:              appLogger,
 	}
 }
 

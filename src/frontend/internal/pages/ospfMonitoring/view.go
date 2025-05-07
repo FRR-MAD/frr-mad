@@ -2,17 +2,20 @@ package ospfMonitoring
 
 import (
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
 	"strconv"
+
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 
 	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+
 	// "github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/lipgloss"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 var currentSubTabLocal = -1
@@ -349,8 +352,9 @@ func (m *Model) renderRouterMonitorTab() string {
 	var routerLSABlocks []string
 	for _, areaID := range routerLSAAreas {
 		areaData := routerLSASelf.RouterStates[areaID]
-		var transitData [][]string
-		var stubData [][]string
+		var transitTableData [][]string
+		var stubTableData [][]string
+		var point2pointTableData [][]string
 
 		for _, lsa := range areaData.LsaEntries {
 			for _, link := range lsa.RouterLinks {
@@ -361,16 +365,22 @@ func (m *Model) renderRouterMonitorTab() string {
 					} else if common.ContainsString(ospfNeighbors, link.DesignatedRouterAddress) {
 						name = "Neighbor"
 					}
-					transitData = append(transitData, []string{
+					transitTableData = append(transitTableData, []string{
 						link.DesignatedRouterAddress,
 						name,
 						link.RouterInterfaceAddress,
 						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				} else if strings.Contains(link.LinkType, "Stub Network") {
-					stubData = append(stubData, []string{
+					stubTableData = append(stubTableData, []string{
 						link.NetworkAddress,
 						link.NetworkMask,
+						strconv.Itoa(int(lsa.LsaAge)),
+					})
+				} else if strings.Contains(link.LinkType, "point-to-point") {
+					point2pointTableData = append(point2pointTableData, []string{
+						link.RouterInterfaceAddress,
+						"translate IP here",
 						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				}
@@ -378,14 +388,17 @@ func (m *Model) renderRouterMonitorTab() string {
 		}
 
 		// Order all Table Data
-		sort.Slice(transitData, func(i, j int) bool {
-			return transitData[i][0] < transitData[j][0]
+		sort.Slice(transitTableData, func(i, j int) bool {
+			return transitTableData[i][0] < transitTableData[j][0]
 		})
-		sort.Slice(stubData, func(i, j int) bool {
-			return stubData[i][0] < stubData[j][0]
+		sort.Slice(stubTableData, func(i, j int) bool {
+			return stubTableData[i][0] < stubTableData[j][0]
+		})
+		sort.Slice(point2pointTableData, func(i, j int) bool {
+			return point2pointTableData[i][0] < point2pointTableData[j][0]
 		})
 
-		rowsTransit := len(transitData)
+		rowsTransit := len(transitTableData)
 		transitTable := components.NewOspfMonitorTable(
 			[]string{
 				"DR Address",
@@ -395,11 +408,11 @@ func (m *Model) renderRouterMonitorTab() string {
 			},
 			rowsTransit,
 		)
-		for _, r := range transitData {
+		for _, r := range transitTableData {
 			transitTable = transitTable.Row(r...)
 		}
 
-		rowsStub := len(stubData)
+		rowsStub := len(stubTableData)
 		stubTable := components.NewOspfMonitorTable(
 			[]string{
 				"Network Address",
@@ -408,8 +421,21 @@ func (m *Model) renderRouterMonitorTab() string {
 			},
 			rowsStub,
 		)
-		for _, r := range stubData {
+		for _, r := range stubTableData {
 			stubTable = stubTable.Row(r...)
+		}
+
+		rowsPoint2Point := len(stubTableData)
+		point2pointTable := components.NewOspfMonitorTable(
+			[]string{
+				"Interface Address",
+				"Translated Address",
+				"LSA Age",
+			},
+			rowsPoint2Point,
+		)
+		for _, r := range point2pointTableData {
+			point2pointTable = point2pointTable.Row(r...)
 		}
 
 		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", areaID))
@@ -424,8 +450,20 @@ func (m *Model) renderRouterMonitorTab() string {
 			styles.H2TwoContentBoxesCenterStyle().Render(stubTable.String()),
 			styles.H2TwoBoxBottomBorderStyle().Render(""),
 		)
+		point2pointTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.H2TitleStyleForTwo().Render("Point-to-Point Networks"),
+			styles.H2TwoContentBoxesCenterStyle().Render(point2pointTable.String()),
+			styles.H2TwoBoxBottomBorderStyle().Render(""),
+		)
 
-		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, stubTableBox)
+		var verticalTables string
+		if len(transitTableBox) < len(stubTableBox) {
+			verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox)
+		} else {
+			verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox)
+		}
+
+		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
 
 		completeAreaRouterLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, horizontalTables)
 

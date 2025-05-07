@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	// "log"
+	"log"
 	"os"
 
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/ba2025-ysmprc/frr-tui/internal/configs"
 	"github.com/ba2025-ysmprc/frr-tui/internal/pages/dashboard"
 	"github.com/ba2025-ysmprc/frr-tui/internal/pages/ospfMonitoring"
 	"github.com/ba2025-ysmprc/frr-tui/internal/pages/shell"
@@ -44,23 +46,39 @@ type AppModel struct {
 	shell         *shell.Model
 	footer        *components.Footer
 	footerOptions []common.FooterOption
+	logger        *logger.Logger
 }
 
-func initModel() *AppModel {
+func initModel(config *configs.Config) *AppModel {
 	windowSize := &common.WindowSize{Width: 80, Height: 24}
+
+	debugLevel := getDebugLevel(config.Default.DebugLevel)
+	appLogger := createLogger("frr_mad_frontend", fmt.Sprintf("%v/frr_mad_frontend.log", config.Default.LogPath))
+	appLogger.SetDebugLevel(debugLevel)
+	appLogger.Info("Starting Frontend Moniotring")
+
+	dashboardLogger := createLogger("dashboard_frontend", fmt.Sprintf("%v/dashboard_frontend.log", config.Default.LogPath))
+	dashboardLogger.SetDebugLevel(debugLevel)
+
+	ospfLogger := createLogger("ospf_frontend", fmt.Sprintf("%v/ospf_frontend.log", config.Default.LogPath))
+	ospfLogger.SetDebugLevel(debugLevel)
+
+	shellLogger := createLogger("shell_frontend", fmt.Sprintf("%v/shell_frontend.log", config.Default.LogPath))
+	shellLogger.SetDebugLevel(debugLevel)
 
 	return &AppModel{
 		currentView:   ViewDashboard,
 		tabs:          []common.Tab{},
 		currentSubTab: -1,
 		windowSize:    windowSize,
-		dashboard:     dashboard.New(windowSize),
-		ospf:          ospfMonitoring.New(windowSize),
+		dashboard:     dashboard.New(windowSize, dashboardLogger),
+		ospf:          ospfMonitoring.New(windowSize, ospfLogger),
 		// code for Presentation slides
 		//ospf2:         ospfMonitoring.New(windowSize),
 		//ospf3:         ospfMonitoring.New(windowSize),
-		shell:  shell.New(windowSize),
+		shell:  shell.New(windowSize, shellLogger),
 		footer: components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
+		logger: appLogger,
 	}
 }
 
@@ -223,16 +241,37 @@ func (m *AppModel) View() string {
 
 func main() {
 	// Load configuration
-	//config, err := configs.LoadConfig()
-	//if err != nil {
-	//	log.Fatalf("Failed to load configuration: %v", err)
-	//}
+	config, err := configs.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 
 	maybeUpdateTERM()
-	p := tea.NewProgram(initModel())
+	p := tea.NewProgram(initModel(config))
 	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v\n", err)
 		os.Exit(1)
+	}
+}
+
+// Create a new logger instance
+func createLogger(name, filePath string) *logger.Logger {
+	logger, err := logger.NewLogger(name, filePath)
+	if err != nil {
+		log.Fatalf("Failed to create logger %s: %v", name, err)
+	}
+	return logger
+}
+
+// Convert debug level string to int
+func getDebugLevel(level string) int {
+	switch level {
+	case "debug":
+		return 2
+	case "error":
+		return 1
+	default:
+		return 0
 	}
 }
