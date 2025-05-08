@@ -6,8 +6,8 @@ import (
 	"time"
 
 	frrSocket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator/frrsockets"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -50,12 +50,14 @@ func initFullFrrData() *frrProto.FullFRRData {
 		OspfAsbrSummaryData:    &frrProto.OSPFAsbrSummaryData{},
 		OspfExternalData:       &frrProto.OSPFExternalData{},
 		OspfNssaExternalData:   &frrProto.OSPFNssaExternalData{},
-		OspfDuplicates:         &frrProto.OSPFDuplicates{},
+		OspfExternalAll:        &frrProto.OSPFExternalAll{},
+		OspfNssaExternalAll:    &frrProto.OSPFNssaExternalAll{},
 		OspfNeighbors:          &frrProto.OSPFNeighbors{},
 		Interfaces:             &frrProto.InterfaceList{},
-		Routes:                 &frrProto.RouteList{},
+		RoutingInformationBase: &frrProto.RoutingInformationBase{},
 		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{},
 		SystemMetrics:          &frrProto.SystemMetrics{},
+		FrrRouterData:          &frrProto.FRRRouterData{},
 	}
 
 	return &fullFrrData
@@ -83,45 +85,53 @@ func (c *Collector) Collect() error {
 			return
 		}
 
+		// TODO: Yes, do something here
 		// Merge the fetched data into the target
 		//proto.Merge(target, result)
 		// Reset target by creating a new instance of the same type
 		// Warning: Copy of Sync.Mutex lock
-		switch v := target.(type) {
-		case *frrProto.StaticFRRConfiguration:
-			*v = *result.(*frrProto.StaticFRRConfiguration)
-		case *frrProto.OSPFRouterData:
-			*v = *result.(*frrProto.OSPFRouterData)
-		case *frrProto.OSPFNetworkData:
-			*v = *result.(*frrProto.OSPFNetworkData)
-		case *frrProto.OSPFSummaryData:
-			*v = *result.(*frrProto.OSPFSummaryData)
-		case *frrProto.OSPFAsbrSummaryData:
-			*v = *result.(*frrProto.OSPFAsbrSummaryData)
-		case *frrProto.OSPFExternalData:
-			*v = *result.(*frrProto.OSPFExternalData)
-		case *frrProto.OSPFNssaExternalData:
-			*v = *result.(*frrProto.OSPFNssaExternalData)
-		case *frrProto.OSPFDatabase:
-			*v = *result.(*frrProto.OSPFDatabase)
-		case *frrProto.OSPFDuplicates:
-			*v = *result.(*frrProto.OSPFDuplicates)
-		case *frrProto.OSPFNeighbors:
-			*v = *result.(*frrProto.OSPFNeighbors)
-		case *frrProto.InterfaceList:
-			*v = *result.(*frrProto.InterfaceList)
-		case *frrProto.RouteList:
-			*v = *result.(*frrProto.RouteList)
-		case *frrProto.SystemMetrics:
-			*v = *result.(*frrProto.SystemMetrics)
-		default:
-			// Fallback to proto.Merge if type isn't explicitly handled
-			// First clear the message if possible
-			if p, ok := target.(interface{ Reset() }); ok {
-				p.Reset()
-			}
-			proto.Merge(target, result)
+
+		// check out Reset()
+		if p, ok := target.(interface{ Reset() }); ok {
+			p.Reset()
 		}
+		proto.Merge(target, result)
+
+		//switch v := target.(type) {
+		//case *frrProto.StaticFRRConfiguration:
+		//	*v = *result.(*frrProto.StaticFRRConfiguration)
+		//case *frrProto.OSPFRouterData:
+		//	*v = *result.(*frrProto.OSPFRouterData)
+		//case *frrProto.OSPFNetworkData:
+		//	*v = *result.(*frrProto.OSPFNetworkData)
+		//case *frrProto.OSPFSummaryData:
+		//	*v = *result.(*frrProto.OSPFSummaryData)
+		//case *frrProto.OSPFAsbrSummaryData:
+		//	*v = *result.(*frrProto.OSPFAsbrSummaryData)
+		//case *frrProto.OSPFExternalData:
+		//	*v = *result.(*frrProto.OSPFExternalData)
+		//case *frrProto.OSPFNssaExternalData:
+		//	*v = *result.(*frrProto.OSPFNssaExternalData)
+		//case *frrProto.OSPFDatabase:
+		//	*v = *result.(*frrProto.OSPFDatabase)
+		//case *frrProto.OSPFDuplicates:
+		//	*v = *result.(*frrProto.OSPFDuplicates)
+		//case *frrProto.OSPFNeighbors:
+		//	*v = *result.(*frrProto.OSPFNeighbors)
+		//case *frrProto.InterfaceList:
+		//	*v = *result.(*frrProto.InterfaceList)
+		//case *frrProto.RouteList:
+		//	*v = *result.(*frrProto.RouteList)
+		//case *frrProto.SystemMetrics:
+		//	*v = *result.(*frrProto.SystemMetrics)
+		//default:
+		//	// Fallback to proto.Merge if type isn't explicitly handled
+		//	// First clear the message if possible
+		//	if p, ok := target.(interface{ Reset() }); ok {
+		//		p.Reset()
+		//	}
+		//	proto.Merge(target, result)
+		//}
 
 		// Log results consistently
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s(): %v\n", name, target))
@@ -161,8 +171,12 @@ func (c *Collector) Collect() error {
 		return FetchFullOSPFDatabase(executor)
 	})
 
-	fetchAndMerge("OSPFDuplicateCandidates", c.FullFrrData.OspfDuplicates, func() (proto.Message, error) {
-		return FetchOSPFDuplicateCandidates(executor)
+	fetchAndMerge("OSPFExternalAll", c.FullFrrData.OspfExternalAll, func() (proto.Message, error) {
+		return FetchOSPFExternalAll(executor)
+	})
+
+	fetchAndMerge("OSPFNssaExternalAll", c.FullFrrData.OspfNssaExternalAll, func() (proto.Message, error) {
+		return FetchOSPFNssaExternalAll(executor)
 	})
 
 	fetchAndMerge("OSPFNeighbors", c.FullFrrData.OspfNeighbors, func() (proto.Message, error) {
@@ -173,12 +187,20 @@ func (c *Collector) Collect() error {
 		return FetchInterfaceStatus(executor)
 	})
 
-	fetchAndMerge("ExpectedRoutes", c.FullFrrData.Routes, func() (proto.Message, error) {
-		return FetchExpectedRoutes(executor)
+	fetchAndMerge("ExpectedRoutes", c.FullFrrData.RoutingInformationBase, func() (proto.Message, error) {
+		return FetchRib(executor)
 	})
 
 	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {
 		return c.fetcher.CollectSystemMetrics()
+	})
+
+	fetchAndMerge("FrrRouterData", c.FullFrrData.FrrRouterData, func() (proto.Message, error) {
+		frrRouterData := &frrProto.FRRRouterData{
+			RouterName:   c.FullFrrData.StaticFrrConfiguration.Hostname,
+			OspfRouterId: c.FullFrrData.OspfDatabase.RouterId,
+		}
+		return frrRouterData, nil
 	})
 
 	return nil
@@ -217,8 +239,12 @@ func (c *Collector) ensureFieldsInitialized() {
 		c.FullFrrData.OspfDatabase = &frrProto.OSPFDatabase{}
 	}
 
-	if c.FullFrrData.OspfDuplicates == nil {
-		c.FullFrrData.OspfDuplicates = &frrProto.OSPFDuplicates{}
+	if c.FullFrrData.OspfExternalAll == nil {
+		c.FullFrrData.OspfExternalAll = &frrProto.OSPFExternalAll{}
+	}
+
+	if c.FullFrrData.OspfNssaExternalAll == nil {
+		c.FullFrrData.OspfNssaExternalAll = &frrProto.OSPFNssaExternalAll{}
 	}
 
 	if c.FullFrrData.OspfNeighbors == nil {
@@ -229,8 +255,8 @@ func (c *Collector) ensureFieldsInitialized() {
 		c.FullFrrData.Interfaces = &frrProto.InterfaceList{}
 	}
 
-	if c.FullFrrData.Routes == nil {
-		c.FullFrrData.Routes = &frrProto.RouteList{}
+	if c.FullFrrData.RoutingInformationBase == nil {
+		c.FullFrrData.RoutingInformationBase = &frrProto.RoutingInformationBase{}
 	}
 
 	if c.FullFrrData.SystemMetrics == nil {

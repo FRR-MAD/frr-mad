@@ -283,6 +283,62 @@ func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, 
 	return &result, nil
 }
 
+func ParseOSPFNssaExternalAll(jsonData []byte) (*frrProto.OSPFNssaExternalAll, error) {
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(jsonData, &rawData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	transformed := make(map[string]interface{})
+
+	if routerID, ok := rawData["routerId"]; ok {
+		transformed["router_id"] = routerID
+	}
+
+	if nssaStates, ok := rawData["NSSA-external Link States"].(map[string]interface{}); ok {
+		areas := make(map[string]interface{})
+
+		for areaID, areaData := range nssaStates {
+			areaDataMap, ok := areaData.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			lsas := make(map[string]interface{})
+			for lsaID, lsaData := range areaDataMap {
+				lsaDataMap, ok := lsaData.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				lsas[lsaID] = transformNssaExternalLSA(lsaDataMap)
+			}
+
+			areas[areaID] = map[string]interface{}{
+				"data": lsas,
+			}
+		}
+
+		transformed["nssa_external_all_link_states"] = areas
+	}
+
+	transformedJSON, err := json.Marshal(transformed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed data: %w", err)
+	}
+
+	var result frrProto.OSPFNssaExternalAll
+	opts := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+
+	if err := opts.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
+}
+
 func ParseFullOSPFDatabase(jsonData []byte) (*frrProto.OSPFDatabase, error) {
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
@@ -337,6 +393,15 @@ func ParseFullOSPFDatabase(jsonData []byte) (*frrProto.OSPFDatabase, error) {
 				transformedArea["asbr_summary_link_states_count"] = areaDataMap["asbrSummaryLinkStatesCount"]
 			}
 
+			if nssaExternalLSAs, ok := areaDataMap["nssaExternalLinkStates"].([]interface{}); ok {
+				transformedNSSALSAs := make([]interface{}, len(nssaExternalLSAs))
+				for i, lsa := range nssaExternalLSAs {
+					transformedNSSALSAs[i] = transformDatabaseNSSAExternalLSA(lsa.(map[string]interface{}))
+				}
+				transformedArea["nssa_external_link_states"] = transformedNSSALSAs
+				transformedArea["nssa_external_link_states_count"] = areaDataMap["nssaExternalLinkStatesCount"]
+			}
+
 			transformedAreas[areaID] = transformedArea
 		}
 		transformedMap["areas"] = transformedAreas
@@ -366,7 +431,7 @@ func ParseFullOSPFDatabase(jsonData []byte) (*frrProto.OSPFDatabase, error) {
 	return &result, nil
 }
 
-func ParseOSPFDuplicates(jsonData []byte) (*frrProto.OSPFDuplicates, error) {
+func ParseOSPFExternalAll(jsonData []byte) (*frrProto.OSPFExternalAll, error) {
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
@@ -388,7 +453,7 @@ func ParseOSPFDuplicates(jsonData []byte) (*frrProto.OSPFDuplicates, error) {
 		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
 	}
 
-	var result frrProto.OSPFDuplicates
+	var result frrProto.OSPFExternalAll
 	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
 	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
@@ -528,13 +593,13 @@ func ParseInterfaceStatus(jsonData []byte) (*frrProto.InterfaceList, error) {
 	return result, nil
 }
 
-func ParseRouteList(jsonData []byte) (*frrProto.RouteList, error) {
+func ParseRib(jsonData []byte) (*frrProto.RoutingInformationBase, error) {
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal(jsonData, &rawResponse); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	result := &frrProto.RouteList{
+	result := &frrProto.RoutingInformationBase{
 		Routes: make(map[string]*frrProto.RouteEntry),
 	}
 
@@ -706,25 +771,65 @@ func parseInterfaceLine(line string) *frrProto.Interface {
 }
 
 func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line string) bool {
+	parts := strings.Fields(line)
 	switch {
 	case strings.HasPrefix(line, "ip address "):
-		parts := strings.Fields(line)
-		ip, ipNet, err := net.ParseCIDR(parts[2])
-		if err != nil || ipNet == nil {
-			log.Printf("bad CIDR %q: %v", parts[2], err)
+		if len(parts) == 3 {
+			ip, ipNet, err := net.ParseCIDR(parts[2])
+			if err != nil || ipNet == nil {
+				log.Printf("bad CIDR %q: %v", parts[2], err)
+				return true
+			}
+			prefixLength, _ := ipNet.Mask.Size()
+			currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
+				IpPrefix: &frrProto.IPPrefix{
+					IpAddress:    ip.String(),
+					PrefixLength: uint32(prefixLength),
+				},
+				Passive: false,
+				HasPeer: false,
+			})
+			return true
+		} else if parts[3] == "peer" {
+			ip := parts[2]
+			peerIp, ipNet, err := net.ParseCIDR(parts[4])
+			if err != nil || ipNet == nil {
+				log.Printf("bad CIDR %q: %v", parts[2], err)
+				return true
+			}
+			peerIpPrefixLength, _ := ipNet.Mask.Size()
+			currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
+				IpPrefix: &frrProto.IPPrefix{
+					IpAddress:    ip,
+					PrefixLength: 32,
+				},
+				Passive: false,
+				HasPeer: true,
+				PeerIpPrefix: &frrProto.IPPrefix{
+					IpAddress:    peerIp.String(),
+					PrefixLength: uint32(peerIpPrefixLength),
+				},
+			})
 			return true
 		}
-		prefixLength, _ := ipNet.Mask.Size()
-		currentInterfacePointer.IpAddress = append(currentInterfacePointer.IpAddress, &frrProto.IPPrefix{
-			IpAddress:    ip.String(),
-			PrefixLength: uint32(prefixLength),
-		})
 		return true
 	case strings.HasPrefix(line, "ip ospf area "):
 		currentInterfacePointer.Area = strings.Fields(line)[3]
 		return true
-	case line == "ip ospf passive":
-		currentInterfacePointer.Passive = true
+	case strings.HasPrefix(line, "ip ospf passive"):
+		if len(parts) < 4 {
+			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				interfaceIPPrefix.Passive = true
+				return true
+			}
+		} else {
+			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				if interfaceIPPrefix.IpPrefix.IpAddress == parts[3] {
+					interfaceIPPrefix.Passive = true
+					return true
+				}
+			}
+		}
 		return true
 	case line == "exit":
 		return true
@@ -879,10 +984,12 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			}
 			parts := strings.Fields(line)
 			area := &frrProto.Area{Name: parts[1]}
-			area.Type = parts[2]
+			if len(parts) > 2 {
+				area.Type = parts[2]
+			}
 			for i, part := range parts {
 				if part == "virtual-link" && i+1 < len(parts) {
-					area.Type = "transit"
+					area.Type = "transit (virtual-link)"
 					config.OspfConfig.VirtualLinkNeighbor = parts[i+1]
 					break
 				}
@@ -1113,71 +1220,46 @@ func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interfa
 
 func transformDatabaseRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	if v, ok := lsaData["numOfRouterLinks"]; ok {
+		transformed["num_of_router_links"] = v
 	}
-
-	transformed["num_of_router_links"] = lsaData["numOfRouterLinks"]
 
 	return transformed
 }
 
 func transformDatabaseNetworkLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
-	}
-
+	addDatabaseLSABaseParameters(transformed, lsaData)
 	return transformed
 }
 
 func transformDatabaseSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
-
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
-	}
-
+	addDatabaseLSABaseParameters(transformed, lsaData)
 	transformed["summary_address"] = lsaData["summaryAddress"]
-
 	return transformed
 }
 
 func transformDatabaseASBRSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	return transformed
+}
 
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
+func transformDatabaseNSSAExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
+	transformed := make(map[string]interface{})
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	if v, ok := lsaData["metricType"]; ok {
+		transformed["metric_type"] = v
+	}
+
+	if v, ok := lsaData["route"]; ok {
+		transformed["route"] = v
+	}
+
+	if v, ok := lsaData["tag"]; ok {
+		transformed["tag"] = v
 	}
 
 	return transformed
@@ -1185,23 +1267,42 @@ func transformDatabaseASBRSummaryLSA(lsaData map[string]interface{}) map[string]
 
 func transformDatabaseExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
+	addDatabaseLSABaseParameters(transformed, lsaData)
+	if v, ok := lsaData["metricType"]; ok {
+		transformed["metric_type"] = v
+	}
+	if v, ok := lsaData["route"]; ok {
+		transformed["route"] = v
+	}
+	if v, ok := lsaData["tag"]; ok {
+		transformed["tag"] = v
+	}
+	return transformed
+}
 
-	// BaseLSA fields
-	if base, ok := lsaData["base"].(map[string]interface{}); ok {
-		transformed["base"] = map[string]interface{}{
-			"ls_id":             base["lsId"],
-			"advertised_router": base["advertisedRouter"],
-			"lsa_age":           base["lsaAge"],
-			"sequence_number":   base["sequenceNumber"],
-			"checksum":          base["checksum"],
-		}
+// addDatabaseLSABaseParameters will pull lsId, advertisedRouter, lsaAge,
+// sequenceNumber and checksum out of the raw lsaData and
+// stick them under transformed["base"] in snake_case.
+func addDatabaseLSABaseParameters(transformed, lsaData map[string]interface{}) {
+	base := make(map[string]interface{})
+
+	if v, ok := lsaData["lsId"]; ok {
+		base["ls_id"] = v
+	}
+	if v, ok := lsaData["advertisedRouter"]; ok {
+		base["advertised_router"] = v
+	}
+	if v, ok := lsaData["lsaAge"]; ok {
+		base["lsa_age"] = v
+	}
+	if v, ok := lsaData["sequenceNumber"]; ok {
+		base["sequence_number"] = v
+	}
+	if v, ok := lsaData["checksum"]; ok {
+		base["checksum"] = v
 	}
 
-	transformed["metric_type"] = lsaData["metricType"]
-	transformed["route"] = lsaData["route"]
-	transformed["tag"] = lsaData["tag"]
-
-	return transformed
+	transformed["base"] = base
 }
 
 func transformExternalLinkState(lsaData map[string]interface{}) map[string]interface{} {

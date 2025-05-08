@@ -22,14 +22,17 @@ __pycache__/
 
 # containerlab
 clab-frr01
+containerlab/.frr01-dev.clab.yml.bak
+*.bak
 
 # go files
+vendor
+src/vendor
 go.sum
 vendor
 
 # folders
 binaries
 proto-binary
-local
-logger
 
+/makefile.yannick

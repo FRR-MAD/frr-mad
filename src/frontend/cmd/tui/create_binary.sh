@@ -1,1 +1,0 @@
-GOOS=linux GOARCH=amd64 go build -o /Users/yannickstaedeli/git/studium/bachelorThesis/frr-deployment/containerlab/tui/frr-tui

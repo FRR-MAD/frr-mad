@@ -1,4 +1,7 @@
-# frr-tui
+# FRR-MAD
+
+FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) is an intuitive Terminal User Interface for monitoring OSPF states within FRRouting.
+It effectively detects anomalies by comparing static file data with the Link-State Database (LSDB) and the Forwarding Information Base (FIB).
 
 ## Usage
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +18,7 @@ func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 	registry := prometheus.NewRegistry()
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
-	anomalies := &frrProto.Anomalies{}
+	anomalies := &frrProto.AnomalyAnalysis{}
 
 	// Create frrMadExporter
 	frrMadExporter := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
@@ -59,7 +59,10 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 	assert.NoError(t, err)
 	now := timestamppb.Now()
 
-	anomalies := &frrProto.Anomalies{
+	anomalyResult := &frrProto.AnomalyAnalysis{}
+
+	//anomalies := &frrProto.Anomalies{
+	_ = &frrProto.Anomalies{
 		OveradvertisedRoutes: []*frrProto.AnomalyOveradvertisedRoute{
 			{
 				Timestamp:        now,
@@ -131,7 +134,7 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 	}
 
 	// Create frrMadExporter
-	frrMadExporter := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
+	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 
 	// Test
 	frrMadExporter.Update()
@@ -169,7 +172,9 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 	assert.NoError(t, err)
 	now := timestamppb.Now()
 
-	anomalies := &frrProto.Anomalies{
+	anomalyResult := &frrProto.AnomalyAnalysis{}
+	//anomalies := &frrProto.Anomalies{
+	_ = &frrProto.Anomalies{
 		OveradvertisedRoutes: []*frrProto.AnomalyOveradvertisedRoute{
 			{
 				Timestamp:        now,
@@ -185,7 +190,7 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 	}
 
 	// Create frrMadExporter
-	frrMadExporter := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
+	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 
 	// Run concurrent updates
 	var wg sync.WaitGroup
@@ -212,8 +217,10 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 func TestAnomalyExporter_NilAnomalies_DoesNothing(t *testing.T) {
 	registry := prometheus.NewRegistry()
 	testLogger, _ := logger.NewLogger("test", "")
-	var anomalies *frrProto.Anomalies // nil
-	exp := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
+	//var anomalies *frrProto.Anomalies // nil
+	var anomalyResult *frrProto.AnomalyAnalysis
+
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 	// Pre-gather to get the empty registry
 	before, _ := registry.Gather()
 	exp.Update()
@@ -228,14 +235,16 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Start with some anomalies
-	anomalies := &frrProto.Anomalies{
+	anomalyResult := &frrProto.AnomalyAnalysis{}
+	//anomalies := &frrProto.Anomalies{
+	_ = &frrProto.Anomalies{
 		OveradvertisedRoutes:  []*frrProto.AnomalyOveradvertisedRoute{{}, {}},
 		UnderadvertisedRoutes: []*frrProto.AnomalyUnderadvertisedRoute{{}},
 		DuplicateRoutes:       []*frrProto.AnomalyDuplicateRoute{{}},
 		MisconfiguredRoutes:   []*frrProto.AnomalyMisconfiguredRoute{{}},
 	}
 
-	frrMadExporter := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
+	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 
 	// First update: should see presence=1 and correct counts
 	frrMadExporter.Update()
@@ -281,10 +290,15 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	}
 
 	// Clear all anomalies
-	anomalies.OveradvertisedRoutes = nil
-	anomalies.UnderadvertisedRoutes = nil
-	anomalies.DuplicateRoutes = nil
-	anomalies.MisconfiguredRoutes = nil
+	//anomalies.OveradvertisedRoutes = nil
+	//anomalies.UnderadvertisedRoutes = nil
+	//anomalies.DuplicateRoutes = nil
+	//anomalies.MisconfiguredRoutes = nil
+
+	anomalyResult.ExternalAnomaly.Reset()
+	anomalyResult.RouterAnomaly.Reset()
+	anomalyResult.NssaExternalAnomaly.Reset()
+	anomalyResult.FibAnomaly.Reset()
 
 	// Second update: everything should reset to 0
 	frrMadExporter.Update()
@@ -310,9 +324,10 @@ func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Empty Anomalies struct -> all slices zero-length
-	anomalies := &frrProto.Anomalies{}
+	//anomalies := &frrProto.Anomalies{}
+	anomalyResult := &frrProto.AnomalyAnalysis{}
 
-	exp := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 	exp.Update()
 
 	// Gather all metric families

@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/binary"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"io"
 	"net"
 	"time"
@@ -15,7 +16,7 @@ import (
 // todo: take the path from the config file
 const (
 	// Path to the Unix domain socket your analyzer listens on.
-	socketPath        = "/tmp/analyzer.sock"
+	socketPath        = "/var/run/frr-mad/analyzer.sock"
 	socketDialTimeout = 2 * time.Second
 
 	// Maximum response size we’re willing to read (for sanity checking).
@@ -69,7 +70,7 @@ func SendMessage(
 func openSocket(path string) (net.Conn, error) {
 	conn, err := net.DialTimeout("unix", path, socketDialTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("unable to connect to %q: %w", path, err)
+		return nil, fmt.Errorf("unable to connect to %q:\n\nBackend message:\n%w", path, err)
 	}
 	return conn, nil
 }
@@ -120,47 +121,139 @@ func receiveProto(conn net.Conn) (*frrProto.Response, error) {
 	return res, nil
 }
 
-func GetOSPFAnomalies() [][]string {
-	// Fetch OSPF Anomalies via protobuf
-
-	// parse received protobuf data
-
-	// parsed protobuf message should look something like this:
-	anomalyRows := [][]string{
-		{"10.0.12.0/23", "unadvertised route", "OSPF Monitoring Tab 5", "Start"},
-		{"10.0.15.0/14", "wrongly advertised", "OSPF Monitoring Tab 3", "Start"},
-		{"10.0.199.0/23", "overadvertised route", "OSPF Monitoring Tab 2", "Start"},
-		{"10.0.12.0/23", "unadvertised route", "OSPF Monitoring Tab 5", "Start"},
-		{"10.0.15.0/14", "wrongly advertised", "OSPF Monitoring Tab 3", "Start"},
-		{"10.0.199.0/23", "overadvertised route", "OSPF Monitoring Tab 2", "Start"},
-		{"10.0.12.0/23", "unadvertised route", "OSPF Monitoring Tab 5", "Start"},
-		{"10.0.15.0/14", "wrongly advertised", "OSPF Monitoring Tab 3", "Start"},
-		{"10.0.199.0/23", "overadvertised route", "OSPF Monitoring Tab 2", "Start"},
-		{"10.0.12.0/23", "unadvertised route", "OSPF Monitoring Tab 5", "Start"},
-		{"10.0.15.0/14", "wrongly advertised", "OSPF Monitoring Tab 3", "Start"},
-		{"100.100.100.100/23", "overadvertised route", "OSPF Monitoring Tab 2", "Start"},
+func GetRouterName() (string, string, error) {
+	response, err := SendMessage("frr", "routerData", nil)
+	if err != nil {
+		return "", "", err
 	}
 
-	return anomalyRows
+	routerData := response.Data.GetFrrRouterData()
+
+	routerName := routerData.RouterName
+	ospfRouterId := routerData.OspfRouterId
+
+	return routerName, ospfRouterId, nil
 }
 
-func GetOSPFMetrics() [][]string {
-	// Fetch all metrics (maybe fetch periodically everything and with the Getter function only provide requested data
+func GetSystemResources() (int64, float64, float64, error) {
 
-	// this getter provides the OSPF metrics for the dashboard if no anomaly is detected
-
-	// Stub or Transit Network does only exist for Router (Type 1) LSAs
-	allGoodRows := [][]string{
-		{"10.0.0.0/23", "Stub Network"},
-		{"10.0.12.0/24", "Transit Network"},
-		{"10.0.13.0/24", "Transit Network"},
-		{"10.0.14.0/24", "Transit Network"},
-		{"10.0.15.0/24", "Transit Network"},
-		{"10.0.16.0/24", "Transit Network"},
-		{"10.0.17.0/24", "Transit Network"},
-		{"10.0.18.0/24", "Transit Network"},
-		{"10.0.19.0/24", "Transit Network"},
+	response, err := SendMessage("system", "allResources", nil)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
+	}
+	if response.Status != "success" {
+		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
 	}
 
-	return allGoodRows
+	systemMetrics := response.Data.GetSystemMetrics()
+
+	cores := systemMetrics.CpuAmount
+	cpuUsage := systemMetrics.CpuUsage
+	memoryUsage := systemMetrics.MemoryUsage
+
+	return cores, cpuUsage, memoryUsage, nil
+}
+
+func GetLSDB() (*frrProto.OSPFDatabase, error) {
+	response, err := SendMessage("ospf", "database", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfDatabase(), nil
+}
+
+func GetOspfRouterData() (*frrProto.OSPFRouterData, error) {
+	response, err := SendMessage("ospf", "router", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfRouterData(), nil
+}
+
+func GetOspfNeighborInterfaces() ([]string, error) {
+	response, err := SendMessage("ospf", "neighbors", nil)
+	if err != nil {
+		return nil, err
+	}
+	ospfNeighbors := response.Data.GetOspfNeighbors()
+
+	var neighborAddresses []string
+	for _, neighborGroup := range ospfNeighbors.Neighbors {
+		for _, neighbor := range neighborGroup.Neighbors {
+			neighborAddresses = append(neighborAddresses, neighbor.IfaceAddress)
+		}
+	}
+
+	return neighborAddresses, nil
+}
+
+func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
+	response, err := SendMessage("ospf", "externalData", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfExternalData(), nil
+}
+
+func GetOspfNssaExternalData() (*frrProto.OSPFNssaExternalData, error) {
+	response, err := SendMessage("ospf", "nssaExternalData", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfNssaExternalData(), nil
+}
+
+func GetStaticFRRConfigurationPretty() (string, error) {
+	response, err := SendMessage("ospf", "staticConfig", nil)
+	if err != nil {
+		return "", err
+	}
+
+	var prettyJson string
+
+	// Pretty‑print the protobuf into nice indented JSON
+	marshaler := protojson.MarshalOptions{
+		Multiline:     true,
+		Indent:        "  ",
+		UseProtoNames: true,
+	}
+	pretty, perr := marshaler.Marshal(response.Data)
+	if perr != nil {
+		prettyJson = response.Data.String()
+	} else {
+		prettyJson = string(pretty)
+	}
+
+	return prettyJson, nil
+}
+
+func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "router", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
+}
+
+func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "external", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
+}
+
+func GetNSSAExternalAnomalies() (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "nssaExternal", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
 }

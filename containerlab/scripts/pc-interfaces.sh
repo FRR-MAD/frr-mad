@@ -1,6 +1,7 @@
 #!/bin/bash
-
-# AS65001
+# ================== #
+#       AS65001      #
+# ================== #
 # setup test PC in Area0 - PC101
 docker exec -d clab-frr01-pc101 ip link set eth1 up
 docker exec -d clab-frr01-pc101 ip addr add 10.0.0.100/23 dev eth1
@@ -9,12 +10,23 @@ docker exec -d clab-frr01-pc101 ip route del default via 172.20.20.1 dev eth0
 docker exec -d clab-frr01-pc101 ip route add 1.1.1.1/24 via 10.0.0.1 eth1
 docker exec -d clab-frr01-pc101 ip route add default via 10.0.0.1 dev eth1
 
-# setsetup test PC in Area1 - PC111
+# setup test PC in Area0 - PC102
+docker exec -d clab-frr01-pc102 ip link set eth1 up
+docker exec -d clab-frr01-pc102 ip addr add 10.0.2.100/24 dev eth1
+docker exec -d clab-frr01-pc102 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc102 ip route add default via 10.0.2.1 dev eth1
+
+# setup test PC in Area1 - PC111
 docker exec -d clab-frr01-pc111 ip link set eth1 up
 docker exec -d clab-frr01-pc111 ip addr add 10.1.0.100/24 dev eth1
 docker exec -d clab-frr01-pc111 ip route del default via 172.20.20.1 dev eth0
-docker exec -d clab-frr01-pc111 ip route add 11.11.11.11/24 via 10.1.0.11 eth1
 docker exec -d clab-frr01-pc111 ip route add default via 10.1.0.11 dev eth1
+
+# setup test PC in Area1 - PC112
+docker exec -d clab-frr01-pc112 ip link set eth1 up
+docker exec -d clab-frr01-pc112 ip addr add 10.1.1.100/24 dev eth1
+docker exec -d clab-frr01-pc112 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc112 ip route add default via 10.1.1.11 dev eth1
 
 # setup test PC in Area2 -  PC121
 docker exec -d clab-frr01-pc121 ip link set eth1 up
@@ -35,6 +47,18 @@ docker exec -d clab-frr01-pc191 ip link set eth1 up
 docker exec -d clab-frr01-pc191 ip addr add 192.168.1.100/24 dev eth1
 docker exec -d clab-frr01-pc191 ip route del default via 172.20.20.1 dev eth0
 docker exec -d clab-frr01-pc191 ip route add default via 192.168.1.91 dev eth1
+
+# setup test PC outside OSPF -  PC192
+docker exec -d clab-frr01-pc192 ip link set eth1 up
+docker exec -d clab-frr01-pc192 ip addr add 192.168.10.100/24 dev eth1
+docker exec -d clab-frr01-pc192 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc192 ip route add default via 192.168.10.92 dev eth1
+
+# setup test PC outside OSPF -  PC193
+docker exec -d clab-frr01-pc192 ip link set eth1 up
+docker exec -d clab-frr01-pc192 ip addr add 192.168.11.100/24 dev eth1
+docker exec -d clab-frr01-pc192 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc192 ip route add default via 192.168.10.93 dev eth1
 
 # setup test PC in Customer4 network -  CPC104
 docker exec -d clab-frr01-cpc104 ip link set eth1 up
@@ -62,23 +86,51 @@ docker exec -d clab-frr01-cpc108 ip addr add 192.168.8.100/24 dev eth1
 docker exec -d clab-frr01-cpc109 ip link set eth1 up
 docker exec -d clab-frr01-cpc109 ip addr add 192.168.9.100/24 dev eth1
 
-# AS 65002
-# setup test PC in Area1 -  PC201
+# ================== #
+#       AS65002      #
+# ================== #
+
+# setup test PC in Area0 -  PC201
 docker exec -d clab-frr01-pc201 ip link set eth1 up
 docker exec -d clab-frr01-pc201 ip addr add 10.20.0.100/24 dev eth1
 docker exec -d clab-frr01-pc201 ip route del default via 172.20.20.1 dev eth0
 docker exec -d clab-frr01-pc201 ip route add 65.0.2.2/24 via 10.20.0.1 eth1
-docker exec -d clab-frr01-pc201 ip route add default via 10.20.0.1 dev eth1
+docker exec -d clab-frr01-pc201 ip route add default via 10.20.0.2 dev eth1
 
-# AS 65003
-# setup test PC in Area1 -  PC201
+# setup test PC in Area0 -  PC203
+docker exec -d clab-frr01-pc203 ip link set eth1 up
+docker exec -d clab-frr01-pc203 ip addr add 10.20.3.100/24 dev eth1
+docker exec -d clab-frr01-pc203 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc203 ip route add default via 10.20.3.3 dev eth1
+
+# setup test PC in Area0 -  PC204
+docker exec -d clab-frr01-pc204 ip link set eth1 up
+docker exec -d clab-frr01-pc204 ip addr add 10.20.4.100/24 dev eth1
+docker exec -d clab-frr01-pc204 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc204 ip route add default via 10.20.4.4 dev eth1
+
+# ================== #
+#       AS65003      #
+# ================== #
+
+# setup test PC in Area1 -  PC301
 docker exec -d clab-frr01-pc301 ip link set eth1 up
 docker exec -d clab-frr01-pc301 ip addr add 10.30.0.100/24 dev eth1
 docker exec -d clab-frr01-pc301 ip route del default via 172.20.20.1 dev eth0
 docker exec -d clab-frr01-pc301 ip route add 65.0.3.2/24 via 10.30.0.2 eth1
 docker exec -d clab-frr01-pc301 ip route add default via 10.30.0.2 dev eth1
 
-# setup test PC outside OSPF -  PC391
-docker exec -d clab-frr01-pc391 ip addr add 192.168.30.100/24 dev eth1
-docker exec -d clab-frr01-pc391 ip route del default via 172.20.20.1 dev eth0
-docker exec -d clab-frr01-pc391 ip route add default via 192.168.30.91 dev eth1
+# setup test PC outside OSPF -  PC393
+docker exec -d clab-frr01-pc393 ip addr add 192.168.33.100/24 dev eth1
+docker exec -d clab-frr01-pc393 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc393 ip route add default via 192.168.33.91 dev eth1
+
+# setup test PC outside OSPF -  PC394
+docker exec -d clab-frr01-pc394 ip addr add 192.168.34.100/24 dev eth1
+docker exec -d clab-frr01-pc394 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc394 ip route add default via 192.168.34.91 dev eth1
+
+# setup test PC outside OSPF -  PC392
+docker exec -d clab-frr01-pc392 ip addr add 192.168.32.100/24 dev eth1
+docker exec -d clab-frr01-pc392 ip route del default via 172.20.20.1 dev eth0
+docker exec -d clab-frr01-pc392 ip route add default via 192.168.32.1 dev eth1
