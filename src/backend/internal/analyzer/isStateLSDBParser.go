@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 )
 
 // lsa type 1 parsing
-func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
+func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) *frrProto.IntraAreaLsa {
 	result := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
 		Areas:    []*frrProto.AreaAnalyzer{},
@@ -37,12 +38,12 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 			for _, routerLink := range lsaEntry.RouterLinks {
 				var ipAddress, prefixLength string
 				isStub := false
-				if routerLink.LinkType == "Stub Network" {
+				if strings.EqualFold(routerLink.LinkType, "Stub Network") {
 					routerLink.LinkType = "stub network"
 					ipAddress = routerLink.NetworkAddress
 					isStub = true
 					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-				} else if routerLink.LinkType == "a Transit Network" {
+				} else if strings.EqualFold(routerLink.LinkType, "a Transit Network") {
 					routerLink.LinkType = "transit network"
 					ipAddress = routerLink.RouterInterfaceAddress
 					//prefixLength = "24" // Assuming a /24 for transit links
@@ -61,6 +62,11 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 				adv.InterfaceAddress = ipAddress
 				if routerLink.LinkType == "another Router (point-to-point)" {
 					adv.LinkType = "point-to-point"
+					//fmt.Println(adv.InterfaceAddress)
+					//fmt.Println(peerNeighbor)
+					//fmt.Println(peerNeighbor[lsaEntry.LinkStateId])
+					//fmt.Println(lsaEntry.LinkStateId)
+					fmt.Println(lsaEntry.RouterLinks)
 				} else {
 					adv.LinkType = routerLink.LinkType
 				}

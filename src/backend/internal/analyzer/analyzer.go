@@ -34,6 +34,9 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
+	peerInterfaceMap := GetPeerNetworkAddress(c.metrics.StaticFrrConfiguration)
+	peerNeighborMap := GetPeerNeighbor(c.metrics.OspfNeighbors, peerInterfaceMap)
+
 	// parse frr configuration file
 	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 
@@ -46,7 +49,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// TODO: use static route map and accessList, mino
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
-	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
+	//fmt.Println(c.metrics.OspfRouterData)
 
 	isExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
@@ -156,6 +160,35 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 			IpAddress:    route.IpPrefix.GetIpAddress(),
 			PrefixLength: int32(route.IpPrefix.GetPrefixLength()),
 			NextHop:      route.NextHop,
+		}
+	}
+
+	return result
+}
+
+func GetPeerNetworkAddress(config *frrProto.StaticFRRConfiguration) map[string]string {
+	peerMap := make(map[string]string)
+
+	for _, iface := range config.Interfaces {
+		for _, i := range iface.InterfaceIpPrefixes {
+			if i.HasPeer {
+				peerMap[iface.Name] = i.IpPrefix.IpAddress
+			}
+		}
+	}
+
+	return peerMap
+}
+
+func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]string) map[string]string {
+	result := map[string]string{}
+
+	for key, neighbors := range config.Neighbors {
+		for _, neighbor := range neighbors.Neighbors {
+			iface := strings.Split(neighbor.IfaceName, ":")
+			if _, exists := peerInterface[iface[0]]; exists {
+				result[key] = iface[1]
+			}
 		}
 	}
 
