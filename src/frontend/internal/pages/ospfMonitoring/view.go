@@ -33,6 +33,8 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 2 {
 		return m.renderExternalMonitorTab()
 	} else if currentSubTabLocal == 3 {
+		return m.renderNeighborMonitorTab()
+	} else if currentSubTabLocal == 4 {
 		return m.renderRunningConfigTab()
 	}
 	return m.renderLsdbMonitorTab()
@@ -136,21 +138,11 @@ func (m *Model) renderLsdbMonitorTab() string {
 		}
 
 		// Order all Table Data
-		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
-			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
-		})
-		sort.Slice(networkLinkStateTableData, func(i, j int) bool {
-			return networkLinkStateTableData[i][0] < networkLinkStateTableData[j][0]
-		})
-		sort.Slice(summaryLinkStateTableData, func(i, j int) bool {
-			return summaryLinkStateTableData[i][0] < summaryLinkStateTableData[j][0]
-		})
-		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
-			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
-		})
-		sort.Slice(nssaExternalLinkStateTableData, func(i, j int) bool {
-			return nssaExternalLinkStateTableData[i][0] < nssaExternalLinkStateTableData[j][0]
-		})
+		common.SortTableByIPColumn(routerLinkStateTableData)
+		common.SortTableByIPColumn(networkLinkStateTableData)
+		common.SortTableByIPColumn(summaryLinkStateTableData)
+		common.SortTableByIPColumn(asbrSummaryLinkStateTableData)
+		common.SortTableByIPColumn(nssaExternalLinkStateTableData)
 
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
@@ -388,15 +380,9 @@ func (m *Model) renderRouterMonitorTab() string {
 		}
 
 		// Order all Table Data
-		sort.Slice(transitTableData, func(i, j int) bool {
-			return transitTableData[i][0] < transitTableData[j][0]
-		})
-		sort.Slice(stubTableData, func(i, j int) bool {
-			return stubTableData[i][0] < stubTableData[j][0]
-		})
-		sort.Slice(point2pointTableData, func(i, j int) bool {
-			return point2pointTableData[i][0] < point2pointTableData[j][0]
-		})
+		common.SortTableByIPColumn(transitTableData)
+		common.SortTableByIPColumn(stubTableData)
+		common.SortTableByIPColumn(point2pointTableData)
 
 		rowsTransit := len(transitTableData)
 		transitTable := components.NewOspfMonitorTable(
@@ -512,9 +498,7 @@ func (m *Model) renderExternalMonitorTab() string {
 	}
 
 	// Order all Table Data
-	sort.Slice(externalTableData, func(i, j int) bool {
-		return externalTableData[i][0] < externalTableData[j][0]
-	})
+	common.SortTableByIPColumn(externalTableData)
 
 	rowsExternal := len(externalTableData)
 	externalTable := components.NewOspfMonitorTable([]string{
@@ -568,9 +552,7 @@ func (m *Model) renderExternalMonitorTab() string {
 			}
 
 			// Order all Table Data
-			sort.Slice(nssaExternalTableData, func(i, j int) bool {
-				return nssaExternalTableData[i][0] < nssaExternalTableData[j][0]
-			})
+			common.SortTableByIPColumn(nssaExternalTableData)
 
 			// create table for NSSA Exernal Link States with extracted data (nssaExternalTableData)
 			rowsNssaExternal := len(nssaExternalTableData)
@@ -661,4 +643,20 @@ func (m *Model) renderRunningConfigTab() string {
 	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
 
 	return m.viewport.View()
+}
+
+func (m *Model) renderNeighborMonitorTab() string {
+	ospfNeighbors, err := backend.GetOspfNeighbors()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
+	}
+
+	// extract and sort the map keys
+	ospfNeighborIDs := make([]string, 0, len(ospfNeighbors.Neighbors))
+	for neighborID := range ospfNeighbors.Neighbors {
+		ospfNeighborIDs = append(ospfNeighborIDs, neighborID)
+	}
+	sort.Sort(common.IpList(ospfNeighborIDs))
+
+	return strings.Join(ospfNeighborIDs, ",")
 }
