@@ -8,9 +8,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,16 +23,16 @@ type Socket struct {
 	listener   net.Listener
 	mutex      sync.Mutex
 	metrics    *frrProto.FullFRRData
-	analyzer   *analyzer.Analyzer
+	anomalies  *frrProto.AnomalyAnalysis
 	logger     *logger.Logger
 }
 
-func NewSocket(socketPath map[string]string, metrics *frrProto.FullFRRData, analyzer *analyzer.Analyzer, logger *logger.Logger) *Socket {
+func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger) *Socket {
 	return &Socket{
-		socketPath: socketPath["UnixSocketLocation"],
+		socketPath: fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:      sync.Mutex{},
 		metrics:    metrics,
-		analyzer:   analyzer,
+		anomalies:  analysisResult,
 		logger:     logger,
 	}
 }
@@ -40,7 +40,7 @@ func NewSocket(socketPath map[string]string, metrics *frrProto.FullFRRData, anal
 func (s *Socket) Start() error {
 	os.Remove(s.socketPath)
 
-	l, err := net.ListenUnix("unix", &net.UnixAddr{s.socketPath, "unix"})
+	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: s.socketPath, Net: "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)
 		//s.logger.Error(fmt.Sprintf("Error listening on socket: %w", err))
@@ -77,7 +77,7 @@ func (s *Socket) handleConnection(conn net.Conn) {
 	sizeBuf := make([]byte, 4)
 	_, err := io.ReadFull(conn, sizeBuf)
 	if err != nil {
-		fmt.Printf("Error reading message size :%s\n", err.Error())
+		s.logger.Error(fmt.Sprintf("Error reading message size :%s\n", err.Error()))
 		return
 	}
 
@@ -97,28 +97,19 @@ func (s *Socket) handleConnection(conn net.Conn) {
 		return
 	}
 
-	//fmt.Printf("Received message: Command=%s, Package %s\n", protoMessage.Service, protoMessage.Command)
-
 	execMutex.Lock()
 	defer execMutex.Unlock()
-
-	// TODO: Implement logging
 
 	protoResponse := s.processCommand(protoMessage)
 
 	responseData, err := proto.Marshal(protoResponse)
 	if err != nil {
-		fmt.Printf("Error marshaling response: %s\n", err.Error())
 		s.logger.Error(fmt.Sprintf("Error marshaling response: %s\n", err.Error()))
 		return
 	}
 
 	responseSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(responseSizeBuf, uint32(len(responseData)))
-
-	//fmt.Printf("Server marshaled %d bytes: %v\n", len(responseData), responseData)
-	//fmt.Printf("Server buf size %d raw: %v\n", len(responseSizeBuf), responseSizeBuf)
-	//fmt.Println(responseData)
 
 	_, err = conn.Write(responseSizeBuf)
 	if err != nil {

@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -8,19 +9,24 @@ import (
 
 // Model defines the state for the shell page.
 type Model struct {
-	title       string
-	subTabs     []string
-	windowSize  *common.WindowSize
-	activeShell string
-	bashInput   string
-	bashOutput  string
-	vtyshInput  string
-	vtyshOutput string
-	viewport    viewport.Model
+	title               string
+	subTabs             []string
+	windowSize          *common.WindowSize
+	activeShell         string
+	bashInput           string
+	bashOutput          string
+	vtyshInput          string
+	vtyshOutput         string
+	backendServiceInput string
+	backendCommandInput string
+	activeBackendInput  string
+	backendResponse     string
+	viewport            viewport.Model
+	logger              *logger.Logger
 }
 
 // New creates and returns a new dashboard Model.
-func New(windowSize *common.WindowSize) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	boxWidthForOne := windowSize.Width - 10
 	if boxWidthForOne < 20 {
 		boxWidthForOne = 20
@@ -32,11 +38,15 @@ func New(windowSize *common.WindowSize) *Model {
 	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
-		title:       "3 - Shell",
-		subTabs:     []string{"bash", "vtysh"},
-		windowSize:  windowSize,
-		activeShell: "",
-		viewport:    vp,
+		title:               "Shell",
+		subTabs:             []string{"bash", "vtysh", "Backend Test"},
+		windowSize:          windowSize,
+		activeShell:         "",
+		backendServiceInput: "",
+		backendCommandInput: "",
+		activeBackendInput:  "service",
+		viewport:            vp,
+		logger:              appLogger,
 	}
 }
 
@@ -56,6 +66,11 @@ func (m *Model) ClearInput() {
 	m.vtyshInput = ""
 }
 
+func (m *Model) clearBackendInput() {
+	m.backendServiceInput = ""
+	m.backendCommandInput = ""
+}
+
 func (m *Model) ClearOutput() {
 	m.bashOutput = ""
 	m.vtyshOutput = ""
@@ -63,9 +78,9 @@ func (m *Model) ClearOutput() {
 
 func (m *Model) GetFooterOptions() common.FooterOption {
 	keyBoardOptions := []string{
-		"'enter': execute command",
-		"'up': scroll up",
-		"'down': scroll down",
+		"[enter]: execute command",
+		"[↑/↓] scroll",
+		"[backspace]: delete last character",
 	}
 	return common.FooterOption{
 		PageTitle:   m.title,

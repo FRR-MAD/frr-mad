@@ -3,12 +3,14 @@ package exporter
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -20,30 +22,41 @@ type Exporter struct {
 	server          *http.Server
 	stopChan        chan struct{}
 	logger          *logger.Logger
+	config          configs.Config
+}
+
+type ParsedFlag struct {
+	Name        string
+	Description string
+	Enabled     bool
 }
 
 func NewExporter(
-	config map[string]string,
+	config configs.ExporterConfig,
 	logger *logger.Logger,
 	pollInterval time.Duration,
 	frrData *frrProto.FullFRRData,
-	anomalies *frrProto.Anomalies,
-) (*Exporter, error) {
+	anomalies *frrProto.AnomalyAnalysis,
+) *Exporter {
 	// Parse port
 	port := 9091
-	if portStr, exists := config["Port"]; exists {
+
+	if config.Port > 0 {
 		var err error
-		port, err = strconv.Atoi(portStr)
+		port = config.Port
 		if err != nil {
-			return nil, fmt.Errorf("invalid port in config: %v", err)
+			logger.Error(fmt.Sprintf("invalid port in config: %v", err))
 		}
 	}
 
+	fmt.Println(port)
+
 	registry := prometheus.NewRegistry()
-	flags, err := configs.GetFlagConfigs(config)
-	if err != nil {
-		return nil, fmt.Errorf("error loading config flags: %v", err)
-	}
+	flags := getFlagConfigs(config)
+	//flags, err := configs.GetFlagConfigs(config)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error loading config flags: %v", err)
+	// }
 
 	// Create exporter
 	e := &Exporter{
@@ -58,7 +71,7 @@ func NewExporter(
 		},
 	}
 
-	return e, nil
+	return e
 }
 
 func (e *Exporter) Start() {
@@ -68,8 +81,10 @@ func (e *Exporter) Start() {
 		}
 	}()
 
+	//e.runExportLoop()
 	go e.runExportLoop()
 	e.logger.Info(fmt.Sprintf("Exporter started on port %s", e.server.Addr))
+	fmt.Sprintf("Exporter started on port %s", e.server.Addr)
 }
 
 func (e *Exporter) Stop() {
@@ -92,11 +107,93 @@ func (e *Exporter) runExportLoop() {
 }
 
 func (e *Exporter) exportData() {
-	// Always export anomalies
 	e.anomalyExporter.Update()
 
-	// Export metrics if exporter exists
 	if e.metricExporter != nil {
 		e.metricExporter.Update()
 	}
+}
+
+// Use reflection to iterate over struct fields
+func getFlagConfigs(config configs.ExporterConfig) map[string]*ParsedFlag {
+	result := make(map[string]*ParsedFlag)
+
+	val := reflect.ValueOf(config)
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldName := typ.Field(i).Name
+
+		if fieldName == "Port" {
+			continue
+		}
+
+		if field.Kind() == reflect.String && field.String() != "" {
+			result[fieldName] = parseFlagTuple(field.String())
+		}
+	}
+
+	return result
+}
+
+func parseFlagTuple(tuple string) *ParsedFlag {
+	tuple = strings.TrimSpace(tuple)
+	if !strings.HasPrefix(tuple, "(") || !strings.HasSuffix(tuple, ")") {
+		fmt.Errorf("invalid flag tuple format - must be enclosed in parentheses")
+		return nil
+	}
+
+	tuple = tuple[1 : len(tuple)-1]
+
+	parts := splitTupleComponents(tuple)
+	if len(parts) != 3 {
+		fmt.Errorf("flag tuple must have exactly 3 components")
+		return nil
+	}
+
+	name := strings.TrimSpace(parts[0])
+	description := strings.TrimSpace(parts[1])
+	enabledStr := strings.TrimSpace(parts[2])
+
+	if strings.HasPrefix(description, `"`) && strings.HasSuffix(description, `"`) {
+		description = description[1 : len(description)-1]
+	}
+
+	enabled, err := strconv.ParseBool(enabledStr)
+	if err != nil {
+		fmt.Errorf("invalid boolean value in flag tuple: %v", err)
+		return nil
+	}
+
+	return &ParsedFlag{
+		Name:        name,
+		Description: description,
+		Enabled:     enabled,
+	} //, nil
+}
+
+func splitTupleComponents(tuple string) []string {
+	var parts []string
+	var current strings.Builder
+	inQuotes := false
+
+	for _, r := range tuple {
+		switch {
+		case r == ',' && !inQuotes:
+			parts = append(parts, current.String())
+			current.Reset()
+		case r == '"':
+			inQuotes = !inQuotes
+			current.WriteRune(r)
+		default:
+			current.WriteRune(r)
+		}
+	}
+
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	return parts
 }

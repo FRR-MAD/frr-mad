@@ -1,5 +1,6 @@
 BACKEND_SRC := src/backend
 FRONTEND_SRC := src/frontend
+TEMPCLIENT_SRC:= tempClient
 
 
 PROTO_SRC := protobufSource/protocol.proto
@@ -14,7 +15,7 @@ run/backend:
 
 run/backend/local:
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && go run -tags=local cmd/frr-analytics/main.go
+	cd $(BACKEND_SRC) && go run -tags=local cmd/frr-analytics/main.go start
 
 run/backend/prod:
 	@cd $(BACKEND_SRC) && go mod tidy
@@ -32,9 +33,9 @@ binaries:
 .PHONY: build/all build/frontend build/backend build/backend/prod build/local
 build/all: build/frontend build/backend
 
-#.PHONY: build/frontend
-#build/frontend: binaries
-#	cd frontend && GOOS=linux GOARCH=amd64 go build -o  ../../binaries
+.PHONY: build/frontend
+build/frontend: binaries
+	cd $(FRONTEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o /tmp/frr-tui ./cmd/tui
 
 build/backend: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
@@ -54,28 +55,29 @@ build/backend/prod: binaries
 protobuf: protobuf/clean
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_BACKEND_DEST) protobufSource/protocol.proto
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_FRONTEND_DEST) protobufSource/protocol.proto
-	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
+#	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
 
 protobuf/mac: protobuf/clean
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_BACKEND_DEST) protobufSource/protocol.proto
 	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_FRONTEND_DEST) protobufSource/protocol.proto
-	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
+#	protoc --proto_path=protobufSource --go_out=paths=source_relative:$(PROTO_TEMPCLIENT_DEST) protobufSource/protocol.proto
 
 protobuf/clean:
 	rm -f $(PROTO_BACKEND_DEST)/protocol.pb.go
 	rm -f $(PROTO_FRONTEND_DEST)/protocol.pb.go
-	rm -f $(PROTO_TEMPCLIENT_DEST)/protocol.pb.go
+#	rm -f $(PROTO_TEMPCLIENT_DEST)/protocol.pb.go
 
 
 #### Hot Module Reloading ####
 
-.PHONY: hmr/docker hmr/run hmr/stop
+.PHONY: hmr/docker hmr/run hmr/stop hmr/clean
 hmr/docker:
 	docker build -t frr-854-dev -f dockerfile/frr-dev.dockerfile .
 	docker build -t frr-854 -f dockerfile/frr.dockerfile .
 
 hmr/run:
 	cd containerlab && chmod +x scripts/
+	-cd containerlab && sh scripts/custom-bridges.sh
 	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
 	cd containerlab && sh scripts/pc-interfaces.sh
 	cd containerlab && sh scripts/remove-default-route.sh
@@ -87,3 +89,17 @@ hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
 	docker network prune -f
 
+.PHONY: go/mod go/sync
+go/tidy:
+	cd src/backend && go mod tidy
+	cd src/frontend && go mod tidy
+
+go/sync: go/tidy
+	cd src && go work sync 
+	cd src && go work vendor
+
+
+### Testing
+.PHONY: test/backend
+test/backend:
+	cd src/backend && go test -v ./test/...

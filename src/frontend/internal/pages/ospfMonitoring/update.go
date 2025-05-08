@@ -14,8 +14,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "up":
 			m.viewport.LineUp(10)
+			return m, nil
 		case "down":
 			m.viewport.LineDown(10)
+			return m, nil
 		case "r":
 			m.runningConfig = []string{"Reloading..."}
 			return m, common.FetchRunningConfig()

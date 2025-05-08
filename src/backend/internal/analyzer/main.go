@@ -3,26 +3,37 @@ package analyzer
 import (
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
 /*
  */
 type Analyzer struct {
-	//	anomalyDetection *AnomalyDetection
-	Cache     *frrProto.Anomalies
-	Collector *aggregator.Collector
-	Logger    *logger.Logger
+	AnalysisResult *frrProto.AnomalyAnalysis
+	metrics        *frrProto.FullFRRData
+	Logger         *logger.Logger
+	config         interface{}
 }
 
-func InitAnalyzer(config map[string]string, collector *aggregator.Collector, logger *logger.Logger) *Analyzer {
+func InitAnalyzer(
+	config interface{},
+	metrics *frrProto.FullFRRData,
+	logger *logger.Logger,
+) *Analyzer {
+
+	anomalyAnalysis := &frrProto.AnomalyAnalysis{
+		RouterAnomaly:       initAnomalyDetection(),
+		ExternalAnomaly:     initAnomalyDetection(),
+		NssaExternalAnomaly: initAnomalyDetection(),
+		FibAnomaly:          initAnomalyDetection(),
+	}
 
 	return &Analyzer{
-		Cache:     &frrProto.Anomalies{},
-		Collector: collector,
-		Logger:    logger,
+		AnalysisResult: anomalyAnalysis,
+		metrics:        metrics,
+		Logger:         logger,
+		config:         config,
 	}
 }
 
@@ -33,8 +44,20 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 		defer ticker.Stop()
 		for range ticker.C {
 			analyzer.AnomalyAnalysis()
-			// fmt.Printf("Analyzer: \n%+v\n", analyzer.Collector.FullFrrData.OspfAsbrSummaryData)
 		}
 	}()
 
+}
+
+// TODO: implement misconfiguredPrefixes functionality
+func initAnomalyDetection() *frrProto.AnomalyDetection {
+	return &frrProto.AnomalyDetection{
+		HasOverAdvertisedPrefixes:  false,
+		HasUnderAdvertisedPrefixes: false,
+		HasDuplicatePrefixes:       false,
+		HasMisconfiguredPrefixes:   false,
+		SuperfluousEntries:         []*frrProto.Advertisement{},
+		MissingEntries:             []*frrProto.Advertisement{},
+		DuplicateEntries:           []*frrProto.Advertisement{},
+	}
 }
