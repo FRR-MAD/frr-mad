@@ -69,9 +69,6 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 			fmt.Println(i.InterfaceAddress)
 		}
 	}
-	//fmt.Println(ospfCounter)
-	//fmt.Println(ospfIsStateExternalCounter + ospfIsStateRouterCounter)
-
 	a.AnalysisResult.FibAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.FibAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.FibAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0

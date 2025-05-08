@@ -15,6 +15,8 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
+	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
@@ -28,7 +30,7 @@ type Service struct {
 type FrrMadApp struct {
 	Analyzer   *analyzer.Analyzer
 	Aggregator *aggregator.Collector
-	Exporter   string
+	Exporter   *exporter.Exporter
 	Socket     *socket.Socket
 	Logger     *logger.Logger
 }
@@ -67,6 +69,15 @@ func main() {
 	// Ensure required directories exist
 	createDirectories(config)
 
+	// frrMetrics := &frrProto.FullFRRData{}
+	// anomalies := &frrProto.AnomalyAnalysis{}
+
+	// exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", config.Default.LogPath))
+	// exporterLogger.SetDebugLevel(0)
+	// metricsExporter := startExporter(config.Exporter, exporterLogger, 30, frrMetrics, anomalies)
+	// fmt.Println(metricsExporter)
+	// metricsExporter.Start()
+	// os.Exit(0)
 	// Process the command
 	command := os.Args[1]
 
@@ -119,6 +130,10 @@ func startApp(config *configs.Config) {
 	}
 
 	// Start requested services
+	//if len(serviceList) == 0 {
+	//	serviceList = append(serviceList, "analyzer")
+	//	serviceList = append(serviceList, "exporter")
+	//}
 
 	pidFile := createPid(socketConfig.UnixSocketLocation, appLogger)
 	defer os.Remove(pidFile)
@@ -149,7 +164,8 @@ func startApp(config *configs.Config) {
 		case "exporter":
 			exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", defaultConfig.LogPath))
 			exporterLogger.SetDebugLevel(debugLevel)
-			app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval)
+			//app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval)
+			app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult)
 		}
 	}
 
@@ -191,6 +207,46 @@ func startApp(config *configs.Config) {
 	}
 
 	appLogger.Info("FRR-MAD shutdown complete")
+}
+
+// func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
+// collector := aggregator.InitAggregator(config, logging)
+// aggregator.StartAggregator(collector, pollInterval)
+//
+// return collectot
+// }
+//
+// func startAnalyzer(config configs.AnalyzerConfig, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
+// detection := analyzer.InitAnalyzer(config, aggregatorService, logging)
+// analyzer.StartAnalyzer(detection, pollInterval)
+//
+// detection.Foobar()
+// return detection
+// }
+//
+// func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector, analyzerService *analyzer.Analyzer) *exporter.Exporter {
+// exporter, err := exporter.NewExporter(config, logging, pollInterval, aggregatorService.FullFrrData, analyzerService.Cache)
+//
+// exporter.Start()
+//exporter.Stop()
+// return exporter, err
+// }
+
+func getEnv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
+
+}
+
+func strToInt(value string) int {
+	retValue, err := strconv.Atoi(value)
+	if err != nil {
+		// TODO: do proper error handling and get a solution in case it doesn't work
+		fmt.Println("Error turning string to int")
+	}
+	return retValue
 }
 
 // Parse command line flags to determine which services to start
@@ -249,10 +305,21 @@ func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time
 }
 
 // Start the exporter service
-func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration) string {
-	// Placeholder for exporter implementation
-	logging.Info("Exporter service started (placeholder)")
-	return "exporter"
+//func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration) string {
+//	// Placeholder for exporter implementation
+//	logging.Info("Exporter service started (placeholder)")
+//	return "exporter"
+//}
+
+// app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval, app.Aggregator)
+func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration, frrData *frrProto.FullFRRData, anomalyResult *frrProto.AnomalyAnalysis) *exporter.Exporter {
+	//detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging)
+	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult)
+
+	//analyzer.StartAnalyzer(detection, pollInterval)
+	metricsExporter.Start()
+	logging.Info("Analyzer service started")
+	return metricsExporter
 }
 
 // Create required directories

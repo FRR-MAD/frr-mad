@@ -15,7 +15,7 @@ run/backend:
 
 run/backend/local:
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && go run -tags=local cmd/frr-analytics/main.go
+	cd $(BACKEND_SRC) && go run -tags=local cmd/frr-analytics/main.go start
 
 run/backend/prod:
 	@cd $(BACKEND_SRC) && go mod tidy
@@ -88,6 +88,15 @@ hmr/stop:
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
 	docker network prune -f
+
+.PHONY: go/mod go/sync
+go/tidy:
+	cd src/backend && go mod tidy
+	cd src/frontend && go mod tidy
+
+go/sync: go/tidy
+	cd src && go work sync 
+	cd src && go work vendor
 
 
 ### Testing

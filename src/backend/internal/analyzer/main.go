@@ -17,7 +17,11 @@ type Analyzer struct {
 	config         interface{}
 }
 
-func InitAnalyzer(config interface{}, metrics *frrProto.FullFRRData, logger *logger.Logger) *Analyzer {
+func InitAnalyzer(
+	config interface{},
+	metrics *frrProto.FullFRRData,
+	logger *logger.Logger,
+) *Analyzer {
 	//anomalies := &frrProto.Anomalies{}
 
 	anomalyAnalysis := &frrProto.AnomalyAnalysis{
