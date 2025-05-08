@@ -102,25 +102,26 @@ go/sync: go/tidy
 
 
 ### Testing
-.PHONY: test/all test/backend test/analyzer test/aggregator test/exporter
-test/all: test/backend
+.PHONY: test/all test/backend test/analyzer test/aggregator test/exporter test/clean
+test/all: test/backend test/clean
 
-test/frontend:
+test/frontend: test/clean
 	cd src/frontend && go test -v ./test/...
 
-test/backend:
+test/backend: test/clean
 	cd src/backend && go test -v ./test/...
 
-test/analyzer:
+test/analyzer: test/clean
 	cd src/backend && go test -v ./test/analyzer/...
 
-test/aggregator:
+test/aggregator: test/clean
 	cd src/backend && go test -v ./test/aggregator/...
 
-test/exporter:
+test/exporter: test/clean
 	cd src/backend && go test -v ./test/exporter/...
 
-test/comms:
+test/comms: test/clean
 	cd src/backend && go test -v ./test/comms/...
 
-
+test/clean:
+	go clean -testcache
