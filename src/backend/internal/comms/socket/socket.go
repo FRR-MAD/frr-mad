@@ -40,6 +40,7 @@ func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analy
 func (s *Socket) Start() error {
 	os.Remove(s.socketPath)
 
+	// TODO: add correct logger, this should be application level logger and not service level logger
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: s.socketPath, Net: "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)
