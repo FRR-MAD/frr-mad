@@ -97,28 +97,19 @@ func (s *Socket) handleConnection(conn net.Conn) {
 		return
 	}
 
-	//fmt.Printf("Received message: Command=%s, Package %s\n", protoMessage.Service, protoMessage.Command)
-
 	execMutex.Lock()
 	defer execMutex.Unlock()
-
-	// TODO: Implement logging
 
 	protoResponse := s.processCommand(protoMessage)
 
 	responseData, err := proto.Marshal(protoResponse)
 	if err != nil {
-		//fmt.Printf("Error marshaling response: %s\n", err.Error())
 		s.logger.Error(fmt.Sprintf("Error marshaling response: %s\n", err.Error()))
 		return
 	}
 
 	responseSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(responseSizeBuf, uint32(len(responseData)))
-
-	//fmt.Printf("Server marshaled %d bytes: %v\n", len(responseData), responseData)
-	//fmt.Printf("Server buf size %d raw: %v\n", len(responseSizeBuf), responseSizeBuf)
-	//fmt.Println(responseData)
 
 	_, err = conn.Write(responseSizeBuf)
 	if err != nil {

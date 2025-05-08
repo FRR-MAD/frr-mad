@@ -81,9 +81,10 @@ func (e *Exporter) Start() {
 		}
 	}()
 
-	e.runExportLoop()
-	//go e.runExportLoop()
+	//e.runExportLoop()
+	go e.runExportLoop()
 	e.logger.Info(fmt.Sprintf("Exporter started on port %s", e.server.Addr))
+	fmt.Sprintf("Exporter started on port %s", e.server.Addr)
 }
 
 func (e *Exporter) Stop() {

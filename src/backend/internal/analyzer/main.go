@@ -10,7 +10,6 @@ import (
 /*
  */
 type Analyzer struct {
-	//	anomalyDetection *AnomalyDetection
 	AnalysisResult *frrProto.AnomalyAnalysis
 	metrics        *frrProto.FullFRRData
 	Logger         *logger.Logger
@@ -22,7 +21,6 @@ func InitAnalyzer(
 	metrics *frrProto.FullFRRData,
 	logger *logger.Logger,
 ) *Analyzer {
-	//anomalies := &frrProto.Anomalies{}
 
 	anomalyAnalysis := &frrProto.AnomalyAnalysis{
 		RouterAnomaly:       initAnomalyDetection(),
@@ -32,7 +30,6 @@ func InitAnalyzer(
 	}
 
 	return &Analyzer{
-		//Anomalies: anomalies,
 		AnalysisResult: anomalyAnalysis,
 		metrics:        metrics,
 		Logger:         logger,
@@ -52,12 +49,13 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 
 }
 
+// TODO: implement misconfiguredPrefixes functionality
 func initAnomalyDetection() *frrProto.AnomalyDetection {
 	return &frrProto.AnomalyDetection{
 		HasOverAdvertisedPrefixes:  false,
 		HasUnderAdvertisedPrefixes: false,
 		HasDuplicatePrefixes:       false,
-		HasMisconfiguredPrefixes:   false, // does nothing atm
+		HasMisconfiguredPrefixes:   false,
 		SuperfluousEntries:         []*frrProto.Advertisement{},
 		MissingEntries:             []*frrProto.Advertisement{},
 		DuplicateEntries:           []*frrProto.Advertisement{},
