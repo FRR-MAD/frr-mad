@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -62,11 +61,7 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peer
 				adv.InterfaceAddress = ipAddress
 				if routerLink.LinkType == "another Router (point-to-point)" {
 					adv.LinkType = "point-to-point"
-					//fmt.Println(adv.InterfaceAddress)
-					//fmt.Println(peerNeighbor)
-					//fmt.Println(peerNeighbor[lsaEntry.LinkStateId])
-					//fmt.Println(lsaEntry.LinkStateId)
-					fmt.Println(lsaEntry.RouterLinks)
+					adv.InterfaceAddress = peerNeighbor[routerLink.NeighborRouterId]
 				} else {
 					adv.LinkType = routerLink.LinkType
 				}
