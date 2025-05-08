@@ -163,13 +163,22 @@ func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	return response.Data.GetOspfDatabase(), nil
 }
 
-func GetOspfRouterData() (*frrProto.OSPFRouterData, error) {
+func GetOspfRouterDataSelf() (*frrProto.OSPFRouterData, error) {
 	response, err := SendMessage("ospf", "router", nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return response.Data.GetOspfRouterData(), nil
+}
+
+func GetOspfNetworkDataSelf() (*frrProto.OSPFNetworkData, error) {
+	response, err := SendMessage("ospf", "network", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfNetworkData(), nil
 }
 
 func GetOspfNeighbors() (*frrProto.OSPFNeighbors, error) {
@@ -198,7 +207,7 @@ func GetOspfNeighborInterfaces() ([]string, error) {
 	return neighborAddresses, nil
 }
 
-func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
+func GetOspfExternalDataSelf() (*frrProto.OSPFExternalData, error) {
 	response, err := SendMessage("ospf", "externalData", nil)
 	if err != nil {
 		return nil, err
@@ -207,7 +216,7 @@ func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
 	return response.Data.GetOspfExternalData(), nil
 }
 
-func GetOspfNssaExternalData() (*frrProto.OSPFNssaExternalData, error) {
+func GetOspfNssaExternalDataSelf() (*frrProto.OSPFNssaExternalData, error) {
 	response, err := SendMessage("ospf", "nssaExternalData", nil)
 	if err != nil {
 		return nil, err
@@ -241,7 +250,7 @@ func GetStaticFRRConfigurationPretty() (string, error) {
 }
 
 func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "dummyRouterOne", nil)
+	response, err := SendMessage("analysis", "router", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +259,7 @@ func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
 }
 
 func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "dummyExternalOne", nil)
+	response, err := SendMessage("analysis", "external", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +268,7 @@ func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
 }
 
 func GetNSSAExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "dummyNSSAExternalOne", nil)
+	response, err := SendMessage("analysis", "nssaExternal", nil)
 	if err != nil {
 		return nil, err
 	}

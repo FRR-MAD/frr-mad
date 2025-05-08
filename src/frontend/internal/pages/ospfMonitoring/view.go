@@ -31,10 +31,12 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 1 {
 		return m.renderRouterMonitorTab()
 	} else if currentSubTabLocal == 2 {
-		return m.renderExternalMonitorTab()
+		return m.renderNetworkMonitorTab()
 	} else if currentSubTabLocal == 3 {
-		return m.renderNeighborMonitorTab()
+		return m.renderExternalMonitorTab()
 	} else if currentSubTabLocal == 4 {
+		return m.renderNeighborMonitorTab()
+	} else if currentSubTabLocal == 5 {
 		return m.renderRunningConfigTab()
 	}
 	return m.renderLsdbMonitorTab()
@@ -329,9 +331,9 @@ func (m *Model) renderRouterMonitorTab() string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
-	routerLSASelf, err := backend.GetOspfRouterData()
+	routerLSASelf, err := backend.GetOspfRouterDataSelf()
 	if err != nil {
-		return common.PrintBackendError(err, "GetOspfRouterData")
+		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
 
 	// extract and sort the map keys (areas)
@@ -465,17 +467,97 @@ func (m *Model) renderRouterMonitorTab() string {
 	return m.viewport.View()
 }
 
+func (m *Model) renderNetworkMonitorTab() string {
+	networkLSASelf, err := backend.GetOspfNetworkDataSelf()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
+	}
+
+	// extract and sort the map keys (areas)
+	networkLSAAreas := make([]string, 0, len(networkLSASelf.NetStates))
+	for area := range networkLSASelf.NetStates {
+		networkLSAAreas = append(networkLSAAreas, area)
+	}
+	sort.Strings(networkLSAAreas)
+
+	var networkLSABlocks []string
+	for _, areaID := range networkLSAAreas {
+		areaData := networkLSASelf.NetStates[areaID]
+		var networkTableData [][]string
+
+		for lsaID, lsa := range areaData.LsaEntries {
+			if lsaID == lsa.LinkStateId {
+				var attachedRouterList []string
+				for _, attachedRouter := range lsa.AttachedRouters {
+					attachedRouterList = append(attachedRouterList, attachedRouter.AttachedRouterId)
+				}
+				networkTableData = append(networkTableData, []string{
+					lsaID,
+					strconv.Itoa(int(lsa.NetworkMask)),
+					lsa.AdvertisingRouter,
+					strings.Join(attachedRouterList, "\n"),
+					strconv.Itoa(int(lsa.LsaAge)),
+				})
+			} else {
+				// TODO: print a pretty anomaly error when lsaID != linkstateID
+				return "Anomaly: LSA Mismatch"
+			}
+		}
+
+		// Order all Table Data
+		common.SortTableByIPColumn(networkTableData)
+
+		rowsNetwork := len(networkTableData)
+		networkTable := components.NewOspfMonitorMultilineTable(
+			[]string{
+				"Link State ID",
+				"CIDR",
+				"Advertising Router",
+				"Attached Routers",
+				"LSA Age",
+			},
+			rowsNetwork,
+		)
+		for _, r := range networkTableData {
+			networkTable = networkTable.Row(r...)
+		}
+
+		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", areaID))
+
+		networkTableBox := lipgloss.JoinVertical(lipgloss.Left,
+			styles.H2TitleStyleForOne().Render("Network LSAs (Type 2)"),
+			styles.H2OneContentBoxCenterStyle().Render(networkTable.String()),
+			styles.H2OneBoxBottomBorderStyle().Render(""),
+		)
+
+		completeAreaNetworkLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, networkTableBox)
+
+		if areaData.LsaEntries != nil {
+			networkLSABlocks = append(networkLSABlocks, completeAreaNetworkLSAs+"\n\n")
+		}
+
+	}
+
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = contentMaxHeight
+
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
+
+	return m.viewport.View()
+}
+
 func (m *Model) renderExternalMonitorTab() string {
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
 
-	externalLSASelf, err := backend.GetOspfExternalData()
+	externalLSASelf, err := backend.GetOspfExternalDataSelf()
 	if err != nil {
-		return common.PrintBackendError(err, "GetOspfExternalData")
+		return common.PrintBackendError(err, "GetOspfExternalDataSelf")
 	}
-	nssaExternalDataSelf, err := backend.GetOspfNssaExternalData()
+	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf()
 	if err != nil {
-		return common.PrintBackendError(err, "GetOspfNssaExternalData")
+		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
 	}
 
 	// ===== OSPF External LSAs (Type 5) =====
@@ -610,41 +692,6 @@ func (m *Model) renderExternalMonitorTab() string {
 	return m.viewport.View()
 }
 
-func (m *Model) renderRunningConfigTab() string {
-	runningConfigTitle := styles.H1TitleStyleForTwo().Render("Running Config")
-	formatedRunningConfigOutput := strings.Join(m.runningConfig, "\n")
-	runningConfigBox := styles.H1TwoContentBoxesStyle().Render(formatedRunningConfigOutput)
-	completeRunningConfig := lipgloss.JoinVertical(lipgloss.Left,
-		runningConfigTitle,
-		runningConfigBox,
-		styles.H1TwoBoxBottomBorderStyle().Render(""),
-	)
-
-	staticFRRConfigTitle := styles.H1TitleStyleForTwo().Render("Parsed Running Config")
-	staticFRRConfiguration, err := backend.GetStaticFRRConfigurationPretty()
-	if err != nil {
-		return common.PrintBackendError(err, "GetStaticFRRConfigurationPretty")
-	}
-	staticFileBox := styles.H1TwoContentBoxesStyle().Render(staticFRRConfiguration)
-	completeStaticConfig := lipgloss.JoinVertical(lipgloss.Left,
-		staticFRRConfigTitle,
-		staticFileBox,
-		styles.H1TwoBoxBottomBorderStyle().Render(""),
-	)
-
-	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
-
-	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
-	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = outputMaxHeight
-	m.viewport.SetContent(completeContent)
-
-	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
-
-	return m.viewport.View()
-}
-
 func (m *Model) renderNeighborMonitorTab() string {
 	ospfNeighbors, err := backend.GetOspfNeighbors()
 	if err != nil {
@@ -708,5 +755,46 @@ func (m *Model) renderNeighborMonitorTab() string {
 		styles.H2OneBoxBottomBorderStyle().Render(""),
 	)
 
-	return lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox)
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = contentMaxHeight
+
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
+
+	return m.viewport.View()
+}
+
+func (m *Model) renderRunningConfigTab() string {
+	runningConfigTitle := styles.H1TitleStyleForTwo().Render("Running Config")
+	formatedRunningConfigOutput := strings.Join(m.runningConfig, "\n")
+	runningConfigBox := styles.H1TwoContentBoxesStyle().Render(formatedRunningConfigOutput)
+	completeRunningConfig := lipgloss.JoinVertical(lipgloss.Left,
+		runningConfigTitle,
+		runningConfigBox,
+		styles.H1TwoBoxBottomBorderStyle().Render(""),
+	)
+
+	staticFRRConfigTitle := styles.H1TitleStyleForTwo().Render("Parsed Running Config")
+	staticFRRConfiguration, err := backend.GetStaticFRRConfigurationPretty()
+	if err != nil {
+		return common.PrintBackendError(err, "GetStaticFRRConfigurationPretty")
+	}
+	staticFileBox := styles.H1TwoContentBoxesStyle().Render(staticFRRConfiguration)
+	completeStaticConfig := lipgloss.JoinVertical(lipgloss.Left,
+		staticFRRConfigTitle,
+		staticFileBox,
+		styles.H1TwoBoxBottomBorderStyle().Render(""),
+	)
+
+	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
+
+	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = outputMaxHeight
+	m.viewport.SetContent(completeContent)
+
+	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
+
+	return m.viewport.View()
 }

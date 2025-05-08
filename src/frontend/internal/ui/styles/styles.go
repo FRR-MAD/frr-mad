@@ -386,6 +386,8 @@ var (
 	HeaderStyle             = lipgloss.NewStyle().Bold(true).Align(lipgloss.Center)
 	FirstNormalRowCellStyle = lipgloss.NewStyle().Padding(0, 1)
 	NormalCellStyle         = lipgloss.NewStyle().Padding(0, 1)
+	MultilineCellStyle      = lipgloss.NewStyle().Padding(0, 1, 1, 1)
+	LastCellOfMultiline     = lipgloss.NewStyle().Padding(0, 1)
 	BadCellStyle            = lipgloss.NewStyle().Padding(0, 1)
 )
 

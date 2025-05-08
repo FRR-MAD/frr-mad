@@ -95,6 +95,7 @@ func getOspfDashboardLsdbSelf() string {
 	dashboardHeader := styles.H1TitleStyle().
 		Width(styles.WidthTwoH1ThreeFourth).
 		BorderBottom(true).
+		Padding(0).
 		Render("All OSPF Routes are advertised as Expected")
 
 	lsdbSelfBlocks = append(lsdbSelfBlocks, dashboardHeader)
@@ -544,31 +545,3 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 // ============================== //
 // HELPERS: BACKEND CALLS         //
 // ============================== //
-
-//func GetSystemResources() (int64, float64, float64, error) {
-//
-//	response, err := backend.SendMessage("system", "allResources", nil)
-//	if err != nil {
-//		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
-//	}
-//	if response.Status != "success" {
-//		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
-//	}
-//
-//	systemMetrics := response.Data.GetSystemMetrics()
-//
-//	cores := systemMetrics.CpuAmount
-//	cpuUsage := systemMetrics.CpuUsage
-//	memoryUsage := systemMetrics.MemoryUsage
-//
-//	return cores, cpuUsage, memoryUsage, nil
-//}
-
-//func getLSDB() (*pkg.OSPFDatabase, error) {
-//	response, err := backend.SendMessage("ospf", "database", nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return response.Data.GetOspfDatabase(), nil
-//}
