@@ -1076,6 +1076,7 @@ func transformRouterLink(linkData map[string]interface{}) map[string]interface{}
 	fieldMapping := map[string]string{
 		"linkType":                "link_type",
 		"designatedRouterAddress": "designated_router_address",
+		"neighborRouterId":        "neighbor_router_id",
 		"routerInterfaceAddress":  "router_interface_address",
 		"networkAddress":          "network_address",
 		"networkMask":             "network_mask",
