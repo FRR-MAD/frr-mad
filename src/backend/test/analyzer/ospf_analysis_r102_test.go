@@ -16,13 +16,9 @@ func TestRouterLsaHappy2(t *testing.T) {
 	ana := initAnalyzer()
 
 	frrMetrics := getR102FRRdata()
-
 	expectedAccessList := getExpectedAccessListr102Happy()
-
 	expectedIsRouterLSDB := getExpectedIsRouterLSDBr102Happy()
-
 	expectedShouldRouterLSDB := getExpectedShouldRouterLSDBr102Happy()
-
 	actualAccessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 
 	less := func(a, b string) bool { return a < b }
@@ -45,6 +41,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 	}
 
 	actualStaticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, actualAccessList)
+	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
 	var actualStaticListKeys []string
 	for k, _ := range actualStaticList {
@@ -56,7 +53,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 	}
 
 	// Runtime parsing of router
-	actualRuntimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualRuntimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 
 	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
