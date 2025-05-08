@@ -651,6 +651,11 @@ func (m *Model) renderNeighborMonitorTab() string {
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
 
+	routerName, _, err := backend.GetRouterName()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterName")
+	}
+
 	// extract and sort the map keys
 	ospfNeighborIDs := make([]string, 0, len(ospfNeighbors.Neighbors))
 	for neighborID := range ospfNeighbors.Neighbors {
@@ -658,5 +663,50 @@ func (m *Model) renderNeighborMonitorTab() string {
 	}
 	sort.Sort(common.IpList(ospfNeighborIDs))
 
-	return strings.Join(ospfNeighborIDs, ",")
+	var ospfNeighborTableData [][]string
+	for _, ospfNeighborID := range ospfNeighborIDs {
+		ospfNeighborList := ospfNeighbors.Neighbors[ospfNeighborID]
+
+		for _, ospfNeighbor := range ospfNeighborList.Neighbors {
+			ospfNeighborTableData = append(ospfNeighborTableData, []string{
+				ospfNeighborID,
+				ospfNeighbor.IfaceAddress,
+				ospfNeighbor.Role,
+				ospfNeighbor.Converged,
+				ospfNeighbor.IfaceName,
+				ospfNeighbor.UpTime,
+				ospfNeighbor.DeadTime,
+			})
+		}
+
+	}
+
+	// Create Table for NSSA External Link States and Fill with extracted nssaExternalLinkStateTableData
+	rowsOspfNeighbors := len(ospfNeighborTableData)
+	ospfNeighborTable := components.NewOspfMonitorTable(
+		[]string{
+			"Neighbor ID",
+			"Neighbor IP",
+			"Role",
+			"Converged",
+			"Internal Interface",
+			"Up Time",
+			"Dead Time",
+		},
+		rowsOspfNeighbors,
+	)
+	for _, r := range ospfNeighborTableData {
+		ospfNeighborTable = ospfNeighborTable.Row(r...)
+	}
+
+	ospfNeghborHeader := styles.H1TitleStyleForOne().Render("All OSPF Neighborships")
+
+	// create styled boxes for each external LSA Type (type 5 & 7)
+	ospfNeighborTableBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H2TitleStyleForOne().Render("Router "+routerName+" has "+strconv.Itoa(len(ospfNeighborIDs))+" Neighbors"),
+		styles.H2OneContentBoxCenterStyle().Render(ospfNeighborTable.String()),
+		styles.H2OneBoxBottomBorderStyle().Render(""),
+	)
+
+	return lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox)
 }

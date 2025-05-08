@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
+	"strings"
 
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
@@ -471,23 +472,41 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	// extract data for tables
 	var tableData [][]string
 
-	for _, superfluousEntry := range a.SuperfluousEntries {
-		tableData = append(tableData, []string{
-			superfluousEntry.InterfaceAddress,
-			"/" + superfluousEntry.PrefixLength,
-			superfluousEntry.LinkStateId,
-			superfluousEntry.LinkType,
-			"Overadvertised Route",
-		})
+	// TODO: add all anomily types
+	if a.HasOverAdvertisedPrefixes {
+		for _, superfluousEntry := range a.SuperfluousEntries {
+			var firstCol string
+			if strings.Contains(lsaTypeHeader, "Router") {
+				firstCol = superfluousEntry.InterfaceAddress
+			} else {
+				firstCol = superfluousEntry.LinkStateId
+			}
+
+			tableData = append(tableData, []string{
+				firstCol,
+				"/" + superfluousEntry.PrefixLength,
+				superfluousEntry.LinkType,
+				"Overadvertised Route",
+			})
+		}
 	}
-	for _, missingEntry := range a.MissingEntries {
-		tableData = append(tableData, []string{
-			missingEntry.InterfaceAddress,
-			"/" + missingEntry.PrefixLength,
-			missingEntry.LinkStateId,
-			missingEntry.LinkType,
-			"Underadvertised Route",
-		})
+
+	if a.HasUnderAdvertisedPrefixes {
+		for _, missingEntry := range a.MissingEntries {
+			var firstCol string
+			if strings.Contains(lsaTypeHeader, "Router") {
+				firstCol = missingEntry.InterfaceAddress
+			} else {
+				firstCol = missingEntry.LinkStateId
+			}
+
+			tableData = append(tableData, []string{
+				firstCol,
+				"/" + missingEntry.PrefixLength,
+				missingEntry.LinkType,
+				"Underadvertised Route",
+			})
+		}
 	}
 
 	// Order all Table Data
@@ -499,9 +518,8 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	rows := len(tableData)
 	table := components.NewAnomalyTable(
 		[]string{
-			"Interface Address",
+			"Network Address",
 			"CIDR",
-			"Link State ID",
 			"Link Type",
 			"Anomaly Type",
 		},

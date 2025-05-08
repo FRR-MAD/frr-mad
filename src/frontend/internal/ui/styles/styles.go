@@ -202,6 +202,12 @@ func H1OneContentBoxStyle() lipgloss.Style {
 		Width(WidthOneH1Box)
 }
 
+func H1OneContentBoxCenterStyle() lipgloss.Style {
+	return H1ContentBoxStyle().
+		Align(lipgloss.Center).
+		Width(WidthOneH1Box)
+}
+
 func H1TwoContentBoxesStyle() lipgloss.Style {
 	return H1OneContentBoxStyle().
 		Width(WidthTwoH1Box)

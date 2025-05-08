@@ -241,7 +241,7 @@ func GetStaticFRRConfigurationPretty() (string, error) {
 }
 
 func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "router", nil)
+	response, err := SendMessage("analysis", "dummyRouterOne", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +250,7 @@ func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
 }
 
 func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "external", nil)
+	response, err := SendMessage("analysis", "dummyExternalOne", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
 }
 
 func GetNSSAExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "nssaExternal", nil)
+	response, err := SendMessage("analysis", "dummyNSSAExternalOne", nil)
 	if err != nil {
 		return nil, err
 	}
