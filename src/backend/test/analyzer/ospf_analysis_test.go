@@ -255,7 +255,7 @@ func TestRouterLsa1(t *testing.T) {
 
 	// Write Router Testing now, because parsing of static config, router config, static list and access list is successful
 
-	ana.RouterAnomalyAnalysis(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
+	ana.RouterAnomalyAnalysisLSDB(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
 
 	t.Run("TestRouterAdvertisment", func(t *testing.T) {
 		//ana.RouterAnomalyAnalysis(actualAccessList, )
@@ -398,7 +398,7 @@ func TestExternalLsa1(t *testing.T) {
 			},
 		},
 	}
-	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration)
+	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 
 	// - actualExternalLSDB -> GetRuntimeExternalRouterData
 	// - predictedExternalLSDB
@@ -446,7 +446,7 @@ func TestExternalLsa1(t *testing.T) {
 			},
 		},
 	}
-	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalRouterData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
@@ -520,7 +520,7 @@ func TestAnomalyAnalysis1(t *testing.T) {
 	runtimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	_, predictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-	ana.RouterAnomalyAnalysis(accessList, predictedRouterLSDB, runtimeRouterLSDB)
+	ana.RouterAnomalyAnalysisLSDB(accessList, predictedRouterLSDB, runtimeRouterLSDB)
 
 	t.Run("TestRouterLSAAnomalyTesting", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)

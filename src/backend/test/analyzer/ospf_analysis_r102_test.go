@@ -519,55 +519,9 @@ func TestExternalLsaUnhappy2(t *testing.T) {
 
 }
 
-// todo
+// TODO:Second happy/unhappy path testing
 func TestAnomalyAnalysisLsaFive2(t *testing.T) {
 
 }
 
 // TODO: TestNssaExternalLsa1
-
-// func TestGetAccessList2(t *testing.T) {
-
-// 	frrMetrics := getR102FRRdata()
-
-// 	expectedResult := map[string]frrProto.AccessListAnalyzer{
-// 		"localsite": {
-// 			AccessList: "localsite",
-// 			AclEntry: []*frrProto.ACLEntry{
-// 				{
-// 					IPAddress:    "192.168.11.0",
-// 					PrefixLength: 24,
-// 					IsPermit:     true,
-// 					Sequence:     15,
-// 				},
-// 			},
-// 		},
-// 		"term": {
-// 			AccessList: "term",
-// 			AclEntry: []*frrProto.ACLEntry{
-// 				{
-// 					IPAddress:    "127.0.0.1",
-// 					PrefixLength: 32,
-// 					IsPermit:     true,
-// 					Sequence:     5,
-// 				},
-// 				{
-// 					IPAddress:    "any",
-// 					PrefixLength: 0,
-// 					IsPermit:     true,
-// 					Any:          true,
-// 					Sequence:     10,
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	result := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
-
-// 	//assert.Equal(t, expectedResult, result)
-// 	t.Log()
-// 	t.Logf("%v\n", expectedResult)
-// 	t.Log()
-// 	t.Logf("%v\n", result)
-
-// }
