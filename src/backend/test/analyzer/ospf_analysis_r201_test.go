@@ -204,4 +204,50 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
 	})
 
+	peerNeighborMap := map[string]string{
+		"65.0.2.3": "10.20.13.1",
+		//	"65.0.2.4": "10.20.14.1",
+	}
+
+	// isRouterLSDB = &frrProto.IntraAreaLsa{
+	// 	RouterId: "65.0.2.1",
+	// 	Hostname: "r201",
+	// 	Areas: []*frrProto.AreaAnalyzer{
+	// 		{
+	// 			AreaName: "0.0.0.0",
+	// 			LsaType:  "router-LSA",
+	// 			Links: []*frrProto.Advertisement{
+	// 				{
+	// 					InterfaceAddress: "10.20.13.1",
+	// 					LinkType:         "point-to-point",
+	// 				},
+	// 				{
+	// 					InterfaceAddress: "10.20.12.1",
+	// 					LinkType:         "transit network",
+	// 				},
+	// 				{
+	// 					InterfaceAddress: "10.20.14.1",
+	// 					LinkType:         "transit network",
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// }
+
+	isRouterLSDB = analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
+
+	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
+	t.Run("TestAnomalyAnalysisR201WrongPeerAddress", func(t *testing.T) {
+
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes)
+		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries), 1)
+		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.MissingEntries), 1)
+		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.DuplicateEntries), 0)
+
+		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress, "0.0.2.88")
+		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
+	})
 }

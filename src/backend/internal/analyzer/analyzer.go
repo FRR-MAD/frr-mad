@@ -37,7 +37,6 @@ func (c *Analyzer) AnomalyAnalysis() {
 	peerInterfaceMap := GetPeerNetworkAddress(c.metrics.StaticFrrConfiguration)
 	peerNeighborMap := GetPeerNeighbor(c.metrics.OspfNeighbors, peerInterfaceMap)
 
-	// parse frr configuration file
 	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
