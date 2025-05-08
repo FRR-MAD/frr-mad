@@ -70,7 +70,7 @@ protobuf/clean:
 
 #### Hot Module Reloading ####
 
-.PHONY: hmr/docker hmr/run hmr/stop hmr/clean
+.PHONY: hmr/docker hmr/run hmr/stop hmr/clean hmr/restart
 hmr/docker:
 	docker build -t frr-854-dev -f dockerfile/frr-dev.dockerfile .
 	docker build -t frr-854 -f dockerfile/frr.dockerfile .
@@ -84,6 +84,8 @@ hmr/run:
 
 hmr/stop: 
 	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
+
+hmr/restart: hmr/stop hmr/run
 
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
