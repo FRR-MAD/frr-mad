@@ -483,6 +483,10 @@ func (m *Model) renderNetworkMonitorTab() string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
+	routerName, _, err := backend.GetRouterName()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterName")
+	}
 
 	// extract and sort the map keys (areas)
 	networkLSAAreas := make([]string, 0, len(networkLSASelf.NetStates))
@@ -549,6 +553,11 @@ func (m *Model) renderNetworkMonitorTab() string {
 
 	}
 
+	if networkLSABlocks == nil {
+		return lipgloss.JoinHorizontal(lipgloss.Left,
+			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"))
+	}
+
 	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
 	m.viewport.Width = styles.WidthBasis
 	m.viewport.Height = contentMaxHeight
@@ -569,6 +578,10 @@ func (m *Model) renderExternalMonitorTab() string {
 	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf()
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
+	}
+	routerName, _, err := backend.GetRouterName()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterName")
 	}
 
 	// ===== OSPF External LSAs (Type 5) =====
@@ -688,8 +701,7 @@ func (m *Model) renderExternalMonitorTab() string {
 		if externalTableData == nil {
 			allLsaBlocks = allLsaBlocks[:0]
 			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
-				externalHeader,
-				"no self originating external advertisements",
+				styles.H1TitleStyleForOne().Render(routerName+" does not originate External LSAs (Type 5 or 7)"),
 			))
 		} else {
 			allLsaBlocks = externalLsaBlock
