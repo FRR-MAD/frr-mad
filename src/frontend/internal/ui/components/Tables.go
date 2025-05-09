@@ -27,6 +27,29 @@ func NewOspfMonitorTable(headers []string, rows int) *ltable.Table {
 	return t
 }
 
+func NewOspfMonitorMultilineTable(headers []string, rows int) *ltable.Table {
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderTop(true).
+		BorderBottom(true).
+		BorderLeft(true).
+		BorderRight(true).
+		BorderHeader(true).
+		BorderColumn(true).
+		Headers(headers...).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row == ltable.HeaderRow:
+				return styles.HeaderStyle
+			case row == rows-1:
+				return styles.LastCellOfMultiline
+			default:
+				return styles.MultilineCellStyle
+			}
+		})
+	return t
+}
+
 func NewAnomalyTable(headers []string, rows int) *ltable.Table {
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).

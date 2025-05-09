@@ -38,7 +38,7 @@ func getRouterAnomalyDummy1() *frrProto.Response {
 	result := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
 			HasOverAdvertisedPrefixes:  true,
-			HasUnderAdvertisedPrefixes: false,
+			HasUnderAdvertisedPrefixes: true,
 			HasDuplicatePrefixes:       false,
 			HasMisconfiguredPrefixes:   false,
 			SuperfluousEntries:         adv1,
@@ -61,9 +61,60 @@ func getRouterAnomalyDummy1() *frrProto.Response {
 }
 
 func getExternalAnomalyDummy1() *frrProto.Response {
-	return getRouterAnomalyDummy1()
+	adv1 := []*frrProto.Advertisement{
+		{
+			InterfaceAddress: "",         // string
+			LinkStateId:      "10.0.0.0", // string
+			PrefixLength:     "24",       // string
+			LinkType:         "",         // string
+		},
+		{
+			InterfaceAddress: "",               // string
+			LinkStateId:      "10.200.155.254", // string
+			PrefixLength:     "32",             // string
+			LinkType:         "Point-to-Point", // string
+		},
+	}
+
+	adv2 := []*frrProto.Advertisement{
+		{
+			InterfaceAddress: "",           // string
+			LinkStateId:      "172.22.0.0", // string
+			PrefixLength:     "24",         // string
+			LinkType:         "",           // string
+		},
+		{
+			InterfaceAddress: "",               // string
+			LinkStateId:      "172.31.255.254", // string
+			PrefixLength:     "32",             // string
+			LinkType:         "Point-to-Point", // string
+		},
+	}
+
+	result := &frrProto.AnomalyAnalysis{
+		RouterAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes:  true,
+			HasUnderAdvertisedPrefixes: true,
+			HasDuplicatePrefixes:       false,
+			HasMisconfiguredPrefixes:   false,
+			SuperfluousEntries:         adv1,
+			MissingEntries:             adv2,
+		},
+	}
+
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_Anomaly{
+			Anomaly: result.RouterAnomaly,
+		},
+	}
+
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "Returning Router Anomaly DUMMY data 1",
+		Data:    value,
+	}
 }
 
 func getNSSAExternalAnomalyDummy1() *frrProto.Response {
-	return getRouterAnomalyDummy1()
+	return getExternalAnomalyDummy1()
 }
