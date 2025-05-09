@@ -42,7 +42,7 @@ func newCollector(metricsURL, configPath, socketPath string, logger *logger.Logg
 func initFullFrrData() *frrProto.FullFRRData {
 	//var fullFrrData frrProto.FullFRRData
 
-	fullFrrData := frrProto.FullFRRData{
+	fullFrrData := &frrProto.FullFRRData{
 		OspfDatabase:           &frrProto.OSPFDatabase{},
 		OspfRouterData:         &frrProto.OSPFRouterData{},
 		OspfNetworkData:        &frrProto.OSPFNetworkData{},
@@ -60,7 +60,7 @@ func initFullFrrData() *frrProto.FullFRRData {
 		FrrRouterData:          &frrProto.FRRRouterData{},
 	}
 
-	return &fullFrrData
+	return fullFrrData
 }
 
 func (c *Collector) Collect() error {

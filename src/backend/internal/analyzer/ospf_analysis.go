@@ -87,34 +87,34 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 
 	for _, area := range isState.Areas {
 		for i := range area.Links {
-			if area.Links[i].LinkType != "point-to-point" {
-				link := area.Links[i]
-				key := getAdvertisementKey(link)
-				isStateMap[key] = &frrProto.Advertisement{
-					InterfaceAddress: link.InterfaceAddress,
-					LinkType:         link.LinkType,
-				}
-				if link.LinkType == strings.ToLower("Stub Network") {
-					isStateMap[key].PrefixLength = link.PrefixLength
-				}
+			//if area.Links[i].LinkType != "point-to-point" {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			isStateMap[key] = &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkType:         link.LinkType,
 			}
+			if link.LinkType == strings.ToLower("Stub Network") {
+				isStateMap[key].PrefixLength = link.PrefixLength
+			}
+			//}
 		}
 	}
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
-			if area.Links[i].LinkType != "point-to-point" {
-				link := area.Links[i]
-				key := getAdvertisementKey(link)
-				shouldStateMap[key] = &frrProto.Advertisement{
-					InterfaceAddress: link.InterfaceAddress,
-					LinkType:         link.LinkType,
-				}
-				if link.LinkType == strings.ToLower("Stub Network") {
-					shouldStateMap[key].PrefixLength = link.PrefixLength
-				}
-
+			//if area.Links[i].LinkType != "point-to-point" {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			shouldStateMap[key] = &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkType:         link.LinkType,
 			}
+			if link.LinkType == strings.ToLower("Stub Network") {
+				shouldStateMap[key].PrefixLength = link.PrefixLength
+			}
+
+			//}
 		}
 	}
 

@@ -123,14 +123,15 @@ func CreateMockFullFRRData() *frrProto.FullFRRData {
 	}
 }
 
-func getMockData() (*logger.Logger, *analyzer.Analyzer, *frrProto.FullFRRData) {
+func getMockData() (*logger.Logger, *analyzer.Analyzer, *frrProto.FullFRRData, *frrProto.PeerInterfaceMap) {
 	mockLoggerInstance, _ := logger.NewLogger("testing", "/tmp/testing.log")
 	mockMetrics := CreateMockFullFRRData()
 	mockAnalyzerInstance := &analyzer.Analyzer{
 		AnalysisResult: &frrProto.AnomalyAnalysis{},
 	}
+	mockP2pMap := &frrProto.PeerInterfaceMap{}
 
-	return mockLoggerInstance, mockAnalyzerInstance, mockMetrics
+	return mockLoggerInstance, mockAnalyzerInstance, mockMetrics, mockP2pMap
 }
 
 // Helper for handling optional string fields

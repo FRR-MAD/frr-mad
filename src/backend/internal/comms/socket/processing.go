@@ -76,6 +76,8 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 		return s.getRoutingInformationBase()
 	case "staticConfig":
 		return s.getStaticFrrConfiguration()
+	case "peerMap":
+		return s.getp2pMap()
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", command)
