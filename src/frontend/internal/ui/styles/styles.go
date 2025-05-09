@@ -202,6 +202,12 @@ func H1OneContentBoxStyle() lipgloss.Style {
 		Width(WidthOneH1Box)
 }
 
+func H1OneContentBoxCenterStyle() lipgloss.Style {
+	return H1ContentBoxStyle().
+		Align(lipgloss.Center).
+		Width(WidthOneH1Box)
+}
+
 func H1TwoContentBoxesStyle() lipgloss.Style {
 	return H1OneContentBoxStyle().
 		Width(WidthTwoH1Box)
@@ -380,6 +386,8 @@ var (
 	HeaderStyle             = lipgloss.NewStyle().Bold(true).Align(lipgloss.Center)
 	FirstNormalRowCellStyle = lipgloss.NewStyle().Padding(0, 1)
 	NormalCellStyle         = lipgloss.NewStyle().Padding(0, 1)
+	MultilineCellStyle      = lipgloss.NewStyle().Padding(0, 1, 1, 1)
+	LastCellOfMultiline     = lipgloss.NewStyle().Padding(0, 1)
 	BadCellStyle            = lipgloss.NewStyle().Padding(0, 1)
 )
 
