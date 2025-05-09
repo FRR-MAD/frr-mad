@@ -28,9 +28,9 @@ func TestConcurrentConnections(t *testing.T) {
 
 	os.Remove(socketPath)
 
-	mockLoggerInstance, mockAnalyzerInstance, mockFullFRRData := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockFullFRRData, p2pMap := getMockData()
 
-	socketInstance := socket.NewSocket(config, mockFullFRRData, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockFullFRRData, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
 
 	go func() {
 		err := socketInstance.Start()
@@ -145,9 +145,9 @@ func TestConcurrentCommandProcessing(t *testing.T) {
 
 	os.Remove(socketPath)
 
-	mockLoggerInstance, mockAnalyzerInstance, mockFullFRRData := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockFullFRRData, p2pMap := getMockData()
 
-	socketInstance := socket.NewSocket(config, mockFullFRRData, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockFullFRRData, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
 
 	go func() {
 		err := socketInstance.Start()

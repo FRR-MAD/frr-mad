@@ -147,7 +147,8 @@ func startApp(config *configs.Config) {
 	}
 
 	if app.Aggregator != nil && app.Analyzer != nil {
-		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger)
+		// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
+		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger, app.Analyzer.P2pMap)
 
 		go func() {
 			if err := app.Socket.Start(); err != nil {

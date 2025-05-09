@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"google.golang.org/protobuf/proto"
 )
 
 type RedistributedRoute struct {
@@ -48,7 +49,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 	// TODO: use static route map and accessList, mino
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
-	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
+	isRouterLSDB, p2pMap := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
 
 	isExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
@@ -67,6 +68,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	//c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
 
+	//c.UpdateMetrics(p2pMap)
+	proto.Merge(c.P2pMap, &p2pMap)
 }
 
 func maskToPrefixLength(mask string) string {
@@ -191,4 +194,10 @@ func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]st
 	}
 
 	return result
+}
+
+func (a *Analyzer) UpdateMetrics(p2pMap frrProto.PeerInterfaceMap) {
+
+	proto.Merge(a.P2pMap, &p2pMap)
+
 }
