@@ -46,6 +46,9 @@ var (
 	WidthTwoH2OneFourthBox   int
 	WidthTwoH2ThreeFourth    int
 	WidthTwoH2ThreeFourthBox int
+
+	HeightH1 int
+	HeightH2 int
 )
 
 func SetWindowSizes(window common.WindowSize) {
@@ -70,6 +73,9 @@ func SetWindowSizes(window common.WindowSize) {
 	WidthTwoH2OneFourthBox = (WidthBasis-2*MarginX4)/4 + roundingCorrectionOneFourthH2
 	WidthTwoH2ThreeFourth = WidthBasis - 2*MarginX2 - 2*BoxBorder - WidthTwoH2OneFourth
 	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
+
+	HeightH1 = 4
+	HeightH2 = 2
 }
 
 // ======================================== //

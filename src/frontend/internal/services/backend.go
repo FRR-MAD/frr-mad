@@ -154,6 +154,15 @@ func GetSystemResources() (int64, float64, float64, error) {
 	return cores, cpuUsage, memoryUsage, nil
 }
 
+func GetRIB() (*frrProto.RoutingInformationBase, error) {
+	response, err := SendMessage("frr", "rib", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetRoutingInformationBase(), nil
+}
+
 func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	response, err := SendMessage("ospf", "database", nil)
 	if err != nil {
@@ -177,8 +186,8 @@ func GetOspfP2PInterfaceMapping() (*frrProto.PeerInterfaceMap, error) {
 	if err != nil {
 		return nil, err
 	}
-  
-  return response.Data.GetPeerInterfaceToAddress(), nil
+
+	return response.Data.GetPeerInterfaceToAddress(), nil
 }
 
 func GetOspfNetworkDataSelf() (*frrProto.OSPFNetworkData, error) {

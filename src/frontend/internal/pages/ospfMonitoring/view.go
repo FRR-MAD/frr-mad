@@ -350,6 +350,7 @@ func (m *Model) renderRouterMonitorTab() string {
 	var routerLSABlocks []string
 	for _, areaID := range routerLSAAreas {
 		areaData := routerLSASelf.RouterStates[areaID]
+
 		var transitTableData [][]string
 		var stubTableData [][]string
 		var point2pointTableData [][]string
