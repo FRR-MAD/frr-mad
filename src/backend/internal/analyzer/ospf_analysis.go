@@ -17,6 +17,16 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
+	fmt.Printf("\n\n\n\n\n\n")
+	fmt.Println("===============")
+	//fmt.Println(ribMap)
+	// fmt.Println(isStateRouter)
+	// fmt.Println(isStateExternal)
+	// fmt.Println(isStateNssaExternal)
+	for key, _ := range ribMap {
+		fmt.Println(key)
+	}
+
 	ospfCounter := 0
 	for _, entry := range ribMap {
 		if entry.Protocol == "ospf" {
@@ -34,20 +44,25 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 		ospfIsStateExternalCounter += len(area.Links)
 	}
 
-	for _, foo := range isStateRouter.Areas {
-		for _, i := range foo.Links {
-			//fmt.Println(i.LinkStateId)
-			fmt.Println(i.InterfaceAddress)
-		}
+	ospfIsStateNssaExternalCounter := 0
+	for _, area := range isStateNssaExternal.Areas {
+		ospfIsStateNssaExternalCounter += len(area.Links)
 	}
 
-	// only  LinkStateId contains an entry
-	for _, foo := range isStateExternal.Areas {
-		for _, i := range foo.Links {
-			fmt.Println(i.LinkStateId)
-			//fmt.Println(i.InterfaceAddress)
-		}
-	}
+	//for _, foo := range isStateRouter.Areas {
+	//	for _, i := range foo.Links {
+	//		//fmt.Println(i.LinkStateId)
+	//		fmt.Println(i.InterfaceAddress)
+	//	}
+	//}
+
+	//// only  LinkStateId contains an entry
+	//for _, foo := range isStateExternal.Areas {
+	//	for _, i := range foo.Links {
+	//		fmt.Println(i.LinkStateId)
+	//		//fmt.Println(i.InterfaceAddress)
+	//	}
+	//}
 
 	// only  InterfaceAddress contains an entry
 	for _, foo := range isStateNssaExternal.Areas {
@@ -56,6 +71,9 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 			fmt.Println(i.InterfaceAddress)
 		}
 	}
+
+	fmt.Printf("Total self lsdb: %d\n", ospfIsStateExternalCounter+ospfIsStateRouterCounter+ospfIsStateNssaExternalCounter)
+
 	a.AnalysisResult.FibAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.FibAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.FibAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0

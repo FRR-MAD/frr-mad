@@ -32,6 +32,8 @@ type OspfRedistribution struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
+	fmt.Println(c.metrics.OspfDatabase)
+
 	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
 
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
@@ -43,8 +45,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
-	// TODO: Parse RIB to get FIB
-	//ribMap := GetFIB(c.metrics.RoutingInformationBase)
+	// TODO: frr-128: Parse RIB to get FIB
+	// fibMap := GetFIB(c.metrics.RoutingInformationBase)
 
 	// TODO: testing and correction, mino
 	// TODO: use static route map and accessList, mino
@@ -62,14 +64,14 @@ func (c *Analyzer) AnomalyAnalysis() {
 	fmt.Println(shouldRouterLSDB)
 
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
-	//}
 
 	// TODO: implement, mino
 	if isNssa {
 		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB)
 	}
 
-	//c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
+	// TODO: frr-128: fib anomaly analysis
+	//c.AnomalyAnalysisFIB(fibMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
 
 	//c.UpdateMetrics(p2pMap)
 	proto.Merge(c.P2pMap, &p2pMap)
