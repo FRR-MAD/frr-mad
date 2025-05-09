@@ -24,15 +24,17 @@ type Socket struct {
 	mutex      sync.Mutex
 	metrics    *frrProto.FullFRRData
 	anomalies  *frrProto.AnomalyAnalysis
+	p2pMap     *frrProto.PeerInterfaceMap
 	logger     *logger.Logger
 }
 
-func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger) *Socket {
+func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger, p2pMap *frrProto.PeerInterfaceMap) *Socket {
 	return &Socket{
 		socketPath: fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:      sync.Mutex{},
 		metrics:    metrics,
 		anomalies:  analysisResult,
+		p2pMap:     p2pMap,
 		logger:     logger,
 	}
 }

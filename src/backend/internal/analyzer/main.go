@@ -12,6 +12,7 @@ import (
 type Analyzer struct {
 	AnalysisResult *frrProto.AnomalyAnalysis
 	metrics        *frrProto.FullFRRData
+	P2pMap         *frrProto.PeerInterfaceMap
 	Logger         *logger.Logger
 	config         interface{}
 }
@@ -32,8 +33,11 @@ func InitAnalyzer(
 	return &Analyzer{
 		AnalysisResult: anomalyAnalysis,
 		metrics:        metrics,
-		Logger:         logger,
-		config:         config,
+		P2pMap: &frrProto.PeerInterfaceMap{
+			PeerInterfaceToAddress: map[string]string{},
+		},
+		Logger: logger,
+		config: config,
 	}
 }
 

@@ -25,7 +25,7 @@ func TestRouterLsaHappy3(t *testing.T) {
 		"65.0.2.4": "10.20.14.1",
 	}
 
-	actualIsRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
+	actualIsRouterLSDB, _ := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
 	expectedIsRouterLSDB := &frrProto.IntraAreaLsa{
 		RouterId: "65.0.2.1",
 		Hostname: "r201",
@@ -52,7 +52,7 @@ func TestRouterLsaHappy3(t *testing.T) {
 	}
 
 	_, shouldRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-	isRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
+	isRouterLSDB, _ := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
 
 	t.Run("TestHelperFunctionParsingR201", func(t *testing.T) {
 		assert.Equal(t, len(expectedPeerInterfaceMap), len(actualPeerInterfaceMap))
@@ -209,32 +209,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		//	"65.0.2.4": "10.20.14.1",
 	}
 
-	// isRouterLSDB = &frrProto.IntraAreaLsa{
-	// 	RouterId: "65.0.2.1",
-	// 	Hostname: "r201",
-	// 	Areas: []*frrProto.AreaAnalyzer{
-	// 		{
-	// 			AreaName: "0.0.0.0",
-	// 			LsaType:  "router-LSA",
-	// 			Links: []*frrProto.Advertisement{
-	// 				{
-	// 					InterfaceAddress: "10.20.13.1",
-	// 					LinkType:         "point-to-point",
-	// 				},
-	// 				{
-	// 					InterfaceAddress: "10.20.12.1",
-	// 					LinkType:         "transit network",
-	// 				},
-	// 				{
-	// 					InterfaceAddress: "10.20.14.1",
-	// 					LinkType:         "transit network",
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// }
-
-	isRouterLSDB = analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
+	isRouterLSDB, _ = analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 	t.Run("TestAnomalyAnalysisR201WrongPeerAddress", func(t *testing.T) {
@@ -249,5 +224,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress, "0.0.2.88")
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
+
+		t.Log(ana.AnalysisResult)
 	})
 }

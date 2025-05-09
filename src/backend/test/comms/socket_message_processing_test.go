@@ -25,9 +25,9 @@ func TestMessageProcessing(t *testing.T) {
 
 	os.Remove("/tmp/test-message-socket")
 
-	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockMetrics, p2pMap := getMockData()
 
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
 
 	go func() {
 		socketInstance.Start()

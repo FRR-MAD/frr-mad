@@ -24,10 +24,10 @@ func TestNewSocket(t *testing.T) {
 	// Create mock dependencies
 	mockLoggerInstance := &logger.Logger{}
 
-	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockMetrics, p2pMap := getMockData()
 
 	// Create socket
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
 
 	assert.NotNil(t, socketInstance)
 	os.Remove("/tmp/test-socket")
@@ -44,10 +44,10 @@ func TestSocketConnectionHandling(t *testing.T) {
 	os.Remove("/tmp/test-connection-socket")
 
 	// Create mock dependencies
-	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockMetrics, p2pMap := getMockData()
 
 	// Create socket
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
 
 	// Start socket server in a goroutine
 	socketErrChan := make(chan error, 1)

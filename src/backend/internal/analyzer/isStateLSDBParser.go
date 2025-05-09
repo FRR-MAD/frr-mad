@@ -8,18 +8,22 @@ import (
 )
 
 // lsa type 1 parsing
-func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) *frrProto.IntraAreaLsa {
-	result := frrProto.IntraAreaLsa{
+func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
+	intraAreaLsa := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
+	p2pMap := frrProto.PeerInterfaceMap{
+		PeerInterfaceToAddress: map[string]string{},
+	}
+
 	for areaName, routerArea := range config.RouterStates {
-		for _, lsaEntry := range routerArea.LsaEntries {
+		for lsaName, lsaEntry := range routerArea.LsaEntries {
 			var currentArea *frrProto.AreaAnalyzer
-			for i := range result.Areas {
-				if result.Areas[i].AreaName == areaName {
-					currentArea = result.Areas[i]
+			for i := range intraAreaLsa.Areas {
+				if intraAreaLsa.Areas[i].AreaName == areaName {
+					currentArea = intraAreaLsa.Areas[i]
 					break
 				}
 			}
@@ -30,11 +34,11 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peer
 					LsaType:  lsaEntry.LsaType,
 					Links:    []*frrProto.Advertisement{},
 				}
-				result.Areas = append(result.Areas, &newArea)
-				currentArea = result.Areas[len(result.Areas)-1]
+				intraAreaLsa.Areas = append(intraAreaLsa.Areas, &newArea)
+				currentArea = intraAreaLsa.Areas[len(intraAreaLsa.Areas)-1]
 			}
 
-			for _, routerLink := range lsaEntry.RouterLinks {
+			for routerName, routerLink := range lsaEntry.RouterLinks {
 				var ipAddress, prefixLength string
 				isStub := false
 				if strings.EqualFold(routerLink.LinkType, "Stub Network") {
@@ -64,6 +68,9 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peer
 					if strings.HasPrefix(ipAddress, "0") {
 						if _, exists := peerNeighbor[routerLink.NeighborRouterId]; exists {
 							adv.InterfaceAddress = peerNeighbor[routerLink.NeighborRouterId]
+							config.RouterStates[areaName].LsaEntries[lsaName].RouterLinks[routerName].P2PInterfaceAddress =
+								peerNeighbor[routerLink.NeighborRouterId]
+							p2pMap.PeerInterfaceToAddress[ipAddress] = peerNeighbor[routerLink.NeighborRouterId]
 						}
 					}
 				} else {
@@ -79,9 +86,9 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, peer
 		}
 	}
 
-	result.Hostname = hostname
+	intraAreaLsa.Hostname = hostname
 
-	return &result
+	return &intraAreaLsa, p2pMap
 }
 
 // lsa type 5 parsing, this will only return static routes, as BGP routes aren't useful in ospf analysis
