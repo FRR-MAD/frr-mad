@@ -63,6 +63,9 @@ func (c *Analyzer) AnomalyAnalysis() {
 	fmt.Println(isRouterLSDB)
 	fmt.Println(shouldRouterLSDB)
 
+	//if len(staticRouteMap) > 0 || isNssa {
+	//fmt.Println(predictedExternalLSDB)
+
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 
 	// TODO: implement, mino
