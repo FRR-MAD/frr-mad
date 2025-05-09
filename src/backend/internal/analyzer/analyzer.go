@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -57,6 +58,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
 	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
+	fmt.Println(isRouterLSDB)
+	fmt.Println(shouldRouterLSDB)
 
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	//}
