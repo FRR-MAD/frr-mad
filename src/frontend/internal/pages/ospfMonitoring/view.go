@@ -341,6 +341,10 @@ func (m *Model) renderRouterMonitorTab() string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfRouterData")
 	}
+	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOspfP2PInterfaceMapping")
+	}
 
 	// extract and sort the map keys (areas)
 	routerLSAAreas := make([]string, 0, len(routerLSASelf.RouterStates))
@@ -378,9 +382,16 @@ func (m *Model) renderRouterMonitorTab() string {
 						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				} else if strings.Contains(link.LinkType, "point-to-point") {
+					var mappedAddress string
+					if addr, ok := p2pInterfaceMap.PeerInterfaceToAddress[link.RouterInterfaceAddress]; ok {
+						mappedAddress = addr
+					} else {
+						mappedAddress = "no mapping"
+					}
+
 					point2pointTableData = append(point2pointTableData, []string{
 						link.RouterInterfaceAddress,
-						"translate IP here",
+						mappedAddress,
 						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				}
