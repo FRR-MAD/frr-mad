@@ -15,6 +15,8 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
+	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
+	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
@@ -28,7 +30,7 @@ type Service struct {
 type FrrMadApp struct {
 	Analyzer   *analyzer.Analyzer
 	Aggregator *aggregator.Collector
-	Exporter   string
+	Exporter   *exporter.Exporter
 	Socket     *socket.Socket
 	Logger     *logger.Logger
 }
@@ -45,29 +47,20 @@ func main() {
 		fmt.Println("  stop    - Stop a running FRR-MAD instance")
 		fmt.Println("  reload  - Reload configuration for a running FRR-MAD")
 		fmt.Println("  help    - Display this help message")
-		// fmt.Println("\nOptions:")
-		// fmt.Println("  --analyzer   - Run with analyzer service enabled")
-		// fmt.Println("  --aggregator - Run with aggregator service enabled")
-		// fmt.Println("  --exporter   - Run with exporter service enabled")
-		// fmt.Println("\nIf no service options are specified, analyzer is enabled by default.")
 	}
 
-	// Check if a command was provided
 	if len(os.Args) < 2 {
 		cmdSet.Usage()
 		os.Exit(1)
 	}
 
-	// Load configuration
 	config, err := configs.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// Ensure required directories exist
 	createDirectories(config)
 
-	// Process the command
 	command := os.Args[1]
 
 	switch command {
@@ -103,22 +96,16 @@ func startApp(config *configs.Config) {
 	appLogger.SetDebugLevel(debugLevel)
 	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
 
-	// Configure polling interval
 	pollInterval := time.Duration(aggregatorConfig.PollInterval) * time.Second
 	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", aggregatorConfig.PollInterval))
 
-	// Determine which services to start
-	services := parseServiceFlags()
-	if len(services) == 0 {
-		services = append(services, "analyzer") // Default to analyzer if no services specified
-	}
+	services := []string{}
+	services = append(services, "analyzer")
+	services = append(services, "exporter")
 
-	// Initialize application
 	app := &FrrMadApp{
 		Logger: appLogger,
 	}
-
-	// Start requested services
 
 	pidFile := createPid(socketConfig.UnixSocketLocation, appLogger)
 	defer os.Remove(pidFile)
@@ -127,14 +114,12 @@ func startApp(config *configs.Config) {
 		appLogger.Info(fmt.Sprintf("Starting %s service", service))
 		switch service {
 		case "analyzer":
-			// Start aggregator first (analyzer depends on it)
 			if app.Aggregator == nil {
 				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", defaultConfig.LogPath))
 				aggregatorLogger.SetDebugLevel(debugLevel)
 				app.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
 			}
 
-			// Then start analyzer
 			analyzerLogger := createLogger("analyzer", fmt.Sprintf("%v/analyzer.log", defaultConfig.LogPath))
 			analyzerLogger.SetDebugLevel(debugLevel)
 			app.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval, app.Aggregator)
@@ -149,10 +134,11 @@ func startApp(config *configs.Config) {
 		case "exporter":
 			exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", defaultConfig.LogPath))
 			exporterLogger.SetDebugLevel(debugLevel)
-			app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval)
+			app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult)
 		}
 	}
 
+	// TODO: create handler to check if all three services are started and close if not.
 	// Ensure aggregator is started if needed by other services
 	if app.Analyzer != nil && app.Aggregator == nil {
 		aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", defaultConfig.LogPath))
@@ -160,7 +146,6 @@ func startApp(config *configs.Config) {
 		app.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
 	}
 
-	// Start the socket server if we have any active services
 	if app.Aggregator != nil && app.Analyzer != nil {
 		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger)
 
@@ -193,25 +178,6 @@ func startApp(config *configs.Config) {
 	appLogger.Info("FRR-MAD shutdown complete")
 }
 
-// Parse command line flags to determine which services to start
-func parseServiceFlags() []string {
-	var services []string
-
-	for _, arg := range os.Args[2:] {
-		switch arg {
-		case "--analyzer":
-			services = append(services, "analyzer")
-		case "--aggregator":
-			services = append(services, "aggregator")
-		case "--exporter":
-			services = append(services, "exporter")
-		}
-	}
-
-	return services
-}
-
-// Create a new logger instance
 func createLogger(name, filePath string) *logger.Logger {
 	logger, err := logger.NewLogger(name, filePath)
 	if err != nil {
@@ -220,7 +186,6 @@ func createLogger(name, filePath string) *logger.Logger {
 	return logger
 }
 
-// Convert debug level string to int
 func getDebugLevel(level string) int {
 	switch level {
 	case "debug":
@@ -232,7 +197,7 @@ func getDebugLevel(level string) int {
 	}
 }
 
-// Start the aggregator service
+// Service starters
 func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
 	collector := aggregator.InitAggregator(config, logging)
 	aggregator.StartAggregator(collector, pollInterval)
@@ -240,7 +205,6 @@ func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, po
 	return collector
 }
 
-// Start the analyzer service
 func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
 	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging)
 	analyzer.StartAnalyzer(detection, pollInterval)
@@ -248,14 +212,15 @@ func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time
 	return detection
 }
 
-// Start the exporter service
-func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration) string {
-	// Placeholder for exporter implementation
-	logging.Info("Exporter service started (placeholder)")
-	return "exporter"
+func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration, frrData *frrProto.FullFRRData, anomalyResult *frrProto.AnomalyAnalysis) *exporter.Exporter {
+	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult)
+
+	metricsExporter.Start()
+	logging.Info("Analyzer service started")
+	return metricsExporter
 }
 
-// Create required directories
+// Helper Functions
 func createDirectories(config *configs.Config) {
 	paths := []string{
 		config.Default.TempFiles,
@@ -278,7 +243,6 @@ func createPid(socketPath string, appLogger *logger.Logger) string {
 		appLogger.Error(fmt.Sprintf("Failed to create PID file: %s", err))
 		os.Exit(1)
 	}
-	// Register cleanup to remove PID file on exit
 	return pidFile
 }
 
@@ -321,7 +285,6 @@ func stopApp(pidFile string) {
 		//appLogger.Error("Signal sent, but process is still running. It may take a moment to shut down...")
 	} else {
 		//appLogger.Info("FRR-MAD successfully stopped")
-
 		if _, err := os.Stat(pidFile); !os.IsNotExist(err) {
 			os.Remove(pidFile)
 		}

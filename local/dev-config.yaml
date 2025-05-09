@@ -1,10 +1,10 @@
 default:
   tempfiles: /tmp/frr-mad
-  logpath: /var/log/frr-mad
+  logpath: /tmp/frr-mad/log
   debuglevel: none 
 
 socket:
-  unixsocketlocation: /var/run/frr-mad
+  unixsocketlocation: /tmp/frr-mad
   unixsocketname: analyzer.sock
   sockettype: unix
 

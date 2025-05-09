@@ -1991,11 +1991,12 @@ type OSPFRouterLSALink struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
 	LinkType                string                 `protobuf:"bytes,1,opt,name=link_type,json=linkType,proto3" json:"link_type,omitempty"`
 	DesignatedRouterAddress string                 `protobuf:"bytes,2,opt,name=designated_router_address,json=designatedRouterAddress,proto3" json:"designated_router_address,omitempty"`
-	RouterInterfaceAddress  string                 `protobuf:"bytes,3,opt,name=router_interface_address,json=routerInterfaceAddress,proto3" json:"router_interface_address,omitempty"`
-	NetworkAddress          string                 `protobuf:"bytes,4,opt,name=network_address,json=networkAddress,proto3" json:"network_address,omitempty"`
-	NetworkMask             string                 `protobuf:"bytes,5,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
-	NumOfTosMetrics         int32                  `protobuf:"varint,6,opt,name=num_of_tos_metrics,json=numOfTosMetrics,proto3" json:"num_of_tos_metrics,omitempty"`
-	Tos0Metric              int32                  `protobuf:"varint,7,opt,name=tos0_metric,json=tos0Metric,proto3" json:"tos0_metric,omitempty"`
+	NeighborRouterId        string                 `protobuf:"bytes,3,opt,name=neighbor_router_id,json=neighborRouterId,proto3" json:"neighbor_router_id,omitempty"`
+	RouterInterfaceAddress  string                 `protobuf:"bytes,4,opt,name=router_interface_address,json=routerInterfaceAddress,proto3" json:"router_interface_address,omitempty"`
+	NetworkAddress          string                 `protobuf:"bytes,5,opt,name=network_address,json=networkAddress,proto3" json:"network_address,omitempty"`
+	NetworkMask             string                 `protobuf:"bytes,6,opt,name=network_mask,json=networkMask,proto3" json:"network_mask,omitempty"`
+	NumOfTosMetrics         int32                  `protobuf:"varint,7,opt,name=num_of_tos_metrics,json=numOfTosMetrics,proto3" json:"num_of_tos_metrics,omitempty"`
+	Tos0Metric              int32                  `protobuf:"varint,8,opt,name=tos0_metric,json=tos0Metric,proto3" json:"tos0_metric,omitempty"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
@@ -2040,6 +2041,13 @@ func (x *OSPFRouterLSALink) GetLinkType() string {
 func (x *OSPFRouterLSALink) GetDesignatedRouterAddress() string {
 	if x != nil {
 		return x.DesignatedRouterAddress
+	}
+	return ""
+}
+
+func (x *OSPFRouterLSALink) GetNeighborRouterId() string {
+	if x != nil {
+		return x.NeighborRouterId
 	}
 	return ""
 }
@@ -6815,15 +6823,16 @@ const file_protocol_proto_rawDesc = "" +
 	"\frouter_links\x18\r \x03(\v2-.communication.OSPFRouterLSA.RouterLinksEntryR\vrouterLinks\x1a`\n" +
 	"\x10RouterLinksEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x126\n" +
-	"\x05value\x18\x02 \x01(\v2 .communication.OSPFRouterLSALinkR\x05value:\x028\x01\"\xc0\x02\n" +
+	"\x05value\x18\x02 \x01(\v2 .communication.OSPFRouterLSALinkR\x05value:\x028\x01\"\xee\x02\n" +
 	"\x11OSPFRouterLSALink\x12\x1b\n" +
 	"\tlink_type\x18\x01 \x01(\tR\blinkType\x12:\n" +
-	"\x19designated_router_address\x18\x02 \x01(\tR\x17designatedRouterAddress\x128\n" +
-	"\x18router_interface_address\x18\x03 \x01(\tR\x16routerInterfaceAddress\x12'\n" +
-	"\x0fnetwork_address\x18\x04 \x01(\tR\x0enetworkAddress\x12!\n" +
-	"\fnetwork_mask\x18\x05 \x01(\tR\vnetworkMask\x12+\n" +
-	"\x12num_of_tos_metrics\x18\x06 \x01(\x05R\x0fnumOfTosMetrics\x12\x1f\n" +
-	"\vtos0_metric\x18\a \x01(\x05R\n" +
+	"\x19designated_router_address\x18\x02 \x01(\tR\x17designatedRouterAddress\x12,\n" +
+	"\x12neighbor_router_id\x18\x03 \x01(\tR\x10neighborRouterId\x128\n" +
+	"\x18router_interface_address\x18\x04 \x01(\tR\x16routerInterfaceAddress\x12'\n" +
+	"\x0fnetwork_address\x18\x05 \x01(\tR\x0enetworkAddress\x12!\n" +
+	"\fnetwork_mask\x18\x06 \x01(\tR\vnetworkMask\x12+\n" +
+	"\x12num_of_tos_metrics\x18\a \x01(\x05R\x0fnumOfTosMetrics\x12\x1f\n" +
+	"\vtos0_metric\x18\b \x01(\x05R\n" +
 	"tos0Metric\"\xdd\x01\n" +
 	"\x0fOSPFNetworkData\x12\x1b\n" +
 	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12R\n" +

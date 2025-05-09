@@ -14,10 +14,6 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	//for _, value := range config.RouterStates {
-	//	fmt.Println(value)
-	//}
-
 	for areaName, routerArea := range config.RouterStates {
 		for _, lsaEntry := range routerArea.LsaEntries {
 			var currentArea *frrProto.AreaAnalyzer
@@ -83,15 +79,11 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 	return &result
 }
 
-// lsa type 5 parsing
-// this will only return static routes, as BGP routes aren't useful in ospf analysis
+// lsa type 5 parsing, this will only return static routes, as BGP routes aren't useful in ospf analysis
 func GetRuntimeExternalData(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
-
-	//fmt.Println("staticRotueMap")
-	//fmt.Println(staticRouteMap)
 
 	// TODO: check if redistribute has a route-map and only if compare to route-map lists
 	result := &frrProto.InterAreaLsa{
@@ -103,7 +95,6 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalData, staticRouteMap ma
 	// Since AS-external-LSA (type 5) doesn't belong to a specific area,
 	// we'll create a single "area" to represent the AS external links
 	externalArea := frrProto.AreaAnalyzer{
-		//AreaName: "External",
 		LsaType: "AS-external-LSA", // Type 5
 		Links:   []*frrProto.Advertisement{},
 	}

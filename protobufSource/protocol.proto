@@ -218,11 +218,12 @@ message OSPFRouterLSA {
 message OSPFRouterLSALink {
   string link_type = 1 [json_name = "linkType"];
   string designated_router_address = 2 [json_name = "designatedRouterAddress"];
-  string router_interface_address = 3 [json_name = "routerInterfaceAddress"];
-  string network_address = 4 [json_name = "networkAddress"];
-  string network_mask = 5 [json_name = "networkMask"];
-  int32 num_of_tos_metrics = 6 [json_name = "numOfTosMetrics"];
-  int32 tos0_metric = 7 [json_name = "tos0Metric"];
+  string neighbor_router_id = 3 [json_name = "neighborRouterId"];
+  string router_interface_address = 4 [json_name = "routerInterfaceAddress"];
+  string network_address = 5 [json_name = "networkAddress"];
+  string network_mask = 6 [json_name = "networkMask"];
+  int32 num_of_tos_metrics = 7 [json_name = "numOfTosMetrics"];
+  int32 tos0_metric = 8 [json_name = "tos0Metric"];
 }
 
 // ================ Aggregator LSA Network ===================
