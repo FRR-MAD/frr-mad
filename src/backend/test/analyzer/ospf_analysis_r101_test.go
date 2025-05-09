@@ -42,7 +42,9 @@ func TestRouterLsaHappy1(t *testing.T) {
 		expectedStaticListKeys = append(expectedStaticListKeys, k)
 	}
 
-	actualRuntimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
+
+	actualRuntimeRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
 	expectedRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
@@ -201,7 +203,9 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 		assert.True(t, missingOne)
 	})
 
-	isRouterLSDB2 := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
+
+	isRouterLSDB2 := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 	shouldRouterLSDB2 := getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy()
 	expectedSuperfluousEntrires := []*frrProto.Advertisement{
 		{
@@ -417,8 +421,9 @@ func TestAnomalyAnalysisHappy1(t *testing.T) {
 	frrMetrics := getR101FRRdata()
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
+	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	isRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname)
+	isRouterLSDB := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 
 	_, shouldRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)

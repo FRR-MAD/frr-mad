@@ -188,6 +188,8 @@ func createLogger(name, filePath string) *logger.Logger {
 
 func getDebugLevel(level string) int {
 	switch level {
+	case "none":
+		return 99
 	case "debug":
 		return 2
 	case "error":

@@ -12,8 +12,8 @@ const (
 	LevelNormal = iota
 	LevelError
 	LevelDebug
-	LevelNone // Highest number (3) but should prevent all logging
 )
+const LevelNone = 99 // Highest number (3) but should prevent all logging
 
 // Logger wraps slog.Logger with additional functionality
 type Logger struct {
