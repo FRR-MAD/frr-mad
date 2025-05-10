@@ -23,8 +23,10 @@ func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
 		return m.renderRibTab()
 	} else if currentSubTabLocal == 1 {
-		return m.renderOSPFRoutesTab()
+		return m.renderFibTab()
 	} else if currentSubTabLocal == 2 {
+		return m.renderOSPFRoutesTab()
+	} else if currentSubTabLocal == 3 {
 		return m.renderConnectedRoutesTab()
 	}
 	return m.renderRibTab()
@@ -37,13 +39,15 @@ func (m *Model) renderRibTab() string {
 	}
 
 	// TODO: call backend for correct amount (backend needs to be adjusted)
-	amountOfRoutes := 40
+	amountOfRIBRoutes := "30"
 
 	routes := make([]string, 0, len(rib.Routes))
 	for route := range rib.Routes {
 		routes = append(routes, route)
 	}
-	sort.Sort(common.IpList(routes))
+	sort.Sort(common.SortedPrefixList(routes))
+
+	// return strings.Join(routes, "\n")
 
 	var ribTableData [][]string
 
@@ -53,7 +57,11 @@ func (m *Model) renderRibTab() string {
 		for _, routeEntryData := range routeEntry.Routes {
 			var nexthopsList []string
 			for _, nexthop := range routeEntryData.Nexthops {
-				nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				if nexthop.Ip == "" {
+					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
+				} else {
+					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				}
 			}
 			ribTableData = append(ribTableData, []string{
 				routeEntryData.Prefix,
@@ -68,7 +76,7 @@ func (m *Model) renderRibTab() string {
 	common.SortTableByIPColumn(ribTableData)
 
 	rowsRIB := len(ribTableData)
-	ribTable := components.NewMultilineTable(
+	ribTable := components.NewOspfMonitorTable(
 		[]string{
 			"Prefix",
 			"Protocol",
@@ -82,13 +90,12 @@ func (m *Model) renderRibTab() string {
 	}
 
 	ribHeader := styles.H1TitleStyleForOne().
-		Render(fmt.Sprintf("Routing Information Base - Received Routes"))
-	ribTableHeader := styles.H2TitleStyleForOne().
-		Render("The RIB contains " + strconv.Itoa(amountOfRoutes) + " routes")
+		Render(fmt.Sprintf("Routing Information Base - " + amountOfRIBRoutes + " Received Routes"))
 
 	// Extract table header and body (top border, header row, bottom border)
 	tableStr := ribTable.String()
 	lines := strings.Split(tableStr, "\n")
+
 	var headerLines, bodyLines []string
 	if len(lines) > 3 {
 		headerLines = lines[:3]
@@ -101,14 +108,13 @@ func (m *Model) renderRibTab() string {
 	tableHeaderContent := styles.H2OneContentBoxCenterStyle().Render(strings.Join(headerLines, "\n"))
 	bodyContent := strings.Join(bodyLines, "\n")
 
-	headers := lipgloss.JoinVertical(lipgloss.Left, ribHeader, ribTableHeader, tableHeaderContent)
+	headers := lipgloss.JoinVertical(lipgloss.Left, ribHeader, tableHeaderContent)
 
 	// Configure viewport
 	contentMaxHeight := m.windowSize.Height -
 		styles.TabRowHeight -
 		styles.FooterHeight -
 		styles.HeightH1 -
-		styles.HeightH2 -
 		3 - 2 // -3 (table Header) -2 (box border bottom style)
 	m.viewport.Width = styles.WidthBasis
 	m.viewport.Height = contentMaxHeight
@@ -118,30 +124,112 @@ func (m *Model) renderRibTab() string {
 		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
 	)
 
-	boxBottomBorder := styles.H2OneBoxBottomBorderStyle().Render("")
+	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
 
 	// Render complete view
 	completeRIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
 	return completeRIBTab
+}
 
-	//ribTableBox := lipgloss.JoinVertical(lipgloss.Left,
-	//	styles.H2OneContentBoxCenterStyle().Render(ribTable.String()),
-	//	styles.H2OneBoxBottomBorderStyle().Render(""),
-	//)
-	//
-	//contentMaxHeight := m.windowSize.Height -
-	//	styles.TabRowHeight -
-	//	styles.FooterHeight -
-	//	styles.HeightH1 -
-	//	styles.HeightH2
-	//m.viewport.Width = styles.WidthBasis
-	//m.viewport.Height = contentMaxHeight
-	//
-	//m.viewport.SetContent(ribTableBox)
-	//
-	//completeRIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View())
-	//
-	//return completeRIBTab
+func (m *Model) renderFibTab() string {
+	rib, err := backend.GetRIB()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRIB")
+	}
+
+	// TODO: call backend for correct amount (backend needs to be adjusted)
+	amountOfFIBRoutes := "20"
+
+	routes := make([]string, 0, len(rib.Routes))
+	for route := range rib.Routes {
+		routes = append(routes, route)
+	}
+	sort.Sort(common.SortedPrefixList(routes))
+
+	// return strings.Join(routes, "\n")
+
+	var fibTableData [][]string
+
+	for _, route := range routes {
+		routeEntry := rib.Routes[route]
+
+		for _, routeEntryData := range routeEntry.Routes {
+			var nexthopsList []string
+			for _, nexthop := range routeEntryData.Nexthops {
+				if nexthop.Ip == "" {
+					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
+				} else {
+					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				}
+			}
+			if routeEntryData.Installed {
+				fibTableData = append(fibTableData, []string{
+					routeEntryData.Prefix,
+					routeEntryData.Protocol,
+					strings.Join(nexthopsList, "\n"),
+					strconv.FormatBool(routeEntryData.Installed),
+				})
+			}
+		}
+	}
+
+	// Order all Table Data
+	common.SortTableByIPColumn(fibTableData)
+
+	rowsFIB := len(fibTableData)
+	fibTable := components.NewMultilineTable(
+		[]string{
+			"Prefix",
+			"Protocol",
+			"Next Hops",
+			"Installed",
+		},
+		rowsFIB,
+	)
+	for _, r := range fibTableData {
+		fibTable = fibTable.Row(r...)
+	}
+
+	fibHeader := styles.H1TitleStyleForOne().
+		Render(fmt.Sprintf("Forwarding Information Base - " + amountOfFIBRoutes + " Installed Routes"))
+
+	// Extract table header and body (top border, header row, bottom border)
+	tableStr := fibTable.String()
+	lines := strings.Split(tableStr, "\n")
+
+	var headerLines, bodyLines []string
+	if len(lines) > 3 {
+		headerLines = lines[:3]
+		bodyLines = lines[3:]
+	} else {
+		headerLines = lines
+		bodyLines = nil
+	}
+	// Render header and body
+	tableHeaderContent := styles.H2OneContentBoxCenterStyle().Render(strings.Join(headerLines, "\n"))
+	bodyContent := strings.Join(bodyLines, "\n")
+
+	headers := lipgloss.JoinVertical(lipgloss.Left, fibHeader, tableHeaderContent)
+
+	// Configure viewport
+	contentMaxHeight := m.windowSize.Height -
+		styles.TabRowHeight -
+		styles.FooterHeight -
+		styles.HeightH1 -
+		3 - 2 // -3 (table Header) -2 (box border bottom style)
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = contentMaxHeight
+
+	// Set only the body into the viewport
+	m.viewport.SetContent(
+		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
+	)
+
+	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
+
+	// Render complete view
+	completeRIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
+	return completeRIBTab
 }
 
 func (m *Model) renderOSPFRoutesTab() string {

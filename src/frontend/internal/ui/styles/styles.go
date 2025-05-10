@@ -473,6 +473,13 @@ func H1OneBoxBottomBorderStyle() lipgloss.Style {
 		BorderBottom(true).
 		BorderTop(false)
 }
+func H1OneSmallBoxBottomBorderStyle() lipgloss.Style {
+	return H1TitleStyleForOne().
+		Padding(0).
+		Margin(0).
+		BorderBottom(true).
+		BorderTop(false)
+}
 
 func H1TwoBoxBottomBorderStyle() lipgloss.Style {
 	return H1TitleStyleForTwo().

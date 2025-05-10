@@ -27,7 +27,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	return &Model{
 		title:      "RIB",
-		subTabs:    []string{"RIB", "OSPF", "Connected"},
+		subTabs:    []string{"RIB", "FIB", "OSPF", "Connected"},
 		windowSize: windowSize,
 		viewport:   vp,
 		logger:     appLogger,
