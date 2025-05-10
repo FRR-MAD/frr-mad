@@ -732,7 +732,7 @@ func (m *Model) renderNeighborMonitorTab() string {
 	for neighborID := range ospfNeighbors.Neighbors {
 		ospfNeighborIDs = append(ospfNeighborIDs, neighborID)
 	}
-	sort.Sort(common.IpList(ospfNeighborIDs))
+	sort.Sort(common.SortedIpList(ospfNeighborIDs))
 
 	var ospfNeighborTableData [][]string
 	for _, ospfNeighborID := range ospfNeighborIDs {
