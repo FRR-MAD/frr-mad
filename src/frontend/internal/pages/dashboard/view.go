@@ -38,12 +38,25 @@ func (m *Model) View() string {
 func (m *Model) renderOSPFDashboard() string {
 	// Update the viewport
 	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
-	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
+	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - styles.HeightH1
 
+	var statusHeader string
 	if m.hasAnomalyDetected {
+		anomalyHeader := styles.H1BadTitleStyle().
+			Width(styles.WidthTwoH1ThreeFourth).
+			BorderBottom(true).
+			Padding(0).
+			Render("All OSPF Routes are advertised as Expected")
+		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := getOspfDashboardAnomalies()
 		m.viewport.SetContent(ospfDashboardAnomalies)
 	} else {
+		dashboardHeader := styles.H1TitleStyle().
+			Width(styles.WidthTwoH1ThreeFourth).
+			BorderBottom(true).
+			Padding(0).
+			Render("All OSPF Routes are advertised as Expected")
+		statusHeader = dashboardHeader
 		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf()
 		m.viewport.SetContent(ospfDashboardLsdbSelf)
 	}
@@ -81,8 +94,10 @@ func (m *Model) renderOSPFDashboard() string {
 		memoryStatistics,
 	)
 
+	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewport.View())
+
 	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
-		m.viewport.View(),
+		leftSideDashboard,
 		systemResources,
 	)
 
@@ -91,14 +106,6 @@ func (m *Model) renderOSPFDashboard() string {
 
 func getOspfDashboardLsdbSelf() string {
 	var lsdbSelfBlocks []string
-
-	dashboardHeader := styles.H1TitleStyle().
-		Width(styles.WidthTwoH1ThreeFourth).
-		BorderBottom(true).
-		Padding(0).
-		Render("All OSPF Routes are advertised as Expected")
-
-	lsdbSelfBlocks = append(lsdbSelfBlocks, dashboardHeader)
 
 	lsdb, err := backend.GetLSDB()
 	if err != nil {
