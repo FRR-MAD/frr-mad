@@ -58,6 +58,8 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 		return s.getOspfRouterData()
 	case "network":
 		return s.getOspfNetworkData()
+	case "networkAll":
+		return s.getOspfNetworkDataAll()
 	case "summary":
 		return s.getOspfSummaryData()
 	case "asbrSummary":

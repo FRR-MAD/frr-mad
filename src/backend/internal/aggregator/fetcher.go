@@ -76,6 +76,14 @@ func FetchOSPFNetworkData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSP
 	return ParseOSPFNetworkLSA(output)
 }
 
+func FetchOSPFNetworkDataAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNetworkData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data network json")
+	if err != nil {
+		return nil, err
+	}
+	return ParseOSPFNetworkLSAAll(output)
+}
+
 func FetchOSPFSummaryData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFSummaryData, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf data summary self json")
 	if err != nil {
@@ -174,10 +182,6 @@ func (f *Fetcher) CollectSystemMetrics() (*frrProto.SystemMetrics, error) {
 	if mem, err := getMemoryUsage(); err == nil {
 		metrics.MemoryUsage = mem
 	}
-
-	// if stats, err := getInterfaceStats(); err == nil {
-	// 	metrics.NetworkStats = stats
-	// }
 
 	return metrics, nil
 }
@@ -278,11 +282,6 @@ func getMemoryUsage() (float64, error) {
 	}
 	return 0, nil
 }
-
-// func getInterfaceStats() ([]frrProto.InterfaceStats, error) {
-// 	// Maybe TODO
-// 	return nil, nil
-// }
 
 // Functions for testing maybe remove later
 func (f *Fetcher) GetMetricURLForTesting() string {

@@ -35,17 +35,15 @@ func newCollector(metricsURL, configPath, socketPath string, logger *logger.Logg
 		socketPath:  socketPath,
 		logger:      logger,
 		FullFrrData: fullFrrData,
-		//FullFrrData: &frrProto.FullFRRData{},
 	}
 }
 
 func initFullFrrData() *frrProto.FullFRRData {
-	//var fullFrrData frrProto.FullFRRData
-
 	fullFrrData := &frrProto.FullFRRData{
 		OspfDatabase:           &frrProto.OSPFDatabase{},
 		OspfRouterData:         &frrProto.OSPFRouterData{},
 		OspfNetworkData:        &frrProto.OSPFNetworkData{},
+		OspfNetworkDataAll:     &frrProto.OSPFNetworkData{},
 		OspfSummaryData:        &frrProto.OSPFSummaryData{},
 		OspfAsbrSummaryData:    &frrProto.OSPFAsbrSummaryData{},
 		OspfExternalData:       &frrProto.OSPFExternalData{},
@@ -86,10 +84,8 @@ func (c *Collector) Collect() error {
 		}
 
 		// TODO: Yes, do something here
-		// Merge the fetched data into the target
-		//proto.Merge(target, result)
+		// Merge the fetched data into the target.
 		// Reset target by creating a new instance of the same type
-		// Warning: Copy of Sync.Mutex lock
 
 		// check out Reset()
 		if p, ok := target.(interface{ Reset() }); ok {
@@ -97,48 +93,10 @@ func (c *Collector) Collect() error {
 		}
 		proto.Merge(target, result)
 
-		//switch v := target.(type) {
-		//case *frrProto.StaticFRRConfiguration:
-		//	*v = *result.(*frrProto.StaticFRRConfiguration)
-		//case *frrProto.OSPFRouterData:
-		//	*v = *result.(*frrProto.OSPFRouterData)
-		//case *frrProto.OSPFNetworkData:
-		//	*v = *result.(*frrProto.OSPFNetworkData)
-		//case *frrProto.OSPFSummaryData:
-		//	*v = *result.(*frrProto.OSPFSummaryData)
-		//case *frrProto.OSPFAsbrSummaryData:
-		//	*v = *result.(*frrProto.OSPFAsbrSummaryData)
-		//case *frrProto.OSPFExternalData:
-		//	*v = *result.(*frrProto.OSPFExternalData)
-		//case *frrProto.OSPFNssaExternalData:
-		//	*v = *result.(*frrProto.OSPFNssaExternalData)
-		//case *frrProto.OSPFDatabase:
-		//	*v = *result.(*frrProto.OSPFDatabase)
-		//case *frrProto.OSPFDuplicates:
-		//	*v = *result.(*frrProto.OSPFDuplicates)
-		//case *frrProto.OSPFNeighbors:
-		//	*v = *result.(*frrProto.OSPFNeighbors)
-		//case *frrProto.InterfaceList:
-		//	*v = *result.(*frrProto.InterfaceList)
-		//case *frrProto.RouteList:
-		//	*v = *result.(*frrProto.RouteList)
-		//case *frrProto.SystemMetrics:
-		//	*v = *result.(*frrProto.SystemMetrics)
-		//default:
-		//	// Fallback to proto.Merge if type isn't explicitly handled
-		//	// First clear the message if possible
-		//	if p, ok := target.(interface{ Reset() }); ok {
-		//		p.Reset()
-		//	}
-		//	proto.Merge(target, result)
-		//}
-
-		// Log results consistently
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s(): %v\n", name, target))
 		c.logger.Debug(fmt.Sprintf("Response of Fetch%s() Address: %p\n", name, target))
 	}
 
-	// Fetch each type of data using the generic function
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
 		return fetchStaticFRRConfig()
 	})
@@ -149,6 +107,10 @@ func (c *Collector) Collect() error {
 
 	fetchAndMerge("OSPFNetworkData", c.FullFrrData.OspfNetworkData, func() (proto.Message, error) {
 		return FetchOSPFNetworkData(executor)
+	})
+
+	fetchAndMerge("OSPFNetworkDataAll", c.FullFrrData.OspfNetworkDataAll, func() (proto.Message, error) {
+		return FetchOSPFNetworkDataAll(executor)
 	})
 
 	fetchAndMerge("OSPFSummaryData", c.FullFrrData.OspfSummaryData, func() (proto.Message, error) {
@@ -217,6 +179,10 @@ func (c *Collector) ensureFieldsInitialized() {
 
 	if c.FullFrrData.OspfNetworkData == nil {
 		c.FullFrrData.OspfNetworkData = &frrProto.OSPFNetworkData{}
+	}
+
+	if c.FullFrrData.OspfNetworkDataAll == nil {
+		c.FullFrrData.OspfNetworkDataAll = &frrProto.OSPFNetworkData{}
 	}
 
 	if c.FullFrrData.OspfSummaryData == nil {
