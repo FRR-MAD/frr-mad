@@ -25,8 +25,14 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 1 {
 		return m.renderFibTab()
 	} else if currentSubTabLocal == 2 {
-		return m.renderOSPFRoutesTab()
+		return m.renderRibWithProtocolFilterTab("ospf")
 	} else if currentSubTabLocal == 3 {
+		return m.renderRibWithProtocolFilterTab("bgp")
+	} else if currentSubTabLocal == 4 {
+		return m.renderRibWithProtocolFilterTab("connected")
+	} else if currentSubTabLocal == 5 {
+		return m.renderRibWithProtocolFilterTab("static")
+	} else if currentSubTabLocal == 6 {
 		return m.renderConnectedRoutesTab()
 	}
 	return m.renderRibTab()
@@ -177,7 +183,7 @@ func (m *Model) renderFibTab() string {
 	common.SortTableByIPColumn(fibTableData)
 
 	rowsFIB := len(fibTableData)
-	fibTable := components.NewMultilineTable(
+	fibTable := components.NewOspfMonitorTable(
 		[]string{
 			"Prefix",
 			"Protocol",
@@ -228,13 +234,211 @@ func (m *Model) renderFibTab() string {
 	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
 
 	// Render complete view
-	completeRIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return completeRIBTab
+	completeFIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
+	return completeFIBTab
 }
 
-func (m *Model) renderOSPFRoutesTab() string {
-	return "OSPF learned routes"
+func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
+	rib, err := backend.GetRIB()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRIB")
+	}
+
+	// TODO: call backend for correct amount (backend needs to be adjusted)
+	amountOfRoutes := "20"
+
+	routes := make([]string, 0, len(rib.Routes))
+	for route := range rib.Routes {
+		routes = append(routes, route)
+	}
+	sort.Sort(common.SortedPrefixList(routes))
+
+	// return strings.Join(routes, "\n")
+
+	var partialRIBRoutesTableData [][]string
+
+	for _, route := range routes {
+		routeEntry := rib.Routes[route]
+
+		for _, routeEntryData := range routeEntry.Routes {
+			var nexthopsList []string
+			for _, nexthop := range routeEntryData.Nexthops {
+				if nexthop.Ip == "" {
+					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
+				} else {
+					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				}
+			}
+			if routeEntryData.Protocol == protocolName {
+				partialRIBRoutesTableData = append(partialRIBRoutesTableData, []string{
+					routeEntryData.Prefix,
+					routeEntryData.Protocol,
+					strings.Join(nexthopsList, "\n"),
+					strconv.FormatBool(routeEntryData.Installed),
+				})
+			}
+		}
+	}
+
+	// Order all Table Data
+	common.SortTableByIPColumn(partialRIBRoutesTableData)
+
+	rowsPartialRIBRoutesRIB := len(partialRIBRoutesTableData)
+	partialRIBRoutesTable := components.NewOspfMonitorTable(
+		[]string{
+			"Prefix",
+			"Protocol",
+			"Next Hops",
+			"Installed",
+		},
+		rowsPartialRIBRoutesRIB,
+	)
+	for _, r := range partialRIBRoutesTableData {
+		partialRIBRoutesTable = partialRIBRoutesTable.Row(r...)
+	}
+
+	partialRoutesHeader := styles.H1TitleStyleForOne().
+		Render(fmt.Sprintf("Routing Information Base received " + amountOfRoutes + " Routes via " + strings.ToUpper(protocolName)))
+
+	// Extract table header and body (top border, header row, bottom border)
+	tableStr := partialRIBRoutesTable.String()
+	lines := strings.Split(tableStr, "\n")
+
+	var headerLines, bodyLines []string
+	if len(lines) > 3 {
+		headerLines = lines[:3]
+		bodyLines = lines[3:]
+	} else {
+		headerLines = lines
+		bodyLines = nil
+	}
+	// Render header and body
+	tableHeaderContent := styles.H2OneContentBoxCenterStyle().Render(strings.Join(headerLines, "\n"))
+	bodyContent := strings.Join(bodyLines, "\n")
+
+	headers := lipgloss.JoinVertical(lipgloss.Left, partialRoutesHeader, tableHeaderContent)
+
+	// Configure viewport
+	contentMaxHeight := m.windowSize.Height -
+		styles.TabRowHeight -
+		styles.FooterHeight -
+		styles.HeightH1 -
+		3 - 2 // -3 (table Header) -2 (box border bottom style)
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = contentMaxHeight
+
+	// Set only the body into the viewport
+	m.viewport.SetContent(
+		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
+	)
+
+	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
+
+	// Render complete view
+	completePartialRIBRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
+	return completePartialRIBRoutesTab
 }
+
+//func (m *Model) renderRibWithProtocolFilterTab() string {
+//	rib, err := backend.GetRIB()
+//	if err != nil {
+//		return common.PrintBackendError(err, "GetRIB")
+//	}
+//
+//	// TODO: call backend for correct amount (backend needs to be adjusted)
+//	amountOfOSPFRoutes := "20"
+//
+//	routes := make([]string, 0, len(rib.Routes))
+//	for route := range rib.Routes {
+//		routes = append(routes, route)
+//	}
+//	sort.Sort(common.SortedPrefixList(routes))
+//
+//	// return strings.Join(routes, "\n")
+//
+//	var ospfRoutesTableData [][]string
+//
+//	for _, route := range routes {
+//		routeEntry := rib.Routes[route]
+//
+//		for _, routeEntryData := range routeEntry.Routes {
+//			var nexthopsList []string
+//			for _, nexthop := range routeEntryData.Nexthops {
+//				if nexthop.Ip == "" {
+//					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
+//				} else {
+//					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+//				}
+//			}
+//			if routeEntryData.Protocol == "ospf" {
+//				ospfRoutesTableData = append(ospfRoutesTableData, []string{
+//					routeEntryData.Prefix,
+//					routeEntryData.Protocol,
+//					strings.Join(nexthopsList, "\n"),
+//					strconv.FormatBool(routeEntryData.Installed),
+//				})
+//			}
+//		}
+//	}
+//
+//	// Order all Table Data
+//	common.SortTableByIPColumn(ospfRoutesTableData)
+//
+//	rowsOSPFRoutesRIB := len(ospfRoutesTableData)
+//	ospfRoutesTable := components.NewOspfMonitorTable(
+//		[]string{
+//			"Prefix",
+//			"Protocol",
+//			"Next Hops",
+//			"Installed",
+//		},
+//		rowsOSPFRoutesRIB,
+//	)
+//	for _, r := range ospfRoutesTableData {
+//		ospfRoutesTable = ospfRoutesTable.Row(r...)
+//	}
+//
+//	ospfRoutesHeader := styles.H1TitleStyleForOne().
+//		Render(fmt.Sprintf("Routing Information Base received " + amountOfOSPFRoutes + " Routes via OSPF"))
+//
+//	// Extract table header and body (top border, header row, bottom border)
+//	tableStr := ospfRoutesTable.String()
+//	lines := strings.Split(tableStr, "\n")
+//
+//	var headerLines, bodyLines []string
+//	if len(lines) > 3 {
+//		headerLines = lines[:3]
+//		bodyLines = lines[3:]
+//	} else {
+//		headerLines = lines
+//		bodyLines = nil
+//	}
+//	// Render header and body
+//	tableHeaderContent := styles.H2OneContentBoxCenterStyle().Render(strings.Join(headerLines, "\n"))
+//	bodyContent := strings.Join(bodyLines, "\n")
+//
+//	headers := lipgloss.JoinVertical(lipgloss.Left, ospfRoutesHeader, tableHeaderContent)
+//
+//	// Configure viewport
+//	contentMaxHeight := m.windowSize.Height -
+//		styles.TabRowHeight -
+//		styles.FooterHeight -
+//		styles.HeightH1 -
+//		3 - 2 // -3 (table Header) -2 (box border bottom style)
+//	m.viewport.Width = styles.WidthBasis
+//	m.viewport.Height = contentMaxHeight
+//
+//	// Set only the body into the viewport
+//	m.viewport.SetContent(
+//		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
+//	)
+//
+//	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
+//
+//	// Render complete view
+//	completeOSPFRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
+//	return completeOSPFRoutesTab
+//}
 
 func (m *Model) renderConnectedRoutesTab() string {
 
