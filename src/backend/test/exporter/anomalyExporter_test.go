@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestAnomalyExporter_NoAnomalies(t *testing.T) {
@@ -38,16 +37,16 @@ func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_route_present":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_misconfigured_route_present":
-			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
+		// case "ospf_misconfigured_route_present":
+		// 	assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_overadvertised_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_underadvertised_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_misconfigured_routes_total":
-			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
+			// case "ospf_misconfigured_routes_total":
+			// 	assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		}
 	}
 }
@@ -57,80 +56,48 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 	registry := prometheus.NewRegistry()
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
-	now := timestamppb.Now()
 
-	anomalyResult := &frrProto.AnomalyAnalysis{}
-
-	//anomalies := &frrProto.Anomalies{
-	_ = &frrProto.Anomalies{
-		OveradvertisedRoutes: []*frrProto.AnomalyOveradvertisedRoute{
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "10.0.0.0/24",
-				ShouldAdvertised: "10.0.0.0/16",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router1",
-					RouterId:   "1.1.1.1",
+	// Create anomalyResult with test data using the correct structs
+	anomalyResult := &frrProto.AnomalyAnalysis{
+		RouterAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes:  true,
+			HasUnderAdvertisedPrefixes: true,
+			HasDuplicatePrefixes:       true,
+			//HasMisconfiguredPrefixes:   true,
+			SuperfluousEntries: []*frrProto.Advertisement{
+				{
+					InterfaceAddress: "10.0.0.1",
+					LinkStateId:      "1.1.1.1",
+					PrefixLength:     "24",
+					LinkType:         "Stub",
+				},
+				{
+					InterfaceAddress: "192.168.1.1",
+					LinkStateId:      "2.2.2.2",
+					PrefixLength:     "24",
+					LinkType:         "Stub",
 				},
 			},
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "192.168.1.0/24",
-				ShouldAdvertised: "192.168.1.0/16",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router2",
-					RouterId:   "2.2.2.2",
+			MissingEntries: []*frrProto.Advertisement{
+				{
+					InterfaceAddress: "10.1.0.1",
+					LinkStateId:      "3.3.3.3",
+					PrefixLength:     "24",
+					LinkType:         "Stub",
 				},
 			},
-		},
-		UnderadvertisedRoutes: []*frrProto.AnomalyUnderadvertisedRoute{
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "10.1.0.0/24",
-				ShouldAdvertised: "10.1.0.0/16",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router3",
-					RouterId:   "3.3.3.3",
-				},
-			},
-		},
-		DuplicateRoutes: []*frrProto.AnomalyDuplicateRoute{
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "172.16.0.0/24",
-				ShouldAdvertised: "172.16.0.0/24",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router4",
-					RouterId:   "4.4.4.4",
+			DuplicateEntries: []*frrProto.Advertisement{
+				{
+					InterfaceAddress: "172.16.0.1",
+					LinkStateId:      "4.4.4.4",
+					PrefixLength:     "24",
+					LinkType:         "Stub",
 				},
 			},
 		},
-		MisconfiguredRoutes: []*frrProto.AnomalyMisconfiguredRoute{
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "10.2.0.0/24",
-				ShouldAdvertised: "10.2.0.0/24[tag:100]",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router5",
-					RouterId:   "5.5.5.5",
-				},
-			},
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "10.3.0.0/24",
-				ShouldAdvertised: "10.3.0.0/24[tag:200]",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router6",
-					RouterId:   "6.6.6.6",
-				},
-			},
-		},
+		ExternalAnomaly:     &frrProto.AnomalyDetection{},
+		NssaExternalAnomaly: &frrProto.AnomalyDetection{},
+		FibAnomaly:          &frrProto.AnomalyDetection{},
 	}
 
 	// Create frrMadExporter
@@ -151,16 +118,12 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_route_present":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_misconfigured_route_present":
-			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_overadvertised_routes_total":
 			assert.Equal(t, 2.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_underadvertised_routes_total":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_routes_total":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_misconfigured_routes_total":
-			assert.Equal(t, 2.0, metric.Metric[0].Gauge.GetValue())
 		}
 	}
 }
@@ -170,20 +133,16 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 	registry := prometheus.NewRegistry()
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
-	now := timestamppb.Now()
 
-	anomalyResult := &frrProto.AnomalyAnalysis{}
-	//anomalies := &frrProto.Anomalies{
-	_ = &frrProto.Anomalies{
-		OveradvertisedRoutes: []*frrProto.AnomalyOveradvertisedRoute{
-			{
-				Timestamp:        now,
-				Service:          "ospf",
-				IsAdvertised:     "10.0.0.0/24",
-				ShouldAdvertised: "10.0.0.0/16",
-				Router: &frrProto.RouterAttribute{
-					RouterName: "router1",
-					RouterId:   "1.1.1.1",
+	anomalyResult := &frrProto.AnomalyAnalysis{
+		RouterAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes: true,
+			SuperfluousEntries: []*frrProto.Advertisement{
+				{
+					InterfaceAddress: "10.0.0.1",
+					LinkStateId:      "1.1.1.1",
+					PrefixLength:     "24",
+					LinkType:         "Stub",
 				},
 			},
 		},
@@ -217,7 +176,6 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 func TestAnomalyExporter_NilAnomalies_DoesNothing(t *testing.T) {
 	registry := prometheus.NewRegistry()
 	testLogger, _ := logger.NewLogger("test", "")
-	//var anomalies *frrProto.Anomalies // nil
 	var anomalyResult *frrProto.AnomalyAnalysis
 
 	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
@@ -235,13 +193,22 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Start with some anomalies
-	anomalyResult := &frrProto.AnomalyAnalysis{}
-	//anomalies := &frrProto.Anomalies{
-	_ = &frrProto.Anomalies{
-		OveradvertisedRoutes:  []*frrProto.AnomalyOveradvertisedRoute{{}, {}},
-		UnderadvertisedRoutes: []*frrProto.AnomalyUnderadvertisedRoute{{}},
-		DuplicateRoutes:       []*frrProto.AnomalyDuplicateRoute{{}},
-		MisconfiguredRoutes:   []*frrProto.AnomalyMisconfiguredRoute{{}},
+	anomalyResult := &frrProto.AnomalyAnalysis{
+		RouterAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes:  true,
+			HasUnderAdvertisedPrefixes: true,
+			HasDuplicatePrefixes:       true,
+			SuperfluousEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "10.0.0.1", PrefixLength: "24"},
+				{InterfaceAddress: "192.168.1.1", PrefixLength: "24"},
+			},
+			MissingEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "10.1.0.1", PrefixLength: "24"},
+			},
+			DuplicateEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "172.16.0.1", PrefixLength: "24"},
+			},
+		},
 	}
 
 	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
@@ -268,7 +235,6 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 		"ospf_overadvertised_route_present":  1.0,
 		"ospf_underadvertised_route_present": 1.0,
 		"ospf_duplicate_route_present":       1.0,
-		"ospf_misconfigured_route_present":   1.0,
 	}
 	for name, want := range expectedPresences {
 		got, ok := getVal(metrics1, name)
@@ -281,7 +247,6 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 		"ospf_overadvertised_routes_total":  2.0,
 		"ospf_underadvertised_routes_total": 1.0,
 		"ospf_duplicate_routes_total":       1.0,
-		"ospf_misconfigured_routes_total":   1.0,
 	}
 	for name, want := range expectedTotals {
 		got, ok := getVal(metrics1, name)
@@ -290,15 +255,12 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	}
 
 	// Clear all anomalies
-	//anomalies.OveradvertisedRoutes = nil
-	//anomalies.UnderadvertisedRoutes = nil
-	//anomalies.DuplicateRoutes = nil
-	//anomalies.MisconfiguredRoutes = nil
-
-	anomalyResult.ExternalAnomaly.Reset()
-	anomalyResult.RouterAnomaly.Reset()
-	anomalyResult.NssaExternalAnomaly.Reset()
-	anomalyResult.FibAnomaly.Reset()
+	anomalyResult.RouterAnomaly.HasOverAdvertisedPrefixes = false
+	anomalyResult.RouterAnomaly.HasUnderAdvertisedPrefixes = false
+	anomalyResult.RouterAnomaly.HasDuplicatePrefixes = false
+	anomalyResult.RouterAnomaly.SuperfluousEntries = nil
+	anomalyResult.RouterAnomaly.MissingEntries = nil
+	anomalyResult.RouterAnomaly.DuplicateEntries = nil
 
 	// Second update: everything should reset to 0
 	frrMadExporter.Update()
@@ -323,8 +285,7 @@ func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 	testLogger, err := logger.NewLogger("test", "/tmp/exporter_no_anom_exist.log")
 	assert.NoError(t, err)
 
-	// Empty Anomalies struct -> all slices zero-length
-	//anomalies := &frrProto.Anomalies{}
+	// Empty AnomalyAnalysis struct
 	anomalyResult := &frrProto.AnomalyAnalysis{}
 
 	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
@@ -334,18 +295,18 @@ func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 	mfs, err := registry.Gather()
 	assert.NoError(t, err)
 
-	// We expect these eight gauges to be registered, each with one sample set to 0
+	// We expect these gauges to be registered, each with one sample set to 0
 	expected := []string{
 		// presence gauges
 		"ospf_overadvertised_route_present",
 		"ospf_underadvertised_route_present",
 		"ospf_duplicate_route_present",
-		"ospf_misconfigured_route_present",
+		//"ospf_misconfigured_route_present",
 		// total counters
 		"ospf_overadvertised_routes_total",
 		"ospf_underadvertised_routes_total",
 		"ospf_duplicate_routes_total",
-		"ospf_misconfigured_routes_total",
+		//"ospf_misconfigured_routes_total",
 	}
 
 	for _, name := range expected {

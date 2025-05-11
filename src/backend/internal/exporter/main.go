@@ -49,14 +49,29 @@ func NewExporter(
 		}
 	}
 
-	fmt.Println(port)
-
 	registry := prometheus.NewRegistry()
 	flags := getFlagConfigs(config)
-	//flags, err := configs.GetFlagConfigs(config)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error loading config flags: %v", err)
-	// }
+
+	mux := http.NewServeMux()
+
+	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `
+			<html>
+				<head><title>FRR MAD Exporter</title></head>
+				<body>
+					<h1>FRR MAD Exporter</h1>
+					<p><a href="/metrics">Metrics</a></p>
+				</body>
+			</html>
+			`)
+	})
 
 	// Create exporter
 	e := &Exporter{
@@ -67,7 +82,7 @@ func NewExporter(
 		logger:          logger,
 		server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", port),
-			Handler: promhttp.HandlerFor(registry, promhttp.HandlerOpts{}),
+			Handler: mux,
 		},
 	}
 
