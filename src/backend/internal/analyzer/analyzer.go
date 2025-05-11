@@ -47,7 +47,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	// TODO: testing and correction, mino
 	// TODO: use static route map and accessList, mino
-	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
+	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	isRouterLSDB, p2pMap := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
 

@@ -1,6 +1,7 @@
 package analyzer_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -470,11 +471,13 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 
 	// Get predicted and runtime NSSA-external LSDBs
-	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration)
+	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// Run the analysis
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+
+	fmt.Println(ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 
 	t.Run("TestNssaExternalNormalCase", func(t *testing.T) {
 		// In normal case, there should be no anomalies
@@ -496,7 +499,7 @@ func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
 	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 
 	// Get predicted and runtime NSSA-external LSDBs
-	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration)
+	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// fmt.Println("---------------------- Predicted ----------------------")
