@@ -65,7 +65,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 
 }
 
-func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
+func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
 	if isState == nil || shouldState == nil {
 		//fmt.Println("nil!")
 		return nil, nil
@@ -166,7 +166,7 @@ func getAdvertisementKey(adv *frrProto.Advertisement) string {
 	return normalizeNetworkAddress(adv.LinkStateId)
 }
 
-func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]frrProto.AccessListAnalyzer) bool {
+func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
 	for _, acl := range accessLists {
 		for _, entry := range acl.AclEntry {
 			if !entry.IsPermit {
@@ -271,7 +271,7 @@ func normalizeNetworkAddress(address string) string {
 }
 
 // TODO: Add missing analysis
-func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
+func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
 	}
