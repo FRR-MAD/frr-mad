@@ -146,7 +146,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 }
 
 // GetStaticFileExternalData makes LSA type 5 prediction parsing
-func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
+func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
@@ -177,6 +177,9 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 				isAllowed = true
 			} else {
 				for _, aclAnalyzer := range accessList {
+					if aclAnalyzer == nil {
+						continue
+					}
 					for _, item := range aclAnalyzer.AclEntry {
 						if item.IPAddress == ipAddr && item.IsPermit {
 							isAllowed = true
@@ -210,17 +213,6 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, acce
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
-
-	fmt.Println("------------------ Config -----------------")
-	fmt.Println(config)
-	fmt.Println("-----------------------------------------------")
-
-	fmt.Println("------------------ AccessList -----------------")
-	fmt.Println(accessList)
-	fmt.Println("-----------------------------------------------")
-	fmt.Println("------------------ static route map -----------------")
-	fmt.Println(staticRouteMap)
-	fmt.Println("-----------------------------------------------")
 
 	result := &frrProto.InterAreaLsa{
 		Hostname: config.Hostname,

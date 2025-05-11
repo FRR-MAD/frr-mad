@@ -470,7 +470,7 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// Run the analysis
-	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+	ana.ExternalAnomalyAnalysisLSDB(predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
 
 	fmt.Println(ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 
