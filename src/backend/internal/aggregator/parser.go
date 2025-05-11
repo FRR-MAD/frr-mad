@@ -324,40 +324,44 @@ func ParseOSPFNssaExternalLSA(jsonData []byte) (*frrProto.OSPFNssaExternalData, 
 }
 
 func ParseOSPFNssaExternalAll(jsonData []byte) (*frrProto.OSPFNssaExternalAll, error) {
-	var rawData map[string]interface{}
-	if err := json.Unmarshal(jsonData, &rawData); err != nil {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	transformed := make(map[string]interface{})
 
-	if routerID, ok := rawData["routerId"]; ok {
+	if routerID, ok := jsonMap["routerId"]; ok {
 		transformed["router_id"] = routerID
 	}
 
-	if nssaStates, ok := rawData["NSSA-external Link States"].(map[string]interface{}); ok {
+	if nssaStates, ok := jsonMap["nssaExternalLinkStates"].(map[string]interface{}); ok {
 		areas := make(map[string]interface{})
 
-		for areaID, areaData := range nssaStates {
-			areaDataMap, ok := areaData.(map[string]interface{})
+		for _, routerAreas := range nssaStates {
+			areaMap, ok := routerAreas.(map[string]interface{})
+			areaID := ""
 			if !ok {
 				continue
 			}
-
 			lsas := make(map[string]interface{})
-			for lsaID, lsaData := range areaDataMap {
-				lsaDataMap, ok := lsaData.(map[string]interface{})
-				if !ok {
-					continue
-				}
-				lsas[lsaID] = transformNssaExternalLSA(lsaDataMap)
-			}
+			for area, linkStates := range areaMap {
+				areaID = area
+				linkStates := linkStates.([]interface{})
+				for _, lsaData := range linkStates {
+					lsaDataMap, ok := lsaData.(map[string]interface{})
+					lsaID := lsaDataMap["linkStateId"].(string)
+					if !ok {
+						continue
+					}
+					lsas[lsaID] = transformNssaExternalLSA(lsaDataMap)
 
+				}
+			}
 			areas[areaID] = map[string]interface{}{
 				"data": lsas,
 			}
 		}
-
 		transformed["nssa_external_all_link_states"] = areas
 	}
 
@@ -374,6 +378,13 @@ func ParseOSPFNssaExternalAll(jsonData []byte) (*frrProto.OSPFNssaExternalAll, e
 
 	if err := opts.Unmarshal(transformedJSON, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	for _, value := range result.NssaExternalAllLinkStates {
+		for lsaID, _ := range value.Data {
+			fmt.Println(lsaID)
+		}
+
 	}
 
 	return &result, nil
@@ -1035,6 +1046,7 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 	}
 }
 
+// TODO: is this needed?
 func addNetworkToArea(config *frrProto.NetworkConfig, network, area string) {
 	for i, a := range config.Areas {
 		if a.Id == area {
@@ -1169,46 +1181,6 @@ func transformNetworkLSA(lsaData map[string]interface{}) map[string]interface{} 
 	return transformed
 }
 
-func transformNetworkLSAAll(lsaData map[string]interface{}) map[string]interface{} {
-	transformed := make(map[string]interface{})
-
-	fieldMapping := map[string]string{
-		"lsaAge":            "lsa_age",
-		"options":           "options",
-		"lsaFlags":          "lsa_flags",
-		"lsaType":           "lsa_type",
-		"linkStateId":       "link_state_id",
-		"advertisingRouter": "advertising_router",
-		"lsaSeqNumber":      "lsa_seq_number",
-		"checksum":          "checksum",
-		"length":            "length",
-		"networkMask":       "network_mask",
-		"attachedRouters":   "attached_routers",
-	}
-
-	for origKey, newKey := range fieldMapping {
-		if value, exists := lsaData[origKey]; exists {
-			if origKey == "attachedRouters" {
-				// Handle attached routers transformation
-				routers := value.(map[string]interface{})
-				transformedRouters := make(map[string]interface{})
-
-				for routerID, routerData := range routers {
-					transformedRouters[routerID] = map[string]interface{}{
-						"attached_router_id": routerData.(map[string]interface{})["attachedRouterId"],
-					}
-				}
-
-				transformed[newKey] = transformedRouters
-			} else {
-				transformed[newKey] = value
-			}
-		}
-	}
-
-	return transformed
-}
-
 func transformSummaryLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
 
@@ -1265,7 +1237,7 @@ func transformExternalLSA(lsaData map[string]interface{}) map[string]interface{}
 	return transformed
 }
 
-func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interface{} {
+func transformNssaExternalLSA(lsaData map[string]interface{}, isNssa ...bool) map[string]interface{} {
 	transformed := make(map[string]interface{})
 
 	fieldMapping := map[string]string{
@@ -1286,10 +1258,20 @@ func transformNssaExternalLSA(lsaData map[string]interface{}) map[string]interfa
 		"externalRouteTag":   "external_route_tag",
 	}
 
+	if isNssa != nil {
+		fmt.Println("=========== TEST ===========")
+	}
 	for jsonKey, protoKey := range fieldMapping {
+		if isNssa != nil {
+			fmt.Println(jsonKey)
+			fmt.Println(lsaData)
+		}
 		if value, exists := lsaData[jsonKey]; exists {
 			transformed[protoKey] = value
 		}
+	}
+	if isNssa != nil {
+		fmt.Println("=========== TEST ===========")
 	}
 
 	return transformed
@@ -1447,6 +1429,7 @@ func transformNeighbor(neighborData map[string]interface{}) map[string]interface
 	return transformed
 }
 
+// TODO: is this needed?
 func transformSingleInterface(ifaceData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
 
@@ -1539,6 +1522,7 @@ func transformEvpnMh(evpnData map[string]interface{}) map[string]interface{} {
 	return transformed
 }
 
+// TODO: is this needed?
 func transformRoute(routeData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
 

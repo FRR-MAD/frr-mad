@@ -121,7 +121,7 @@ func FetchOSPFNssaExternalData(executor *frrSocket.FRRCommandExecutor) (*frrProt
 }
 
 func FetchFullOSPFDatabase(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFDatabase, error) {
-	output, err := executor.ExecOSPFCmd("show ip ospf database json")
+	output, err := executor.ExecOSPFCmd("show ip ospf data json")
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func FetchFullOSPFDatabase(executor *frrSocket.FRRCommandExecutor) (*frrProto.OS
 }
 
 func FetchOSPFExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFExternalAll, error) {
-	output, err := executor.ExecOSPFCmd("show ip ospf database external json")
+	output, err := executor.ExecOSPFCmd("show ip ospf data external json")
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func FetchOSPFExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSP
 }
 
 func FetchOSPFNssaExternalAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNssaExternalAll, error) {
-	output, err := executor.ExecOSPFCmd("show ip ospf database nssa-external json")
+	output, err := executor.ExecOSPFCmd("show ip ospf data nssa-external json")
 	if err != nil {
 		return nil, err
 	}
