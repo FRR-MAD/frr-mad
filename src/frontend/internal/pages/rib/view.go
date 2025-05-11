@@ -32,8 +32,6 @@ func (m *Model) View() string {
 		return m.renderRibWithProtocolFilterTab("connected")
 	} else if currentSubTabLocal == 5 {
 		return m.renderRibWithProtocolFilterTab("static")
-	} else if currentSubTabLocal == 6 {
-		return m.renderConnectedRoutesTab()
 	}
 	return m.renderRibTab()
 }
@@ -74,12 +72,12 @@ func (m *Model) renderRibTab() string {
 				routeEntryData.Protocol,
 				strings.Join(nexthopsList, "\n"),
 				strconv.FormatBool(routeEntryData.Installed),
+				strconv.Itoa(int(routeEntryData.Distance)),
+				strconv.Itoa(int(routeEntryData.Metric)),
+				routeEntryData.Uptime,
 			})
 		}
 	}
-
-	// Order all Table Data
-	common.SortTableByIPColumn(ribTableData)
 
 	rowsRIB := len(ribTableData)
 	ribTable := components.NewOspfMonitorTable(
@@ -88,6 +86,9 @@ func (m *Model) renderRibTab() string {
 			"Protocol",
 			"Next Hops",
 			"Installed",
+			"Distance",
+			"Metric",
+			"Uptime",
 		},
 		rowsRIB,
 	)
@@ -162,25 +163,29 @@ func (m *Model) renderFibTab() string {
 		for _, routeEntryData := range routeEntry.Routes {
 			var nexthopsList []string
 			for _, nexthop := range routeEntryData.Nexthops {
-				if nexthop.Ip == "" {
-					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
-				} else {
-					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				// To confirm that all listed nexthops are indeed in the kernel FIB, check each "fib": true status
+				if nexthop.Fib {
+					if nexthop.Ip == "" {
+						nexthopsList = append(nexthopsList, nexthop.InterfaceName)
+					} else {
+						nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+					}
 				}
 			}
+			// "installed": true = FRR has pushed a forwarding entry for that prefix to the kernel (at least one)
 			if routeEntryData.Installed {
 				fibTableData = append(fibTableData, []string{
 					routeEntryData.Prefix,
 					routeEntryData.Protocol,
 					strings.Join(nexthopsList, "\n"),
 					strconv.FormatBool(routeEntryData.Installed),
+					strconv.Itoa(int(routeEntryData.Distance)),
+					strconv.Itoa(int(routeEntryData.Metric)),
+					routeEntryData.Uptime,
 				})
 			}
 		}
 	}
-
-	// Order all Table Data
-	common.SortTableByIPColumn(fibTableData)
 
 	rowsFIB := len(fibTableData)
 	fibTable := components.NewOspfMonitorTable(
@@ -189,6 +194,9 @@ func (m *Model) renderFibTab() string {
 			"Protocol",
 			"Next Hops",
 			"Installed",
+			"Distance",
+			"Metric",
+			"Uptime",
 		},
 		rowsFIB,
 	)
@@ -275,13 +283,13 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 					routeEntryData.Protocol,
 					strings.Join(nexthopsList, "\n"),
 					strconv.FormatBool(routeEntryData.Installed),
+					strconv.Itoa(int(routeEntryData.Distance)),
+					strconv.Itoa(int(routeEntryData.Metric)),
+					routeEntryData.Uptime,
 				})
 			}
 		}
 	}
-
-	// Order all Table Data
-	common.SortTableByIPColumn(partialRIBRoutesTableData)
 
 	rowsPartialRIBRoutesRIB := len(partialRIBRoutesTableData)
 	partialRIBRoutesTable := components.NewOspfMonitorTable(
@@ -290,6 +298,9 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 			"Protocol",
 			"Next Hops",
 			"Installed",
+			"Distance",
+			"Metric",
+			"Uptime",
 		},
 		rowsPartialRIBRoutesRIB,
 	)
@@ -345,7 +356,6 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 //		return common.PrintBackendError(err, "GetRIB")
 //	}
 //
-//	// TODO: call backend for correct amount (backend needs to be adjusted)
 //	amountOfOSPFRoutes := "20"
 //
 //	routes := make([]string, 0, len(rib.Routes))
@@ -439,8 +449,3 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 //	completeOSPFRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
 //	return completeOSPFRoutesTab
 //}
-
-func (m *Model) renderConnectedRoutesTab() string {
-
-	return "Directly Connected Networks"
-}

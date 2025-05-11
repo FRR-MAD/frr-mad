@@ -46,7 +46,7 @@ func (m *Model) renderOSPFDashboard() string {
 			Width(styles.WidthTwoH1ThreeFourth).
 			BorderBottom(true).
 			Padding(0).
-			Render("All OSPF Routes are advertised as Expected")
+			Render("Anomalies Detected!")
 		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := getOspfDashboardAnomalies()
 		m.viewport.SetContent(ospfDashboardAnomalies)

@@ -63,33 +63,37 @@ func (ips SortedIpList) Less(i, j int) bool {
 	return bytesCompare(ip1.To16(), ip2.To16()) < 0
 }
 
-// SortedPrefixList holds and sorts IP Prefixes
+// SortedPrefixList implements sort.Interface for a slice of CIDR strings.
 type SortedPrefixList []string
 
 func (pl SortedPrefixList) Len() int {
 	return len(pl)
 }
-
 func (pl SortedPrefixList) Swap(i, j int) {
 	pl[i], pl[j] = pl[j], pl[i]
 }
 
 func (pl SortedPrefixList) Less(i, j int) bool {
-	p1, err1 := netip.ParsePrefix(pl[i])
-	p2, err2 := netip.ParsePrefix(pl[j])
-
-	if err1 != nil || err2 != nil {
-		log.Printf("invalid prefix: %v or %v", pl[i], pl[j])
-		return pl[i] < pl[j] // fallback to string comparison
+	p1, err := netip.ParsePrefix(pl[i])
+	if err != nil {
+		log.Fatalf("invalid CIDR %q: %v", pl[i], err)
+	}
+	p2, err := netip.ParsePrefix(pl[j])
+	if err != nil {
+		log.Fatalf("invalid CIDR %q: %v", pl[j], err)
 	}
 
-	// Compare IP addresses first
-	if cmp := p1.Addr().Compare(p2.Addr()); cmp != 0 {
-		return cmp < 0
+	// 1) Compare the numeric IP addresses
+	if a1, a2 := p1.Addr(), p2.Addr(); a1 != a2 {
+		return a1.Compare(a2) < 0
 	}
 
-	// If addresses are equal, compare prefix length (shorter first)
+	// 2) If same IP, shorter (smaller) mask first
 	return p1.Bits() < p2.Bits()
 }
+
+//func SortPrefixes(list []string) {
+//	sort.Sort(SortedPrefixList(list))
+//}
 
 type ReloadMessage time.Time
