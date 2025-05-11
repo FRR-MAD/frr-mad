@@ -58,6 +58,15 @@ func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
 	return parsedStaticFRRConfig, nil
 }
 
+func FetchGeneralOSPFInformation(executor *frrSocket.FRRCommandExecutor) (*frrProto.GeneralOspfInformation, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseGeneralOspfInformation(output)
+}
+
 func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf data router self json")
 	if err != nil {
