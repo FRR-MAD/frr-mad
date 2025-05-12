@@ -105,7 +105,7 @@ func getSystemResourcesBox() string {
 func getOSPFGeneralInfoBox() string {
 	ospfInformation, err := backend.GetOSPF()
 	if err != nil {
-		common.PrintBackendError(err, "GetOSPF")
+		return common.PrintBackendError(err, "GetOSPF")
 	}
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
