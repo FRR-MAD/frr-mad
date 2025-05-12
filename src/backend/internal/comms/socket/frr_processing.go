@@ -12,7 +12,7 @@ func (s *Socket) getRouterName() *frrProto.Response {
 	}
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returng FRR Router Data",
+		Message: "Returning FRR meta data of router itself",
 		Data:    value,
 	}
 }
@@ -25,7 +25,7 @@ func (s *Socket) getSystemResources() *frrProto.Response {
 	}
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returning magical system data",
+		Message: "Returning system metrics including CPU and memory",
 		Data:    value,
 	}
 }
@@ -38,7 +38,7 @@ func (s *Socket) getRoutingInformationBase() *frrProto.Response {
 	}
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returning routes",
+		Message: "Returning all routes (RIB)",
 		Data:    value,
 	}
 }
@@ -51,7 +51,7 @@ func (s *Socket) getRibFibSummary() *frrProto.Response {
 	}
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returning routes",
+		Message: "Returning route summaries of RIB and FIB",
 		Data:    value,
 	}
 }

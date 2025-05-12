@@ -15,18 +15,15 @@ import (
 )
 
 func ParseGeneralOspfInformation(jsonData []byte) (*frrProto.GeneralOspfInformation, error) {
-	// First decode into a generic map
 	var raw map[string]interface{}
 	if err := json.Unmarshal(jsonData, &raw); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal OSPF JSON: %w", err)
 	}
 
-	// Initialize result and its areas map
 	result := &frrProto.GeneralOspfInformation{
 		Areas: make(map[string]*frrProto.GeneralInfoOspfArea),
 	}
 
-	// Top‐level fields
 	result.RouterId = getString(raw, "routerId")
 	result.TosRoutesOnly = getBool(raw, "tosRoutesOnly")
 	result.Rfc2328Conform = getBool(raw, "rfc2328Conform")
@@ -49,7 +46,6 @@ func ParseGeneralOspfInformation(jsonData []byte) (*frrProto.GeneralOspfInformat
 	result.LsaAsopaqueChecksum = int64(getFloat(raw, "lsaAsOpaqueChecksum"))
 	result.AttachedAreaCounter = int32(getFloat(raw, "attachedAreaCounter"))
 
-	// Parse the areas map
 	if areasRaw, ok := raw["areas"].(map[string]interface{}); ok {
 		for areaID, v := range areasRaw {
 			areaMap, ok := v.(map[string]interface{})
@@ -755,7 +751,6 @@ func ParseRibFibSummary(jsonData []byte) (*frrProto.RibFibSummaryRoutes, error) 
 		RouteSummaries: make([]*frrProto.RouteSummary, 0),
 	}
 
-	// Extract route summaries
 	if routes, ok := raw["routes"].([]interface{}); ok {
 		for _, r := range routes {
 			routeMap, ok := r.(map[string]interface{})
@@ -775,7 +770,6 @@ func ParseRibFibSummary(jsonData []byte) (*frrProto.RibFibSummaryRoutes, error) 
 		}
 	}
 
-	// Extract totals
 	result.RoutesTotal = int32(getFloat(raw, "routesTotal"))
 	result.RoutesTotalFib = int32(getFloat(raw, "routesTotalFib"))
 

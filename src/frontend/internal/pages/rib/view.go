@@ -52,9 +52,8 @@ func (m *Model) renderRibTab() string {
 	for route := range rib.Routes {
 		routes = append(routes, route)
 	}
-	sort.Sort(common.SortedPrefixList(routes))
-
-	// return strings.Join(routes, "\n")
+	list := common.SortedPrefixList(routes)
+	sort.Sort(&list)
 
 	var ribTableData [][]string
 
@@ -155,7 +154,8 @@ func (m *Model) renderFibTab() string {
 	for route := range rib.Routes {
 		routes = append(routes, route)
 	}
-	sort.Sort(common.SortedPrefixList(routes))
+	list := common.SortedPrefixList(routes)
+	sort.Sort(&list)
 
 	// return strings.Join(routes, "\n")
 
@@ -276,7 +276,8 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	for route := range rib.Routes {
 		routes = append(routes, route)
 	}
-	sort.Sort(common.SortedPrefixList(routes))
+	list := common.SortedPrefixList(routes)
+	sort.Sort(&list)
 
 	// return strings.Join(routes, "\n")
 
