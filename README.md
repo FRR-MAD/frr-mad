@@ -6,10 +6,11 @@ It effectively detects anomalies by comparing static file data with the Link-Sta
 ## Usage
 
 This Project is split into two parts:
-- frr-tui: The frontend of our application. It's not really necessary but makes it a lot easier to check the sanity of the application. It should also help significantly with less experienced network engineers to work with this ospf.
-- frr-analyzer: The analysis system that consits of aggregation, analysis and exporting information. It spawns a socket, which the frr-tui unit uses to fetch all necessary data.
+- **frr-tui**: The frontend of our application. It's not really necessary but makes it a lot easier to check the sanity of the application. It should also help significantly with less experienced network engineers to work with this ospf.
+- **frr-analyzer**: The analysis system that consits of aggregation, analysis and exporting information. It spawns a socket, which the frr-tui unit uses to fetch all necessary data.
+- **frr-mad-exporter**: Exports collected routing data and triggers alerts when anomalies are detected, enabling monitoring and quick issue response.
 
-### frr-analytics
+### frr-analyzer
 Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
 ```sh
 /path/to/frr-analyzer start
@@ -23,7 +24,7 @@ The tui can be started by running:
 /path/to/frr-tui
 ```
 
-You will enter a small tui. It serves as a small monitoring application with the most important information already present. 
+You will enter a small terminal user interface. It serves as a small monitoring application with the most important information already present. 
 
 ## Installation
 
@@ -35,9 +36,9 @@ cd src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -
 cd ../../
 cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-tui ./cmd/tui
 cd ../../
-```sh
+```
 
-Provided is a default configuration file. Creating it wills tart the application. 
+Provided is a default configuration file. Creating it will start the application. 
 
 ```sh
 mkdir -p /etc/frr-mad
