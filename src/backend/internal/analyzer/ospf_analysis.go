@@ -9,7 +9,7 @@ import (
 
 // WIP
 // TODO: Implement FIB analysis
-func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, isStateRouter *frrProto.IntraAreaLsa, isStateExternal *frrProto.InterAreaLsa, isStateNssaExternal *frrProto.InterAreaLsa) {
+func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
 	result := &frrProto.AnomalyDetection{
 		HasMisconfiguredPrefixes: false,
 		SuperfluousEntries:       []*frrProto.Advertisement{},
@@ -17,62 +17,47 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
-	fmt.Printf("\n\n\n\n\n\n")
-	fmt.Println("===============")
-	//fmt.Println(ribMap)
-	// fmt.Println(isStateRouter)
-	// fmt.Println(isStateExternal)
-	// fmt.Println(isStateNssaExternal)
-	for key, _ := range ribMap {
-		fmt.Println(key)
-	}
+	lsaList := []string{}
 
-	ospfCounter := 0
-	for _, entry := range ribMap {
-		if entry.Protocol == "ospf" {
-			ospfCounter += 1
-		}
-	}
+	////receivedRouterCount, routerLsaList := countAndCollectLSAs(receivedRouterLSDB)
+	//_, networkLsaList := countAndCollectLSAs(receivedNetworkLSDB)
+	_, summaryLsaList := countAndCollectLSAs(receivedSummaryLSDB)
+	_, externalLsaList := countAndCollectLSAs(receivedExternalLSDB)
+	_, nssaExternalLsaList := countAndCollectLSAs(receivedNssaExternalLSDB)
+	//// receivedNetworkCount, networkLsaList := countAndCollectLSAs(receivedNetworkLSDB)
+	//// receivedExternalCount, externalLsaList := countAndCollectLSAs(receivedExternalLSDB)
+	//// receivedNssaExternalCount, nssaExternalLsaList := countAndCollectLSAs(receivedNssaExternalLSDB)
+	//// //_ = receivedRouterCount + receivedNetworkCount + receivedExternalCount + receivedNssaExternalCount
 
-	ospfIsStateRouterCounter := 0
-	for _, area := range isStateRouter.Areas {
-		ospfIsStateRouterCounter += len(area.Links)
-	}
+	////lsaList = append(lsaList, routerLsaList...)
+	//lsaList = append(lsaList, networkLsaList...)
+	lsaList = append(lsaList, summaryLsaList...)
+	lsaList = append(lsaList, externalLsaList...)
+	lsaList = append(lsaList, nssaExternalLsaList...)
+	//lsaList = append(lsaList, tmpList...)
+	lsaList = filterUnique(lsaList)
 
-	ospfIsStateExternalCounter := 0
-	for _, area := range isStateExternal.Areas {
-		ospfIsStateExternalCounter += len(area.Links)
-	}
-
-	ospfIsStateNssaExternalCounter := 0
-	for _, area := range isStateNssaExternal.Areas {
-		ospfIsStateNssaExternalCounter += len(area.Links)
-	}
-
-	//for _, foo := range isStateRouter.Areas {
-	//	for _, i := range foo.Links {
-	//		//fmt.Println(i.LinkStateId)
-	//		fmt.Println(i.InterfaceAddress)
+	//for _, v1 := range receivedNetworkLSDB.Areas {
+	//	for _, v2 := range v1.Links {
+	//		fmt.Println(v2.LinkStateId)
 	//	}
 	//}
 
-	//// only  LinkStateId contains an entry
-	//for _, foo := range isStateExternal.Areas {
-	//	for _, i := range foo.Links {
-	//		fmt.Println(i.LinkStateId)
-	//		//fmt.Println(i.InterfaceAddress)
-	//	}
-	//}
+	//fmt.Printf("Total lsdb: %d\n", totalCount)
+	//// //fmt.Printf("Router lsdb: %d\n", receivedRouterCount)
+	//// fmt.Printf("Network lsdb: %d\n", receivedNetworkCount)
+	//// fmt.Printf("External lsdb: %d\n", receivedExternalCount)
+	//// fmt.Printf("Nssa-External lsdb: %d\n", receivedNssaExternalCount)
 
-	// only  InterfaceAddress contains an entry
-	for _, foo := range isStateNssaExternal.Areas {
-		for _, i := range foo.Links {
-			//fmt.Println(i.LinkStateId)
-			fmt.Println(i.InterfaceAddress)
-		}
+	////fmt.Println(len(lsaList))
+	////fmt.Println(lsaList)
+	////sort.Slice(lsaList, func(i, j int) bool {
+	////	return lsaList[i] < lsaList[j]
+	////})
+	for _, v := range lsaList {
+		fmt.Println(v)
 	}
-
-	fmt.Printf("Total self lsdb: %d\n", ospfIsStateExternalCounter+ospfIsStateRouterCounter+ospfIsStateNssaExternalCounter)
+	fmt.Printf("Total lsdb: %d\n", len(lsaList))
 
 	a.AnalysisResult.FibAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.FibAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
@@ -381,4 +366,40 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 	a.AnalysisResult.NssaExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries = result.DuplicateEntries
+}
+
+func countAndCollectLSAs(lsdb interface{}) (int, []string) {
+	lsaList := []string{}
+
+	switch db := lsdb.(type) {
+	case *frrProto.IntraAreaLsa:
+		for _, area := range db.Areas {
+			for _, lsa := range area.Links {
+				//lsaList = append(lsaList, lsa.LinkStateId+"/"+lsa.PrefixLength)
+				lsaList = append(lsaList, lsa.LinkStateId)
+			}
+		}
+
+	case *frrProto.InterAreaLsa:
+		for _, area := range db.Areas {
+			for _, lsa := range area.Links {
+				//lsaList = append(lsaList, lsa.LinkStateId+"/"+lsa.PrefixLength)
+				lsaList = append(lsaList, lsa.LinkStateId)
+			}
+		}
+	}
+	return len(lsaList), filterUnique(lsaList)
+}
+
+func filterUnique(lsaList []string) []string {
+	uniqueMap := make(map[string]bool)
+	var uniqueNames []string
+
+	for _, lsa := range lsaList {
+		if _, exists := uniqueMap[lsa]; !exists {
+			uniqueMap[lsa] = true
+			uniqueNames = append(uniqueNames, lsa)
+		}
+	}
+	return uniqueNames
 }

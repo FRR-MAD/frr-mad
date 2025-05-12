@@ -173,20 +173,22 @@ message OSPFInterfaceConfig {
 message FullFRRData {
   OSPFDatabase ospf_database = 1;
   OSPFRouterData ospf_router_data = 2;
-  OSPFNetworkData ospf_network_data = 3;
-  OSPFNetworkData ospf_network_data_all = 4;
-  OSPFSummaryData ospf_summary_data = 5;
-  OSPFAsbrSummaryData ospf_asbr_summary_data = 6;
-  OSPFExternalData ospf_external_data = 7;
-  OSPFNssaExternalData ospf_nssa_external_data = 8;
-  OSPFExternalAll ospf_external_all = 9;
-  OSPFNssaExternalAll ospf_nssa_external_all = 10;
-  OSPFNeighbors ospf_neighbors = 11;
-  InterfaceList interfaces = 12;
-  RoutingInformationBase routing_information_base = 13;
-  StaticFRRConfiguration static_frr_configuration = 14;
-  SystemMetrics system_metrics = 15;
-  FRRRouterData frr_router_data = 16;
+  OSPFRouterData ospf_router_data_all = 3;
+  OSPFNetworkData ospf_network_data = 4;
+  OSPFNetworkData ospf_network_data_all = 5;
+  OSPFSummaryData ospf_summary_data = 6;
+  OSPFSummaryData ospf_summary_data_all = 7;
+  OSPFAsbrSummaryData ospf_asbr_summary_data = 8;
+  OSPFExternalData ospf_external_data = 9;
+  OSPFNssaExternalData ospf_nssa_external_data = 10;
+  OSPFExternalAll ospf_external_all = 11;
+  OSPFNssaExternalAll ospf_nssa_external_all = 12;
+  OSPFNeighbors ospf_neighbors = 13;
+  InterfaceList interfaces = 14;
+  RoutingInformationBase routing_information_base = 15;
+  StaticFRRConfiguration static_frr_configuration = 16;
+  SystemMetrics system_metrics = 17;
+  FRRRouterData frr_router_data = 18;
 }
 
 // ================ Aggregator LSA Router ====================

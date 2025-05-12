@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -15,8 +14,6 @@ type RedistributedRoute struct {
 	PrefixLength int    `json:"prefix_length,omitempty"`
 	NextHop      string `json:"next_hop,omitempty"`
 	RouteMapName string `json:"route_map_name,omitempty"`
-	Metric       string `json:"metric,omitempty"`
-	MetricType   string `json:"metric_type,omitempty"`
 }
 
 type RedistributionList struct {
@@ -32,49 +29,43 @@ type OspfRedistribution struct {
 
 func (c *Analyzer) AnomalyAnalysis() {
 
-	fmt.Println(c.metrics.OspfDatabase)
-
 	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
-
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
-
 	peerInterfaceMap := GetPeerNetworkAddress(c.metrics.StaticFrrConfiguration)
 	peerNeighborMap := GetPeerNeighbor(c.metrics.OspfNeighbors, peerInterfaceMap)
+	hostname := c.metrics.StaticFrrConfiguration.Hostname
 
 	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	// TODO: frr-128: Parse RIB to get FIB
-	// fibMap := GetFIB(c.metrics.RoutingInformationBase)
+	fibMap := GetFIB(c.metrics.RoutingInformationBase)
+	//receivedRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterDataAll, hostname)
+	receivedSummaryLSDB := GetRuntimeSummaryData(c.metrics.OspfSummaryDataAll, hostname)
+	//recGetRuntimeSummaryData(c.metrics.OspfSummaryDataAll, hostname)
+	receivedNetworkLSDB := GetRuntimeNetworkData(c.metrics.OspfNetworkDataAll, hostname)
+	receivedExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalAll, hostname)
+	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(c.metrics.OspfNssaExternalAll, hostname)
 
 	// TODO: testing and correction, mino
 	// TODO: use static route map and accessList, mino
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
 
-	isRouterLSDB, p2pMap := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
+	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(c.metrics.OspfRouterData, hostname, peerNeighborMap)
 
-	isExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	isExternalLSDB := GetRuntimeExternalDataSelf(c.metrics.OspfExternalData, staticRouteMap, hostname)
 
 	// TODO: testing, mino
-	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	isNssaExternalLSDB := GetNssaExternalDataSelf(c.metrics.OspfNssaExternalData, staticRouteMap, hostname)
 
 	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
-	fmt.Println(isRouterLSDB)
-	fmt.Println(shouldRouterLSDB)
-
-	//if len(staticRouteMap) > 0 || isNssa {
-	//fmt.Println(predictedExternalLSDB)
-
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
-
 	// TODO: implement, mino
 	if isNssa {
 		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB)
 	}
-
 	// TODO: frr-128: fib anomaly analysis
-	//c.AnomalyAnalysisFIB(fibMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
+	c.AnomalyAnalysisFIB(fibMap, receivedSummaryLSDB, receivedNetworkLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
 	//c.UpdateMetrics(p2pMap)
 	proto.Merge(c.P2pMap, &p2pMap)
