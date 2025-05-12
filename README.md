@@ -9,6 +9,22 @@ This Project is split into two parts:
 - frr-tui: The frontend of our application. It's not really necessary but makes it a lot easier to check the sanity of the application. It should also help significantly with less experienced network engineers to work with this ospf.
 - frr-analyzer: The analysis system that consits of aggregation, analysis and exporting information. It spawns a socket, which the frr-tui unit uses to fetch all necessary data.
 
+### frr-analytics
+Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
+```sh
+/path/to/frr-analyzer start
+```
+
+This will start a persistent service and spawn a socket. To stop it, you can execute the binary again with the stop argument. Don't kill it if possible, as it will leave a spawned socket.
+
+### frr-tui
+The tui can be started by running:
+```
+/path/to/frr-tui
+```
+
+You will enter a small tui. It serves as a small monitoring application with the most important information already present. 
+
 ## Installation
 
 Installation is fairly easy. Clone the repo and build it. The executable is compiled with the static flag, so remove it if you have all the dependencies set on the host.
