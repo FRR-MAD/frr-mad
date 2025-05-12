@@ -114,8 +114,25 @@ func getOSPFGeneralInfoBox() string {
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
 	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
 
+	var routerType []string
+	switch {
+	case ospfInformation.AsbrRouter != "" && ospfInformation.AbrType != "":
+		routerType = append(routerType, "Router Type: ASBR / ABR")
+	case ospfInformation.AsbrRouter != "":
+		routerType = append(routerType, "Router Type: ASBR")
+	case ospfInformation.AbrType != "":
+		routerType = append(routerType, "Router Type: ABR")
+	default:
+		routerType = append(routerType, "Router Type: Internal")
+	}
+
+	if ospfInformation.AbrType != "" {
+		routerType = append(routerType, "ABR Type: "+ospfInformation.AbrType)
+	}
+
 	ospfRouterInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
 		"OSPF Router ID: " + ospfInformation.RouterId + "\n" +
+			strings.Join(routerType, "\n") + "\n" +
 			"Last SPF Execution: " + lastSPFExecution.String() + "\n" +
 			"Total External LSAs: " + strconv.Itoa(int(ospfInformation.LsaExternalCounter)) + "\n" +
 			"Attached Areas: " + strconv.Itoa(int(ospfInformation.AttachedAreaCounter)) + "\n")
