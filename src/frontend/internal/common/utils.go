@@ -2,9 +2,10 @@ package common
 
 import (
 	"fmt"
-	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 	"net"
 	"sort"
+
+	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 )
 
 func ContainsString(slice []string, s string) bool {
@@ -20,7 +21,7 @@ func HasAnyAnomaly(a *frrProto.AnomalyDetection) bool {
 	if a == nil {
 		return false
 	}
-	return a.HasUnderAdvertisedPrefixes ||
+	return a.HasUnAdvertisedPrefixes ||
 		a.HasOverAdvertisedPrefixes ||
 		a.HasDuplicatePrefixes ||
 		a.HasMisconfiguredPrefixes

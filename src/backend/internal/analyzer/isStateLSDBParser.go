@@ -1,13 +1,13 @@
 package analyzer
 
 import (
+	"net"
 	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// lsa type 1 parsing
 func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
 	intraAreaLsa := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
@@ -49,13 +49,11 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 				} else if strings.EqualFold(routerLink.LinkType, "a Transit Network") {
 					routerLink.LinkType = "transit network"
 					ipAddress = routerLink.RouterInterfaceAddress
-					//prefixLength = "24" // Assuming a /24 for transit links
 				} else {
 					if routerLink.RouterInterfaceAddress != "" {
 						ipAddress = routerLink.RouterInterfaceAddress
 					} else if routerLink.NetworkAddress != "" {
 						ipAddress = routerLink.NetworkAddress
-						//prefixLength = maskToPrefixLength(routerLink.NetworkMask)
 					} else {
 						continue
 					}
@@ -103,7 +101,7 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 	}
 
 	routerLsdb := &frrProto.AreaAnalyzer{
-		LsaType: "router-LSA", // Type 2
+		LsaType: "router-LSA",
 		Links:   []*frrProto.Advertisement{},
 	}
 
@@ -128,6 +126,37 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 	}
 
 	return result
+}
+
+func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string) *frrProto.IntraAreaLsa {
+	if config == nil {
+		return nil
+	}
+	result := &frrProto.IntraAreaLsa{
+		Hostname: hostname,
+		RouterId: config.RouterId,
+		Areas:    []*frrProto.AreaAnalyzer{},
+	}
+	networkLsdb := &frrProto.AreaAnalyzer{
+		LsaType: "network-LSA",
+		Links:   []*frrProto.Advertisement{},
+	}
+
+	result.Areas = append(result.Areas, networkLsdb)
+
+	for _, netStates := range config.NetStates {
+		for _, lsaEntry := range netStates.LsaEntries {
+			adv := &frrProto.Advertisement{
+				LinkStateId:  getNetworkAddress(lsaEntry.LinkStateId, lsaEntry.NetworkMask) + "/" + strconv.Itoa(int(lsaEntry.NetworkMask)),
+				PrefixLength: strconv.Itoa(int(lsaEntry.NetworkMask)),
+				Options:      lsaEntry.Options,
+			}
+			networkLsdb.Links = append(networkLsdb.Links, adv)
+		}
+	}
+
+	return result
+
 }
 
 func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string) *frrProto.InterAreaLsa {
@@ -160,38 +189,9 @@ func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string) *f
 	return result
 }
 
-func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string) *frrProto.IntraAreaLsa {
-	if config == nil {
-		return nil
-	}
-	result := &frrProto.IntraAreaLsa{
-		Hostname: hostname,
-		RouterId: config.RouterId,
-		Areas:    []*frrProto.AreaAnalyzer{},
-	}
-	networkLsdb := &frrProto.AreaAnalyzer{
-		LsaType: "network-LSA", // Type 2
-		Links:   []*frrProto.Advertisement{},
-	}
-
-	result.Areas = append(result.Areas, networkLsdb)
-
-	for _, netStates := range config.NetStates {
-		for _, lsaEntry := range netStates.LsaEntries {
-			adv := &frrProto.Advertisement{
-				LinkStateId:  lsaEntry.LinkStateId,
-				PrefixLength: strconv.Itoa(int(lsaEntry.NetworkMask)),
-				Options:      lsaEntry.Options,
-			}
-			networkLsdb.Links = append(networkLsdb.Links, adv)
-		}
-	}
-
-	return result
-
-}
-
 // lsa type 5 parsing, this will only return static routes, as BGP routes aren't useful in ospf analysis
+// Since AS-external-LSA (type 5) doesn't belong to a specific area,
+// we'll create a single "area" to represent the AS external links
 func GetRuntimeExternalDataSelf(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
@@ -204,10 +204,8 @@ func GetRuntimeExternalDataSelf(config *frrProto.OSPFExternalData, staticRouteMa
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	// Since AS-external-LSA (type 5) doesn't belong to a specific area,
-	// we'll create a single "area" to represent the AS external links
 	externalArea := frrProto.AreaAnalyzer{
-		LsaType: "AS-external-LSA", // Type 5
+		LsaType: "AS-external-LSA",
 		Links:   []*frrProto.Advertisement{},
 	}
 
@@ -261,7 +259,6 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string) *
 	return result
 }
 
-// lsa type 7 parsing
 func GetNssaExternalDataSelf(config *frrProto.OSPFNssaExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
@@ -335,13 +332,13 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 
 func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {
 
-	RibMap := map[string]frrProto.RibPrefixes{}
+	OspfFibMap := map[string]frrProto.RibPrefixes{}
 	for prefix, routes := range rib.Routes {
 		for _, routeEntry := range routes.Routes {
 			for _, route := range routeEntry.Nexthops {
 				if route.Fib {
-					RibMap[prefix] = frrProto.RibPrefixes{
-						Prefix:         strings.Split(routeEntry.Prefix, "/")[0],
+					OspfFibMap[prefix] = frrProto.RibPrefixes{
+						Prefix:         routeEntry.Prefix,
 						PrefixLength:   strconv.FormatInt(int64(routeEntry.PrefixLen), 10),
 						NextHopAddress: route.Ip,
 						Protocol:       routeEntry.Protocol,
@@ -351,5 +348,19 @@ func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixe
 		}
 	}
 
-	return RibMap
+	return OspfFibMap
+}
+
+func getNetworkAddress(prefix string, prefixLength int32) string {
+	ip := net.ParseIP(prefix)
+
+	tmpNet := &net.IPNet{
+		IP:   ip,
+		Mask: net.CIDRMask(int(prefixLength), 32),
+	}
+
+	network := tmpNet.IP.Mask(tmpNet.Mask)
+
+	return network.String()
+
 }

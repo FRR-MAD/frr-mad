@@ -74,7 +74,6 @@ func (c *Collector) Collect() error {
 
 	executor := NewFRRCommandExecutor(c.socketPath, 2*time.Second)
 
-	// Generic fetch function
 	fetchAndMerge := func(name string, target proto.Message, fetchFunc func() (proto.Message, error)) {
 		result, err := fetchFunc()
 		if err != nil {
@@ -89,7 +88,6 @@ func (c *Collector) Collect() error {
 		// Merge the fetched data into the target.
 		// Reset target by creating a new instance of the same type
 
-		// check out Reset()
 		if p, ok := target.(interface{ Reset() }); ok {
 			p.Reset()
 		}
@@ -248,7 +246,6 @@ func (c *Collector) ensureFieldsInitialized() {
 	}
 }
 
-// Functions for testing maybe remove later
 func (c *Collector) GetFetcherForTesting() *Fetcher {
 	return c.fetcher
 }

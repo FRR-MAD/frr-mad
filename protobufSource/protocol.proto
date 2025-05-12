@@ -589,12 +589,13 @@ message AnomalyAnalysis {
   AnomalyDetection router_anomaly= 1;
   AnomalyDetection external_anomaly = 2;
   AnomalyDetection nssa_external_anomaly = 3;
-  AnomalyDetection fib_anomaly = 4;
+  AnomalyDetection lsdb_to_rib_anomaly = 4;
+  AnomalyDetection rib_to_fib_anomaly = 5;
 }
 
 message AnomalyDetection {
   bool HasOverAdvertisedPrefixes = 1;
-  bool HasUnderAdvertisedPrefixes = 2;
+  bool HasUnAdvertisedPrefixes = 2;
   bool HasDuplicatePrefixes = 3;
   bool HasMisconfiguredPrefixes = 4;
   repeated Advertisement superfluous_entries = 5;
@@ -664,7 +665,7 @@ message RibPrefixes {
 // Main message containing all anomaly types
 message Anomalies {
   repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
-  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
+  repeated AnomalyUnadvertisedRoute unadvertised_routes = 2;
   repeated AnomalyDuplicateRoute duplicate_routes = 3;
   repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
 }
@@ -686,7 +687,7 @@ message AnomalyOveradvertisedRoute {
 
 
 // Route should be advertised but is not
-message AnomalyUnderadvertisedRoute {
+message AnomalyUnadvertisedRoute {
   google.protobuf.Timestamp timestamp = 1;
   string service = 2;
   string is_advertised = 3;

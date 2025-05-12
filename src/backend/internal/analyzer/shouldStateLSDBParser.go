@@ -8,7 +8,6 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// GetStaticFileRouterData makes LSA type 1 prediction parsing
 func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
 	if config == nil || config.OspfConfig == nil {
 		return false, nil
@@ -24,9 +23,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 
 	areaMap := make(map[string]*frrProto.AreaAnalyzer)
 
-	// Process all interfaces
 	for _, iface := range config.Interfaces {
-		// Skip interfaces without an area -> they are not part of OSPF
 		peerInterface := false
 		for _, peer := range iface.InterfaceIpPrefixes {
 			if peer.PeerIpPrefix != nil {
@@ -49,7 +46,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 			a = &newArea
 		}
 
-		// Create advertisements from IP addresses
 		for _, interfaceIpPrefix := range iface.InterfaceIpPrefixes {
 			if interfaceIpPrefix.IpPrefix == nil {
 				continue
@@ -73,14 +69,12 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 	}
 
-	// Process virtual links if present
 	if config.OspfConfig != nil {
 		for _, ospfArea := range config.OspfConfig.Area {
 			if ospfArea.Type == "" {
 				continue
 			}
 
-			// Check if this is the area containing virtual links
 			if config.OspfConfig.VirtualLinkNeighbor != "" {
 				a, exists := areaMap[ospfArea.Name]
 				if !exists {
@@ -102,7 +96,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 				a.Links = append(a.Links, &adv)
 			}
 
-			// check if is nssa
 			switch ospfArea.Type {
 			case "nssa":
 				areaMap[ospfArea.Name].AreaType = "nssa"
@@ -117,7 +110,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 	}
 
-	// Convert map to slice for the final result
 	for _, a := range areaMap {
 		if len(a.Links) > 0 {
 			result.Areas = append(result.Areas, a)
@@ -131,7 +123,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 	}
 
-	// If no areas were found, return nil
 	if len(result.Areas) == 0 {
 		return false, nil
 	} else if len(result.Areas) == 1 {
@@ -145,7 +136,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 	return isNssa, result
 }
 
-// GetStaticFileExternalData makes LSA type 5 prediction parsing
 func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
@@ -157,14 +147,12 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	// Create a single AreaAnalyzer for all routes
 	area := &frrProto.AreaAnalyzer{
 		LsaType: "AS-external-LSA",
 		Links:   []*frrProto.Advertisement{},
 	}
 	result.Areas = append(result.Areas, area)
 
-	// Loop through static routes in the configuration
 	for _, staticRoute := range config.StaticRoutes {
 		ipAddr := staticRoute.IpPrefix.IpAddress
 		prefixLen := staticRoute.IpPrefix.PrefixLength
@@ -172,7 +160,6 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 		if _, exists := staticRouteMap[ipAddr]; exists {
 			isAllowed := false
 
-			// TODO: does this really cover all scenarios?
 			if len(accessList) == 0 {
 				isAllowed = true
 			} else {
@@ -203,112 +190,6 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 
 	return result
 
-}
-
-func GetStaticFileExternalDataOld(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
-	if config == nil || config.OspfConfig == nil {
-		return nil
-	}
-	result := &frrProto.InterAreaLsa{
-		Hostname: config.Hostname,
-		RouterId: config.OspfConfig.RouterId,
-		Areas:    []*frrProto.AreaAnalyzer{}}
-
-	// Check for OSPF redistribution (potential external advertisements)
-	// BGP, connected, static, etc. redistribution means the router will advertise external routes
-	hasRedistribution := false
-	for _, redist := range config.OspfConfig.Redistribution {
-		if redist.Type != "" {
-			hasRedistribution = true
-			break
-		}
-	}
-
-	if !hasRedistribution {
-		return nil
-	}
-
-	// Find NSSA areas (for type 7 LSAs)
-	nssaAreas := make(map[string]bool)
-	for _, ospfArea := range config.OspfConfig.Area {
-		if ospfArea.Type == "nssa" {
-			nssaAreas[ospfArea.Name] = true
-		}
-	}
-
-	// Find all areas
-	areaMap := make(map[string]bool)
-	areaNssaMap := make(map[string]bool)
-	areaList := []string{}
-	for _, iface := range config.Interfaces {
-		areaNssaMap[iface.Area] = false
-		if iface.Area != "" {
-			if _, exists := areaMap[iface.Area]; !exists {
-				areaMap[iface.Area] = true
-				areaList = append(areaList, iface.Area)
-			}
-		}
-
-	}
-
-	staticRedistMap := make(map[string]bool)
-	routeMap := make(map[string]bool)
-
-	for _, redist := range config.OspfConfig.Redistribution {
-		if redist.Type == "static" {
-			if _, exists := config.RouteMap[redist.RouteMap]; exists {
-				if _, exists := staticRedistMap[redist.Type]; !exists && config.RouteMap[redist.RouteMap].Permit {
-					staticRedistMap[redist.Type] = true
-					for _, access := range config.AccessList[config.RouteMap[redist.RouteMap].AccessList].AccessListItems {
-						if access.AccessControl == "permit" {
-							if ipPrefixDest, ok := access.Destination.(*frrProto.AccessListItem_IpPrefix); ok {
-								routeMap[ipPrefixDest.IpPrefix.IpAddress] = true
-							}
-						}
-					}
-				}
-			}
-
-		}
-	}
-
-	for _, area := range config.OspfConfig.Area {
-		if area.Type == "nssa" {
-			areaNssaMap[area.Name] = true
-		}
-	}
-
-	for _, area := range areaList {
-		if areaNssaMap[area] {
-			continue
-		}
-
-		externalArea := frrProto.AreaAnalyzer{
-			LsaType: "AS-external-LSA",
-			Links:   []*frrProto.Advertisement{},
-		}
-
-		for _, staticRoute := range config.StaticRoutes {
-			if staticRoute.IpPrefix != nil && routeMap[staticRoute.IpPrefix.IpAddress] {
-				adv := frrProto.Advertisement{
-					LinkStateId:  staticRoute.IpPrefix.IpAddress,
-					PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
-					LinkType:     "external",
-				}
-				externalArea.Links = append(externalArea.Links, &adv)
-			}
-		}
-
-		if len(externalArea.Links) > 0 {
-			result.Areas = append(result.Areas, &externalArea)
-		}
-	}
-
-	if len(result.Areas) == 0 {
-		return nil
-	}
-
-	return result
 }
 
 // GetStaticFileNssaExternalData makes LSA type 7 prediction parsing

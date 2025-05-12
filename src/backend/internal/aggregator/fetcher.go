@@ -210,8 +210,6 @@ func getCPUAmount() (int64, error) {
 	return int64(cores), nil
 }
 
-// readCPUSample parses the first line of /proc/stat and returns
-// totalJiffies and idleJiffies.
 func readCPUSample() (total, idle float64, err error) {
 	f, err := os.Open("/proc/stat")
 	if err != nil {
@@ -224,7 +222,6 @@ func readCPUSample() (total, idle float64, err error) {
 		return 0, 0, fmt.Errorf("failed to scan /proc/stat")
 	}
 	fields := strings.Fields(scanner.Text())
-	// fields[0]=="cpu", then user, nice, system, idle, iowait, irq, ...
 	var values []float64
 	for _, s := range fields[1:] {
 		v, err := strconv.ParseFloat(s, 64)
@@ -234,7 +231,6 @@ func readCPUSample() (total, idle float64, err error) {
 		values = append(values, v)
 	}
 
-	// idle is the 4th value (index 3)
 	idle = values[3]
 	for _, v := range values {
 		total += v
@@ -242,8 +238,6 @@ func readCPUSample() (total, idle float64, err error) {
 	return total, idle, nil
 }
 
-// getCPUUsagePercent reads two samples 'interval' apart and returns
-// busy percentage in [0.0, 100.0].
 func getCPUUsagePercent(interval time.Duration) (float64, error) {
 	t0, id0, err := readCPUSample()
 	if err != nil {
@@ -262,7 +256,6 @@ func getCPUUsagePercent(interval time.Duration) (float64, error) {
 	}
 
 	busy := (totalDelta - idleDelta) / totalDelta * 100.0
-	// clamp to [0,100]
 	if busy < 0 {
 		busy = 0
 	} else if busy > 100 {
@@ -272,7 +265,6 @@ func getCPUUsagePercent(interval time.Duration) (float64, error) {
 }
 
 func getCPUUsage() (float64, error) {
-	// This is right now only for linux
 	if runtime.GOOS == "linux" {
 		cmd := exec.Command("sh", "-c", "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'")
 		out, err := cmd.Output()
@@ -287,7 +279,6 @@ func getCPUUsage() (float64, error) {
 }
 
 func getMemoryUsage() (float64, error) {
-	// This is right now only for linux
 	if runtime.GOOS == "linux" {
 		cmd := exec.Command("sh", "-c", "free | grep Mem | awk '{print $3/$2 * 100.0}'")
 		out, err := cmd.Output()
@@ -301,7 +292,6 @@ func getMemoryUsage() (float64, error) {
 	return 0, nil
 }
 
-// Functions for testing maybe remove later
 func (f *Fetcher) GetMetricURLForTesting() string {
 	return f.metricsURL
 }

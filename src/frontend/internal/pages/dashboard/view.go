@@ -2,17 +2,19 @@ package dashboard
 
 import (
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
 	"strings"
 
+	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
+	"strconv"
+
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 	"github.com/charmbracelet/lipgloss"
-	"strconv"
 )
 
 var (
@@ -492,7 +494,7 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 		}
 	}
 
-	if a.HasUnderAdvertisedPrefixes {
+	if a.HasUnAdvertisedPrefixes {
 		for _, missingEntry := range a.MissingEntries {
 			var firstCol string
 			if strings.Contains(lsaTypeHeader, "Router") {
@@ -505,7 +507,7 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 				firstCol,
 				"/" + missingEntry.PrefixLength,
 				missingEntry.LinkType,
-				"Underadvertised Route",
+				"Unadvertised Route",
 			})
 		}
 	}

@@ -75,7 +75,6 @@ func ParseOSPFRouterLSAAll(jsonData []byte) (*frrProto.OSPFRouterData, error) {
 				areaDataMap := areaData.([]interface{})
 				for _, lsaData := range areaDataMap {
 					tmpLSA := transformRouterLSA(lsaData.(map[string]interface{}))
-					//fmt.Println(tmpLSA)
 					transformedLSAs[tmpLSA["advertising_router"].(string)] = transformRouterLSA(lsaData.(map[string]interface{}))
 				}
 
@@ -651,7 +650,6 @@ func ParseInterfaceStatus(jsonData []byte) (*frrProto.InterfaceList, error) {
 			IpAddresses: make([]*frrProto.IpAddress, 0),
 		}
 
-		// Map all simple fields
 		singleIface.AdministrativeStatus = getString(ifaceMap, "administrativeStatus")
 		singleIface.OperationalStatus = getString(ifaceMap, "operationalStatus")
 		singleIface.LinkDetection = getBool(ifaceMap, "linkDetection")
@@ -679,7 +677,6 @@ func ParseInterfaceStatus(jsonData []byte) (*frrProto.InterfaceList, error) {
 		singleIface.Protodown = getString(ifaceMap, "protodown")
 		singleIface.ParentIfindex = int32(getFloat(ifaceMap, "parentIfindex"))
 
-		// Handle IP addresses
 		if ipAddrs, ok := ifaceMap["ipAddresses"].([]interface{}); ok {
 			for _, ipAddr := range ipAddrs {
 				if ipMap, ok := ipAddr.(map[string]interface{}); ok {
@@ -693,7 +690,6 @@ func ParseInterfaceStatus(jsonData []byte) (*frrProto.InterfaceList, error) {
 			}
 		}
 
-		// Handle EVPN MH
 		if evpnData, ok := ifaceMap["evpnMh"].(map[string]interface{}); ok {
 			singleIface.EvpnMh = &frrProto.EvpnMh{
 				EthernetSegmentId: getString(evpnData, "ethernetSegmentId"),
@@ -772,7 +768,6 @@ func ParseRib(jsonData []byte) (*frrProto.RoutingInformationBase, error) {
 				Nexthops:                 make([]*frrProto.Nexthop, 0),
 			}
 
-			// Handle nexthops
 			if nexthops, ok := routeMap["nexthops"].([]interface{}); ok {
 				for _, nh := range nexthops {
 					if nhMap, ok := nh.(map[string]interface{}); ok {
@@ -809,7 +804,6 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 	}
 	defer func(file *os.File) {
 		if closeErr := file.Close(); closeErr != nil {
-			// todo: this must be updated to write it to logger
 			err = fmt.Errorf("failed to close config file: %w", closeErr)
 		}
 	}(file)
@@ -830,7 +824,6 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 		}
 
 		if newInterface := parseInterfaceLine(line); newInterface != nil {
-			// start of a new block: flush previous
 			if currentInterfacePointer != nil {
 				config.Interfaces = append(config.Interfaces, currentInterfacePointer)
 			}
@@ -863,7 +856,6 @@ func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error)
 		}
 	}
 
-	// flush last Interface block
 	if currentInterfacePointer != nil {
 		config.Interfaces = append(config.Interfaces, currentInterfacePointer)
 	}
@@ -1079,11 +1071,6 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 			parts := strings.Fields(line)
 			config.OspfConfig.RouterId = parts[2]
 
-		//case strings.HasPrefix(line, "network "):
-		//	parts := strings.Fields(line)
-		//	network, area := parts[1], parts[3]
-		//	addNetworkToArea(config, network, area)
-
 		case strings.HasPrefix(line, "redistribute "):
 			if config.OspfConfig == nil {
 				config.OspfConfig = &frrProto.OSPFConfig{}
@@ -1164,7 +1151,6 @@ func (c *Collector) ReadConfig() (string, error) {
 func transformRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
 	transformed := make(map[string]interface{})
 
-	// Map field names from camelCase to snake_case
 	fieldMapping := map[string]string{
 		"lsaAge":            "lsa_age",
 		"options":           "options",
@@ -1184,7 +1170,6 @@ func transformRouterLSA(lsaData map[string]interface{}) map[string]interface{} {
 	for origKey, newKey := range fieldMapping {
 		if value, exists := lsaData[origKey]; exists {
 			if origKey == "routerLinks" {
-				// Handle router links transformation
 				routerLinks := value.(map[string]interface{})
 				transformedLinks := make(map[string]interface{})
 
@@ -1245,7 +1230,6 @@ func transformNetworkLSA(lsaData map[string]interface{}) map[string]interface{} 
 	for origKey, newKey := range fieldMapping {
 		if value, exists := lsaData[origKey]; exists {
 			if origKey == "attachedRouters" {
-				// Handle attached routers transformation
 				routers := value.(map[string]interface{})
 				transformedRouters := make(map[string]interface{})
 
@@ -1423,9 +1407,6 @@ func transformDatabaseExternalLSA(lsaData map[string]interface{}) map[string]int
 	return transformed
 }
 
-// addDatabaseLSABaseParameters will pull lsId, advertisedRouter, lsaAge,
-// sequenceNumber and checksum out of the raw lsaData and
-// stick them under transformed["base"] in snake_case.
 func addDatabaseLSABaseParameters(transformed, lsaData map[string]interface{}) {
 	base := make(map[string]interface{})
 

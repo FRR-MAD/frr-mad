@@ -7,42 +7,42 @@ import (
 func getRouterAnomalyDummy1() *frrProto.Response {
 	adv1 := []*frrProto.Advertisement{
 		{
-			InterfaceAddress: "10.0.0.0", // string
-			LinkStateId:      "",         // string
-			PrefixLength:     "24",       // string
-			LinkType:         "",         // string
+			InterfaceAddress: "10.0.0.0",
+			LinkStateId:      "",
+			PrefixLength:     "24",
+			LinkType:         "",
 		},
 		{
-			InterfaceAddress: "10.200.155.254", // string
-			LinkStateId:      "",               // string
-			PrefixLength:     "32",             // string
-			LinkType:         "Point-to-Point", // string
+			InterfaceAddress: "10.200.155.254",
+			LinkStateId:      "",
+			PrefixLength:     "32",
+			LinkType:         "Point-to-Point",
 		},
 	}
 
 	adv2 := []*frrProto.Advertisement{
 		{
-			InterfaceAddress: "172.22.0.0", // string
-			LinkStateId:      "",           // string
-			PrefixLength:     "24",         // string
-			LinkType:         "",           // string
+			InterfaceAddress: "172.22.0.0",
+			LinkStateId:      "",
+			PrefixLength:     "24",
+			LinkType:         "",
 		},
 		{
-			InterfaceAddress: "172.31.255.254", // string
-			LinkStateId:      "",               // string
-			PrefixLength:     "32",             // string
-			LinkType:         "Point-to-Point", // string
+			InterfaceAddress: "172.31.255.254",
+			LinkStateId:      "",
+			PrefixLength:     "32",
+			LinkType:         "Point-to-Point",
 		},
 	}
 
 	result := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
-			HasOverAdvertisedPrefixes:  true,
-			HasUnderAdvertisedPrefixes: true,
-			HasDuplicatePrefixes:       false,
-			HasMisconfiguredPrefixes:   false,
-			SuperfluousEntries:         adv1,
-			MissingEntries:             adv2,
+			HasOverAdvertisedPrefixes: true,
+			HasUnAdvertisedPrefixes:   true,
+			HasDuplicatePrefixes:      false,
+			HasMisconfiguredPrefixes:  false,
+			SuperfluousEntries:        adv1,
+			MissingEntries:            adv2,
 		},
 	}
 
@@ -63,42 +63,42 @@ func getRouterAnomalyDummy1() *frrProto.Response {
 func getExternalAnomalyDummy1() *frrProto.Response {
 	adv1 := []*frrProto.Advertisement{
 		{
-			InterfaceAddress: "",         // string
-			LinkStateId:      "10.0.0.0", // string
-			PrefixLength:     "24",       // string
-			LinkType:         "",         // string
+			InterfaceAddress: "",
+			LinkStateId:      "10.0.0.0",
+			PrefixLength:     "24",
+			LinkType:         "",
 		},
 		{
-			InterfaceAddress: "",               // string
-			LinkStateId:      "10.200.155.254", // string
-			PrefixLength:     "32",             // string
-			LinkType:         "Point-to-Point", // string
+			InterfaceAddress: "",
+			LinkStateId:      "10.200.155.254",
+			PrefixLength:     "32",
+			LinkType:         "Point-to-Point",
 		},
 	}
 
 	adv2 := []*frrProto.Advertisement{
 		{
-			InterfaceAddress: "",           // string
-			LinkStateId:      "172.22.0.0", // string
-			PrefixLength:     "24",         // string
-			LinkType:         "",           // string
+			InterfaceAddress: "",
+			LinkStateId:      "172.22.0.0",
+			PrefixLength:     "24",
+			LinkType:         "",
 		},
 		{
-			InterfaceAddress: "",               // string
-			LinkStateId:      "172.31.255.254", // string
-			PrefixLength:     "32",             // string
-			LinkType:         "Point-to-Point", // string
+			InterfaceAddress: "",
+			LinkStateId:      "172.31.255.254",
+			PrefixLength:     "32",
+			LinkType:         "Point-to-Point",
 		},
 	}
 
 	result := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
-			HasOverAdvertisedPrefixes:  true,
-			HasUnderAdvertisedPrefixes: true,
-			HasDuplicatePrefixes:       false,
-			HasMisconfiguredPrefixes:   false,
-			SuperfluousEntries:         adv1,
-			MissingEntries:             adv2,
+			HasOverAdvertisedPrefixes: true,
+			HasUnAdvertisedPrefixes:   true,
+			HasDuplicatePrefixes:      false,
+			HasMisconfiguredPrefixes:  false,
+			SuperfluousEntries:        adv1,
+			MissingEntries:            adv2,
 		},
 	}
 

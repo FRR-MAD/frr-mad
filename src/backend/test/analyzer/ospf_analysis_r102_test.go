@@ -53,7 +53,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 	}
 
 	// Runtime parsing of router
-	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 
 	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
@@ -190,9 +190,9 @@ func TestRouterLsaUnhappy2(t *testing.T) {
 		},
 	}
 
-	t.Run("TestUnderadvertised", func(t *testing.T) {
+	t.Run("TestUnadvertised", func(t *testing.T) {
 
-		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes)
 		assert.Equal(t, 1, len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
 
 		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
@@ -277,7 +277,7 @@ func TestExternalLsaHappy2(t *testing.T) {
 			},
 		},
 	}
-	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	//TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
@@ -349,7 +349,7 @@ func TestExternalLsaUnhappy2(t *testing.T) {
 	// Unadvertised: isExternalLSDB is empty
 	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
-		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
 		expectedMissingEntrires := []*frrProto.Advertisement{
 			{
@@ -377,7 +377,7 @@ func TestExternalLsaUnhappy2(t *testing.T) {
 	shouldExternalLSDB = analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
 		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries))
 		expectedMissingEntrires := []*frrProto.Advertisement{

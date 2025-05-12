@@ -1,15 +1,13 @@
 package analyzer
 
 import (
-	"fmt"
+	"sort"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// WIP
-// TODO: Implement FIB analysis
-func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
+func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
 	result := &frrProto.AnomalyDetection{
 		HasMisconfiguredPrefixes: false,
 		SuperfluousEntries:       []*frrProto.Advertisement{},
@@ -17,71 +15,59 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, re
 		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
-	lsaList := []string{}
+	lsdbList := []string{}
+	networkLsdbList := getLSDBMapAndList(receivedSummaryLSDB)
+	summaryLsdbList := getLSDBMapAndList(receivedSummaryLSDB)
+	externalLsdbList := getLSDBMapAndList(receivedExternalLSDB)
+	nssaExternalLsdbList := getLSDBMapAndList(receivedNssaExternalLSDB)
 
-	////receivedRouterCount, routerLsaList := countAndCollectLSAs(receivedRouterLSDB)
-	//_, networkLsaList := countAndCollectLSAs(receivedNetworkLSDB)
-	_, summaryLsaList := countAndCollectLSAs(receivedSummaryLSDB)
-	_, externalLsaList := countAndCollectLSAs(receivedExternalLSDB)
-	_, nssaExternalLsaList := countAndCollectLSAs(receivedNssaExternalLSDB)
-	//// receivedNetworkCount, networkLsaList := countAndCollectLSAs(receivedNetworkLSDB)
-	//// receivedExternalCount, externalLsaList := countAndCollectLSAs(receivedExternalLSDB)
-	//// receivedNssaExternalCount, nssaExternalLsaList := countAndCollectLSAs(receivedNssaExternalLSDB)
-	//// //_ = receivedRouterCount + receivedNetworkCount + receivedExternalCount + receivedNssaExternalCount
+	lsdbList = append(lsdbList, networkLsdbList...)
+	lsdbList = append(lsdbList, summaryLsdbList...)
+	lsdbList = append(lsdbList, externalLsdbList...)
+	lsdbList = append(lsdbList, nssaExternalLsdbList...)
+	lsdbList = filterUnique(lsdbList)
 
-	////lsaList = append(lsaList, routerLsaList...)
-	//lsaList = append(lsaList, networkLsaList...)
-	lsaList = append(lsaList, summaryLsaList...)
-	lsaList = append(lsaList, externalLsaList...)
-	lsaList = append(lsaList, nssaExternalLsaList...)
-	//lsaList = append(lsaList, tmpList...)
-	lsaList = filterUnique(lsaList)
-
-	//for _, v1 := range receivedNetworkLSDB.Areas {
-	//	for _, v2 := range v1.Links {
-	//		fmt.Println(v2.LinkStateId)
-	//	}
-	//}
-
-	//fmt.Printf("Total lsdb: %d\n", totalCount)
-	//// //fmt.Printf("Router lsdb: %d\n", receivedRouterCount)
-	//// fmt.Printf("Network lsdb: %d\n", receivedNetworkCount)
-	//// fmt.Printf("External lsdb: %d\n", receivedExternalCount)
-	//// fmt.Printf("Nssa-External lsdb: %d\n", receivedNssaExternalCount)
-
-	////fmt.Println(len(lsaList))
-	////fmt.Println(lsaList)
-	////sort.Slice(lsaList, func(i, j int) bool {
-	////	return lsaList[i] < lsaList[j]
-	////})
-	for _, v := range lsaList {
-		fmt.Println(v)
+	setA := make(map[string]bool)
+	for _, v := range fibMap {
+		setA[v.Prefix] = true
 	}
-	fmt.Printf("Total lsdb: %d\n", len(lsaList))
+	fibList := []string{}
+	for prefix, _ := range fibMap {
+		fibList = append(fibList, prefix)
+	}
+	sort.Strings(fibList)
+	sort.Strings(lsdbList)
 
-	a.AnalysisResult.FibAnomaly.HasOverAdvertisedPrefixes = len(result.MissingEntries) > 0
-	a.AnalysisResult.FibAnomaly.HasUnderAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
-	a.AnalysisResult.FibAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
-	a.AnalysisResult.FibAnomaly.MissingEntries = result.MissingEntries
-	a.AnalysisResult.FibAnomaly.SuperfluousEntries = result.SuperfluousEntries
-	a.AnalysisResult.FibAnomaly.DuplicateEntries = result.DuplicateEntries
+	for _, entry := range lsdbList {
+		_, exists := fibMap[entry]
+		if !exists {
+			result.HasUnAdvertisedPrefixes = true
+			result.MissingEntries = append(result.MissingEntries, &frrProto.Advertisement{
+				LinkStateId:  strings.Split(entry, "/")[0],
+				PrefixLength: strings.Split(entry, "/")[1],
+			})
+		}
+	}
+
+	a.AnalysisResult.LsdbToRibAnomaly.MissingEntries = result.MissingEntries
+	a.AnalysisResult.LsdbToRibAnomaly.SuperfluousEntries = result.SuperfluousEntries
+	a.AnalysisResult.LsdbToRibAnomaly.DuplicateEntries = result.DuplicateEntries
 
 }
 
 func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
 	if isState == nil || shouldState == nil {
-		//fmt.Println("nil!")
 		return nil, nil
 	}
 
 	result := &frrProto.AnomalyDetection{
-		HasUnderAdvertisedPrefixes: false,
-		HasOverAdvertisedPrefixes:  false,
-		HasDuplicatePrefixes:       false,
-		HasMisconfiguredPrefixes:   false,
-		SuperfluousEntries:         []*frrProto.Advertisement{},
-		MissingEntries:             []*frrProto.Advertisement{},
-		DuplicateEntries:           []*frrProto.Advertisement{},
+		HasUnAdvertisedPrefixes:   false,
+		HasOverAdvertisedPrefixes: false,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries:        []*frrProto.Advertisement{},
+		MissingEntries:            []*frrProto.Advertisement{},
+		DuplicateEntries:          []*frrProto.Advertisement{},
 	}
 
 	isStateMap := make(map[string]*frrProto.Advertisement)
@@ -90,7 +76,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 
 	for _, area := range isState.Areas {
 		for i := range area.Links {
-			//if area.Links[i].LinkType != "point-to-point" {
 			link := area.Links[i]
 			key := getAdvertisementKey(link)
 			isStateMap[key] = &frrProto.Advertisement{
@@ -100,13 +85,11 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 			if link.LinkType == strings.ToLower("Stub Network") {
 				isStateMap[key].PrefixLength = link.PrefixLength
 			}
-			//}
 		}
 	}
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
-			//if area.Links[i].LinkType != "point-to-point" {
 			link := area.Links[i]
 			key := getAdvertisementKey(link)
 			shouldStateMap[key] = &frrProto.Advertisement{
@@ -117,28 +100,21 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 				shouldStateMap[key].PrefixLength = link.PrefixLength
 			}
 
-			//}
 		}
 	}
 
-	// check for missing prefixes -> underadvertised
 	for key, shouldLink := range shouldStateMap {
 		if _, exists := isStateMap[key]; !exists {
-			//fmt.Println(shouldLink)
 			result.MissingEntries = append(result.MissingEntries, shouldLink)
-			//if !isExcludedByAccessList(shouldLink, accessList) {
-			//}
 		}
 	}
 
-	// check for to many advertisements -> overadvertised
 	for key, isLink := range isStateMap {
 		if _, exists := shouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
-	// check for duplicates
 	for prefix, counter := range isStateCounter {
 		if counter > 1 {
 			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
@@ -146,7 +122,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.Acce
 	}
 
 	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
-	a.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
 	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
@@ -188,11 +164,6 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	return false
 }
 
-// TODO: Check what is received by BGP, cross check with FIB (not rib)
-/*
-	- if it is in FIB, it's good
-	- if it is NOT in FIB, it's no good
-*/
 func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
@@ -209,7 +180,6 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	isStateCounter := make(map[string]int)
 	shouldStateMap := make(map[string]*frrProto.Advertisement)
 
-	// Process isState links
 	for _, area := range isState.Areas {
 		for i := range area.Links {
 			link := area.Links[i]
@@ -224,7 +194,6 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 		}
 	}
 
-	// Process shouldState links
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
 			link := area.Links[i]
@@ -239,21 +208,18 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 		}
 	}
 
-	// check for missing prefixes -> underadvertised
 	for key, shouldLink := range shouldStateMap {
 		if _, exists := isStateMap[key]; !exists {
 			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
-	// check for to many advertisements -> overadvertised
 	for key, isLink := range isStateMap {
 		if _, exists := shouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
-	// check for duplicates
 	for prefix, counter := range isStateCounter {
 		if counter > 1 {
 			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
@@ -261,7 +227,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	}
 
 	a.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
-	a.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
 	a.AnalysisResult.ExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.ExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
@@ -273,7 +239,6 @@ func normalizeNetworkAddress(address string) string {
 	return strings.ToLower(strings.TrimSpace(address))
 }
 
-// TODO: Add missing analysis
 func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
@@ -286,12 +251,10 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
-	// Maps to track expected and actual NSSA-external routes
-	isStateMap := make(map[string]map[string]*frrProto.Advertisement) // area -> prefix -> advertisement
+	isStateMap := make(map[string]map[string]*frrProto.Advertisement)
 	shouldStateMap := make(map[string]map[string]*frrProto.Advertisement)
-	duplicateTracker := make(map[string]map[string]int) // area -> prefix -> count
+	duplicateTracker := make(map[string]map[string]int)
 
-	// Process actual NSSA-external routes (isState)
 	for _, area := range isState.Areas {
 		if area.LsaType != "NSSA-LSA" {
 			continue
@@ -308,7 +271,6 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 			key := link.LinkStateId + "/" + link.PrefixLength
 			isStateMap[area.AreaName][key] = link
 
-			// Track duplicates
 			duplicateTracker[area.AreaName][key]++
 			if duplicateTracker[area.AreaName][key] > 1 {
 				result.DuplicateEntries = append(result.DuplicateEntries, link)
@@ -316,10 +278,9 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		}
 	}
 
-	// Process expected NSSA-external routes (shouldState)
 	for _, area := range shouldState.Areas {
 		if area.LsaType != "NSSA-LSA" {
-			continue // Skip non-NSSA areas
+			continue
 		}
 
 		if shouldStateMap[area.AreaName] == nil {
@@ -332,12 +293,9 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		}
 	}
 
-	// Check for missing routes (under-advertised)
 	for areaName, shouldRoutes := range shouldStateMap {
 		for key, route := range shouldRoutes {
-			// Check if route exists in isState for this area
 			if isStateMap[areaName] == nil || isStateMap[areaName][key] == nil {
-				// Check if route is excluded by access list
 				if !isExcludedByAccessList(route, accessList) {
 					result.MissingEntries = append(result.MissingEntries, route)
 				}
@@ -345,50 +303,41 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		}
 	}
 
-	// Check for superfluous routes (over-advertised)
 	for areaName, isRoutes := range isStateMap {
 		for key, route := range isRoutes {
-			// Check if route exists in shouldState for this area
 			if shouldStateMap[areaName] == nil || shouldStateMap[areaName][key] == nil {
 				result.SuperfluousEntries = append(result.SuperfluousEntries, route)
 			}
 		}
 	}
 
-	// Check for P-bit issues (NSSA-external routes not being translated)
-	// This requires comparing Type 7 LSAs in NSSA with Type 5 LSAs in backbone
-	// You'll need to implement this separately by comparing NSSA and external databases
-
-	// Update analysis result
 	a.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
-	a.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.NssaExternalAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
 	a.AnalysisResult.NssaExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries = result.DuplicateEntries
 }
 
-func countAndCollectLSAs(lsdb interface{}) (int, []string) {
-	lsaList := []string{}
+func getLSDBMapAndList(lsdb interface{}) []string {
+	lsdbList := []string{}
 
 	switch db := lsdb.(type) {
 	case *frrProto.IntraAreaLsa:
 		for _, area := range db.Areas {
 			for _, lsa := range area.Links {
-				//lsaList = append(lsaList, lsa.LinkStateId+"/"+lsa.PrefixLength)
-				lsaList = append(lsaList, lsa.LinkStateId)
+				lsdbList = append(lsdbList, lsa.LinkStateId+"/"+lsa.PrefixLength)
 			}
 		}
 
 	case *frrProto.InterAreaLsa:
 		for _, area := range db.Areas {
 			for _, lsa := range area.Links {
-				//lsaList = append(lsaList, lsa.LinkStateId+"/"+lsa.PrefixLength)
-				lsaList = append(lsaList, lsa.LinkStateId)
+				lsdbList = append(lsdbList, lsa.LinkStateId+"/"+lsa.PrefixLength)
 			}
 		}
 	}
-	return len(lsaList), filterUnique(lsaList)
+	return filterUnique(lsdbList)
 }
 
 func filterUnique(lsaList []string) []string {
@@ -402,4 +351,38 @@ func filterUnique(lsaList []string) []string {
 		}
 	}
 	return uniqueNames
+}
+
+func isSublist(lsdbList, fibList []int) bool {
+	if len(fibList) == 0 {
+		return true
+	}
+
+	if len(fibList) > len(lsdbList) {
+		return false
+	}
+
+	if len(lsdbList) == len(fibList) {
+		for i := range lsdbList {
+			if lsdbList[i] != fibList[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	for i := 0; i <= len(lsdbList)-len(fibList); i++ {
+		found := true
+		for j := 0; j < len(fibList); j++ {
+			if lsdbList[i+j] != fibList[j] {
+				found = false
+				break
+			}
+		}
+		if found {
+			return true
+		}
+	}
+
+	return false
 }
