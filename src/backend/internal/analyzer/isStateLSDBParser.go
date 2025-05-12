@@ -14,6 +14,7 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
+	// TODO: change to pointer
 	p2pMap := frrProto.PeerInterfaceMap{
 		PeerInterfaceToAddress: map[string]string{},
 	}

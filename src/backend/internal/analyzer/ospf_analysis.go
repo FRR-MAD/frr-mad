@@ -49,6 +49,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, re
 		}
 	}
 
+	// TODO: superfluous and duplicate not necessary
 	a.AnalysisResult.LsdbToRibAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.LsdbToRibAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.LsdbToRibAnomaly.DuplicateEntries = result.DuplicateEntries
