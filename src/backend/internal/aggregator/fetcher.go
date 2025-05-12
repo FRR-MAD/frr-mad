@@ -58,6 +58,15 @@ func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
 	return parsedStaticFRRConfig, nil
 }
 
+func FetchGeneralOSPFInformation(executor *frrSocket.FRRCommandExecutor) (*frrProto.GeneralOspfInformation, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseGeneralOspfInformation(output)
+}
+
 func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf data router self json")
 	if err != nil {
@@ -158,6 +167,14 @@ func FetchRib(executor *frrSocket.FRRCommandExecutor) (*frrProto.RoutingInformat
 		return nil, err
 	}
 	return ParseRib(output)
+}
+
+func FetchRibFibSummary(executor *frrSocket.FRRCommandExecutor) (*frrProto.RibFibSummaryRoutes, error) {
+	output, err := executor.ExecZebraCmd("show ip route summary json")
+	if err != nil {
+		return nil, err
+	}
+	return ParseRibFibSummary(output)
 }
 
 func (f *Fetcher) CollectSystemMetrics() (*frrProto.SystemMetrics, error) {

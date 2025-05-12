@@ -350,6 +350,7 @@ func (m *Model) renderRouterMonitorTab() string {
 	var routerLSABlocks []string
 	for _, areaID := range routerLSAAreas {
 		areaData := routerLSASelf.RouterStates[areaID]
+
 		var transitTableData [][]string
 		var stubTableData [][]string
 		var point2pointTableData [][]string
@@ -731,7 +732,7 @@ func (m *Model) renderNeighborMonitorTab() string {
 	for neighborID := range ospfNeighbors.Neighbors {
 		ospfNeighborIDs = append(ospfNeighborIDs, neighborID)
 	}
-	sort.Sort(common.IpList(ospfNeighborIDs))
+	sort.Sort(common.SortedIpList(ospfNeighborIDs))
 
 	var ospfNeighborTableData [][]string
 	for _, ospfNeighborID := range ospfNeighborIDs {

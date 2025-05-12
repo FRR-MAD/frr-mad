@@ -14,6 +14,80 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+func ParseGeneralOspfInformation(jsonData []byte) (*frrProto.GeneralOspfInformation, error) {
+	// First decode into a generic map
+	var raw map[string]interface{}
+	if err := json.Unmarshal(jsonData, &raw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal OSPF JSON: %w", err)
+	}
+
+	// Initialize result and its areas map
+	result := &frrProto.GeneralOspfInformation{
+		Areas: make(map[string]*frrProto.GeneralInfoOspfArea),
+	}
+
+	// Top‐level fields
+	result.RouterId = getString(raw, "routerId")
+	result.TosRoutesOnly = getBool(raw, "tosRoutesOnly")
+	result.Rfc2328Conform = getBool(raw, "rfc2328Conform")
+	result.SpfScheduleDelayMsecs = int32(getFloat(raw, "spfScheduleDelayMsecs"))
+	result.HoldtimeMinMsecs = int32(getFloat(raw, "holdtimeMinMsecs"))
+	result.HoldtimeMaxMsecs = int32(getFloat(raw, "holdtimeMaxMsecs"))
+	result.HoldtimeMultiplier = int32(getFloat(raw, "holdtimeMultplier"))
+	result.SpfLastExecutedMsecs = int64(getFloat(raw, "spfLastExecutedMsecs"))
+	result.SpfLastDurationMsecs = int32(getFloat(raw, "spfLastDurationMsecs"))
+	result.LsaMinIntervalMsecs = int32(getFloat(raw, "lsaMinIntervalMsecs"))
+	result.LsaMinArrivalMsecs = int32(getFloat(raw, "lsaMinArrivalMsecs"))
+	result.WriteMultiplier = int32(getFloat(raw, "writeMultiplier"))
+	result.RefreshTimerMsecs = int32(getFloat(raw, "refreshTimerMsecs"))
+	result.MaximumPaths = int32(getFloat(raw, "maximumPaths"))
+	result.Preference = int32(getFloat(raw, "preference"))
+	result.AsbrRouter = getString(raw, "asbrRouter")
+	result.LsaExternalCounter = int32(getFloat(raw, "lsaExternalCounter"))
+	result.LsaExternalChecksum = int64(getFloat(raw, "lsaExternalChecksum"))
+	result.LsaAsopaqueCounter = int32(getFloat(raw, "lsaAsopaqueCounter"))
+	result.LsaAsopaqueChecksum = int64(getFloat(raw, "lsaAsOpaqueChecksum"))
+	result.AttachedAreaCounter = int32(getFloat(raw, "attachedAreaCounter"))
+
+	// Parse the areas map
+	if areasRaw, ok := raw["areas"].(map[string]interface{}); ok {
+		for areaID, v := range areasRaw {
+			areaMap, ok := v.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			area := &frrProto.GeneralInfoOspfArea{
+				Backbone:               getBool(areaMap, "backbone"),
+				AreaIfTotalCounter:     int32(getFloat(areaMap, "areaIfTotalCounter")),
+				AreaIfActiveCounter:    int32(getFloat(areaMap, "areaIfActiveCounter")),
+				NbrFullAdjacentCounter: int32(getFloat(areaMap, "nbrFullAdjacentCounter")),
+				Authentication:         getString(areaMap, "authentication"),
+				SpfExecutedCounter:     int32(getFloat(areaMap, "spfExecutedCounter")),
+				LsaNumber:              int32(getFloat(areaMap, "lsaNumber")),
+				LsaRouterNumber:        int32(getFloat(areaMap, "lsaRouterNumber")),
+				LsaRouterChecksum:      int64(getFloat(areaMap, "lsaRouterChecksum")),
+				LsaNetworkNumber:       int32(getFloat(areaMap, "lsaNetworkNumber")),
+				LsaNetworkChecksum:     int64(getFloat(areaMap, "lsaNetworkChecksum")),
+				LsaSummaryNumber:       int32(getFloat(areaMap, "lsaSummaryNumber")),
+				LsaSummaryChecksum:     int64(getFloat(areaMap, "lsaSummaryChecksum")),
+				LsaAsbrNumber:          int32(getFloat(areaMap, "lsaAsbrNumber")),
+				LsaAsbrChecksum:        int64(getFloat(areaMap, "lsaAsbrChecksum")),
+				LsaNssaNumber:          int32(getFloat(areaMap, "lsaNssaNumber")),
+				LsaNssaChecksum:        int64(getFloat(areaMap, "lsaNssaChecksum")),
+				LsaOpaqueLinkNumber:    int32(getFloat(areaMap, "lsaOpaqueLinkNumber")),
+				LsaOpaqueLinkChecksum:  int64(getFloat(areaMap, "lsaOpaqueLinkChecksum")),
+				LsaOpaqueAreaNumber:    int32(getFloat(areaMap, "lsaOpaqueAreaNumber")),
+				LsaOpaqueAreaChecksum:  int64(getFloat(areaMap, "lsaOpaqueAreaChecksum")),
+			}
+
+			result.Areas[areaID] = area
+		}
+	}
+
+	return result, nil
+}
+
 func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
@@ -667,6 +741,43 @@ func ParseRib(jsonData []byte) (*frrProto.RoutingInformationBase, error) {
 
 		result.Routes[prefix] = routeEntry
 	}
+
+	return result, nil
+}
+
+func ParseRibFibSummary(jsonData []byte) (*frrProto.RibFibSummaryRoutes, error) {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(jsonData, &raw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal summary JSON: %w", err)
+	}
+
+	result := &frrProto.RibFibSummaryRoutes{
+		RouteSummaries: make([]*frrProto.RouteSummary, 0),
+	}
+
+	// Extract route summaries
+	if routes, ok := raw["routes"].([]interface{}); ok {
+		for _, r := range routes {
+			routeMap, ok := r.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			summary := &frrProto.RouteSummary{
+				Fib:          int32(getFloat(routeMap, "fib")),
+				Rib:          int32(getFloat(routeMap, "rib")),
+				FibOffLoaded: int32(getFloat(routeMap, "fibOffLoaded")),
+				FibTrapped:   int32(getFloat(routeMap, "fibTrapped")),
+				Type:         getString(routeMap, "type"),
+			}
+
+			result.RouteSummaries = append(result.RouteSummaries, summary)
+		}
+	}
+
+	// Extract totals
+	result.RoutesTotal = int32(getFloat(raw, "routesTotal"))
+	result.RoutesTotalFib = int32(getFloat(raw, "routesTotalFib"))
 
 	return result, nil
 }
