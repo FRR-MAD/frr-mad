@@ -67,6 +67,15 @@ func FetchOSPFRouterData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPF
 	return ParseOSPFRouterLSA(output)
 }
 
+func FetchOSPFRouterDataAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFRouterData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data router json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFRouterLSAAll(output)
+}
+
 func FetchOSPFNetworkData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFNetworkData, error) {
 	output, err := executor.ExecOSPFCmd("show ip ospf data network self json")
 	if err != nil {
@@ -91,6 +100,15 @@ func FetchOSPFSummaryData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSP
 	}
 
 	return ParseOSPFSummaryLSA(output)
+}
+
+func FetchOSPFSummaryDataAll(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFSummaryData, error) {
+	output, err := executor.ExecOSPFCmd("show ip ospf data summary json")
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseOSPFSummaryLSAAll(output)
 }
 
 func FetchOSPFAsbrSummaryData(executor *frrSocket.FRRCommandExecutor) (*frrProto.OSPFAsbrSummaryData, error) {

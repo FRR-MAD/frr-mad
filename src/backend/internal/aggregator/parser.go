@@ -54,6 +54,53 @@ func ParseOSPFRouterLSA(jsonData []byte) (*frrProto.OSPFRouterData, error) {
 	return &result, nil
 }
 
+func ParseOSPFRouterLSAAll(jsonData []byte) (*frrProto.OSPFRouterData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+	type foo map[string]interface{}
+
+	if routerLinkStates, ok := jsonMap["routerLinkStates"].(map[string]interface{}); ok {
+		areaID := ""
+		transformedStates := make(map[string]interface{})
+		for _, areasData := range routerLinkStates {
+			areasDataMap := areasData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+			for areaId, areaData := range areasDataMap {
+				areaID = areaId
+				areaDataMap := areaData.([]interface{})
+				for _, lsaData := range areaDataMap {
+					tmpLSA := transformRouterLSA(lsaData.(map[string]interface{}))
+					//fmt.Println(tmpLSA)
+					transformedLSAs[tmpLSA["advertising_router"].(string)] = transformRouterLSA(lsaData.(map[string]interface{}))
+				}
+
+				transformedStates[areaID] = map[string]interface{}{
+					"lsa_entries": transformedLSAs,
+				}
+			}
+		}
+		transformedMap["router_states"] = transformedStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFRouterData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
+}
+
 func ParseOSPFNetworkLSA(jsonData []byte) (*frrProto.OSPFNetworkData, error) {
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
@@ -180,6 +227,50 @@ func ParseOSPFSummaryLSA(jsonData []byte) (*frrProto.OSPFSummaryData, error) {
 			}
 		}
 		transformedMap["summary_states"] = transformedSummaryStates
+	}
+
+	transformedJSON, err := json.Marshal(transformedMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transformed map: %w", err)
+	}
+
+	var result frrProto.OSPFSummaryData
+	unmarshaler := protojson.UnmarshalOptions{AllowPartial: true}
+	if err := unmarshaler.Unmarshal(transformedJSON, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
+	}
+
+	return &result, nil
+}
+
+func ParseOSPFSummaryLSAAll(jsonData []byte) (*frrProto.OSPFSummaryData, error) {
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	transformedMap := make(map[string]interface{})
+	transformedMap["router_id"] = jsonMap["routerId"]
+
+	if sumStates, ok := jsonMap["summaryLinkStates"].(map[string]interface{}); ok {
+		transformedNetStates := make(map[string]interface{})
+		areaID := ""
+		for _, areaData := range sumStates {
+			areaDataMap := areaData.(map[string]interface{})
+			transformedLSAs := make(map[string]interface{})
+			for areaId, lsaData := range areaDataMap {
+				areaID = areaId
+				lsaDataList := lsaData.([]interface{})
+				for _, lsa := range lsaDataList {
+					tmpLSA := transformNetworkLSA(lsa.(map[string]interface{}))
+					transformedLSAs[tmpLSA["link_state_id"].(string)] = tmpLSA
+				}
+			}
+			transformedNetStates[areaID] = map[string]interface{}{
+				"lsa_entries": transformedLSAs,
+			}
+		}
+		transformedMap["summary_states"] = transformedNetStates
 	}
 
 	transformedJSON, err := json.Marshal(transformedMap)
@@ -378,13 +469,6 @@ func ParseOSPFNssaExternalAll(jsonData []byte) (*frrProto.OSPFNssaExternalAll, e
 
 	if err := opts.Unmarshal(transformedJSON, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal to protobuf: %w", err)
-	}
-
-	for _, value := range result.NssaExternalAllLinkStates {
-		for lsaID, _ := range value.Data {
-			fmt.Println(lsaID)
-		}
-
 	}
 
 	return &result, nil

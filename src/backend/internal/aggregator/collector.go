@@ -42,9 +42,11 @@ func initFullFrrData() *frrProto.FullFRRData {
 	fullFrrData := &frrProto.FullFRRData{
 		OspfDatabase:           &frrProto.OSPFDatabase{},
 		OspfRouterData:         &frrProto.OSPFRouterData{},
+		OspfRouterDataAll:      &frrProto.OSPFRouterData{},
 		OspfNetworkData:        &frrProto.OSPFNetworkData{},
 		OspfNetworkDataAll:     &frrProto.OSPFNetworkData{},
 		OspfSummaryData:        &frrProto.OSPFSummaryData{},
+		OspfSummaryDataAll:     &frrProto.OSPFSummaryData{},
 		OspfAsbrSummaryData:    &frrProto.OSPFAsbrSummaryData{},
 		OspfExternalData:       &frrProto.OSPFExternalData{},
 		OspfNssaExternalData:   &frrProto.OSPFNssaExternalData{},
@@ -105,6 +107,10 @@ func (c *Collector) Collect() error {
 		return FetchOSPFRouterData(executor)
 	})
 
+	fetchAndMerge("OSPFRouterDataAll", c.FullFrrData.OspfRouterDataAll, func() (proto.Message, error) {
+		return FetchOSPFRouterDataAll(executor)
+	})
+
 	fetchAndMerge("OSPFNetworkData", c.FullFrrData.OspfNetworkData, func() (proto.Message, error) {
 		return FetchOSPFNetworkData(executor)
 	})
@@ -115,6 +121,10 @@ func (c *Collector) Collect() error {
 
 	fetchAndMerge("OSPFSummaryData", c.FullFrrData.OspfSummaryData, func() (proto.Message, error) {
 		return FetchOSPFSummaryData(executor)
+	})
+
+	fetchAndMerge("OSPFSummaryDataAll", c.FullFrrData.OspfSummaryDataAll, func() (proto.Message, error) {
+		return FetchOSPFSummaryDataAll(executor)
 	})
 
 	fetchAndMerge("OSPFAsbrSummaryData", c.FullFrrData.OspfAsbrSummaryData, func() (proto.Message, error) {
@@ -177,6 +187,10 @@ func (c *Collector) ensureFieldsInitialized() {
 		c.FullFrrData.OspfRouterData = &frrProto.OSPFRouterData{}
 	}
 
+	if c.FullFrrData.OspfRouterDataAll == nil {
+		c.FullFrrData.OspfRouterDataAll = &frrProto.OSPFRouterData{}
+
+	}
 	if c.FullFrrData.OspfNetworkData == nil {
 		c.FullFrrData.OspfNetworkData = &frrProto.OSPFNetworkData{}
 	}
@@ -187,6 +201,10 @@ func (c *Collector) ensureFieldsInitialized() {
 
 	if c.FullFrrData.OspfSummaryData == nil {
 		c.FullFrrData.OspfSummaryData = &frrProto.OSPFSummaryData{}
+	}
+
+	if c.FullFrrData.OspfSummaryDataAll == nil {
+		c.FullFrrData.OspfSummaryDataAll = &frrProto.OSPFSummaryData{}
 	}
 
 	if c.FullFrrData.OspfAsbrSummaryData == nil {
