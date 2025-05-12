@@ -132,7 +132,9 @@ func getOSPFGeneralInfoBox() string {
 
 	ospfRouterInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
 		"OSPF Router ID: " + ospfInformation.RouterId + "\n" +
-			"Last SPF Execution: " + lastSPFExecution.String() + "\n\n")
+			"Last SPF Execution: " + lastSPFExecution.String() + "\n" +
+			"Total External LSAs: " + strconv.Itoa(int(ospfInformation.LsaExternalCounter)) + "\n" +
+			"Attached Areas: " + strconv.Itoa(int(ospfInformation.AttachedAreaCounter)) + "\n")
 
 	var ospfAreaInformation []string
 	for areaID, areaData := range ospfInformation.Areas {
