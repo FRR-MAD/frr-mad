@@ -63,17 +63,26 @@ func (m *Model) renderRibTab() string {
 
 		for _, routeEntryData := range routeEntry.Routes {
 			var nexthopsList []string
+			var fibList []string
 			for _, nexthop := range routeEntryData.Nexthops {
-				if nexthop.Ip == "" {
-					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
-				} else {
-					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				if nexthop == nil {
+					continue
 				}
+
+				var entry string
+				if nexthop.Ip == "" {
+					entry = nexthop.InterfaceName
+				} else {
+					entry = nexthop.Ip + " " + nexthop.InterfaceName
+				}
+				nexthopsList = append(nexthopsList, entry)
+				fibList = append(fibList, strconv.FormatBool(nexthop.Fib))
 			}
 			ribTableData = append(ribTableData, []string{
 				routeEntryData.Prefix,
 				routeEntryData.Protocol,
 				strings.Join(nexthopsList, "\n"),
+				strings.Join(fibList, "\n"),
 				strconv.FormatBool(routeEntryData.Installed),
 				strconv.Itoa(int(routeEntryData.Distance)),
 				strconv.Itoa(int(routeEntryData.Metric)),
@@ -83,18 +92,7 @@ func (m *Model) renderRibTab() string {
 	}
 
 	rowsRIB := len(ribTableData)
-	ribTable := components.NewOspfMonitorTable(
-		[]string{
-			"Prefix",
-			"Protocol",
-			"Next Hops",
-			"Installed",
-			"Distance",
-			"Metric",
-			"Uptime",
-		},
-		rowsRIB,
-	)
+	ribTable := components.NewRibMonitorTable(rowsRIB)
 	for _, r := range ribTableData {
 		ribTable = ribTable.Row(r...)
 	}
@@ -168,14 +166,22 @@ func (m *Model) renderFibTab() string {
 
 		for _, routeEntryData := range routeEntry.Routes {
 			var nexthopsList []string
+			var fibList []string
 			for _, nexthop := range routeEntryData.Nexthops {
+				if nexthop == nil {
+					continue
+				}
+
 				// To confirm that all listed nexthops are indeed in the kernel FIB, check each "fib": true status
 				if nexthop.Fib {
+					var entry string
 					if nexthop.Ip == "" {
-						nexthopsList = append(nexthopsList, nexthop.InterfaceName)
+						entry = nexthop.InterfaceName
 					} else {
-						nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+						entry = nexthop.Ip + " " + nexthop.InterfaceName
 					}
+					nexthopsList = append(nexthopsList, entry)
+					fibList = append(fibList, strconv.FormatBool(nexthop.Fib))
 				}
 			}
 			// "installed": true = FRR has pushed a forwarding entry for that prefix to the kernel (at least one)
@@ -184,6 +190,7 @@ func (m *Model) renderFibTab() string {
 					routeEntryData.Prefix,
 					routeEntryData.Protocol,
 					strings.Join(nexthopsList, "\n"),
+					strings.Join(fibList, "\n"),
 					strconv.FormatBool(routeEntryData.Installed),
 					strconv.Itoa(int(routeEntryData.Distance)),
 					strconv.Itoa(int(routeEntryData.Metric)),
@@ -194,18 +201,7 @@ func (m *Model) renderFibTab() string {
 	}
 
 	rowsFIB := len(fibTableData)
-	fibTable := components.NewOspfMonitorTable(
-		[]string{
-			"Prefix",
-			"Protocol",
-			"Next Hops",
-			"Installed",
-			"Distance",
-			"Metric",
-			"Uptime",
-		},
-		rowsFIB,
-	)
+	fibTable := components.NewRibMonitorTable(rowsFIB)
 	for _, r := range fibTableData {
 		fibTable = fibTable.Row(r...)
 	}
@@ -262,16 +258,17 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
-	var amountOfRibRoutes = "0"
+	protocolName = strings.ToLower(protocolName)
+
+	amountOfRibRoutes := "0"
+
 	for _, routeSummary := range ribFibSummary.RouteSummaries {
-		if routeSummary.Type == "ospf" && protocolName == "ospf" {
+		if routeSummary == nil {
+			continue
+		}
+		if strings.ToLower(routeSummary.Type) == protocolName {
 			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
-		} else if routeSummary.Type == "bgp" && protocolName == "bgp" {
-			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
-		} else if routeSummary.Type == "connected" && protocolName == "connected" {
-			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
-		} else if routeSummary.Type == "static" && protocolName == "static" {
-			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
+			break
 		}
 	}
 
@@ -290,18 +287,27 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 
 		for _, routeEntryData := range routeEntry.Routes {
 			var nexthopsList []string
+			var fibList []string
 			for _, nexthop := range routeEntryData.Nexthops {
-				if nexthop.Ip == "" {
-					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
-				} else {
-					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
+				if nexthop == nil {
+					continue
 				}
+
+				var entry string
+				if nexthop.Ip == "" {
+					entry = nexthop.InterfaceName
+				} else {
+					entry = nexthop.Ip + " " + nexthop.InterfaceName
+				}
+				nexthopsList = append(nexthopsList, entry)
+				fibList = append(fibList, strconv.FormatBool(nexthop.Fib))
 			}
-			if routeEntryData.Protocol == protocolName {
+			if strings.ToLower(routeEntryData.Protocol) == protocolName {
 				partialRIBRoutesTableData = append(partialRIBRoutesTableData, []string{
 					routeEntryData.Prefix,
 					routeEntryData.Protocol,
 					strings.Join(nexthopsList, "\n"),
+					strings.Join(fibList, "\n"),
 					strconv.FormatBool(routeEntryData.Installed),
 					strconv.Itoa(int(routeEntryData.Distance)),
 					strconv.Itoa(int(routeEntryData.Metric)),
@@ -312,24 +318,13 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	}
 
 	rowsPartialRIBRoutesRIB := len(partialRIBRoutesTableData)
-	partialRIBRoutesTable := components.NewOspfMonitorTable(
-		[]string{
-			"Prefix",
-			"Protocol",
-			"Next Hops",
-			"Installed",
-			"Distance",
-			"Metric",
-			"Uptime",
-		},
-		rowsPartialRIBRoutesRIB,
-	)
+	partialRIBRoutesTable := components.NewRibMonitorTable(rowsPartialRIBRoutesRIB)
 	for _, r := range partialRIBRoutesTableData {
 		partialRIBRoutesTable = partialRIBRoutesTable.Row(r...)
 	}
 
 	partialRoutesHeader := styles.H1TitleStyleForOne().
-		Render(fmt.Sprintf("Routing Information Base received " + amountOfRibRoutes + " Routes via " + strings.ToUpper(protocolName)))
+		Render(fmt.Sprintf("Routing Information Base received " + amountOfRibRoutes + " routes via " + strings.ToUpper(protocolName)))
 
 	// Extract table header and body (top border, header row, bottom border)
 	tableStr := partialRIBRoutesTable.String()
@@ -369,103 +364,3 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	completePartialRIBRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
 	return completePartialRIBRoutesTab
 }
-
-//func (m *Model) renderRibWithProtocolFilterTab() string {
-//	rib, err := backend.GetRIB()
-//	if err != nil {
-//		return common.PrintBackendError(err, "GetRIB")
-//	}
-//
-//	amountOfOSPFRoutes := "20"
-//
-//	routes := make([]string, 0, len(rib.Routes))
-//	for route := range rib.Routes {
-//		routes = append(routes, route)
-//	}
-//	sort.Sort(common.SortedPrefixList(routes))
-//
-//	// return strings.Join(routes, "\n")
-//
-//	var ospfRoutesTableData [][]string
-//
-//	for _, route := range routes {
-//		routeEntry := rib.Routes[route]
-//
-//		for _, routeEntryData := range routeEntry.Routes {
-//			var nexthopsList []string
-//			for _, nexthop := range routeEntryData.Nexthops {
-//				if nexthop.Ip == "" {
-//					nexthopsList = append(nexthopsList, nexthop.InterfaceName)
-//				} else {
-//					nexthopsList = append(nexthopsList, nexthop.Ip+" "+nexthop.InterfaceName)
-//				}
-//			}
-//			if routeEntryData.Protocol == "ospf" {
-//				ospfRoutesTableData = append(ospfRoutesTableData, []string{
-//					routeEntryData.Prefix,
-//					routeEntryData.Protocol,
-//					strings.Join(nexthopsList, "\n"),
-//					strconv.FormatBool(routeEntryData.Installed),
-//				})
-//			}
-//		}
-//	}
-//
-//	// Order all Table Data
-//	common.SortTableByIPColumn(ospfRoutesTableData)
-//
-//	rowsOSPFRoutesRIB := len(ospfRoutesTableData)
-//	ospfRoutesTable := components.NewOspfMonitorTable(
-//		[]string{
-//			"Prefix",
-//			"Protocol",
-//			"Next Hops",
-//			"Installed",
-//		},
-//		rowsOSPFRoutesRIB,
-//	)
-//	for _, r := range ospfRoutesTableData {
-//		ospfRoutesTable = ospfRoutesTable.Row(r...)
-//	}
-//
-//	ospfRoutesHeader := styles.H1TitleStyleForOne().
-//		Render(fmt.Sprintf("Routing Information Base received " + amountOfOSPFRoutes + " Routes via OSPF"))
-//
-//	// Extract table header and body (top border, header row, bottom border)
-//	tableStr := ospfRoutesTable.String()
-//	lines := strings.Split(tableStr, "\n")
-//
-//	var headerLines, bodyLines []string
-//	if len(lines) > 3 {
-//		headerLines = lines[:3]
-//		bodyLines = lines[3:]
-//	} else {
-//		headerLines = lines
-//		bodyLines = nil
-//	}
-//	// Render header and body
-//	tableHeaderContent := styles.H2OneContentBoxCenterStyle().Render(strings.Join(headerLines, "\n"))
-//	bodyContent := strings.Join(bodyLines, "\n")
-//
-//	headers := lipgloss.JoinVertical(lipgloss.Left, ospfRoutesHeader, tableHeaderContent)
-//
-//	// Configure viewport
-//	contentMaxHeight := m.windowSize.Height -
-//		styles.TabRowHeight -
-//		styles.FooterHeight -
-//		styles.HeightH1 -
-//		3 - 2 // -3 (table Header) -2 (box border bottom style)
-//	m.viewport.Width = styles.WidthBasis
-//	m.viewport.Height = contentMaxHeight
-//
-//	// Set only the body into the viewport
-//	m.viewport.SetContent(
-//		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
-//	)
-//
-//	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
-//
-//	// Render complete view
-//	completeOSPFRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-//	return completeOSPFRoutesTab
-//}

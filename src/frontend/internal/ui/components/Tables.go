@@ -71,6 +71,36 @@ func NewAnomalyTable(headers []string, rows int) *ltable.Table {
 	return t
 }
 
+func NewRibMonitorTable(rows int) *ltable.Table {
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderTop(true).
+		BorderBottom(true).
+		BorderLeft(true).
+		BorderRight(true).
+		BorderHeader(true).
+		BorderColumn(true).
+		Headers(
+			"Prefix",
+			"Protocol",
+			"Next Hops",
+			"FIB",
+			"Installed",
+			"Distance",
+			"Metric",
+			"Uptime",
+		).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row == ltable.HeaderRow:
+				return styles.HeaderStyle
+			default:
+				return styles.NormalCellStyle
+			}
+		})
+	return t
+}
+
 func NewMultilineTable(headers []string, rows int) *ltable.Table {
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
