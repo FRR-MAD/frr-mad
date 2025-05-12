@@ -181,6 +181,15 @@ func GetOspfRouterDataSelf() (*frrProto.OSPFRouterData, error) {
 	return response.Data.GetOspfRouterData(), nil
 }
 
+func GetOSPF() (*frrProto.GeneralOspfInformation, error) {
+	response, err := SendMessage("ospf", "generalInfo", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetGeneralOspfInformation(), nil
+}
+
 func GetOspfP2PInterfaceMapping() (*frrProto.PeerInterfaceMap, error) {
 	response, err := SendMessage("ospf", "peerMap", nil)
 	if err != nil {

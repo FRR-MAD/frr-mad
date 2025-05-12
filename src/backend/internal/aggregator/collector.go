@@ -44,6 +44,7 @@ func initFullFrrData() *frrProto.FullFRRData {
 
 	fullFrrData := &frrProto.FullFRRData{
 		OspfDatabase:           &frrProto.OSPFDatabase{},
+		GeneralOspfInformation: &frrProto.GeneralOspfInformation{},
 		OspfRouterData:         &frrProto.OSPFRouterData{},
 		OspfNetworkData:        &frrProto.OSPFNetworkData{},
 		OspfSummaryData:        &frrProto.OSPFSummaryData{},
@@ -141,6 +142,10 @@ func (c *Collector) Collect() error {
 	// Fetch each type of data using the generic function
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
 		return fetchStaticFRRConfig()
+	})
+
+	fetchAndMerge("GeneralOSPFInformation", c.FullFrrData.GeneralOspfInformation, func() (proto.Message, error) {
+		return FetchGeneralOSPFInformation(executor)
 	})
 
 	fetchAndMerge("OSPFRouterData", c.FullFrrData.OspfRouterData, func() (proto.Message, error) {

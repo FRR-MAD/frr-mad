@@ -61,6 +61,8 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 	switch command {
 	case "database":
 		return s.getOspfDatabase()
+	case "generalInfo":
+		return s.getGeneralOspfInformation()
 	case "router":
 		return s.getOspfRouterData()
 	case "network":

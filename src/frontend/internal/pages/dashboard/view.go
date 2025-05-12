@@ -5,6 +5,7 @@ import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
 	"strings"
+	"time"
 
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
@@ -51,7 +52,7 @@ func (m *Model) renderOSPFDashboard() string {
 		ospfDashboardAnomalies := getOspfDashboardAnomalies()
 		m.viewport.SetContent(ospfDashboardAnomalies)
 	} else {
-		dashboardHeader := styles.H1TitleStyle().
+		dashboardHeader := styles.H1GoodTitleStyle().
 			Width(styles.WidthTwoH1ThreeFourth).
 			BorderBottom(true).
 			Padding(0).
@@ -61,6 +62,19 @@ func (m *Model) renderOSPFDashboard() string {
 		m.viewport.SetContent(ospfDashboardLsdbSelf)
 	}
 
+	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(), getOSPFGeneralInfoBox())
+
+	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewport.View())
+
+	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
+		leftSideDashboard,
+		rightSideDashboard,
+	)
+
+	return horizontalDashboard
+}
+
+func getSystemResourcesBox() string {
 	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources()
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
@@ -73,35 +87,55 @@ func (m *Model) renderOSPFDashboard() string {
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
 	}
 
-	cpuStatistics := lipgloss.JoinVertical(lipgloss.Left,
+	systemStatistics := lipgloss.JoinVertical(lipgloss.Left,
 		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("CPU Metrics"),
 		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
 			"CPU Usage: "+cpuUsageString+"\n"+
-				"Cores: "+cpuAmountString),
-		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2OneFourth).Render(""),
-	)
-
-	memoryStatistics := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Memory Metrics"),
-		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
-			"Memory Usage: "+memoryString),
-		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2OneFourth).Render(""),
+				"Cores: "+cpuAmountString+"\n"+
+				"Memory Usage: "+memoryString)+"\n",
 	)
 
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
 		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resources"),
-		cpuStatistics,
-		memoryStatistics,
+		systemStatistics,
+	)
+	return systemResources
+}
+
+func getOSPFGeneralInfoBox() string {
+	ospfInformation, err := backend.GetOSPF()
+	if err != nil {
+		common.PrintBackendError(err, "GetOSPF")
+	}
+
+	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
+	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
+
+	ospfRouterInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
+		"OSPF Router ID: " + ospfInformation.RouterId + "\n" +
+			"Last SPF Execution: " + lastSPFExecution.String() + "\n" +
+			"Total External LSAs: " + strconv.Itoa(int(ospfInformation.LsaExternalCounter)) + "\n" +
+			"Attached Areas: " + strconv.Itoa(int(ospfInformation.AttachedAreaCounter)) + "\n")
+
+	var ospfAreaInformation []string
+	for areaID, areaData := range ospfInformation.Areas {
+		ospfAreaInformation = append(ospfAreaInformation,
+			styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Area "+areaID))
+		ospfAreaInformation = append(ospfAreaInformation,
+			styles.H2TwoContentBoxesStyle().Width(styles.WidthTwoH2OneFourthBox).Render(
+				"Full Adjencencies: "+strconv.Itoa(int(areaData.NbrFullAdjacentCounter))+"\n"+
+					"Total LSAs: "+strconv.Itoa(int(areaData.LsaNumber))+"\n"))
+	}
+
+	renderedOSPFAreaInformation := lipgloss.JoinVertical(lipgloss.Left, ospfAreaInformation...)
+
+	ospfInformationBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("General OSPF Information"),
+		ospfRouterInfo,
+		renderedOSPFAreaInformation,
 	)
 
-	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewport.View())
-
-	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
-		leftSideDashboard,
-		systemResources,
-	)
-
-	return horizontalDashboard
+	return ospfInformationBox
 }
 
 func getOspfDashboardLsdbSelf() string {

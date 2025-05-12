@@ -44,6 +44,20 @@ func (s *Socket) getOspfDatabase() *frrProto.Response {
 	}
 }
 
+func (s *Socket) getGeneralOspfInformation() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_GeneralOspfInformation{
+			GeneralOspfInformation: s.metrics.GetGeneralOspfInformation(),
+		},
+	}
+
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "Returning OSPF database",
+		Data:    value,
+	}
+}
+
 func (s *Socket) getOspfRouterData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfRouterData{
