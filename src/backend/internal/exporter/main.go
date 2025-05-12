@@ -120,11 +120,44 @@ func (e *Exporter) runExportLoop() {
 }
 
 func (e *Exporter) exportData() {
-	e.anomalyExporter.Update()
+	err := tryUpdateWithRetry("AnomalyExporter", e.anomalyExporter.Update, e.logger)
+	if err != nil {
+		e.logger.Error(fmt.Sprintf("Final failure: Anomaly Exporter Update function: %v", err))
+	}
 
 	if e.metricExporter != nil {
-		e.metricExporter.Update()
+		err := tryUpdateWithRetry("MetricExporter", e.metricExporter.Update, e.logger)
+		if err != nil {
+			e.logger.Error(fmt.Sprintf("Final failure: Metric Exporter Update function: %v", err))
+		}
 	}
+}
+
+func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) error {
+	const retryDelay = 500 * time.Millisecond
+
+	try := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+		updateFunc()
+		return nil
+	}
+
+	// First try
+	if err := try(); err != nil {
+		logger.Warning(fmt.Sprintf("%s update failed, retrying in %s: %v", name, retryDelay, err))
+		time.Sleep(retryDelay)
+
+		// Retry
+		if retryErr := try(); retryErr != nil {
+			return retryErr
+		}
+	}
+
+	return nil
 }
 
 // Use reflection to iterate over struct fields

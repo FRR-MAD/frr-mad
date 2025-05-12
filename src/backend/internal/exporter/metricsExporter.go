@@ -37,7 +37,6 @@ func NewMetricExporter(
 	m.initializeExternalMetrics(flags)
 	m.initializeNSSAExternalMetrics(flags)
 	m.initializeDatabaseMetrics(flags)
-	m.initializeDuplicateMetrics(flags)
 	m.initializeNeighborMetrics(flags)
 	m.initializeInterfaceMetrics(flags)
 	m.initializeRouteMetrics(flags)
@@ -237,18 +236,15 @@ func (m *MetricExporter) Update() {
 	if m.enabledMetrics["database"] {
 		m.updateDatabaseMetrics()
 	}
-	//if m.enabledMetrics["duplicates"] {
-	//	m.updateDuplicateMetrics()
-	//}
 	if m.enabledMetrics["neighbors"] {
 		m.updateNeighborMetrics()
 	}
 	if m.enabledMetrics["interfaces"] {
 		m.updateInterfaceMetrics()
 	}
-	//if m.enabledMetrics["routes"] {
-	//	m.updateRouteMetrics()
-	//}
+	if m.enabledMetrics["routes"] {
+		m.updateRouteMetrics()
+	}
 }
 
 func (m *MetricExporter) updateRouterMetrics() {
@@ -267,6 +263,7 @@ func (m *MetricExporter) updateRouterMetrics() {
 func (m *MetricExporter) updateNetworkMetrics() {
 	if networkData := m.data.GetOspfNetworkData(); networkData != nil {
 		vec := m.metrics["ospf_network_attached_routers"].(*prometheus.GaugeVec)
+
 		vec.Reset()
 
 		for areaID, areaData := range networkData.NetStates {
@@ -342,17 +339,6 @@ func (m *MetricExporter) updateDatabaseMetrics() {
 	}
 }
 
-//func (m *MetricExporter) updateDuplicateMetrics() {
-//	if dupData := m.data.GetOspfDuplicates(); dupData != nil {
-//		vec := m.metrics["ospf_duplicate_lsas"].(*prometheus.GaugeVec)
-//		vec.Reset()
-//
-//		for _, lsa := range dupData.AsExternalLinkStates {
-//			vec.WithLabelValues(lsa.LinkStateId).Inc()
-//		}
-//	}
-//}
-
 func (m *MetricExporter) updateNeighborMetrics() {
 	if neighborData := m.data.GetOspfNeighbors(); neighborData != nil {
 		stateVec := m.metrics["ospf_neighbor_state"].(*prometheus.GaugeVec)
@@ -401,17 +387,17 @@ func (m *MetricExporter) updateInterfaceMetrics() {
 	}
 }
 
-//func (m *MetricExporter) updateRouteMetrics() {
-//if routeData := m.data.GetRoutes(); routeData != nil {
-//vec := m.metrics["route_metric"].(*prometheus.GaugeVec)
-//vec.Reset()
+func (m *MetricExporter) updateRouteMetrics() {
+	if routeData := m.data.GetRoutingInformationBase(); routeData != nil {
+		vec := m.metrics["route_metric"].(*prometheus.GaugeVec)
+		vec.Reset()
 
-//for vrf, routeEntry := range routeData.Routes {
-//for _, route := range routeEntry.Routes {
-//if route.Installed {
-//vec.WithLabelValues(route.Prefix, route.Protocol, vrf).Set(float64(route.Metric))
-//}
-//}
-//}
-//}
-//}
+		for vrf, routeEntry := range routeData.Routes {
+			for _, route := range routeEntry.Routes {
+				if route.Installed && route.Protocol == "ospf" {
+					vec.WithLabelValues(route.Prefix, route.Protocol, vrf).Set(float64(route.Metric))
+				}
+			}
+		}
+	}
+}

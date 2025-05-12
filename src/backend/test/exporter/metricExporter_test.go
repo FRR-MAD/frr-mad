@@ -27,7 +27,6 @@ func TestMetricExporter_WithData(t *testing.T) {
 		"OSPFExternalData":     {Enabled: true},
 		"OSPFNssaExternalData": {Enabled: true},
 		"OSPFDatabase":         {Enabled: true},
-		"OSPFDuplicates":       {Enabled: true},
 		"OSPFNeighbors":        {Enabled: true},
 		"InterfaceList":        {Enabled: true},
 		"RouteList":            {Enabled: true},
@@ -132,17 +131,16 @@ func TestMetricExporter_WithData(t *testing.T) {
 				},
 			},
 		},
-		// TODO: What to do?
-		// Routes: &frrProto.RouteList{
-		// 	Routes: map[string]*frrProto.RouteEntry{
-		// 		"default": {
-		// 			Routes: []*frrProto.Route{
-		// 				{Prefix: "10.0.0.0/24", Protocol: "ospf", Metric: 100, Installed: true},
-		// 				{Prefix: "192.168.1.0/24", Protocol: "bgp", Metric: 200, Installed: true},
-		// 			},
-		// 		},
-		// 	},
-		// },
+		RoutingInformationBase: &frrProto.RoutingInformationBase{
+			Routes: map[string]*frrProto.RouteEntry{
+				"default": {
+					Routes: []*frrProto.Route{
+						{Prefix: "10.0.0.0/24", Protocol: "ospf", Metric: 100, Installed: true},
+						{Prefix: "192.168.1.0/24", Protocol: "bgp", Metric: 200, Installed: true},
+					},
+				},
+			},
+		},
 	}
 
 	// Create frrMadExporter
@@ -289,17 +287,11 @@ func TestMetricExporter_WithData(t *testing.T) {
 	}))
 
 	// Route metrics
-	// TODO: What to do?
-	// assert.Equal(t, 100.0, getMetricValue("frr_route_metric", map[string]string{
-	// 	"prefix":   "10.0.0.0/24",
-	// 	"protocol": "ospf",
-	// 	"vrf":      "default",
-	// }))
-	// assert.Equal(t, 200.0, getMetricValue("frr_route_metric", map[string]string{
-	// 	"prefix":   "192.168.1.0/24",
-	// 	"protocol": "bgp",
-	// 	"vrf":      "default",
-	// }))
+	assert.Equal(t, 100.0, getMetricValue("frr_route_metric", map[string]string{
+		"prefix":   "10.0.0.0/24",
+		"protocol": "ospf",
+		"vrf":      "default",
+	}))
 }
 
 func TestMetricExporter_WithPartialData(t *testing.T) {
@@ -317,7 +309,6 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 		"OSPFExternalData":     {Enabled: true},
 		"OSPFNssaExternalData": {Enabled: false},
 		"OSPFDatabase":         {Enabled: false},
-		"OSPFDuplicates":       {Enabled: true},
 		"OSPFNeighbors":        {Enabled: false},
 		"InterfaceList":        {Enabled: false},
 		"RouteList":            {Enabled: false},
@@ -392,13 +383,6 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 			},
 			AsExternalCount: 4,
 		},
-		// TODO: What to do?
-		// OspfDuplicates: &frrProto.OSPFDuplicates{
-		// 	AsExternalLinkStates: []*frrProto.ASExternalLinkState{
-		// 		{LinkStateId: "6.6.6.6"},
-		// 		{LinkStateId: "6.6.6.6"}, // duplicate
-		// 	},
-		// },
 		OspfNeighbors: &frrProto.OSPFNeighbors{
 			Neighbors: map[string]*frrProto.NeighborList{
 				"eth0": {
@@ -416,16 +400,16 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 			},
 		},
 		// TODO: What to do?
-		// Routes: &frrProto.RouteList{
-		// 	Routes: map[string]*frrProto.RouteEntry{
-		// 		"default": {
-		// 			Routes: []*frrProto.Route{
-		// 				{Prefix: "10.0.0.0/24", Protocol: "ospf", Metric: 100, Installed: true},
-		// 				{Prefix: "192.168.1.0/24", Protocol: "bgp", Metric: 200, Installed: true},
-		// 			},
-		// 		},
-		// 	},
-		// },
+		RoutingInformationBase: &frrProto.RoutingInformationBase{
+			Routes: map[string]*frrProto.RouteEntry{
+				"default": {
+					Routes: []*frrProto.Route{
+						{Prefix: "10.0.0.0/24", Protocol: "ospf", Metric: 100, Installed: true},
+						{Prefix: "192.168.1.0/24", Protocol: "bgp", Metric: 200, Installed: true},
+					},
+				},
+			},
+		},
 	}
 
 	// ── Exercise the exporter ────────────────────────────────────────────────────
@@ -484,10 +468,6 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 	assert.Equal(t, 30.0, getValue("frr_ospf_external_metric", map[string]string{
 		"link_state_id": "4.4.4.4", "metric_type": "E2",
 	}))
-	// TODO: What to do?
-	// assert.Equal(t, 2.0, getValue("frr_ospf_duplicate_lsa_count", map[string]string{
-	// 	"link_state_id": "6.6.6.6",
-	// }))
 
 	// And every other metric (summary, ASBR, NSSA, DB, neighbors, interfaces, routes)
 	// should NOT be registered:
@@ -523,7 +503,6 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 		"OSPFExternalData":     {Enabled: false},
 		"OSPFNssaExternalData": {Enabled: false},
 		"OSPFDatabase":         {Enabled: false},
-		"OSPFDuplicates":       {Enabled: false},
 		"OSPFNeighbors":        {Enabled: false},
 		"InterfaceList":        {Enabled: false},
 		"RouteList":            {Enabled: false},
@@ -560,7 +539,6 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 		"frr_ospf_external_metric",
 		"frr_ospf_nssa_external_metric",
 		"frr_ospf_database_lsa_count",
-		"frr_ospf_duplicate_lsa_count",
 		"frr_ospf_neighbor_state",
 		"frr_ospf_neighbor_uptime_seconds",
 		"frr_interface_operational_status",
@@ -594,7 +572,6 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 		"OSPFExternalData":     {Enabled: true},
 		"OSPFNssaExternalData": {Enabled: true},
 		"OSPFDatabase":         {Enabled: true},
-		"OSPFDuplicates":       {Enabled: true},
 		"OSPFNeighbors":        {Enabled: true},
 		"InterfaceList":        {Enabled: true},
 		"RouteList":            {Enabled: true},
@@ -718,31 +695,6 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 			removeLabels: map[string]string{"link_state_id": "e2", "metric_type": "E2"},
 			updatedValue: 5.0,
 		},
-		// TODO: What to do? Anyway, FullFRRData is the wrong place for analyzed data. FullFRRData consits of parsed LSDB and zebra information, while OSPFDuplicates is analyzed data.
-		// {
-		// 	name: "DuplicateMetrics",
-		// 	initData: func() *frrProto.FullFRRData {
-		// 		return &frrProto.FullFRRData{
-		// 			OspfDuplicates: &frrProto.OSPFDuplicates{
-		// 				AsExternalLinkStates: []*frrProto.ASExternalLinkState{
-		// 					{LinkStateId: "D"},
-		// 					{LinkStateId: "D"},
-		// 					{LinkStateId: "E"},
-		// 				},
-		// 			},
-		// 		}
-		// 	},
-		// 	mutateData: func(d *frrProto.FullFRRData) {
-		// 		d.OspfDuplicates.AsExternalLinkStates = []*frrProto.ASExternalLinkState{
-		// 			{LinkStateId: "D"},
-		// 		}
-		// 	},
-		// 	metricName:   "frr_ospf_duplicate_lsa_count",
-		// 	keepLabels:   map[string]string{"link_state_id": "D"},
-		// 	keepValue:    2.0,
-		// 	removeLabels: map[string]string{"link_state_id": "E"},
-		// 	updatedValue: 1.0,
-		// },
 		{
 			name: "InterfaceMetrics",
 			initData: func() *frrProto.FullFRRData {
@@ -766,38 +718,33 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 			removeLabels: map[string]string{"interface": "ifB", "vrf": "vrf"},
 			updatedValue: 0.0,
 		},
-		// TODO: What is RouteList? Something simply parsed or is there logic already?
-		/*
-			- If there is logic, FullFRRData is the wrong please
-			- If it is simply parsed from FRR output to go struct, it's correct here
-		*/
-		// {
-		// 	name: "RouteMetrics",
-		// 	initData: func() *frrProto.FullFRRData {
-		// 		return &frrProto.FullFRRData{
-		// 			Routes: &frrProto.RouteList{
-		// 				Routes: map[string]*frrProto.RouteEntry{
-		// 					"vrf": {
-		// 						Routes: []*frrProto.Route{
-		// 							{Prefix: "p1", Protocol: "ospf", Metric: 10, Installed: true},
-		// 							{Prefix: "p2", Protocol: "bgp", Metric: 20, Installed: true},
-		// 						},
-		// 					},
-		// 				},
-		// 			},
-		// 		}
-		// 	},
-		// 	mutateData: func(d *frrProto.FullFRRData) {
-		// 		d.Routes.Routes["vrf"].Routes = []*frrProto.Route{
-		// 			{Prefix: "p1", Protocol: "ospf", Metric: 15, Installed: true},
-		// 		}
-		// 	},
-		// 	metricName:   "frr_route_metric",
-		// 	keepLabels:   map[string]string{"prefix": "p1", "protocol": "ospf", "vrf": "vrf"},
-		// 	keepValue:    10.0,
-		// 	removeLabels: map[string]string{"prefix": "p2", "protocol": "bgp", "vrf": "vrf"},
-		// 	updatedValue: 15.0,
-		// },
+		{
+			name: "RouteMetrics",
+			initData: func() *frrProto.FullFRRData {
+				return &frrProto.FullFRRData{
+					RoutingInformationBase: &frrProto.RoutingInformationBase{
+						Routes: map[string]*frrProto.RouteEntry{
+							"vrf": {
+								Routes: []*frrProto.Route{
+									{Prefix: "p1", Protocol: "ospf", Metric: 10, Installed: true},
+									{Prefix: "p2", Protocol: "bgp", Metric: 20, Installed: true},
+								},
+							},
+						},
+					},
+				}
+			},
+			mutateData: func(d *frrProto.FullFRRData) {
+				d.RoutingInformationBase.Routes["vrf"].Routes = []*frrProto.Route{
+					{Prefix: "p1", Protocol: "ospf", Metric: 15, Installed: true},
+				}
+			},
+			metricName:   "frr_route_metric",
+			keepLabels:   map[string]string{"prefix": "p1", "protocol": "ospf", "vrf": "vrf"},
+			keepValue:    10.0,
+			removeLabels: nil,
+			updatedValue: 15.0,
+		},
 	}
 
 	for _, tc := range tests {
