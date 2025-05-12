@@ -140,19 +140,6 @@ func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag)
 	}
 }
 
-func (m *MetricExporter) initializeDuplicateMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFDuplicates"]; ok && flag.Enabled {
-		m.enabledMetrics["duplicates"] = true
-		m.metrics["ospf_duplicate_lsas"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_duplicate_lsa_count",
-				Help: "Count of duplicate OSPF LSAs",
-			},
-			[]string{"link_state_id"},
-		)
-	}
-}
-
 func (m *MetricExporter) initializeNeighborMetrics(flags map[string]*ParsedFlag) {
 	if flag, ok := flags["OSPFNeighbors"]; ok && flag.Enabled {
 		m.enabledMetrics["neighbors"] = true

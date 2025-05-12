@@ -39,14 +39,15 @@ type AggregatorConfig struct {
 type ExporterConfig struct {
 	Port                 int    `mapstructure:"Port"`
 	OSPFRouterData       string `mapstructure:"OSPFRouterData"`
+	OSPFNetworkData      string `mapstructure:"OSPFNetworkData"`
+	OSPFSummaryData      string `mapstructure:"OSPFSummaryData"`
 	OSPFAsbrSummaryData  string `mapstructure:"OSPFAsbrSummaryData"`
 	OSPFExternalData     string `mapstructure:"OSPFExternalData"`
 	OSPFNssaExternalData string `mapstructure:"OSPFNssaExternalData"`
 	OSPFDatabase         string `mapstructure:"OSPFDatabase"`
-	OSPFDuplicates       string `mapstructure:"OSPFDuplicates"`
 	OSPFNeighbors        string `mapstructure:"OSPFNeighbors"`
-	InterfaceList        string `mapstructure:"OSPFInterfaceList"`
-	RouteList            string `mapstructure:"OSPFRouteList"`
+	InterfaceList        string `mapstructure:"InterfaceList"`
+	RouteList            string `mapstructure:"RouteList"`
 }
 
 type Config struct {
