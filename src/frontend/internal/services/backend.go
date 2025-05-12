@@ -154,13 +154,13 @@ func GetSystemResources() (int64, float64, float64, error) {
 	return cores, cpuUsage, memoryUsage, nil
 }
 
-func GetOSPF() (*frrProto.OSPFDatabase, error) {
+func GetOSPF() (*frrProto.GeneralOspfInformation, error) {
 	response, err := SendMessage("ospf", "generalInfo", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return response.Data.GetOspfDatabase(), nil
+	return response.Data.GetGeneralOspfInformation(), nil
 }
 
 func GetLSDB() (*frrProto.OSPFDatabase, error) {
