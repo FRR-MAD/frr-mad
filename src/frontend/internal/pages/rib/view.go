@@ -41,9 +41,12 @@ func (m *Model) renderRibTab() string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
 	}
+	ribFibSummary, err := backend.GetRibFibSummary()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRibFibSummary")
+	}
 
-	// TODO: call backend for correct amount (backend needs to be adjusted)
-	amountOfRIBRoutes := "30"
+	amountOfRIBRoutes := strconv.Itoa(int(ribFibSummary.RoutesTotal))
 
 	routes := make([]string, 0, len(rib.Routes))
 	for route := range rib.Routes {
@@ -143,9 +146,12 @@ func (m *Model) renderFibTab() string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
 	}
+	ribFibSummary, err := backend.GetRibFibSummary()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRibFibSummary")
+	}
 
-	// TODO: call backend for correct amount (backend needs to be adjusted)
-	amountOfFIBRoutes := "20"
+	amountOfFIBRoutes := strconv.Itoa(int(ribFibSummary.RoutesTotalFib))
 
 	routes := make([]string, 0, len(rib.Routes))
 	for route := range rib.Routes {
@@ -251,9 +257,23 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
 	}
+	ribFibSummary, err := backend.GetRibFibSummary()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRibFibSummary")
+	}
 
-	// TODO: call backend for correct amount (backend needs to be adjusted)
-	amountOfRoutes := "20"
+	var amountOfRibRoutes = "0"
+	for _, routeSummary := range ribFibSummary.RouteSummaries {
+		if routeSummary.Type == "ospf" && protocolName == "ospf" {
+			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
+		} else if routeSummary.Type == "bgp" && protocolName == "bgp" {
+			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
+		} else if routeSummary.Type == "connected" && protocolName == "connected" {
+			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
+		} else if routeSummary.Type == "static" && protocolName == "static" {
+			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
+		}
+	}
 
 	routes := make([]string, 0, len(rib.Routes))
 	for route := range rib.Routes {
@@ -309,7 +329,7 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	}
 
 	partialRoutesHeader := styles.H1TitleStyleForOne().
-		Render(fmt.Sprintf("Routing Information Base received " + amountOfRoutes + " Routes via " + strings.ToUpper(protocolName)))
+		Render(fmt.Sprintf("Routing Information Base received " + amountOfRibRoutes + " Routes via " + strings.ToUpper(protocolName)))
 
 	// Extract table header and body (top border, header row, bottom border)
 	tableStr := partialRIBRoutesTable.String()
