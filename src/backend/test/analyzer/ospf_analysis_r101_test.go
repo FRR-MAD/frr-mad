@@ -467,12 +467,19 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 
 	// Get predicted and runtime NSSA-external LSDBs
 	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
-	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// Run the analysis
-	ana.ExternalAnomalyAnalysisLSDB(predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
 
-	fmt.Println(ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
+	fmt.Println("---------------------- Predicted ----------------------")
+	fmt.Println(predictedNssaExternalLSDB)
+	fmt.Println("---------------------- Predicted ----------------------")
+
+	fmt.Println("---------------------- Runtime ----------------------")
+	fmt.Println(runtimeNssaExternalLSDB)
+	fmt.Println("---------------------- Runtime ----------------------")
 
 	t.Run("TestNssaExternalNormalCase", func(t *testing.T) {
 		// In normal case, there should be no anomalies
@@ -495,7 +502,8 @@ func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
 
 	// Get predicted and runtime NSSA-external LSDBs
 	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
-	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// fmt.Println("---------------------- Predicted ----------------------")
 	// fmt.Println(predictedNssaExternalLSDB)
@@ -506,23 +514,11 @@ func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
 	// fmt.Println("---------------------- Runtime ----------------------")
 
 	// Run the analysis
-	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB)
+	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
 
 	t.Run("TestNssaExternalMissingRoutes", func(t *testing.T) {
 		// Should detect missing routes that should be advertised
 		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
 		assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 	})
-
-	// t.Run("TestNssaExternalExtraRoutes", func(t *testing.T) {
-	// 	// Should detect extra routes that shouldn't be advertised
-	// 	assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
-	// 	assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
-	// })
-
-	// t.Run("TestNssaExternalDuplicates", func(t *testing.T) {
-	// 	// Should detect duplicate routes
-	// 	assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes)
-	// 	assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
-	// })
 }

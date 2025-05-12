@@ -220,14 +220,24 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, acce
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
+	// Find the NSSA area from OSPF configuration
+	var nssaAreaID string
+	for _, area := range config.OspfConfig.Area {
+		if area.Type == "nssa" {
+			nssaAreaID = area.Name
+			break
+		}
+	}
+
 	// Create a single AreaAnalyzer for all routes
 	area := &frrProto.AreaAnalyzer{
-		LsaType: "NSSA-LSA",
-		Links:   []*frrProto.Advertisement{},
+		AreaName: nssaAreaID, // Set the area name
+		LsaType:  "NSSA-LSA",
+		Links:    []*frrProto.Advertisement{},
 	}
 	result.Areas = append(result.Areas, area)
 
-	// Loop through static routes in the configuration
+	// Rest of the function remains the same...
 	for _, staticRoute := range config.StaticRoutes {
 		ipAddr := staticRoute.IpPrefix.IpAddress
 		prefixLen := staticRoute.IpPrefix.PrefixLength
@@ -235,7 +245,6 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, acce
 		if _, exists := staticRouteMap[ipAddr]; exists {
 			isAllowed := false
 
-			// TODO: does this really cover all scenarios?
 			if len(accessList) == 0 {
 				isAllowed = true
 			} else {

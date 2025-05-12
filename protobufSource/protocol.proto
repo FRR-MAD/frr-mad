@@ -598,6 +598,7 @@ message Advertisement {
   string LinkStateId = 2;
   string PrefixLength = 3;
   string LinkType = 4;
+  bool PBit = 5;
 }
 
 
