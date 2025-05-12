@@ -37,9 +37,12 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderOSPFDashboard() string {
-	// Update the viewport
-	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
-	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - styles.HeightH1
+	// Update the viewportLeft
+	m.viewportLeft.Width = styles.ViewPortWidthThreeFourth
+	m.viewportLeft.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+
+	m.viewportRight.Width = styles.ViewPortWidthOneFourth
+	m.viewportRight.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -50,7 +53,7 @@ func (m *Model) renderOSPFDashboard() string {
 			Render("Anomalies Detected!")
 		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := getOspfDashboardAnomalies()
-		m.viewport.SetContent(ospfDashboardAnomalies)
+		m.viewportLeft.SetContent(ospfDashboardAnomalies)
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
 			Width(styles.WidthTwoH1ThreeFourth).
@@ -59,12 +62,16 @@ func (m *Model) renderOSPFDashboard() string {
 			Render("All OSPF Routes are advertised as Expected")
 		statusHeader = dashboardHeader
 		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf()
-		m.viewport.SetContent(ospfDashboardLsdbSelf)
+		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
 	}
 
-	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(), getOSPFGeneralInfoBox())
+	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(), getOSPFGeneralInfoBox())
+	m.viewportRight.SetContent(rightSideDashboardContent)
 
-	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewport.View())
+	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
+
+	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewportLeft.View())
 
 	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
 		leftSideDashboard,
@@ -95,11 +102,7 @@ func getSystemResourcesBox() string {
 				"Memory Usage: "+memoryString)+"\n",
 	)
 
-	systemResources := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resources"),
-		systemStatistics,
-	)
-	return systemResources
+	return systemStatistics
 }
 
 func getOSPFGeneralInfoBox() string {
@@ -117,14 +120,27 @@ func getOSPFGeneralInfoBox() string {
 			"Total External LSAs: " + strconv.Itoa(int(ospfInformation.LsaExternalCounter)) + "\n" +
 			"Attached Areas: " + strconv.Itoa(int(ospfInformation.AttachedAreaCounter)) + "\n")
 
+	ospfAreas := make([]string, 0, len(ospfInformation.Areas))
+	for area := range ospfInformation.Areas {
+		ospfAreas = append(ospfAreas, area)
+	}
+	sort.Strings(ospfAreas)
+
 	var ospfAreaInformation []string
-	for areaID, areaData := range ospfInformation.Areas {
+	for _, areaID := range ospfAreas {
+		areaData := ospfInformation.Areas[areaID]
+
 		ospfAreaInformation = append(ospfAreaInformation,
 			styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Area "+areaID))
 		ospfAreaInformation = append(ospfAreaInformation,
 			styles.H2TwoContentBoxesStyle().Width(styles.WidthTwoH2OneFourthBox).Render(
 				"Full Adjencencies: "+strconv.Itoa(int(areaData.NbrFullAdjacentCounter))+"\n"+
-					"Total LSAs: "+strconv.Itoa(int(areaData.LsaNumber))+"\n"))
+					"Total LSAs: "+strconv.Itoa(int(areaData.LsaNumber))+"\n"+
+					"Router LSAs: "+strconv.Itoa(int(areaData.LsaRouterNumber))+"\n"+
+					"Network LSAs: "+strconv.Itoa(int(areaData.LsaNetworkNumber))+"\n"+
+					"Summary LSAs: "+strconv.Itoa(int(areaData.LsaSummaryNumber))+"\n"+
+					"ASBR Summary LSAs: "+strconv.Itoa(int(areaData.LsaAsbrNumber))+"\n"+
+					"NSSA External LSAs: "+strconv.Itoa(int(areaData.LsaNssaNumber))))
 	}
 
 	renderedOSPFAreaInformation := lipgloss.JoinVertical(lipgloss.Left, ospfAreaInformation...)

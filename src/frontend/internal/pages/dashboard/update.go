@@ -16,8 +16,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ospfAnomalies = append(m.ospfAnomalies, "Reloading...")
 		case "up":
 			m.viewportLeft.LineUp(10)
+			m.viewportRight.LineUp(10)
 		case "down":
 			m.viewportLeft.LineDown(10)
+			m.viewportRight.LineDown(10)
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData()
