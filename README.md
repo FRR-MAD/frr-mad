@@ -11,22 +11,20 @@ This Project is split into two parts:
 
 ## Installation
 
-Installation if fairly easy. Clone the repo and build it.
+Installation is fairly easy. Clone the repo and build it. The executable is compiled with the static flag, so remove it if you have all the dependencies set on the host.
 
 ```sh
-cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o ../../binaries/analyzer_dev ./cmd/frr-analytics
-cd $(FRONTEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o /tmp/frr-tui ./cmd/tui
+mkdir -p /tmp/frr-mad-binaries/
+cd src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-analyzer ./cmd/frr-analytics
+cd ../../
+cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-tui ./cmd/tui
+cd ../../
 ```sh
-
-The default folders for this application are:
-- config location: /etc/frr-mad/
-- log location: /var/tmp/frr-mad
-- tmp files: /tmp/frr-mad
-- Unix socket location: /var/run/frr-mad
 
 Provided is a default configuration file. Creating it wills tart the application. 
 
 ```sh
+mkdir -p /etc/frr-mad
 cat <<EOF>/etc/frr-mad/frr-mad.yaml
 default:
   tempfiles: /tmp/frr-mad
@@ -66,7 +64,14 @@ exporter:
 EOF
 ```
 
+The default folders for this application are:
+- config location: /etc/frr-mad/
+- log location: /var/tmp/frr-mad
+- tmp files: /tmp/frr-mad
+- Unix socket location: /var/run/frr-mad
 
+
+That's all there is to the installation and setup.
 
 ## Project Structure
 
@@ -128,31 +133,9 @@ root/
 │   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
 ```
 
-## development Tools
+## Development
 
-### Linting and Code Quality
-
-- **golangci-lint**: Linter for go
-- **errcheck**: Ensures errors are correctly handled
-
-
-### Testing and Coverage
-
-- **go test**: Built-in testing framework
-
-### Dependency Managemetn
-
-- **go mod**: Standard Go module system
-
-### Development Workflow
-
-- **pre-commit hooks**: Run linters and tests before commits
-- **Makefile**: Standardize common development commands
-- **air**: Hot reloading during development
-
-### IDE Integration
-
-- **VS Code/codium** and **GoLand**: Both excellent Go development IDEs.
+TODO
 
 ### CI/CD
 

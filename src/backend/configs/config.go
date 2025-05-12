@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ConfigLocation = "/etc/frr-mad/frr-mad.yaml"
+var ConfigLocation = "/etc/frr-analytics/main.yaml"
 
 type DefaultConfig struct {
 	TempFiles  string `mapstructure:"tempfiles"`
