@@ -1481,6 +1481,7 @@ func getNssaRouterFRRdataHappy1() *frrProto.FullFRRData {
 						"192.168.1.0": {
 							LinkStateId: "192.168.1.0",
 							NetworkMask: 24,
+							Options:     "*|-|-|-|N/P|-|E|-",
 						},
 					},
 				},
@@ -1583,6 +1584,13 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 					},
 					NextHop: "192.168.100.100",
 				},
+				{
+					IpPrefix: &frrProto.IPPrefix{
+						IpAddress:    "172.16.1.0",
+						PrefixLength: 24,
+					},
+					NextHop: "192.168.100.101",
+				},
 			},
 			RouteMap: map[string]*frrProto.RouteMap{
 				"nssa-routes": {
@@ -1605,6 +1613,16 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 								},
 							},
 						},
+						{
+							Sequence:      20,
+							AccessControl: "permit",
+							Destination: &frrProto.AccessListItem_IpPrefix{
+								IpPrefix: &frrProto.IPPrefix{
+									IpAddress:    "172.16.1.0",
+									PrefixLength: 24,
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1617,6 +1635,12 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 						"192.168.1.0": {
 							LinkStateId: "192.168.1.0",
 							NetworkMask: 24,
+							Options:     "*|-|-|-|N/P|-|E|-",
+						},
+						"10.99.99.0": {
+							LinkStateId: "10.99.99.0",
+							NetworkMask: 24,
+							Options:     "*|-|-|-|N/P|-|E|-",
 						},
 					},
 				},
