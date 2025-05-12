@@ -745,6 +745,43 @@ func ParseRib(jsonData []byte) (*frrProto.RoutingInformationBase, error) {
 	return result, nil
 }
 
+func ParseRibFibSummary(jsonData []byte) (*frrProto.RibFibSummaryRoutes, error) {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(jsonData, &raw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal summary JSON: %w", err)
+	}
+
+	result := &frrProto.RibFibSummaryRoutes{
+		RouteSummaries: make([]*frrProto.RouteSummary, 0),
+	}
+
+	// Extract route summaries
+	if routes, ok := raw["routes"].([]interface{}); ok {
+		for _, r := range routes {
+			routeMap, ok := r.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			summary := &frrProto.RouteSummary{
+				Fib:          int32(getFloat(routeMap, "fib")),
+				Rib:          int32(getFloat(routeMap, "rib")),
+				FibOffLoaded: int32(getFloat(routeMap, "fibOffLoaded")),
+				FibTrapped:   int32(getFloat(routeMap, "fibTrapped")),
+				Type:         getString(routeMap, "type"),
+			}
+
+			result.RouteSummaries = append(result.RouteSummaries, summary)
+		}
+	}
+
+	// Extract totals
+	result.RoutesTotal = int32(getFloat(raw, "routesTotal"))
+	result.RoutesTotalFib = int32(getFloat(raw, "routesTotalFib"))
+
+	return result, nil
+}
+
 func ParseStaticFRRConfig(path string) (*frrProto.StaticFRRConfiguration, error) {
 	file, err := os.Open(path)
 	if err != nil {

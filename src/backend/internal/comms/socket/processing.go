@@ -49,6 +49,8 @@ func (s *Socket) frrProcessing(command string) *frrProto.Response {
 		return s.getRouterName()
 	case "rib":
 		return s.getRoutingInformationBase()
+	case "ribfibSummary":
+		return s.getRibFibSummary()
 	default:
 		response.Status = "error"
 		response.Message = "There was an error"
@@ -81,7 +83,7 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 		return s.getOspfNeighbors()
 	case "interfaces":
 		return s.getInterfaces()
-	case "staticConfig":
+	case "staticConfig": // TODO: should be added to case frr, because not only ospf data is contained
 		return s.getStaticFrrConfiguration()
 	case "peerMap":
 		return s.getp2pMap()

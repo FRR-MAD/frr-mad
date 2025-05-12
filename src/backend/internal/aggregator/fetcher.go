@@ -169,6 +169,14 @@ func FetchRib(executor *frrSocket.FRRCommandExecutor) (*frrProto.RoutingInformat
 	return ParseRib(output)
 }
 
+func FetchRibFibSummary(executor *frrSocket.FRRCommandExecutor) (*frrProto.RibFibSummaryRoutes, error) {
+	output, err := executor.ExecZebraCmd("show ip route summary json")
+	if err != nil {
+		return nil, err
+	}
+	return ParseRibFibSummary(output)
+}
+
 func (f *Fetcher) CollectSystemMetrics() (*frrProto.SystemMetrics, error) {
 	metrics := &frrProto.SystemMetrics{}
 

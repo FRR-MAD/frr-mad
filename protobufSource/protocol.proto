@@ -56,9 +56,10 @@ message ResponseValue {
     OSPFNeighbors ospf_neighbors = 15;
     InterfaceList interfaces = 16;
     RoutingInformationBase routing_information_base = 17;
-    StaticFRRConfiguration static_frr_configuration = 18;
-    SystemMetrics system_metrics = 19;
-    FRRRouterData frr_router_data = 20;
+    RibFibSummaryRoutes rib_fib_summary_routes = 18;
+    StaticFRRConfiguration static_frr_configuration = 19;
+    SystemMetrics system_metrics = 20;
+    FRRRouterData frr_router_data = 21;
   }
 }
 
@@ -103,9 +104,10 @@ message FullFRRData {
   OSPFNeighbors ospf_neighbors = 11;
   InterfaceList interfaces = 12;
   RoutingInformationBase routing_information_base = 13;
-  StaticFRRConfiguration static_frr_configuration = 14;
-  SystemMetrics system_metrics = 15;
-  FRRRouterData frr_router_data = 16;
+  RibFibSummaryRoutes rib_fib_summary_routes = 14;
+  StaticFRRConfiguration static_frr_configuration = 15;
+  SystemMetrics system_metrics = 16;
+  FRRRouterData frr_router_data = 17;
 }
 
 
@@ -594,7 +596,7 @@ message EvpnMh {
   int32 leave_count = 19;
 }
 
-// ================ Routes ================
+// ================ Aggregator Routes ================
 message RoutingInformationBase {
   map<string, RouteEntry> routes = 1;
 }
@@ -636,6 +638,22 @@ message Nexthop {
   string interface_name = 8;
   bool active = 9;
   int32 weight = 10;
+}
+
+// ================ Routes ================
+
+message RibFibSummaryRoutes {
+  repeated RouteSummary route_summaries = 1;
+  int32 routes_total = 2;
+  int32 routes_total_fib = 3;
+}
+
+message RouteSummary {
+  int32 fib = 1;
+  int32 rib = 2;
+  int32 fib_off_loaded = 3;
+  int32 fib_trapped = 4;
+  string type = 5;
 }
 
 // ================ Analyzer payload Messages ================

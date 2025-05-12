@@ -163,6 +163,15 @@ func GetRIB() (*frrProto.RoutingInformationBase, error) {
 	return response.Data.GetRoutingInformationBase(), nil
 }
 
+func GetRibFibSummary() (*frrProto.RibFibSummaryRoutes, error) {
+	response, err := SendMessage("frr", "ribfibSummary", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetRibFibSummaryRoutes(), nil
+}
+
 func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	response, err := SendMessage("ospf", "database", nil)
 	if err != nil {
