@@ -274,11 +274,7 @@ func getCPUUsagePercent(interval time.Duration, cores int) (float64, error) {
 	}
 
 	busy := (totalDelta - idleDelta) / totalDelta * 100.0
-	// Normalize by number of cores
 	normalizedBusy := busy / float64(cores)
-
-	fmt.Println(busy)
-	fmt.Println(normalizedBusy)
 
 	return normalizedBusy, nil
 }

@@ -150,7 +150,6 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 	result := map[string]*frrProto.StaticList{}
 
 	for _, route := range config.StaticRoutes {
-		//fmt.Println(route)
 		result[route.IpPrefix.GetIpAddress()] = &frrProto.StaticList{
 			IpAddress:    route.IpPrefix.GetIpAddress(),
 			PrefixLength: int32(route.IpPrefix.GetPrefixLength()),
