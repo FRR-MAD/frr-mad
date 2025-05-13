@@ -6,8 +6,8 @@ It effectively detects anomalies by comparing static file data with the Link-Sta
 ## Usage
 
 This Project is split into two parts:
-- **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
 - **frr-analyzer**: The analysis system that consits of aggregation, analysis and information exporting. It spawns a socket, which the frr-tui unit uses to fetch all necessary data. The exporter collects routing data and exports them via the well-defined Prometheus Node Exporter uri. 
+- **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
 
 ### frr-analyzer
 Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
