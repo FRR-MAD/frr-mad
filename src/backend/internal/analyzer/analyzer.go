@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"google.golang.org/protobuf/proto"
 )
 
 type RedistributedRoute struct {
@@ -13,8 +14,6 @@ type RedistributedRoute struct {
 	PrefixLength int    `json:"prefix_length,omitempty"`
 	NextHop      string `json:"next_hop,omitempty"`
 	RouteMapName string `json:"route_map_name,omitempty"`
-	Metric       string `json:"metric,omitempty"`
-	MetricType   string `json:"metric_type,omitempty"`
 }
 
 type RedistributionList struct {
@@ -31,40 +30,40 @@ type OspfRedistribution struct {
 func (c *Analyzer) AnomalyAnalysis() {
 
 	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
-
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
+	peerInterfaceMap := GetPeerNetworkAddress(c.metrics.StaticFrrConfiguration)
+	peerNeighborMap := GetPeerNeighbor(c.metrics.OspfNeighbors, peerInterfaceMap)
+	hostname := c.metrics.StaticFrrConfiguration.Hostname
 
-	// parse frr configuration file
 	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
-	// TODO: Parse RIB to get FIB
-	//ribMap := GetFIB(c.metrics.RoutingInformationBase)
+	fibMap := GetFIB(c.metrics.RoutingInformationBase)
+	receivedSummaryLSDB := GetRuntimeSummaryData(c.metrics.OspfSummaryDataAll, hostname)
+	receivedNetworkLSDB := GetRuntimeNetworkData(c.metrics.OspfNetworkDataAll, hostname)
+	receivedExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalAll, hostname)
+	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(c.metrics.OspfNssaExternalAll, hostname)
 
-	// TODO: testing and correction, mino
-	// TODO: use static route map and accessList, mino
-	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
+	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
-	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(c.metrics.OspfRouterData, hostname, peerNeighborMap)
 
-	isExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	isExternalLSDB := GetRuntimeExternalDataSelf(c.metrics.OspfExternalData, staticRouteMap, hostname)
 
-	// TODO: testing, mino
-	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
+	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname, c.Logger)
 
 	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
-
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	//}
 
-	// TODO: implement, mino
 	if isNssa {
-		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB)
+		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB, isExternalLSDB)
 	}
+	// TODO: implement ribMap -> fibMap analysis, if necessary?
+	c.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
-	//c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
-
+	//c.UpdateMetrics(p2pMap)
+	proto.Merge(c.P2pMap, &p2pMap)
 }
 
 func maskToPrefixLength(mask string) string {
@@ -89,8 +88,8 @@ func maskToPrefixLength(mask string) string {
 	return strconv.Itoa(ones)
 }
 
-func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]frrProto.AccessListAnalyzer {
-	result := make(map[string]frrProto.AccessListAnalyzer)
+func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]*frrProto.AccessListAnalyzer {
+	result := make(map[string]*frrProto.AccessListAnalyzer)
 
 	if config == nil || config.AccessList == nil {
 		return result
@@ -128,7 +127,7 @@ func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]frrProto.
 			entries = append(entries, &entry)
 		}
 
-		result[name] = frrProto.AccessListAnalyzer{
+		result[name] = &frrProto.AccessListAnalyzer{
 			AccessList: name,
 			AclEntry:   entries,
 		}
@@ -143,7 +142,7 @@ func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
 }
 
 // TODO: check with accesslist if it is redistributed in ospf
-func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
+func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
 	if len(config.StaticRoutes) == 0 {
 		return nil
 	}
@@ -160,4 +159,39 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 	}
 
 	return result
+}
+
+func GetPeerNetworkAddress(config *frrProto.StaticFRRConfiguration) map[string]string {
+	peerMap := make(map[string]string)
+
+	for _, iface := range config.Interfaces {
+		for _, i := range iface.InterfaceIpPrefixes {
+			if i.HasPeer {
+				peerMap[iface.Name] = i.IpPrefix.IpAddress
+			}
+		}
+	}
+
+	return peerMap
+}
+
+func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]string) map[string]string {
+	result := map[string]string{}
+
+	for key, neighbors := range config.Neighbors {
+		for _, neighbor := range neighbors.Neighbors {
+			iface := strings.Split(neighbor.IfaceName, ":")
+			if _, exists := peerInterface[iface[0]]; exists {
+				result[key] = iface[1]
+			}
+		}
+	}
+
+	return result
+}
+
+func (a *Analyzer) UpdateMetrics(p2pMap frrProto.PeerInterfaceMap) {
+
+	proto.Merge(a.P2pMap, &p2pMap)
+
 }

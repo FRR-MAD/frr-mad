@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/rib"
 	"log"
 	"os"
 
@@ -23,6 +24,7 @@ type AppState int
 const (
 	ViewDashboard AppState = iota
 	ViewOSPF
+	ViewRIB
 	// code for Presentation slides
 	//ViewOSPF2
 	//ViewOSPF3
@@ -40,9 +42,7 @@ type AppModel struct {
 	windowSize    *common.WindowSize
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
-	// code for Presentation slides
-	//ospf2         *ospfMonitoring.Model
-	//ospf3         *ospfMonitoring.Model
+	rib           *rib.Model
 	shell         *shell.Model
 	footer        *components.Footer
 	footerOptions []common.FooterOption
@@ -63,6 +63,9 @@ func initModel(config *configs.Config) *AppModel {
 	ospfLogger := createLogger("ospf_frontend", fmt.Sprintf("%v/ospf_frontend.log", config.Default.LogPath))
 	ospfLogger.SetDebugLevel(debugLevel)
 
+	ribLogger := createLogger("rib_frontend", fmt.Sprintf("%v/rib_frontend.log", config.Default.LogPath))
+	ribLogger.SetDebugLevel(debugLevel)
+
 	shellLogger := createLogger("shell_frontend", fmt.Sprintf("%v/shell_frontend.log", config.Default.LogPath))
 	shellLogger.SetDebugLevel(debugLevel)
 
@@ -73,12 +76,10 @@ func initModel(config *configs.Config) *AppModel {
 		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize, dashboardLogger),
 		ospf:          ospfMonitoring.New(windowSize, ospfLogger),
-		// code for Presentation slides
-		//ospf2:         ospfMonitoring.New(windowSize),
-		//ospf3:         ospfMonitoring.New(windowSize),
-		shell:  shell.New(windowSize, shellLogger),
-		footer: components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
-		logger: appLogger,
+		rib:           rib.New(windowSize, ribLogger),
+		shell:         shell.New(windowSize, shellLogger),
+		footer:        components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
+		logger:        appLogger,
 	}
 }
 
@@ -107,7 +108,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "3":
 			if m.currentSubTab == -1 {
-				m.currentView = ViewShell
+				m.currentView = ViewRIB
 			} else if subTabsLength >= 3 {
 				m.currentSubTab = 2
 			}
@@ -181,6 +182,10 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.ospf.Update(msg)
 		m.ospf = updatedModel.(*ospfMonitoring.Model)
 		return m, cmd
+	case ViewRIB:
+		updatedModel, cmd := m.rib.Update(msg)
+		m.rib = updatedModel.(*rib.Model)
+		return m, cmd
 	// code for Presentation slides
 	//case ViewOSPF2:
 	//	updatedModel, cmd := m.ospf.Update(msg)
@@ -210,6 +215,9 @@ func (m *AppModel) View() string {
 	case ViewOSPF:
 		content = m.ospf.OSPFView(m.currentSubTab)
 		subTabsLength = m.ospf.GetSubTabsLength()
+	case ViewRIB:
+		content = m.rib.RibView(m.currentSubTab)
+		subTabsLength = m.rib.GetSubTabsLength()
 	// code for Presentation slides
 	//case ViewOSPF2:
 	//	content = m.ospf.OSPFView(m.currentSubTab)
@@ -226,7 +234,7 @@ func (m *AppModel) View() string {
 
 	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)
 	contentWidth := m.windowSize.Width - 4
-	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.BorderContentBox - styles.FooterHeight
 
 	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize)
 	footer := m.footer.Get()

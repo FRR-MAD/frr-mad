@@ -70,7 +70,7 @@ protobuf/clean:
 
 #### Hot Module Reloading ####
 
-.PHONY: hmr/docker hmr/run hmr/stop hmr/clean
+.PHONY: hmr/docker hmr/run hmr/stop hmr/clean hmr/restart
 hmr/docker:
 	docker build -t frr-854-dev -f dockerfile/frr-dev.dockerfile .
 	docker build -t frr-854 -f dockerfile/frr.dockerfile .
@@ -84,6 +84,9 @@ hmr/run:
 
 hmr/stop: 
 	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
+
+
+hmr/restart: hmr/stop hmr/run
 
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
@@ -100,6 +103,26 @@ go/sync: go/tidy
 
 
 ### Testing
-.PHONY: test/backend
-test/backend:
+.PHONY: test/all test/backend test/analyzer test/aggregator test/exporter test/clean
+test/all: test/backend test/clean
+
+test/frontend: test/clean
+	cd src/frontend && go test -v ./test/...
+
+test/backend: test/clean
 	cd src/backend && go test -v ./test/...
+
+test/analyzer: test/clean
+	cd src/backend && go test -v ./test/analyzer/...
+
+test/aggregator: test/clean
+	cd src/backend && go test -v ./test/aggregator/...
+
+test/exporter: test/clean
+	cd src/backend && go test -v ./test/exporter/...
+
+test/comms: test/clean
+	cd src/backend && go test -v ./test/comms/...
+
+test/clean:
+	go clean -testcache

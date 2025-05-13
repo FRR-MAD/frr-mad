@@ -7,20 +7,12 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// func processCommand(message *frrProto.Message) *frrProto.Response {
 func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	var response frrProto.Response
 
 	switch message.Service {
 	case "frr":
-		switch message.Command {
-		case "routerData":
-			return s.getRouterName()
-		default:
-			response.Status = "error"
-			response.Message = "There was an error"
-			return &response
-		}
+		return s.frrProcessing(message.Command)
 	case "ospf":
 		return s.ospfProcessing(message.Command)
 	case "analysis":
@@ -49,15 +41,35 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	}
 }
 
+func (s *Socket) frrProcessing(command string) *frrProto.Response {
+	var response frrProto.Response
+	switch command {
+	case "routerData":
+		return s.getRouterName()
+	case "rib":
+		return s.getRoutingInformationBase()
+	case "ribfibSummary":
+		return s.getRibFibSummary()
+	default:
+		response.Status = "error"
+		response.Message = "There was an error"
+		return &response
+	}
+}
+
 func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 	var response frrProto.Response
 	switch command {
 	case "database":
 		return s.getOspfDatabase()
+	case "generalInfo":
+		return s.getGeneralOspfInformation()
 	case "router":
 		return s.getOspfRouterData()
 	case "network":
 		return s.getOspfNetworkData()
+	case "networkAll":
+		return s.getOspfNetworkDataAll()
 	case "summary":
 		return s.getOspfSummaryData()
 	case "asbrSummary":
@@ -72,10 +84,10 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 		return s.getOspfNeighbors()
 	case "interfaces":
 		return s.getInterfaces()
-	case "rib":
-		return s.getRoutingInformationBase()
-	case "staticConfig":
+	case "staticConfig": // TODO: should be added to case frr, because not only ospf data is contained
 		return s.getStaticFrrConfiguration()
+	case "peerMap":
+		return s.getp2pMap()
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", command)
@@ -93,6 +105,10 @@ func (s *Socket) analysisProcessing(command string) *frrProto.Response {
 		return s.getExternalAnomaly()
 	case "nssaExternal":
 		return s.getNssaExternalAnomaly()
+	case "lsdbToRib":
+		return s.getLsdbToRibAnomaly()
+	case "ribToFib":
+		return s.getRibToFibAnomaly()
 
 	case "dummyRouterOne":
 		return getRouterAnomalyDummy1()
