@@ -33,7 +33,7 @@ func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 		switch *metric.Name {
 		case "ospf_overadvertised_route_present":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_underadvertised_route_present":
+		case "ospf_unadvertised_route_present":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_route_present":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
@@ -41,7 +41,7 @@ func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 		// 	assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_overadvertised_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_underadvertised_routes_total":
+		case "ospf_unadvertised_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
@@ -114,13 +114,13 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 		switch *metric.Name {
 		case "ospf_overadvertised_route_present":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_underadvertised_route_present":
+		case "ospf_unadvertised_route_present":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_route_present":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_overadvertised_routes_total":
 			assert.Equal(t, 2.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_underadvertised_routes_total":
+		case "ospf_unadvertised_routes_total":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		case "ospf_duplicate_routes_total":
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
@@ -232,9 +232,9 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 
 	// presence gauges should be 1
 	expectedPresences := map[string]float64{
-		"ospf_overadvertised_route_present":  1.0,
-		"ospf_underadvertised_route_present": 1.0,
-		"ospf_duplicate_route_present":       1.0,
+		"ospf_overadvertised_route_present": 1.0,
+		"ospf_unadvertised_route_present":   1.0,
+		"ospf_duplicate_route_present":      1.0,
 	}
 	for name, want := range expectedPresences {
 		got, ok := getVal(metrics1, name)
@@ -244,9 +244,9 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 
 	// total counters should match slice lengths
 	expectedTotals := map[string]float64{
-		"ospf_overadvertised_routes_total":  2.0,
-		"ospf_underadvertised_routes_total": 1.0,
-		"ospf_duplicate_routes_total":       1.0,
+		"ospf_overadvertised_routes_total": 2.0,
+		"ospf_unadvertised_routes_total":   1.0,
+		"ospf_duplicate_routes_total":      1.0,
 	}
 	for name, want := range expectedTotals {
 		got, ok := getVal(metrics1, name)
@@ -299,12 +299,12 @@ func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 	expected := []string{
 		// presence gauges
 		"ospf_overadvertised_route_present",
-		"ospf_underadvertised_route_present",
+		"ospf_unadvertised_route_present",
 		"ospf_duplicate_route_present",
 		//"ospf_misconfigured_route_present",
 		// total counters
 		"ospf_overadvertised_routes_total",
-		"ospf_underadvertised_routes_total",
+		"ospf_unadvertised_routes_total",
 		"ospf_duplicate_routes_total",
 		//"ospf_misconfigured_routes_total",
 	}
