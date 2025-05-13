@@ -60,9 +60,9 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 	// Create anomalyResult with test data using the correct structs
 	anomalyResult := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
-			HasOverAdvertisedPrefixes:  true,
-			HasUnderAdvertisedPrefixes: true,
-			HasDuplicatePrefixes:       true,
+			HasOverAdvertisedPrefixes: true,
+			HasUnAdvertisedPrefixes:   true,
+			HasDuplicatePrefixes:      true,
 			//HasMisconfiguredPrefixes:   true,
 			SuperfluousEntries: []*frrProto.Advertisement{
 				{
@@ -97,7 +97,7 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 		},
 		ExternalAnomaly:     &frrProto.AnomalyDetection{},
 		NssaExternalAnomaly: &frrProto.AnomalyDetection{},
-		FibAnomaly:          &frrProto.AnomalyDetection{},
+		RibToFibAnomaly:     &frrProto.AnomalyDetection{},
 	}
 
 	// Create frrMadExporter
@@ -195,9 +195,9 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	// Start with some anomalies
 	anomalyResult := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
-			HasOverAdvertisedPrefixes:  true,
-			HasUnderAdvertisedPrefixes: true,
-			HasDuplicatePrefixes:       true,
+			HasOverAdvertisedPrefixes: true,
+			HasUnAdvertisedPrefixes:   true,
+			HasDuplicatePrefixes:      true,
 			SuperfluousEntries: []*frrProto.Advertisement{
 				{InterfaceAddress: "10.0.0.1", PrefixLength: "24"},
 				{InterfaceAddress: "192.168.1.1", PrefixLength: "24"},
@@ -256,7 +256,7 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 
 	// Clear all anomalies
 	anomalyResult.RouterAnomaly.HasOverAdvertisedPrefixes = false
-	anomalyResult.RouterAnomaly.HasUnderAdvertisedPrefixes = false
+	anomalyResult.RouterAnomaly.HasUnAdvertisedPrefixes = false
 	anomalyResult.RouterAnomaly.HasDuplicatePrefixes = false
 	anomalyResult.RouterAnomaly.SuperfluousEntries = nil
 	anomalyResult.RouterAnomaly.MissingEntries = nil
