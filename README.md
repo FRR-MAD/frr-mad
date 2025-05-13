@@ -5,12 +5,92 @@ It effectively detects anomalies by comparing static file data with the Link-Sta
 
 ## Usage
 
+This Project is split into two parts:
+- **frr-analyzer**: The analysis system that consits of aggregation, analysis and information exporting. It spawns a socket, which the frr-tui unit uses to fetch all necessary data. The exporter collects routing data and exports them via the well-defined Prometheus Node Exporter uri. 
+- **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
+
+### frr-analyzer
+Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
+```sh
+/path/to/frr-analyzer start
+```
+
+This will start a persistent service and spawn a socket. To stop it, you can execute the binary again with the stop argument. Don't kill it if possible, as it will leave a spawned socket.
+
+By default the exporter runs on port 9091 an all ips. The port is freely adjustable. 
+
+
+### frr-tui
+The tui can be started by running:
+```
+/path/to/frr-tui
+```
+
+You will enter a small terminal user interface. It serves as a small monitoring application with the most important information already present. 
+
 ## Installation
 
-- foobar
+Installation is fairly easy. Clone the repo and build it. The executable is compiled with the static flag, so remove it if you have all the dependencies set on the host.
 
-    ```
+```sh
+mkdir -p /tmp/frr-mad-binaries/
+cd src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-mad-analyzer ./cmd/frr-analyzer
+cd ../../
+cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-mad-tui ./cmd/tui
+cd ../../
+```
 
+Provided is a default configuration file. Creating it will start the application. 
+
+```sh
+mkdir -p /etc/frr-mad
+cat <<EOF>/etc/frr-mad/main.yaml
+default:
+  tempfiles: /tmp/frr-mad
+  logpath: /tmp/frr-mad/log
+  debuglevel: none 
+
+socket:
+  unixsocketlocation: /tmp/frr-mad
+  unixsocketname: analyzer.sock
+  sockettype: unix
+
+analyzer:
+  foo: bar
+
+aggregator:
+  frrmetricsurl: http://localhost:9342/metrics
+  frrconfigpath: /etc/frr/frr.conf
+  pollinterval: 5
+  socketpathbgp: /var/run/frr/bgpd.vty
+  socketpathospf: /var/run/frr/ospfd.vty
+  socketpathzebra: /var/run/frr/zebra.vty
+  socketpath: /var/run/frr
+
+exporter:
+  Port: 9091     
+  OSPFRouterData: (collector.ospf.router,"Collect OSPF router information metrics",true)
+  OSPFNetworkData: (collector.ospf.network,"Collect OSPF network information metrics",true)
+  OSPFSummaryData: (collector.ospf.summary,"Collect OSPF summary information metrics",true)
+  OSPFAsbrSummaryData: (collector.ospf.asbr-summary,"Collect OSPF ASBR summary information metrics",true)
+  OSPFExternalData: (collector.ospf.external,"Collect OSPF external route information metrics",true)
+  OSPFNssaExternalData: (collector.ospf.nssa-external,"Collect OSPF NSSA external route information metrics",true)
+  OSPFDatabase: (collector.ospf.database,"Collect OSPF database information metrics",true)
+  OSPFDuplicates: (collector.ospf.duplicates,"Collect OSPF duplicate information metrics",true)
+  OSPFNeighbors: (collector.ospf.neighbors,"Collect OSPF neighbor information metrics",true)
+  InterfaceList: (collector.interface.list,"Collect interface list information metrics",true)
+  RouteList: (collector.route.list,"Collect route list information metrics",true)
+EOF
+```
+
+The default folders for this application are:
+- config location: /etc/frr-mad/
+- log location: /var/tmp/frr-mad
+- tmp files: /tmp/frr-mad
+- Unix socket location: /var/run/frr-mad
+
+
+That's all there is to the installation and setup.
 
 ## Project Structure
 
@@ -27,7 +107,8 @@ root/
 │   │   │   ├── analyzer/    # Logic to analyze collected data
 │   │   │   ├── comms/       # Unix Socket creation
 │   │   │   ├── logger/      # Logic for application logging
-│   └── frontend/            # Terminal User Interface using Charmbracelet Libraries
+│   ├── frontend/            # Terminal User Interface using Charmbracelet Libraries
+│   └── logger/              # Project wide logger implementation using slog
 └── README.md                # Project documentation
 ```
 
@@ -71,31 +152,9 @@ root/
 │   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
 ```
 
-## development Tools
+## Development
 
-### Linting and Code Quality
-
-- **golangci-lint**: Linter for go
-- **errcheck**: Ensures errors are correctly handled
-
-
-### Testing and Coverage
-
-- **go test**: Built-in testing framework
-
-### Dependency Managemetn
-
-- **go mod**: Standard Go module system
-
-### Development Workflow
-
-- **pre-commit hooks**: Run linters and tests before commits
-- **Makefile**: Standardize common development commands
-- **air**: Hot reloading during development
-
-### IDE Integration
-
-- **VS Code/codium** and **GoLand**: Both excellent Go development IDEs.
+TODO
 
 ### CI/CD
 

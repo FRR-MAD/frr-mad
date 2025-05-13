@@ -11,15 +11,15 @@ PROTO_FRONTEND_DEST := src/frontend/pkg
 .PHONY: run/backend run/backend/local run/backend/prod
 run/backend:
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && go run -tags=dev cmd/frr-analytics/main.go
+	cd $(BACKEND_SRC) && go run -tags=dev cmd/frr-analyzer/main.go
 
 run/backend/local:
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && go run -tags=local cmd/frr-analytics/main.go start
+	cd $(BACKEND_SRC) && go run -tags=local cmd/frr-analyzer/main.go start
 
 run/backend/prod:
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && go run cmd/frr-analytics/main.go
+	cd $(BACKEND_SRC) && go run cmd/frr-analyzer/main.go
 
 run/frontend:
 	@cd $(FRONTEND_SRC) && go mod tidy
@@ -39,16 +39,16 @@ build/frontend: binaries
 
 build/backend: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o ../../binaries/analyzer_dev ./cmd/frr-analytics
+	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=dev -o ../../binaries/analyzer_dev ./cmd/frr-analyzer
 
 build/local: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=local -o ../../binaries/analyzer_dev ./cmd/frr-analytics
+	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=local -o ../../binaries/analyzer_dev ./cmd/frr-analyzer
 
 
 build/backend/prod: binaries
 	@cd $(BACKEND_SRC) && go mod tidy
-	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o ../../binaries/analyzer ./cmd/frr-analytics
+	cd $(BACKEND_SRC) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o ../../binaries/analyzer ./cmd/frr-analyzer
 
 
 .PHONY: protobuf protobuf/mac protobuf/clean
@@ -84,6 +84,7 @@ hmr/run:
 
 hmr/stop: 
 	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
+
 
 hmr/restart: hmr/stop hmr/run
 

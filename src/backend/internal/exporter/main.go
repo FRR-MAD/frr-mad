@@ -37,7 +37,6 @@ func NewExporter(
 	frrData *frrProto.FullFRRData,
 	anomalies *frrProto.AnomalyAnalysis,
 ) *Exporter {
-	// Parse port
 	port := 9091
 
 	if config.Port > 0 {
@@ -72,7 +71,6 @@ func NewExporter(
 			`)
 	})
 
-	// Create exporter
 	e := &Exporter{
 		interval:        pollInterval,
 		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),

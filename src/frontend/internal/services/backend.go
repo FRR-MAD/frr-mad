@@ -3,10 +3,11 @@ package backend
 import (
 	"encoding/binary"
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
 	"io"
 	"net"
 	"time"
+
+	"google.golang.org/protobuf/encoding/protojson"
 
 	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 

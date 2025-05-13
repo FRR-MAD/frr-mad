@@ -53,6 +53,19 @@ func (s *Socket) getOspfNetworkData() *frrProto.Response {
 	}
 	return &frrProto.Response{
 		Status:  "success",
+		Message: "Returning OSPF network data self",
+		Data:    value,
+	}
+}
+
+func (s *Socket) getOspfNetworkDataAll() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfNetworkData{
+			OspfNetworkData: s.metrics.GetOspfNetworkDataAll(),
+		},
+	}
+	return &frrProto.Response{
+		Status:  "success",
 		Message: "Returning OSPF network data",
 		Data:    value,
 	}
