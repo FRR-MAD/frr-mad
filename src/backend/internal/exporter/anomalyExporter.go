@@ -32,7 +32,7 @@ func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus
 		help string
 	}{
 		{"ospf_overadvertised_route_present", "1: overadvertised routes exist, 0: otherwise"},
-		{"ospf_underadvertised_route_present", "1: underadvertised routes exist, 0: otherwise"},
+		{"ospf_unadvertised_route_present", "1: unadvertised routes exist, 0: otherwise"},
 		{"ospf_duplicate_route_present", "1: duplicate routes exist, 0: otherwise"},
 		{"ospf_misconfigured_route_present", "1: misconfigured routes exist, 0: otherwise"},
 	}
@@ -52,7 +52,7 @@ func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus
 		help string
 	}{
 		{"ospf_overadvertised_routes_total", "Total overadvertised routes detected"},
-		{"ospf_underadvertised_routes_total", "Total underadvertised routes detected"},
+		{"ospf_unadvertised_routes_total", "Total unadvertised routes detected"},
 		{"ospf_duplicate_routes_total", "Total duplicate routes detected"},
 		{"ospf_misconfigured_routes_total", "Total misconfigured routes detected"},
 	}
@@ -85,13 +85,13 @@ func (a *AnomalyExporter) Update() {
 	a.gauges["ospf_overadvertised_route_present"].Set(boolToFloat(overCount > 0))
 	a.alertCounters["ospf_overadvertised_routes_total"].Set(float64(overCount))
 
-	// Process underadvertised routes
+	// Process unadvertised routes
 	underCount :=
 		len(a.anomalies.RouterAnomaly.GetMissingEntries()) +
 			len(a.anomalies.ExternalAnomaly.GetMissingEntries()) +
 			len(a.anomalies.NssaExternalAnomaly.GetMissingEntries())
-	a.gauges["ospf_underadvertised_route_present"].Set(boolToFloat(underCount > 0))
-	a.alertCounters["ospf_underadvertised_routes_total"].Set(float64(underCount))
+	a.gauges["ospf_unadvertised_route_present"].Set(boolToFloat(underCount > 0))
+	a.alertCounters["ospf_unadvertised_routes_total"].Set(float64(underCount))
 
 	// Process duplicate routes
 	dupCount :=
