@@ -317,9 +317,8 @@ func (m *Model) renderLsdbMonitorTab() string {
 	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
 
 	// Set viewport sizes and assign content to viewport
-	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	m.viewport.Height = styles.ViewPortHeightCompletePage
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
 
@@ -350,6 +349,7 @@ func (m *Model) renderRouterMonitorTab() string {
 	var routerLSABlocks []string
 	for _, areaID := range routerLSAAreas {
 		areaData := routerLSASelf.RouterStates[areaID]
+
 		var transitTableData [][]string
 		var stubTableData [][]string
 		var point2pointTableData [][]string
@@ -469,9 +469,8 @@ func (m *Model) renderRouterMonitorTab() string {
 		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
-	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
 
@@ -482,6 +481,10 @@ func (m *Model) renderNetworkMonitorTab() string {
 	networkLSASelf, err := backend.GetOspfNetworkDataSelf()
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
+	}
+	routerName, _, err := backend.GetRouterName()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterName")
 	}
 
 	// extract and sort the map keys (areas)
@@ -549,9 +552,13 @@ func (m *Model) renderNetworkMonitorTab() string {
 
 	}
 
-	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	if networkLSABlocks == nil {
+		return lipgloss.JoinHorizontal(lipgloss.Left,
+			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"))
+	}
+
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
 
@@ -569,6 +576,10 @@ func (m *Model) renderExternalMonitorTab() string {
 	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf()
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
+	}
+	routerName, _, err := backend.GetRouterName()
+	if err != nil {
+		return common.PrintBackendError(err, "GetRouterName")
 	}
 
 	// ===== OSPF External LSAs (Type 5) =====
@@ -679,17 +690,15 @@ func (m *Model) renderExternalMonitorTab() string {
 		}
 	}
 
-	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage
 
 	var allLsaBlocks []string
 	if hasNssaExternalLSAs == false {
 		if externalTableData == nil {
 			allLsaBlocks = allLsaBlocks[:0]
 			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
-				externalHeader,
-				"no self originating external advertisements",
+				styles.H1TitleStyleForOne().Render(routerName+" does not originate External LSAs (Type 5 or 7)"),
 			))
 		} else {
 			allLsaBlocks = externalLsaBlock
@@ -719,7 +728,8 @@ func (m *Model) renderNeighborMonitorTab() string {
 	for neighborID := range ospfNeighbors.Neighbors {
 		ospfNeighborIDs = append(ospfNeighborIDs, neighborID)
 	}
-	sort.Sort(common.IpList(ospfNeighborIDs))
+	list := common.SortedIpList(ospfNeighborIDs)
+	sort.Sort(&list)
 
 	var ospfNeighborTableData [][]string
 	for _, ospfNeighborID := range ospfNeighborIDs {
@@ -766,9 +776,8 @@ func (m *Model) renderNeighborMonitorTab() string {
 		styles.H2OneBoxBottomBorderStyle().Render(""),
 	)
 
-	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
 
@@ -800,9 +809,8 @@ func (m *Model) renderRunningConfigTab() string {
 	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
 
 	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
-	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
-	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = outputMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage
 	m.viewport.SetContent(completeContent)
 
 	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())

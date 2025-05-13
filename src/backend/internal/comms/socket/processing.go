@@ -12,14 +12,7 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 
 	switch message.Service {
 	case "frr":
-		switch message.Command {
-		case "routerData":
-			return s.getRouterName()
-		default:
-			response.Status = "error"
-			response.Message = "There was an error"
-			return &response
-		}
+		return s.frrProcessing(message.Command)
 	case "ospf":
 		return s.ospfProcessing(message.Command)
 	case "analysis":
@@ -48,11 +41,29 @@ func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	}
 }
 
+func (s *Socket) frrProcessing(command string) *frrProto.Response {
+	var response frrProto.Response
+	switch command {
+	case "routerData":
+		return s.getRouterName()
+	case "rib":
+		return s.getRoutingInformationBase()
+	case "ribfibSummary":
+		return s.getRibFibSummary()
+	default:
+		response.Status = "error"
+		response.Message = "There was an error"
+		return &response
+	}
+}
+
 func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 	var response frrProto.Response
 	switch command {
 	case "database":
 		return s.getOspfDatabase()
+	case "generalInfo":
+		return s.getGeneralOspfInformation()
 	case "router":
 		return s.getOspfRouterData()
 	case "network":
@@ -73,9 +84,7 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 		return s.getOspfNeighbors()
 	case "interfaces":
 		return s.getInterfaces()
-	case "rib":
-		return s.getRoutingInformationBase()
-	case "staticConfig":
+	case "staticConfig": // TODO: should be added to case frr, because not only ospf data is contained
 		return s.getStaticFrrConfiguration()
 	case "peerMap":
 		return s.getp2pMap()

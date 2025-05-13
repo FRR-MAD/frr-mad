@@ -1,11 +1,13 @@
 package analyzer
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
 func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
@@ -260,7 +262,8 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string) *
 	return result
 }
 
-func GetNssaExternalDataSelf(config *frrProto.OSPFNssaExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
+// lsa type 7 parsing
+func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string, logger *logger.Logger) *frrProto.InterAreaLsa {
 	if config == nil {
 		return nil
 	}
@@ -282,6 +285,15 @@ func GetNssaExternalDataSelf(config *frrProto.OSPFNssaExternalData, staticRouteM
 			if _, exists := staticRouteMap[key]; !exists {
 				continue
 			}
+
+			pBitSet := false
+			fields := strings.Split(lsa.Options, "|")
+			if len(fields) > 4 && strings.Contains(fields[4], "P") {
+				pBitSet = true
+			}
+
+			logger.Info(fmt.Sprintf("NSSA route %s/%s has P-bit: %v", lsa.LinkStateId, strconv.Itoa(int(lsa.NetworkMask)), pBitSet))
+
 			adv := frrProto.Advertisement{
 				LinkStateId:  lsa.LinkStateId,
 				PrefixLength: strconv.Itoa(int(lsa.NetworkMask)),

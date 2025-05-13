@@ -20,7 +20,7 @@ const (
 	MarginX3                  = 6
 	MarginX4                  = 8
 
-	TabRowHeight = 6
+	TabRowHeight = 4
 	FooterHeight = 1
 )
 
@@ -46,6 +46,17 @@ var (
 	WidthTwoH2OneFourthBox   int
 	WidthTwoH2ThreeFourth    int
 	WidthTwoH2ThreeFourthBox int
+
+	ViewPortWidthCompletePage int
+	ViewPortWidthThreeFourth  int
+	ViewPortWidthOneFourth    int
+
+	HeightBasis int
+
+	ViewPortHeightCompletePage int
+
+	HeightH1 int
+	HeightH2 int
 )
 
 func SetWindowSizes(window common.WindowSize) {
@@ -70,17 +81,29 @@ func SetWindowSizes(window common.WindowSize) {
 	WidthTwoH2OneFourthBox = (WidthBasis-2*MarginX4)/4 + roundingCorrectionOneFourthH2
 	WidthTwoH2ThreeFourth = WidthBasis - 2*MarginX2 - 2*BoxBorder - WidthTwoH2OneFourth
 	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
+
+	ViewPortWidthCompletePage = WidthBasis + 2
+	ViewPortWidthThreeFourth = WidthTwoH1ThreeFourth + 2
+	ViewPortWidthOneFourth = WidthTwoH1OneFourth + 2
+
+	HeightBasis = window.Height - TabRowHeight - FooterHeight - BorderContentBox
+
+	ViewPortHeightCompletePage = HeightBasis
+
+	HeightH1 = 4
+	HeightH2 = 2
 }
 
 // ======================================== //
 // Colors                                   //
 // ======================================== //
 
-var MainBlue = "#5f87ff"    // Usage: Active Tab, Content Border
-var Grey = "#444444"        // Usage: inactive components, options
-var NormalBeige = "#d7d7af" // Usage: Box Border when content good
-var BadRed = "#d70000"      // Usage: Box Border when content bad
-var NavyBlue = "#3a3a3a"
+var MainBlue = "#5f87ff"    // Usage: Active Menu Tab, Content Border
+var Grey = "#444444"        // Usage: inactive components, options, H2 Title
+var NormalBeige = "#d7d7af" // Usage: H1 Title
+var GoodGreen = "#5f875f"   // Usage: Box border when content good
+var BadRed = "#d70000"      // Usage: Box border when content bad
+var NavyBlue = "#5f87af"
 
 //var MainBlue = "111" // Usage: Active Tab, Content Border
 //var Grey = "238"          // Usage: inactive components, options
@@ -150,15 +173,14 @@ var AlignCenterAndM02P01 = lipgloss.NewStyle().
 	Padding(0, 1).
 	Align(lipgloss.Center)
 
+func H1GoodTitleStyle() lipgloss.Style {
+	return H1TitleStyle().
+		BorderForeground(lipgloss.Color(GoodGreen))
+}
+
 func H1BadTitleStyle() lipgloss.Style {
-	return lipgloss.NewStyle().
-		Border(lipgloss.ThickBorder()).
-		BorderForeground(lipgloss.Color(BadRed)).
-		BorderBottom(false).
-		Margin(0, 0, 1, 0).
-		Padding(1, 0, 0, 0).
-		Align(lipgloss.Center).
-		Bold(true)
+	return H1TitleStyle().
+		BorderForeground(lipgloss.Color(BadRed))
 }
 
 // ----------------------------
@@ -389,31 +411,8 @@ var (
 	MultilineCellStyle      = lipgloss.NewStyle().Padding(0, 1, 1, 1)
 	LastCellOfMultiline     = lipgloss.NewStyle().Padding(0, 1)
 	BadCellStyle            = lipgloss.NewStyle().Padding(0, 1)
+	EvenRowCell             = NormalCellStyle.Foreground(lipgloss.Color(NavyBlue))
 )
-
-//var NormalTable = table.New().
-//	Border(TableBorder).
-//	BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(NormalBeige))).
-//	StyleFunc(func(row, col int) lipgloss.Style {
-//		switch {
-//		case row == table.HeaderRow:
-//			return HeaderStyle
-//		default:
-//			return CellStyle
-//		}
-//	})
-
-//var BadTable = table.New().
-//	Border(NormalTableBorder).
-//	BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(BadRed))).
-//	StyleFunc(func(row, col int) lipgloss.Style {
-//		switch {
-//		case row == table.HeaderRow:
-//			return headerStyle
-//		default:
-//			return cellStyle
-//		}
-//	})
 
 func BuildTableStyles() table.Styles {
 	// start from the defaults
@@ -464,6 +463,13 @@ func H1BadBoxBottomBorderStyle() lipgloss.Style {
 
 func H1OneBoxBottomBorderStyle() lipgloss.Style {
 	return H1TitleStyleForOne().
+		BorderBottom(true).
+		BorderTop(false)
+}
+func H1OneSmallBoxBottomBorderStyle() lipgloss.Style {
+	return H1TitleStyleForOne().
+		Padding(0).
+		Margin(0).
 		BorderBottom(true).
 		BorderTop(false)
 }

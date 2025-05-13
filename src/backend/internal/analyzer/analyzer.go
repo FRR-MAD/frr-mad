@@ -44,20 +44,20 @@ func (c *Analyzer) AnomalyAnalysis() {
 	receivedExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalAll, hostname)
 	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(c.metrics.OspfNssaExternalAll, hostname)
 
-	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration)
+	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(c.metrics.OspfRouterData, hostname, peerNeighborMap)
 
 	isExternalLSDB := GetRuntimeExternalDataSelf(c.metrics.OspfExternalData, staticRouteMap, hostname)
 
-	// TODO: testing, mino
-	isNssaExternalLSDB := GetNssaExternalDataSelf(c.metrics.OspfNssaExternalData, staticRouteMap, hostname)
+	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname, c.Logger)
 
 	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
-	// TODO: implement, mino
+	//}
+
 	if isNssa {
-		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB)
+		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB, isExternalLSDB)
 	}
 	// TODO: implement ribMap -> fibMap analysis, if necessary?
 	c.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
@@ -88,8 +88,8 @@ func maskToPrefixLength(mask string) string {
 	return strconv.Itoa(ones)
 }
 
-func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]frrProto.AccessListAnalyzer {
-	result := make(map[string]frrProto.AccessListAnalyzer)
+func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]*frrProto.AccessListAnalyzer {
+	result := make(map[string]*frrProto.AccessListAnalyzer)
 
 	if config == nil || config.AccessList == nil {
 		return result
@@ -127,7 +127,7 @@ func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]frrProto.
 			entries = append(entries, &entry)
 		}
 
-		result[name] = frrProto.AccessListAnalyzer{
+		result[name] = &frrProto.AccessListAnalyzer{
 			AccessList: name,
 			AclEntry:   entries,
 		}
@@ -142,7 +142,7 @@ func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
 }
 
 // TODO: check with accesslist if it is redistributed in ospf
-func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
+func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
 	if len(config.StaticRoutes) == 0 {
 		return nil
 	}

@@ -136,7 +136,8 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 	return isNssa, result
 }
 
-func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
+// GetStaticFileExternalData makes LSA type 5 prediction parsing
+func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
@@ -164,7 +165,9 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 				isAllowed = true
 			} else {
 				for _, aclAnalyzer := range accessList {
-
+					if aclAnalyzer == nil {
+						continue
+					}
 					for _, item := range aclAnalyzer.AclEntry {
 						if item.IPAddress == ipAddr && item.IsPermit {
 							isAllowed = true
@@ -194,7 +197,7 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 
 // GetStaticFileNssaExternalData makes LSA type 7 prediction parsing
 // TODO: finish this
-func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frrProto.InterAreaLsa {
+func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
@@ -205,88 +208,59 @@ func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration) *frr
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	redistributionTypes := make(map[string]bool)
-	for _, redist := range config.OspfConfig.Redistribution {
-		if redist.Type != "" {
-			redistributionTypes[redist.Type] = true
+	// Find the NSSA area from OSPF configuration
+	var nssaAreaID string
+	for _, area := range config.OspfConfig.Area {
+		if area.Type == "nssa" {
+			nssaAreaID = area.Name
+			break
 		}
 	}
 
-	// If no redistribution is configured, router won't generate NSSA external LSAs
-	if len(redistributionTypes) == 0 {
-		return nil
+	// Create a single AreaAnalyzer for all routes
+	area := &frrProto.AreaAnalyzer{
+		AreaName: nssaAreaID, // Set the area name
+		LsaType:  "NSSA-LSA",
+		Links:    []*frrProto.Advertisement{},
 	}
+	result.Areas = append(result.Areas, area)
 
-	nssaAreas := make(map[string]bool)
-	for _, ospfArea := range config.OspfConfig.Area {
-		if ospfArea.Type == "nssa" {
-			nssaAreas[ospfArea.Name] = true
-		}
-	}
+	// Rest of the function remains the same...
+	for _, staticRoute := range config.StaticRoutes {
+		ipAddr := staticRoute.IpPrefix.IpAddress
+		prefixLen := staticRoute.IpPrefix.PrefixLength
 
-	if len(nssaAreas) == 0 {
-		return nil
-	}
+		if _, exists := staticRouteMap[ipAddr]; exists {
+			isAllowed := false
 
-	// Find interfaces in NSSA areas for reference
-	interfacesByArea := make(map[string][]string)
-	for _, iface := range config.Interfaces {
-		if iface.Area != "" {
-			interfacesByArea[iface.Area] = append(interfacesByArea[iface.Area], iface.Name)
-		}
-	}
-
-	// Process each NSSA area
-	for nssaArea := range nssaAreas {
-		nssaAreaObj := frrProto.AreaAnalyzer{
-			AreaName: nssaArea,
-			LsaType:  "NSSA-LSA", // Type 7
-			Links:    []*frrProto.Advertisement{},
-		}
-
-		// Only include connected interfaces if "connected" is being redistributed
-		if redistributionTypes["connected"] {
-			for _, ifaceName := range interfacesByArea[nssaArea] {
-				for _, iface := range config.Interfaces {
-					if iface.Name == ifaceName {
-						for _, ipPrefix := range iface.InterfaceIpPrefixes {
-							if ipPrefix.IpPrefix != nil {
-								adv := frrProto.Advertisement{
-									LinkStateId:  ipPrefix.IpPrefix.IpAddress,
-									PrefixLength: strconv.Itoa(int(ipPrefix.IpPrefix.PrefixLength)),
-									LinkType:     "nssa-external",
-								}
-								nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
-							}
+			if len(accessList) == 0 {
+				isAllowed = true
+			} else {
+				for _, aclAnalyzer := range accessList {
+					if aclAnalyzer == nil {
+						continue
+					}
+					for _, item := range aclAnalyzer.AclEntry {
+						if item.IPAddress == ipAddr && item.IsPermit {
+							isAllowed = true
+							break
 						}
 					}
-				}
-			}
-		}
-
-		// Add static routes if static redistribution is enabled
-		if redistributionTypes["static"] {
-			for _, staticRoute := range config.StaticRoutes {
-				if staticRoute.IpPrefix != nil {
-					adv := frrProto.Advertisement{
-						LinkStateId:  staticRoute.IpPrefix.IpAddress,
-						PrefixLength: strconv.Itoa(int(staticRoute.IpPrefix.PrefixLength)),
-						LinkType:     "nssa-external",
+					if isAllowed {
+						break
 					}
-					nssaAreaObj.Links = append(nssaAreaObj.Links, &adv)
 				}
 			}
-		}
 
-		// Add NSSA area to the result if it has any links
-		if len(nssaAreaObj.Links) > 0 {
-			result.Areas = append(result.Areas, &nssaAreaObj)
+			if isAllowed {
+				advert := &frrProto.Advertisement{
+					LinkStateId:  ipAddr,
+					PrefixLength: fmt.Sprintf("%d", prefixLen),
+					LinkType:     "nssa-external",
+				}
+				area.Links = append(area.Links, advert)
+			}
 		}
-	}
-
-	// If no areas were added, return nil (no NSSA external LSAs predicted)
-	if len(result.Areas) == 0 {
-		return nil
 	}
 
 	return result

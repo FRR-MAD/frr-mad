@@ -41,6 +41,7 @@ func newCollector(metricsURL, configPath, socketPath string, logger *logger.Logg
 func initFullFrrData() *frrProto.FullFRRData {
 	fullFrrData := &frrProto.FullFRRData{
 		OspfDatabase:           &frrProto.OSPFDatabase{},
+		GeneralOspfInformation: &frrProto.GeneralOspfInformation{},
 		OspfRouterData:         &frrProto.OSPFRouterData{},
 		OspfRouterDataAll:      &frrProto.OSPFRouterData{},
 		OspfNetworkData:        &frrProto.OSPFNetworkData{},
@@ -55,6 +56,7 @@ func initFullFrrData() *frrProto.FullFRRData {
 		OspfNeighbors:          &frrProto.OSPFNeighbors{},
 		Interfaces:             &frrProto.InterfaceList{},
 		RoutingInformationBase: &frrProto.RoutingInformationBase{},
+		RibFibSummaryRoutes:    &frrProto.RibFibSummaryRoutes{},
 		StaticFrrConfiguration: &frrProto.StaticFRRConfiguration{},
 		SystemMetrics:          &frrProto.SystemMetrics{},
 		FrrRouterData:          &frrProto.FRRRouterData{},
@@ -99,6 +101,10 @@ func (c *Collector) Collect() error {
 
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
 		return fetchStaticFRRConfig()
+	})
+
+	fetchAndMerge("GeneralOSPFInformation", c.FullFrrData.GeneralOspfInformation, func() (proto.Message, error) {
+		return FetchGeneralOSPFInformation(executor)
 	})
 
 	fetchAndMerge("OSPFRouterData", c.FullFrrData.OspfRouterData, func() (proto.Message, error) {
@@ -161,6 +167,10 @@ func (c *Collector) Collect() error {
 		return FetchRib(executor)
 	})
 
+	fetchAndMerge("RibFibSummaryRoutes", c.FullFrrData.RibFibSummaryRoutes, func() (proto.Message, error) {
+		return FetchRibFibSummary(executor)
+	})
+
 	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {
 		return c.fetcher.CollectSystemMetrics()
 	})
@@ -179,6 +189,10 @@ func (c *Collector) Collect() error {
 func (c *Collector) ensureFieldsInitialized() {
 	if c.FullFrrData.StaticFrrConfiguration == nil {
 		c.FullFrrData.StaticFrrConfiguration = &frrProto.StaticFRRConfiguration{}
+	}
+
+	if c.FullFrrData.GeneralOspfInformation == nil {
+		c.FullFrrData.GeneralOspfInformation = &frrProto.GeneralOspfInformation{}
 	}
 
 	if c.FullFrrData.OspfRouterData == nil {
@@ -239,6 +253,10 @@ func (c *Collector) ensureFieldsInitialized() {
 
 	if c.FullFrrData.RoutingInformationBase == nil {
 		c.FullFrrData.RoutingInformationBase = &frrProto.RoutingInformationBase{}
+	}
+
+	if c.FullFrrData.RibFibSummaryRoutes == nil {
+		c.FullFrrData.RibFibSummaryRoutes = &frrProto.RibFibSummaryRoutes{}
 	}
 
 	if c.FullFrrData.SystemMetrics == nil {
