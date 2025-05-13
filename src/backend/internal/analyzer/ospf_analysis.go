@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -65,7 +66,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(ribMap map[string]frrProto.RibPrefixes, is
 
 }
 
-func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
+func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
 	if isState == nil || shouldState == nil {
 		//fmt.Println("nil!")
 		return nil, nil
@@ -160,13 +161,33 @@ func writeBoolTarget(source bool) bool {
 }
 
 func getAdvertisementKey(adv *frrProto.Advertisement) string {
-	if adv.InterfaceAddress != "" {
+	if adv.LinkType == "transit network" {
 		return normalizeNetworkAddress(adv.InterfaceAddress)
 	}
-	return normalizeNetworkAddress(adv.LinkStateId)
+	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
 }
 
-func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]frrProto.AccessListAnalyzer) bool {
+func getKeyWithFallback(primary, fallback, prefixLength string) string {
+	addr := normalizeNetworkAddress(primary)
+	if addr == "" {
+		addr = normalizeNetworkAddress(fallback)
+	}
+	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
+}
+
+// 32 is fallback and default
+func normalizePrefixLength(prefixLength string) string {
+	if prefixLength == "" {
+		return "32"
+	}
+	i, err := strconv.Atoi(prefixLength)
+	if err != nil {
+		return "32"
+	}
+	return strconv.Itoa(i)
+}
+
+func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
 	for _, acl := range accessLists {
 		for _, entry := range acl.AclEntry {
 			if !entry.IsPermit {
@@ -271,7 +292,7 @@ func normalizeNetworkAddress(address string) string {
 }
 
 // TODO: Add missing analysis
-func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
+func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa, externalState *frrProto.InterAreaLsa) {
 	if isState == nil || shouldState == nil {
 		return
 	}
@@ -302,7 +323,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		}
 
 		for _, link := range area.Links {
-			key := link.LinkStateId + "/" + link.PrefixLength
+			key := getAdvertisementKey(link)
 			isStateMap[area.AreaName][key] = link
 
 			// Track duplicates
@@ -324,7 +345,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		}
 
 		for _, link := range area.Links {
-			key := link.LinkStateId + "/" + link.PrefixLength
+			key := getAdvertisementKey(link)
 			shouldStateMap[area.AreaName][key] = link
 		}
 	}
@@ -352,9 +373,8 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 		}
 	}
 
-	// Check for P-bit issues (NSSA-external routes not being translated)
-	// This requires comparing Type 7 LSAs in NSSA with Type 5 LSAs in backbone
-	// You'll need to implement this separately by comparing NSSA and external databases
+	// P-bit validation
+	a.checkNssaPBitTranslation(isState, externalState, result)
 
 	// Update analysis result
 	a.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
@@ -363,4 +383,33 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]frrProto.Ac
 	a.AnalysisResult.NssaExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries = result.DuplicateEntries
+}
+
+func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, externalState *frrProto.InterAreaLsa, result *frrProto.AnomalyDetection) {
+	if externalState == nil {
+		return
+	}
+
+	externalMap := make(map[string]bool)
+	for _, area := range externalState.Areas {
+		for _, link := range area.Links {
+			key := getAdvertisementKey(link)
+			externalMap[key] = true
+		}
+	}
+
+	for _, area := range nssaState.Areas {
+		if area.LsaType != "NSSA-LSA" {
+			continue
+		}
+		for _, link := range area.Links {
+			if link.PBit {
+				key := getAdvertisementKey(link)
+				if !externalMap[key] {
+					// P-bit set, but no matching Type-5 exists
+					result.MissingEntries = append(result.MissingEntries, link)
+				}
+			}
+		}
+	}
 }

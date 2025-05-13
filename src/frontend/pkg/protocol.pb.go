@@ -6010,6 +6010,7 @@ type Advertisement struct {
 	LinkStateId      string                 `protobuf:"bytes,2,opt,name=LinkStateId,proto3" json:"LinkStateId,omitempty"`
 	PrefixLength     string                 `protobuf:"bytes,3,opt,name=PrefixLength,proto3" json:"PrefixLength,omitempty"`
 	LinkType         string                 `protobuf:"bytes,4,opt,name=LinkType,proto3" json:"LinkType,omitempty"`
+	PBit             bool                   `protobuf:"varint,5,opt,name=PBit,proto3" json:"PBit,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -6070,6 +6071,13 @@ func (x *Advertisement) GetLinkType() string {
 		return x.LinkType
 	}
 	return ""
+}
+
+func (x *Advertisement) GetPBit() bool {
+	if x != nil {
+		return x.PBit
+	}
+	return false
 }
 
 type AccessListAnalyzer struct {
@@ -7939,12 +7947,13 @@ const file_protocol_proto_rawDesc = "" +
 	"\x18HasMisconfiguredPrefixes\x18\x04 \x01(\bR\x18HasMisconfiguredPrefixes\x12M\n" +
 	"\x13superfluous_entries\x18\x05 \x03(\v2\x1c.communication.AdvertisementR\x12superfluousEntries\x12E\n" +
 	"\x0fmissing_entries\x18\x06 \x03(\v2\x1c.communication.AdvertisementR\x0emissingEntries\x12I\n" +
-	"\x11duplicate_entries\x18\a \x03(\v2\x1c.communication.AdvertisementR\x10duplicateEntries\"\x9d\x01\n" +
+	"\x11duplicate_entries\x18\a \x03(\v2\x1c.communication.AdvertisementR\x10duplicateEntries\"\xb1\x01\n" +
 	"\rAdvertisement\x12*\n" +
 	"\x10InterfaceAddress\x18\x01 \x01(\tR\x10InterfaceAddress\x12 \n" +
 	"\vLinkStateId\x18\x02 \x01(\tR\vLinkStateId\x12\"\n" +
 	"\fPrefixLength\x18\x03 \x01(\tR\fPrefixLength\x12\x1a\n" +
-	"\bLinkType\x18\x04 \x01(\tR\bLinkType\"j\n" +
+	"\bLinkType\x18\x04 \x01(\tR\bLinkType\x12\x12\n" +
+	"\x04PBit\x18\x05 \x01(\bR\x04PBit\"j\n" +
 	"\x12AccessListAnalyzer\x12\x1e\n" +
 	"\n" +
 	"AccessList\x18\x01 \x01(\tR\n" +
