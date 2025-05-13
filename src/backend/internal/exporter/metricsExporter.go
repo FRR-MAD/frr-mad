@@ -56,7 +56,7 @@ func (m *MetricExporter) initializeRouterMetrics(flags map[string]*ParsedFlag) {
 		m.metrics["ospf_router_links"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_router_links_total",
-				Help: "Number of router links in OSPF",
+				Help: "Number of router interfaces in OSPF",
 			},
 			[]string{"area_id", "link_state_id"},
 		)
@@ -69,7 +69,7 @@ func (m *MetricExporter) initializeNetworkMetrics(flags map[string]*ParsedFlag) 
 		m.metrics["ospf_network_attached_routers"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_network_attached_routers_total",
-				Help: "Number of routers attached to OSPF network",
+				Help: "Number of attached routers announced in network LSA",
 			},
 			[]string{"area_id", "link_state_id"},
 		)
@@ -108,7 +108,7 @@ func (m *MetricExporter) initializeExternalMetrics(flags map[string]*ParsedFlag)
 		m.metrics["ospf_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_external_metric",
-				Help: "OSPF external route metric",
+				Help: "OSPF external LSA route metric",
 			},
 			[]string{"link_state_id", "metric_type"},
 		)
@@ -121,7 +121,7 @@ func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]*ParsedF
 		m.metrics["ospf_nssa_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_nssa_external_metric",
-				Help: "OSPF NSSA external route metric",
+				Help: "OSPF NSSA external LSA route metric",
 			},
 			[]string{"area_id", "link_state_id", "metric_type"},
 		)
@@ -134,7 +134,7 @@ func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag)
 		m.metrics["ospf_database_counts"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_database_lsa_count",
-				Help: "Counts of different LSA types in OSPF database",
+				Help: "Amount of LSDB entries for each LSA type",
 			},
 			[]string{"area_id", "lsa_type"},
 		)
