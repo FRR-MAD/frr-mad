@@ -103,7 +103,7 @@ var Grey = "#444444"        // Usage: inactive components, options, H2 Title
 var NormalBeige = "#d7d7af" // Usage: H1 Title
 var GoodGreen = "#5f875f"   // Usage: Box border when content good
 var BadRed = "#d70000"      // Usage: Box border when content bad
-var NavyBlue = "#3a3a3a"
+var NavyBlue = "#5f87af"
 
 //var MainBlue = "111" // Usage: Active Tab, Content Border
 //var Grey = "238"          // Usage: inactive components, options
@@ -411,31 +411,8 @@ var (
 	MultilineCellStyle      = lipgloss.NewStyle().Padding(0, 1, 1, 1)
 	LastCellOfMultiline     = lipgloss.NewStyle().Padding(0, 1)
 	BadCellStyle            = lipgloss.NewStyle().Padding(0, 1)
+	EvenRowCell             = NormalCellStyle.Foreground(lipgloss.Color(NavyBlue))
 )
-
-//var NormalTable = table.New().
-//	Border(TableBorder).
-//	BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(NormalBeige))).
-//	StyleFunc(func(row, col int) lipgloss.Style {
-//		switch {
-//		case row == table.HeaderRow:
-//			return HeaderStyle
-//		default:
-//			return CellStyle
-//		}
-//	})
-
-//var BadTable = table.New().
-//	Border(NormalTableBorder).
-//	BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(BadRed))).
-//	StyleFunc(func(row, col int) lipgloss.Style {
-//		switch {
-//		case row == table.HeaderRow:
-//			return headerStyle
-//		default:
-//			return cellStyle
-//		}
-//	})
 
 func BuildTableStyles() table.Styles {
 	// start from the defaults
