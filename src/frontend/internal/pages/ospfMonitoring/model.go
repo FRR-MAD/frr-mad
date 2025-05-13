@@ -69,6 +69,6 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
-		common.FetchRunningConfig(),
+		common.FetchRunningConfig(m.logger),
 	)
 }

@@ -45,7 +45,7 @@ func (m *Model) View() string {
 func (m *Model) renderLsdbMonitorTab() string {
 	var lsdbBlocks []string
 
-	lsdb, err := backend.GetLSDB()
+	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetLSDB")
 	}
@@ -327,15 +327,15 @@ func (m *Model) renderLsdbMonitorTab() string {
 }
 
 func (m *Model) renderRouterMonitorTab() string {
-	ospfNeighbors, err := backend.GetOspfNeighborInterfaces()
+	ospfNeighbors, err := backend.GetOspfNeighborInterfaces(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
-	routerLSASelf, err := backend.GetOspfRouterDataSelf()
+	routerLSASelf, err := backend.GetOspfRouterDataSelf(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
-	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping()
+	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfP2PInterfaceMapping")
 	}
@@ -480,11 +480,11 @@ func (m *Model) renderRouterMonitorTab() string {
 }
 
 func (m *Model) renderNetworkMonitorTab() string {
-	networkLSASelf, err := backend.GetOspfNetworkDataSelf()
+	networkLSASelf, err := backend.GetOspfNetworkDataSelf(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
-	routerName, _, err := backend.GetRouterName()
+	routerName, _, err := backend.GetRouterName(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterName")
 	}
@@ -572,15 +572,15 @@ func (m *Model) renderExternalMonitorTab() string {
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
 
-	externalLSASelf, err := backend.GetOspfExternalDataSelf()
+	externalLSASelf, err := backend.GetOspfExternalDataSelf(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfExternalDataSelf")
 	}
-	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf()
+	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
 	}
-	routerName, _, err := backend.GetRouterName()
+	routerName, _, err := backend.GetRouterName(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterName")
 	}
@@ -717,12 +717,12 @@ func (m *Model) renderExternalMonitorTab() string {
 }
 
 func (m *Model) renderNeighborMonitorTab() string {
-	ospfNeighbors, err := backend.GetOspfNeighbors()
+	ospfNeighbors, err := backend.GetOspfNeighbors(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
 
-	routerName, _, err := backend.GetRouterName()
+	routerName, _, err := backend.GetRouterName(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterName")
 	}
@@ -800,7 +800,7 @@ func (m *Model) renderRunningConfigTab() string {
 	)
 
 	staticFRRConfigTitle := styles.H1TitleStyleForTwo().Render("Parsed Running Config")
-	staticFRRConfiguration, err := backend.GetStaticFRRConfigurationPretty()
+	staticFRRConfiguration, err := backend.GetStaticFRRConfigurationPretty(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetStaticFRRConfigurationPretty")
 	}

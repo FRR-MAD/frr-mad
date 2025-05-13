@@ -1,14 +1,16 @@
 package components
 
 import (
+	"strings"
+
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
 )
 
-func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize *common.WindowSize) string {
+func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize *common.WindowSize, logger *logger.Logger) string {
 	var renderedTabs []string
 	var renderedSubTabs []string
 	for i, tab := range tabs {
@@ -43,7 +45,7 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	}
 
 	// in future call backend to query router name
-	routerName, routerOSPFID, _ := backend.GetRouterName()
+	routerName, routerOSPFID, _ := backend.GetRouterName(logger)
 	routerNameWidth := lipgloss.Width(routerName)
 	routerNameString := "Router Name: "
 	routerNameStringWidth := lipgloss.Width(routerNameString)

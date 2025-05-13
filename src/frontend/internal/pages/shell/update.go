@@ -4,11 +4,12 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	"time"
+
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/protobuf/encoding/protojson"
-	"time"
 )
 
 // Update handles incoming messages and updates the dashboard state.
@@ -38,14 +39,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.clearBackendInput()
 		case "enter":
 			if currentSubTabLocal == 0 {
-				bashOutput, err := common.RunCustomCommand("bash", m.bashInput, 5*time.Second)
+				bashOutput, err := common.RunCustomCommand("bash", m.bashInput, 5*time.Second, m.logger)
 				if err != nil {
 					m.bashOutput = fmt.Sprintf("Error: %v", err)
 				} else {
 					m.bashOutput = bashOutput
 				}
 			} else if currentSubTabLocal == 1 {
-				vtyshOutput, err := common.RunCustomCommand("vtysh", m.vtyshInput, 5*time.Second)
+				vtyshOutput, err := common.RunCustomCommand("vtysh", m.vtyshInput, 5*time.Second, m.logger)
 				if err != nil {
 					m.vtyshOutput = fmt.Sprintf("Error: %v", err)
 				} else {
@@ -56,6 +57,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.backendServiceInput,
 					m.backendCommandInput,
 					nil,
+					m.logger,
 				)
 				if err != nil {
 					m.backendResponse = fmt.Sprintf("Error: %v", err)

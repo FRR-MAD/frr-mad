@@ -3,9 +3,10 @@ package dashboard
 import (
 	// "math/rand/v2"
 
+	"time"
+
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	tea "github.com/charmbracelet/bubbletea"
-	"time"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -20,7 +21,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineDown(10)
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
-			return m, common.FetchOSPFData()
+			return m, common.FetchOSPFData(m.logger)
 		}
 
 	case common.OSPFMsg:

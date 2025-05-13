@@ -72,9 +72,9 @@ func reloadView() tea.Cmd {
 }
 
 func (m *Model) detectAnomaly() {
-	ospfRouterAnomalies, _ := backend.GetRouterAnomalies()
-	ospfExternalAnomalies, _ := backend.GetExternalAnomalies()
-	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies()
+	ospfRouterAnomalies, _ := backend.GetRouterAnomalies(m.logger)
+	ospfExternalAnomalies, _ := backend.GetExternalAnomalies(m.logger)
+	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies(m.logger)
 
 	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
 		common.HasAnyAnomaly(ospfExternalAnomalies) ||
@@ -89,7 +89,7 @@ func (m *Model) detectAnomaly() {
 func (m *Model) Init() tea.Cmd {
 	m.detectAnomaly()
 	return tea.Batch(
-		common.FetchOSPFData(),
+		common.FetchOSPFData(m.logger),
 		reloadView(),
 	)
 }

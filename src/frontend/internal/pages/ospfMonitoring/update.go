@@ -20,9 +20,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "r":
 			m.runningConfig = []string{"Reloading..."}
-			return m, common.FetchRunningConfig()
+			return m, common.FetchRunningConfig(m.logger)
 		case "enter":
-			return m, common.FetchRunningConfig()
+			return m, common.FetchRunningConfig(m.logger)
 		}
 	case common.RunningConfigMsg:
 		m.runningConfig = common.ShowRunningConfig(string(msg))
