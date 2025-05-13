@@ -6,9 +6,8 @@ It effectively detects anomalies by comparing static file data with the Link-Sta
 ## Usage
 
 This Project is split into two parts:
-- **frr-tui**: The frontend of our application. It's not really necessary but makes it a lot easier to check the sanity of the application. It should also help significantly with less experienced network engineers to work with this ospf.
-- **frr-analyzer**: The analysis system that consits of aggregation, analysis and exporting information. It spawns a socket, which the frr-tui unit uses to fetch all necessary data.
-- **frr-mad-exporter**: Exports collected routing data and triggers alerts when anomalies are detected, enabling monitoring and quick issue response.
+- **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
+- **frr-analyzer**: The analysis system that consits of aggregation, analysis and information exporting. It spawns a socket, which the frr-tui unit uses to fetch all necessary data. The exporter collects routing data and exports them via the well-defined Prometheus Node Exporter uri. 
 
 ### frr-analyzer
 Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
@@ -17,6 +16,8 @@ Install the applications where you want or create your custom start scripts. To 
 ```
 
 This will start a persistent service and spawn a socket. To stop it, you can execute the binary again with the stop argument. Don't kill it if possible, as it will leave a spawned socket.
+
+By default the exporter runs on port 9091 an all ips. The port is freely adjustable.
 
 ### frr-tui
 The tui can be started by running:
