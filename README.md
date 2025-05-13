@@ -51,7 +51,7 @@ default:
   debuglevel: none 
 
 socket:
-  unixsocketlocation: /tmp/frr-mad
+  unixsocketlocation: /var/run/frr-mad
   unixsocketname: analyzer.sock
   sockettype: unix
 
