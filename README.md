@@ -17,7 +17,8 @@ Install the applications where you want or create your custom start scripts. To 
 
 This will start a persistent service and spawn a socket. To stop it, you can execute the binary again with the stop argument. Don't kill it if possible, as it will leave a spawned socket.
 
-By default the exporter runs on port 9091 an all ips. The port is freely adjustable.
+By default the exporter runs on port 9091 an all ips. The port is freely adjustable. 
+
 
 ### frr-tui
 The tui can be started by running:
@@ -43,7 +44,7 @@ Provided is a default configuration file. Creating it will start the application
 
 ```sh
 mkdir -p /etc/frr-mad
-cat <<EOF>/etc/frr-mad/frr-mad.yaml
+cat <<EOF>/etc/frr-mad/main.yaml
 default:
   tempfiles: /tmp/frr-mad
   logpath: /tmp/frr-mad/log
