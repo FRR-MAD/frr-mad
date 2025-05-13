@@ -1432,21 +1432,22 @@ func transformNssaExternalLSA(lsaData map[string]interface{}, isNssa ...bool) ma
 		"externalRouteTag":   "external_route_tag",
 	}
 
-	if isNssa != nil {
-		fmt.Println("=========== TEST ===========")
-	}
+	// TODO: What is this?
+	//if isNssa != nil {
+	//	fmt.Println("=========== TEST ===========")
+	//}
 	for jsonKey, protoKey := range fieldMapping {
-		if isNssa != nil {
-			fmt.Println(jsonKey)
-			fmt.Println(lsaData)
-		}
+		//if isNssa != nil {
+		//	fmt.Println(jsonKey)
+		//	fmt.Println(lsaData)
+		//}
 		if value, exists := lsaData[jsonKey]; exists {
 			transformed[protoKey] = value
 		}
 	}
-	if isNssa != nil {
-		fmt.Println("=========== TEST ===========")
-	}
+	//if isNssa != nil {
+	//	fmt.Println("=========== TEST ===========")
+	//}
 
 	return transformed
 }

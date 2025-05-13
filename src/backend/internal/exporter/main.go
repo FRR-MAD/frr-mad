@@ -38,7 +38,6 @@ func NewExporter(
 	frrData *frrProto.FullFRRData,
 	anomalies *frrProto.AnomalyAnalysis,
 ) *Exporter {
-	// Parse port
 	port := 9091
 
 	if config.Port > 0 {
@@ -51,12 +50,7 @@ func NewExporter(
 
 	registry := prometheus.NewRegistry()
 	flags := getFlagConfigs(config)
-	//flags, err := configs.GetFlagConfigs(config)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error loading config flags: %v", err)
-	// }
 
-	// Create exporter
 	e := &Exporter{
 		interval:        pollInterval,
 		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
@@ -82,7 +76,6 @@ func (e *Exporter) Start() {
 	//e.runExportLoop()
 	go e.runExportLoop()
 	e.logger.Info(fmt.Sprintf("Exporter started on port %s", e.server.Addr))
-	fmt.Sprintf("Exporter started on port %s", e.server.Addr)
 }
 
 func (e *Exporter) Stop() {
