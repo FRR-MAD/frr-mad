@@ -184,12 +184,18 @@ func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]*ParsedFlag
 func (m *MetricExporter) initializeRouteMetrics(flags map[string]*ParsedFlag) {
 	if flag, ok := flags["RouteList"]; ok && flag.Enabled {
 		m.enabledMetrics["routes"] = true
-		m.metrics["route_metric"] = prometheus.NewGaugeVec(
+		m.metrics["installed_ospf_route"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_route_metric",
-				Help: "Routing protocol metric for installed routes",
+				Name: "frr_installed_ospf_route",
+				Help: "Routing protocol metric for installed ospf routes",
 			},
 			[]string{"prefix", "protocol", "vrf"},
+		)
+		m.metrics["installed_ospf_routes_count"] = prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Name: "frr_installed_ospf_routes_count",
+				Help: "Number of installed ospf routes from RIB",
+			},
 		)
 	}
 }
@@ -377,15 +383,19 @@ func (m *MetricExporter) updateInterfaceMetrics() {
 
 func (m *MetricExporter) updateRouteMetrics() {
 	if routeData := m.data.GetRoutingInformationBase(); routeData != nil {
-		vec := m.metrics["route_metric"].(*prometheus.GaugeVec)
+		vec := m.metrics["installed_ospf_route"].(*prometheus.GaugeVec)
+		countMetric := m.metrics["installed_ospf_routes_count"].(prometheus.Gauge)
 		vec.Reset()
 
+		var counter float64
 		for vrf, routeEntry := range routeData.Routes {
 			for _, route := range routeEntry.Routes {
 				if route.Installed && route.Protocol == "ospf" {
+					counter++
 					vec.WithLabelValues(route.Prefix, route.Protocol, vrf).Set(float64(route.Metric))
 				}
 			}
 		}
+		countMetric.Set(counter)
 	}
 }

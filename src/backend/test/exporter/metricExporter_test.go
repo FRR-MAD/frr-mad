@@ -100,13 +100,6 @@ func TestMetricExporter_WithData(t *testing.T) {
 			},
 			AsExternalCount: 4,
 		},
-		// TODO: what to do?
-		// OspfDuplicates: &frrProto.OSPFDuplicates{
-		// 	AsExternalLinkStates: []*frrProto.ASExternalLinkState{
-		// 		{LinkStateId: "6.6.6.6"},
-		// 		{LinkStateId: "6.6.6.6"}, // Duplicate
-		// 	},
-		// },
 		OspfNeighbors: &frrProto.OSPFNeighbors{
 			Neighbors: map[string]*frrProto.NeighborList{
 				"eth0": {
@@ -137,6 +130,12 @@ func TestMetricExporter_WithData(t *testing.T) {
 					Routes: []*frrProto.Route{
 						{Prefix: "10.0.0.0/24", Protocol: "ospf", Metric: 100, Installed: true},
 						{Prefix: "192.168.1.0/24", Protocol: "bgp", Metric: 200, Installed: true},
+						{Prefix: "172.16.0.0/16", Protocol: "ospf", Metric: 150, Installed: true},
+					},
+				},
+				"vrf1": {
+					Routes: []*frrProto.Route{
+						{Prefix: "10.1.0.0/24", Protocol: "ospf", Metric: 50, Installed: true},
 					},
 				},
 			},
@@ -175,6 +174,18 @@ func TestMetricExporter_WithData(t *testing.T) {
 					if match {
 						return m.Gauge.GetValue()
 					}
+				}
+			}
+		}
+		return 0
+	}
+
+	// Helper function to get unlabeled metric value
+	getUnlabeledMetricValue := func(name string) float64 {
+		for _, metric := range metrics {
+			if *metric.Name == name {
+				if len(metric.Metric) > 0 {
+					return metric.Metric[0].Gauge.GetValue()
 				}
 			}
 		}
@@ -244,12 +255,6 @@ func TestMetricExporter_WithData(t *testing.T) {
 		"lsa_type": "external",
 	}))
 
-	// Duplicate metrics
-	//TODO: what to do?
-	// assert.Equal(t, 2.0, getMetricValue("frr_ospf_duplicate_lsa_count", map[string]string{
-	// 	"link_state_id": "6.6.6.6",
-	// }))
-
 	// Neighbor metrics
 	assert.Equal(t, 1.0, getMetricValue("frr_ospf_neighbor_state", map[string]string{
 		"neighbor_id": "7.7.7.7",
@@ -287,11 +292,24 @@ func TestMetricExporter_WithData(t *testing.T) {
 	}))
 
 	// Route metrics
-	assert.Equal(t, 100.0, getMetricValue("frr_route_metric", map[string]string{
+	assert.Equal(t, 100.0, getMetricValue("frr_installed_ospf_route", map[string]string{
 		"prefix":   "10.0.0.0/24",
 		"protocol": "ospf",
 		"vrf":      "default",
 	}))
+	assert.Equal(t, 150.0, getMetricValue("frr_installed_ospf_route", map[string]string{
+		"prefix":   "172.16.0.0/16",
+		"protocol": "ospf",
+		"vrf":      "default",
+	}))
+	assert.Equal(t, 50.0, getMetricValue("frr_installed_ospf_route", map[string]string{
+		"prefix":   "10.1.0.0/24",
+		"protocol": "ospf",
+		"vrf":      "vrf1",
+	}))
+
+	// Route count metric
+	assert.Equal(t, 3.0, getUnlabeledMetricValue("frr_installed_ospf_routes_count"))
 }
 
 func TestMetricExporter_WithPartialData(t *testing.T) {
@@ -311,7 +329,7 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 		"OSPFDatabase":         {Enabled: false},
 		"OSPFNeighbors":        {Enabled: false},
 		"InterfaceList":        {Enabled: false},
-		"RouteList":            {Enabled: false},
+		"RouteList":            {Enabled: true}, // Enable RouteList for this test
 	}
 
 	// ── Build a COMPLETE FullFRRData payload ─────────────────────────────────────
@@ -399,7 +417,6 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 				"eth1": {OperationalStatus: "Down", AdministrativeStatus: "Up", VrfName: "default"},
 			},
 		},
-		// TODO: What to do?
 		RoutingInformationBase: &frrProto.RoutingInformationBase{
 			Routes: map[string]*frrProto.RouteEntry{
 				"default": {
@@ -413,18 +430,8 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 	}
 
 	// ── Exercise the exporter ────────────────────────────────────────────────────
-	//exp := exporter.NewMetricExporter(data, registry, testLogger, flags)
-	//exp.Update()
-	//metrics, err := registry.Gather()
-	//assert.NoError(t, err)
-
-	// Create frrMadExporter
 	frrMadExporter := exporter.NewMetricExporter(data, registry, testLogger, flags)
-
-	// Test
 	frrMadExporter.Update()
-
-	// Verify metrics
 	metrics, err := registry.Gather()
 	assert.NoError(t, err)
 
@@ -458,7 +465,7 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 	}
 
 	// ── Assert only the enabled metrics appear ──────────────────────────────────
-	// Router & network & external & duplicates should be present:
+	// Router & network & external & route metrics should be present:
 	assert.Equal(t, 3.0, getValue("frr_ospf_router_links_total", map[string]string{
 		"area_id": "0.0.0.0", "link_state_id": "1.1.1.1",
 	}))
@@ -468,8 +475,12 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 	assert.Equal(t, 30.0, getValue("frr_ospf_external_metric", map[string]string{
 		"link_state_id": "4.4.4.4", "metric_type": "E2",
 	}))
+	assert.Equal(t, 100.0, getValue("frr_installed_ospf_route", map[string]string{
+		"prefix": "10.0.0.0/24", "protocol": "ospf", "vrf": "default",
+	}))
+	assert.Equal(t, 1.0, getValue("frr_installed_ospf_routes_count", map[string]string{}))
 
-	// And every other metric (summary, ASBR, NSSA, DB, neighbors, interfaces, routes)
+	// And every other metric (summary, ASBR, NSSA, DB, neighbors, interfaces)
 	// should NOT be registered:
 	disabled := []string{
 		"frr_ospf_summary_metric",
@@ -480,7 +491,6 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 		"frr_ospf_neighbor_uptime_seconds",
 		"frr_interface_operational_status",
 		"frr_interface_admin_status",
-		"frr_route_metric",
 	}
 	for _, name := range disabled {
 		for _, mf := range metrics {
@@ -543,7 +553,7 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 		"frr_ospf_neighbor_uptime_seconds",
 		"frr_interface_operational_status",
 		"frr_interface_admin_status",
-		"frr_route_metric",
+		"frr_installed_ospf_route",
 	}
 
 	for _, expected := range expectedMetrics {
@@ -739,7 +749,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					{Prefix: "p1", Protocol: "ospf", Metric: 15, Installed: true},
 				}
 			},
-			metricName:   "frr_route_metric",
+			metricName:   "frr_installed_ospf_route",
 			keepLabels:   map[string]string{"prefix": "p1", "protocol": "ospf", "vrf": "vrf"},
 			keepValue:    10.0,
 			removeLabels: nil,
