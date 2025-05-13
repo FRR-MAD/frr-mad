@@ -104,7 +104,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 		assert.Equal(t, len(expectedAccessList), len(actualAccessList))
 		assert.True(t, cmp.Diff(expectedAccessListKeys, actualAccessListKeys, cmpopts.SortSlices(less)) == "")
 		for _, v := range actualAccessListKeys {
-			assert.Equal(t, actualAccessList[v], expectedAccessList[v])
+			assert.Equal(t, expectedAccessList[v], actualAccessList[v])
 		}
 	})
 
@@ -186,7 +186,7 @@ func TestRouterLsaUnhappy2(t *testing.T) {
 	expectedMissingEntrires := []*frrProto.Advertisement{
 		{
 			InterfaceAddress: "10.0.12.2",
-			LinkType:         "a Transit Network",
+			LinkType:         "transit network",
 		},
 	}
 
