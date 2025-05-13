@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"sort"
+	"strings"
+	"time"
 
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
@@ -37,16 +39,42 @@ func (m *Model) View() string {
 func (m *Model) renderOSPFDashboard() string {
 	// Update the viewport
 	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
-	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
+	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - styles.HeightH1
 
+	var statusHeader string
 	if m.hasAnomalyDetected {
+		anomalyHeader := styles.H1BadTitleStyle().
+			Width(styles.WidthTwoH1ThreeFourth).
+			BorderBottom(true).
+			Padding(0).
+			Render("Anomalies Detected!")
+		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := getOspfDashboardAnomalies()
 		m.viewport.SetContent(ospfDashboardAnomalies)
 	} else {
+		dashboardHeader := styles.H1GoodTitleStyle().
+			Width(styles.WidthTwoH1ThreeFourth).
+			BorderBottom(true).
+			Padding(0).
+			Render("All OSPF Routes are advertised as Expected")
+		statusHeader = dashboardHeader
 		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf()
 		m.viewport.SetContent(ospfDashboardLsdbSelf)
 	}
 
+	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(), getOSPFGeneralInfoBox())
+
+	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewport.View())
+
+	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
+		leftSideDashboard,
+		rightSideDashboard,
+	)
+
+	return horizontalDashboard
+}
+
+func getSystemResourcesBox() string {
 	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources()
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
@@ -59,44 +87,59 @@ func (m *Model) renderOSPFDashboard() string {
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
 	}
 
-	cpuStatistics := lipgloss.JoinVertical(lipgloss.Left,
+	systemStatistics := lipgloss.JoinVertical(lipgloss.Left,
 		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("CPU Metrics"),
 		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
 			"CPU Usage: "+cpuUsageString+"\n"+
-				"Cores: "+cpuAmountString),
-		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2OneFourth).Render(""),
-	)
-
-	memoryStatistics := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Memory Metrics"),
-		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
-			"Memory Usage: "+memoryString),
-		styles.H2BoxBottomBorderStyle().Width(styles.WidthTwoH2OneFourth).Render(""),
+				"Cores: "+cpuAmountString+"\n"+
+				"Memory Usage: "+memoryString)+"\n",
 	)
 
 	systemResources := lipgloss.JoinVertical(lipgloss.Left,
 		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resources"),
-		cpuStatistics,
-		memoryStatistics,
+		systemStatistics,
+	)
+	return systemResources
+}
+
+func getOSPFGeneralInfoBox() string {
+	ospfInformation, err := backend.GetOSPF()
+	if err != nil {
+		return common.PrintBackendError(err, "GetOSPF")
+	}
+
+	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
+	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
+
+	ospfRouterInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
+		"OSPF Router ID: " + ospfInformation.RouterId + "\n" +
+			"Last SPF Execution: " + lastSPFExecution.String() + "\n" +
+			"Total External LSAs: " + strconv.Itoa(int(ospfInformation.LsaExternalCounter)) + "\n" +
+			"Attached Areas: " + strconv.Itoa(int(ospfInformation.AttachedAreaCounter)) + "\n")
+
+	var ospfAreaInformation []string
+	for areaID, areaData := range ospfInformation.Areas {
+		ospfAreaInformation = append(ospfAreaInformation,
+			styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Area "+areaID))
+		ospfAreaInformation = append(ospfAreaInformation,
+			styles.H2TwoContentBoxesStyle().Width(styles.WidthTwoH2OneFourthBox).Render(
+				"Full Adjencencies: "+strconv.Itoa(int(areaData.NbrFullAdjacentCounter))+"\n"+
+					"Total LSAs: "+strconv.Itoa(int(areaData.LsaNumber))+"\n"))
+	}
+
+	renderedOSPFAreaInformation := lipgloss.JoinVertical(lipgloss.Left, ospfAreaInformation...)
+
+	ospfInformationBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("General OSPF Information"),
+		ospfRouterInfo,
+		renderedOSPFAreaInformation,
 	)
 
-	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
-		m.viewport.View(),
-		systemResources,
-	)
-
-	return horizontalDashboard
+	return ospfInformationBox
 }
 
 func getOspfDashboardLsdbSelf() string {
 	var lsdbSelfBlocks []string
-
-	dashboardHeader := styles.H1TitleStyle().
-		Width(styles.WidthTwoH1ThreeFourth).
-		BorderBottom(true).
-		Render("All OSPF Routes are advertised as Expected")
-
-	lsdbSelfBlocks = append(lsdbSelfBlocks, dashboardHeader)
 
 	lsdb, err := backend.GetLSDB()
 	if err != nil {
@@ -471,23 +514,41 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	// extract data for tables
 	var tableData [][]string
 
-	for _, superfluousEntry := range a.SuperfluousEntries {
-		tableData = append(tableData, []string{
-			superfluousEntry.InterfaceAddress,
-			"/" + superfluousEntry.PrefixLength,
-			superfluousEntry.LinkStateId,
-			superfluousEntry.LinkType,
-			"Overadvertised Route",
-		})
+	// TODO: add all anomily types
+	if a.HasOverAdvertisedPrefixes {
+		for _, superfluousEntry := range a.SuperfluousEntries {
+			var firstCol string
+			if strings.Contains(lsaTypeHeader, "Router") {
+				firstCol = superfluousEntry.InterfaceAddress
+			} else {
+				firstCol = superfluousEntry.LinkStateId
+			}
+
+			tableData = append(tableData, []string{
+				firstCol,
+				"/" + superfluousEntry.PrefixLength,
+				superfluousEntry.LinkType,
+				"Overadvertised Route",
+			})
+		}
 	}
-	for _, missingEntry := range a.MissingEntries {
-		tableData = append(tableData, []string{
-			missingEntry.InterfaceAddress,
-			"/" + missingEntry.PrefixLength,
-			missingEntry.LinkStateId,
-			missingEntry.LinkType,
-			"Underadvertised Route",
-		})
+
+	if a.HasUnderAdvertisedPrefixes {
+		for _, missingEntry := range a.MissingEntries {
+			var firstCol string
+			if strings.Contains(lsaTypeHeader, "Router") {
+				firstCol = missingEntry.InterfaceAddress
+			} else {
+				firstCol = missingEntry.LinkStateId
+			}
+
+			tableData = append(tableData, []string{
+				firstCol,
+				"/" + missingEntry.PrefixLength,
+				missingEntry.LinkType,
+				"Underadvertised Route",
+			})
+		}
 	}
 
 	// Order all Table Data
@@ -499,9 +560,8 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	rows := len(tableData)
 	table := components.NewAnomalyTable(
 		[]string{
-			"Interface Address",
+			"Network Address",
 			"CIDR",
-			"Link State ID",
 			"Link Type",
 			"Anomaly Type",
 		},
@@ -526,31 +586,3 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 // ============================== //
 // HELPERS: BACKEND CALLS         //
 // ============================== //
-
-//func GetSystemResources() (int64, float64, float64, error) {
-//
-//	response, err := backend.SendMessage("system", "allResources", nil)
-//	if err != nil {
-//		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
-//	}
-//	if response.Status != "success" {
-//		return 0, 0, 0, fmt.Errorf("backend returned status %q: %s", response.Status, response.Message)
-//	}
-//
-//	systemMetrics := response.Data.GetSystemMetrics()
-//
-//	cores := systemMetrics.CpuAmount
-//	cpuUsage := systemMetrics.CpuUsage
-//	memoryUsage := systemMetrics.MemoryUsage
-//
-//	return cores, cpuUsage, memoryUsage, nil
-//}
-
-//func getLSDB() (*pkg.OSPFDatabase, error) {
-//	response, err := backend.SendMessage("ospf", "database", nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return response.Data.GetOspfDatabase(), nil
-//}

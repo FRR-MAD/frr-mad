@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"google.golang.org/protobuf/proto"
 )
 
 type RedistributedRoute struct {
@@ -34,7 +35,9 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
 
-	// parse frr configuration file
+	peerInterfaceMap := GetPeerNetworkAddress(c.metrics.StaticFrrConfiguration)
+	peerNeighborMap := GetPeerNeighbor(c.metrics.OspfNeighbors, peerInterfaceMap)
+
 	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
 
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
@@ -44,7 +47,7 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
-	isRouterLSDB := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname)
+	isRouterLSDB, p2pMap := GetRuntimeRouterData(c.metrics.OspfRouterData, c.metrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
 
 	isExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname)
 
@@ -61,6 +64,8 @@ func (c *Analyzer) AnomalyAnalysis() {
 
 	//c.AnomalyAnalysisFIB(ribMap, isRouterLSDB, isExternalLSDB, isNssaExternalLSDB)
 
+	//c.UpdateMetrics(p2pMap)
+	proto.Merge(c.P2pMap, &p2pMap)
 }
 
 func maskToPrefixLength(mask string) string {
@@ -156,4 +161,39 @@ func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[
 	}
 
 	return result
+}
+
+func GetPeerNetworkAddress(config *frrProto.StaticFRRConfiguration) map[string]string {
+	peerMap := make(map[string]string)
+
+	for _, iface := range config.Interfaces {
+		for _, i := range iface.InterfaceIpPrefixes {
+			if i.HasPeer {
+				peerMap[iface.Name] = i.IpPrefix.IpAddress
+			}
+		}
+	}
+
+	return peerMap
+}
+
+func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]string) map[string]string {
+	result := map[string]string{}
+
+	for key, neighbors := range config.Neighbors {
+		for _, neighbor := range neighbors.Neighbors {
+			iface := strings.Split(neighbor.IfaceName, ":")
+			if _, exists := peerInterface[iface[0]]; exists {
+				result[key] = iface[1]
+			}
+		}
+	}
+
+	return result
+}
+
+func (a *Analyzer) UpdateMetrics(p2pMap frrProto.PeerInterfaceMap) {
+
+	proto.Merge(a.P2pMap, &p2pMap)
+
 }

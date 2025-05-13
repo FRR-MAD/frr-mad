@@ -154,6 +154,24 @@ func GetSystemResources() (int64, float64, float64, error) {
 	return cores, cpuUsage, memoryUsage, nil
 }
 
+func GetRIB() (*frrProto.RoutingInformationBase, error) {
+	response, err := SendMessage("frr", "rib", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetRoutingInformationBase(), nil
+}
+
+func GetRibFibSummary() (*frrProto.RibFibSummaryRoutes, error) {
+	response, err := SendMessage("frr", "ribfibSummary", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetRibFibSummaryRoutes(), nil
+}
+
 func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	response, err := SendMessage("ospf", "database", nil)
 	if err != nil {
@@ -163,13 +181,49 @@ func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	return response.Data.GetOspfDatabase(), nil
 }
 
-func GetOspfRouterData() (*frrProto.OSPFRouterData, error) {
+func GetOspfRouterDataSelf() (*frrProto.OSPFRouterData, error) {
 	response, err := SendMessage("ospf", "router", nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return response.Data.GetOspfRouterData(), nil
+}
+
+func GetOSPF() (*frrProto.GeneralOspfInformation, error) {
+	response, err := SendMessage("ospf", "generalInfo", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetGeneralOspfInformation(), nil
+}
+
+func GetOspfP2PInterfaceMapping() (*frrProto.PeerInterfaceMap, error) {
+	response, err := SendMessage("ospf", "peerMap", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetPeerInterfaceToAddress(), nil
+}
+
+func GetOspfNetworkDataSelf() (*frrProto.OSPFNetworkData, error) {
+	response, err := SendMessage("ospf", "network", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfNetworkData(), nil
+}
+
+func GetOspfNeighbors() (*frrProto.OSPFNeighbors, error) {
+	response, err := SendMessage("ospf", "neighbors", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfNeighbors(), nil
 }
 
 func GetOspfNeighborInterfaces() ([]string, error) {
@@ -189,7 +243,7 @@ func GetOspfNeighborInterfaces() ([]string, error) {
 	return neighborAddresses, nil
 }
 
-func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
+func GetOspfExternalDataSelf() (*frrProto.OSPFExternalData, error) {
 	response, err := SendMessage("ospf", "externalData", nil)
 	if err != nil {
 		return nil, err
@@ -198,7 +252,7 @@ func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
 	return response.Data.GetOspfExternalData(), nil
 }
 
-func GetOspfNssaExternalData() (*frrProto.OSPFNssaExternalData, error) {
+func GetOspfNssaExternalDataSelf() (*frrProto.OSPFNssaExternalData, error) {
 	response, err := SendMessage("ospf", "nssaExternalData", nil)
 	if err != nil {
 		return nil, err
