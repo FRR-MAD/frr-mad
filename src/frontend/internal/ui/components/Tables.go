@@ -94,6 +94,8 @@ func NewRibMonitorTable(rows int) *ltable.Table {
 			switch {
 			case row == ltable.HeaderRow:
 				return styles.HeaderStyle
+			case row%2 == 0:
+				return styles.EvenRowCell
 			default:
 				return styles.NormalCellStyle
 			}
