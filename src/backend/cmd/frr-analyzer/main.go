@@ -65,7 +65,8 @@ func main() {
 
 	switch command {
 	case "start":
-		startApp(config)
+		pidFile := fmt.Sprintf("%s/frr-mad.pid", config.Socket.UnixSocketLocation)
+		startApp(pidFile, config)
 	case "stop":
 		pidFile := fmt.Sprintf("%s/frr-mad.pid", config.Socket.UnixSocketLocation)
 		stopApp(pidFile)
@@ -81,7 +82,7 @@ func main() {
 	}
 }
 
-func startApp(config *configs.Config) {
+func startApp(currentPid string, config *configs.Config) {
 
 	// Extract configuration sections
 	defaultConfig := config.Default
@@ -107,7 +108,7 @@ func startApp(config *configs.Config) {
 		Logger: appLogger,
 	}
 
-	pidFile := createPid(socketConfig.UnixSocketLocation, appLogger)
+	pidFile := createPid(currentPid, socketConfig.UnixSocketLocation, appLogger)
 	defer os.Remove(pidFile)
 
 	for _, service := range services {
@@ -239,8 +240,21 @@ func createDirectories(config *configs.Config) {
 	}
 }
 
-func createPid(socketPath string, appLogger *logger.Logger) string {
-	pid := os.Getpid()
+func createPid(currentPid string, socketPath string, appLogger *logger.Logger) string {
+	// todo: error handling
+	pidBytes, _ := os.ReadFile(currentPid)
+	pidStr := strings.TrimSpace(string(pidBytes))
+	// todo: error handling
+	pid, _ := strconv.Atoi(pidStr)
+	// todo: error handling
+	process, _ := os.FindProcess(pid)
+	err := process.Signal(syscall.Signal(0))
+	if err == nil {
+		appLogger.Error("FRR-MAD is already running")
+		os.Exit(0)
+	}
+
+	pid = os.Getpid()
 	pidFile := fmt.Sprintf("%s/frr-mad.pid", socketPath)
 	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644); err != nil {
 		appLogger.Error(fmt.Sprintf("Failed to create PID file: %s", err))
