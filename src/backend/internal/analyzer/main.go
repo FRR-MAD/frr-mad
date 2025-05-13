@@ -27,7 +27,8 @@ func InitAnalyzer(
 		RouterAnomaly:       initAnomalyDetection(),
 		ExternalAnomaly:     initAnomalyDetection(),
 		NssaExternalAnomaly: initAnomalyDetection(),
-		FibAnomaly:          initAnomalyDetection(),
+		RibToFibAnomaly:     initAnomalyDetection(),
+		LsdbToRibAnomaly:    initAnomalyDetection(),
 	}
 
 	return &Analyzer{
@@ -56,12 +57,12 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 // TODO: implement misconfiguredPrefixes functionality
 func initAnomalyDetection() *frrProto.AnomalyDetection {
 	return &frrProto.AnomalyDetection{
-		HasOverAdvertisedPrefixes:  false,
-		HasUnderAdvertisedPrefixes: false,
-		HasDuplicatePrefixes:       false,
-		HasMisconfiguredPrefixes:   false,
-		SuperfluousEntries:         []*frrProto.Advertisement{},
-		MissingEntries:             []*frrProto.Advertisement{},
-		DuplicateEntries:           []*frrProto.Advertisement{},
+		HasOverAdvertisedPrefixes: false,
+		HasUnAdvertisedPrefixes:   false,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries:        []*frrProto.Advertisement{},
+		MissingEntries:            []*frrProto.Advertisement{},
+		DuplicateEntries:          []*frrProto.Advertisement{},
 	}
 }
