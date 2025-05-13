@@ -20,7 +20,7 @@ const (
 	MarginX3                  = 6
 	MarginX4                  = 8
 
-	TabRowHeight = 6
+	TabRowHeight = 4
 	FooterHeight = 1
 )
 
@@ -46,6 +46,14 @@ var (
 	WidthTwoH2OneFourthBox   int
 	WidthTwoH2ThreeFourth    int
 	WidthTwoH2ThreeFourthBox int
+
+	ViewPortWidthCompletePage int
+	ViewPortWidthThreeFourth  int
+	ViewPortWidthOneFourth    int
+
+	HeightBasis int
+
+	ViewPortHeightCompletePage int
 
 	HeightH1 int
 	HeightH2 int
@@ -73,6 +81,14 @@ func SetWindowSizes(window common.WindowSize) {
 	WidthTwoH2OneFourthBox = (WidthBasis-2*MarginX4)/4 + roundingCorrectionOneFourthH2
 	WidthTwoH2ThreeFourth = WidthBasis - 2*MarginX2 - 2*BoxBorder - WidthTwoH2OneFourth
 	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
+
+	ViewPortWidthCompletePage = WidthBasis + 2
+	ViewPortWidthThreeFourth = WidthTwoH1ThreeFourth + 2
+	ViewPortWidthOneFourth = WidthTwoH1OneFourth + 2
+
+	HeightBasis = window.Height - TabRowHeight - FooterHeight - BorderContentBox
+
+	ViewPortHeightCompletePage = HeightBasis
 
 	HeightH1 = 4
 	HeightH2 = 2

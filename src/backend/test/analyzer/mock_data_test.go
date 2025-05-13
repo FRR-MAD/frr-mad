@@ -1089,7 +1089,7 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 				Links: []*frrProto.Advertisement{
 					{
 						InterfaceAddress: "10.0.12.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.2.0",
@@ -1098,19 +1098,19 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 					},
 					{
 						InterfaceAddress: "10.0.14.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.16.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.18.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.15.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.0.0",
@@ -1119,15 +1119,15 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 					},
 					{
 						InterfaceAddress: "10.0.17.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.13.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.19.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 				},
 			},
@@ -1135,8 +1135,8 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 	}
 }
 
-func getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy() frrProto.IntraAreaLsa {
-	return frrProto.IntraAreaLsa{
+func getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy() *frrProto.IntraAreaLsa {
+	return &frrProto.IntraAreaLsa{
 		RouterId: "65.0.1.1",
 		Hostname: "r101",
 		Areas: []*frrProto.AreaAnalyzer{
@@ -1146,7 +1146,7 @@ func getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy() frrProto.IntraAr
 				Links: []*frrProto.Advertisement{
 					// {
 					// 	InterfaceAddress: "10.0.12.1",
-					// 	LinkType:         "a Transit Network",
+					// 	LinkType:         "transit network",
 					// },
 					// {
 					// 	InterfaceAddress: "10.0.2.0",
@@ -1155,19 +1155,19 @@ func getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy() frrProto.IntraAr
 					// },
 					{
 						InterfaceAddress: "10.0.14.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.16.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.18.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.15.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.0.0",
@@ -1176,15 +1176,15 @@ func getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy() frrProto.IntraAr
 					},
 					{
 						InterfaceAddress: "10.0.17.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.13.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.19.1",
-						LinkType:         "a Transit Network",
+						LinkType:         "transit network",
 					},
 				},
 			},
@@ -1317,8 +1317,8 @@ func getExpectedShouldRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 
 }
 
-func getExpectedAccessListr101Happy() map[string]frrProto.AccessListAnalyzer {
-	return map[string]frrProto.AccessListAnalyzer{
+func getExpectedAccessListr101Happy() map[string]*frrProto.AccessListAnalyzer {
+	return map[string]*frrProto.AccessListAnalyzer{
 		"localsite": {
 			AccessList: "localsite",
 			AclEntry: []*frrProto.ACLEntry{
@@ -1481,6 +1481,7 @@ func getNssaRouterFRRdataHappy1() *frrProto.FullFRRData {
 						"192.168.1.0": {
 							LinkStateId: "192.168.1.0",
 							NetworkMask: 24,
+							Options:     "*|-|-|-|N/P|-|E|-",
 						},
 					},
 				},
@@ -1583,6 +1584,13 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 					},
 					NextHop: "192.168.100.100",
 				},
+				{
+					IpPrefix: &frrProto.IPPrefix{
+						IpAddress:    "172.16.1.0",
+						PrefixLength: 24,
+					},
+					NextHop: "192.168.100.101",
+				},
 			},
 			RouteMap: map[string]*frrProto.RouteMap{
 				"nssa-routes": {
@@ -1605,6 +1613,16 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 								},
 							},
 						},
+						{
+							Sequence:      20,
+							AccessControl: "permit",
+							Destination: &frrProto.AccessListItem_IpPrefix{
+								IpPrefix: &frrProto.IPPrefix{
+									IpAddress:    "172.16.1.0",
+									PrefixLength: 24,
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1617,6 +1635,12 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 						"192.168.1.0": {
 							LinkStateId: "192.168.1.0",
 							NetworkMask: 24,
+							Options:     "*|-|-|-|N/P|-|E|-",
+						},
+						"10.99.99.0": {
+							LinkStateId: "10.99.99.0",
+							NetworkMask: 24,
+							Options:     "*|-|-|-|N/P|-|E|-",
 						},
 					},
 				},
@@ -1662,8 +1686,8 @@ func getNssaRouterFRRdataUnhappy1() *frrProto.FullFRRData {
 	}
 }
 
-func getExpectedAccessListr102Happy() map[string]frrProto.AccessListAnalyzer {
-	return map[string]frrProto.AccessListAnalyzer{
+func getExpectedAccessListr102Happy() map[string]*frrProto.AccessListAnalyzer {
+	return map[string]*frrProto.AccessListAnalyzer{
 		"localsite": {
 			AccessList: "localsite",
 			AclEntry: []*frrProto.ACLEntry{
@@ -1708,12 +1732,12 @@ func getExpectedIsRouterLSDBr102Happy() *frrProto.IntraAreaLsa {
 				Links: []*frrProto.Advertisement{
 					{
 						InterfaceAddress: "10.0.12.2",
-						LinkType:         "a transit network",
+						LinkType:         "transit network",
 					},
 					{
 						InterfaceAddress: "10.0.23.2",
 						PrefixLength:     "24",
-						LinkType:         "a transit network",
+						LinkType:         "transit network",
 					},
 				},
 			},
@@ -1723,7 +1747,7 @@ func getExpectedIsRouterLSDBr102Happy() *frrProto.IntraAreaLsa {
 				Links: []*frrProto.Advertisement{
 					{
 						InterfaceAddress: "10.1.21.2",
-						LinkType:         "a transit network",
+						LinkType:         "transit network",
 					},
 				},
 			},

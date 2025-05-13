@@ -22,7 +22,6 @@ type Exporter struct {
 	server          *http.Server
 	stopChan        chan struct{}
 	logger          *logger.Logger
-	config          configs.Config
 }
 
 type ParsedFlag struct {
@@ -38,7 +37,6 @@ func NewExporter(
 	frrData *frrProto.FullFRRData,
 	anomalies *frrProto.AnomalyAnalysis,
 ) *Exporter {
-	// Parse port
 	port := 9091
 
 	if config.Port > 0 {
@@ -51,12 +49,28 @@ func NewExporter(
 
 	registry := prometheus.NewRegistry()
 	flags := getFlagConfigs(config)
-	//flags, err := configs.GetFlagConfigs(config)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error loading config flags: %v", err)
-	// }
 
-	// Create exporter
+	mux := http.NewServeMux()
+
+	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `
+			<html>
+				<head><title>FRR MAD Exporter</title></head>
+				<body>
+					<h1>FRR MAD Exporter</h1>
+					<p><a href="/metrics">Metrics</a></p>
+				</body>
+			</html>
+			`)
+	})
+
 	e := &Exporter{
 		interval:        pollInterval,
 		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
@@ -65,7 +79,7 @@ func NewExporter(
 		logger:          logger,
 		server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", port),
-			Handler: promhttp.HandlerFor(registry, promhttp.HandlerOpts{}),
+			Handler: mux,
 		},
 	}
 
@@ -82,7 +96,6 @@ func (e *Exporter) Start() {
 	//e.runExportLoop()
 	go e.runExportLoop()
 	e.logger.Info(fmt.Sprintf("Exporter started on port %s", e.server.Addr))
-	fmt.Sprintf("Exporter started on port %s", e.server.Addr)
 }
 
 func (e *Exporter) Stop() {
@@ -105,11 +118,44 @@ func (e *Exporter) runExportLoop() {
 }
 
 func (e *Exporter) exportData() {
-	e.anomalyExporter.Update()
+	err := tryUpdateWithRetry("AnomalyExporter", e.anomalyExporter.Update, e.logger)
+	if err != nil {
+		e.logger.Error(fmt.Sprintf("Final failure: Anomaly Exporter Update function: %v", err))
+	}
 
 	if e.metricExporter != nil {
-		e.metricExporter.Update()
+		err := tryUpdateWithRetry("MetricExporter", e.metricExporter.Update, e.logger)
+		if err != nil {
+			e.logger.Error(fmt.Sprintf("Final failure: Metric Exporter Update function: %v", err))
+		}
 	}
+}
+
+func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) error {
+	const retryDelay = 500 * time.Millisecond
+
+	try := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+		updateFunc()
+		return nil
+	}
+
+	// First try
+	if err := try(); err != nil {
+		logger.Warning(fmt.Sprintf("%s update failed, retrying in %s: %v", name, retryDelay, err))
+		time.Sleep(retryDelay)
+
+		// Retry
+		if retryErr := try(); retryErr != nil {
+			return retryErr
+		}
+	}
+
+	return nil
 }
 
 // Use reflection to iterate over struct fields

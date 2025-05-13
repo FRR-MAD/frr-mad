@@ -21,15 +21,9 @@ type Model struct {
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
-	boxWidthForOne := windowSize.Width - 6
-	if boxWidthForOne < 20 {
-		boxWidthForOne = 20
-	}
-	// subtract tab row, footer, and border heights.
-	outputHeight := windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(boxWidthForOne, outputHeight)
+	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
 
 	return &Model{
 		title: "OSPF Monitoring",

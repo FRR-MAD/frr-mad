@@ -92,22 +92,25 @@ message OSPFInterfaceConfig {
 // ================ Main Aggregated Message ================
 message FullFRRData {
   OSPFDatabase ospf_database = 1;
-  GeneralOspfInformation general_ospf_information = 2;
-  OSPFRouterData ospf_router_data = 3;
-  OSPFNetworkData ospf_network_data = 4;
-  OSPFSummaryData ospf_summary_data = 5;
-  OSPFAsbrSummaryData ospf_asbr_summary_data = 6;
-  OSPFExternalData ospf_external_data = 7;
-  OSPFNssaExternalData ospf_nssa_external_data = 8;
-  OSPFExternalAll ospf_external_all = 9;
-  OSPFNssaExternalAll ospf_nssa_external_all = 10;
-  OSPFNeighbors ospf_neighbors = 11;
-  InterfaceList interfaces = 12;
-  RoutingInformationBase routing_information_base = 13;
-  RibFibSummaryRoutes rib_fib_summary_routes = 14;
-  StaticFRRConfiguration static_frr_configuration = 15;
-  SystemMetrics system_metrics = 16;
-  FRRRouterData frr_router_data = 17;
+  OSPFRouterData ospf_router_data = 2;
+  GeneralOspfInformation general_ospf_information = 3;
+  OSPFRouterData ospf_router_data_all = 4;
+  OSPFNetworkData ospf_network_data = 5;
+  OSPFNetworkData ospf_network_data_all = 6;
+  OSPFSummaryData ospf_summary_data = 7;
+  OSPFSummaryData ospf_summary_data_all = 8;
+  OSPFAsbrSummaryData ospf_asbr_summary_data = 9;
+  OSPFExternalData ospf_external_data = 10;
+  OSPFNssaExternalData ospf_nssa_external_data = 11;
+  OSPFExternalAll ospf_external_all = 12;
+  OSPFNssaExternalAll ospf_nssa_external_all = 13;
+  OSPFNeighbors ospf_neighbors = 14;
+  InterfaceList interfaces = 15;
+  RoutingInformationBase routing_information_base = 16;
+  RibFibSummaryRoutes rib_fib_summary_routes = 17;
+  StaticFRRConfiguration static_frr_configuration = 18;
+  SystemMetrics system_metrics = 19;
+  FRRRouterData frr_router_data = 20;
 }
 
 
@@ -216,12 +219,13 @@ message GeneralOspfInformation {
   int32 maximum_paths = 14;
   int32 preference = 15;
   string asbr_router = 16;
-  int32 lsa_external_counter = 17;
-  int64 lsa_external_checksum = 18;
-  int32 lsa_asopaque_counter = 19;
-  int64 lsa_asopaque_checksum = 20;
-  int32 attached_area_counter = 21;
-  map<string, GeneralInfoOspfArea> areas = 22;
+  string abr_type = 17;
+  int32 lsa_external_counter = 18;
+  int64 lsa_external_checksum = 19;
+  int32 lsa_asopaque_counter = 20;
+  int64 lsa_asopaque_checksum = 21;
+  int32 attached_area_counter = 22;
+  map<string, GeneralInfoOspfArea> areas = 23;
 }
 
 // Represents per-area statistics within the OSPF process.
@@ -663,12 +667,13 @@ message AnomalyAnalysis {
   AnomalyDetection router_anomaly= 1;
   AnomalyDetection external_anomaly = 2;
   AnomalyDetection nssa_external_anomaly = 3;
-  AnomalyDetection fib_anomaly = 4;
+  AnomalyDetection lsdb_to_rib_anomaly = 4;
+  AnomalyDetection rib_to_fib_anomaly = 5;
 }
 
 message AnomalyDetection {
   bool HasOverAdvertisedPrefixes = 1;
-  bool HasUnderAdvertisedPrefixes = 2;
+  bool HasUnAdvertisedPrefixes = 2;
   bool HasDuplicatePrefixes = 3;
   bool HasMisconfiguredPrefixes = 4;
   repeated Advertisement superfluous_entries = 5;
@@ -681,6 +686,8 @@ message Advertisement {
   string LinkStateId = 2;
   string PrefixLength = 3;
   string LinkType = 4;
+  bool PBit = 5;
+  string Options = 6;
 }
 
 
@@ -737,7 +744,7 @@ message RibPrefixes {
 // Main message containing all anomaly types
 message Anomalies {
   repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
-  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
+  repeated AnomalyUnadvertisedRoute unadvertised_routes = 2;
   repeated AnomalyDuplicateRoute duplicate_routes = 3;
   repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
 }
@@ -759,7 +766,7 @@ message AnomalyOveradvertisedRoute {
 
 
 // Route should be advertised but is not
-message AnomalyUnderadvertisedRoute {
+message AnomalyUnadvertisedRoute {
   google.protobuf.Timestamp timestamp = 1;
   string service = 2;
   string is_advertised = 3;

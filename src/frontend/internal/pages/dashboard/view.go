@@ -40,9 +40,12 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderOSPFDashboard() string {
-	// Update the viewport
-	m.viewport.Width = styles.WidthTwoH1ThreeFourth + 2
-	m.viewport.Height = m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - styles.HeightH1
+	// Update the viewportLeft
+	m.viewportLeft.Width = styles.ViewPortWidthThreeFourth
+	m.viewportLeft.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+
+	m.viewportRight.Width = styles.ViewPortWidthOneFourth
+	m.viewportRight.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -53,7 +56,7 @@ func (m *Model) renderOSPFDashboard() string {
 			Render("Anomalies Detected!")
 		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := getOspfDashboardAnomalies(m.logger)
-		m.viewport.SetContent(ospfDashboardAnomalies)
+		m.viewportLeft.SetContent(ospfDashboardAnomalies)
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
 			Width(styles.WidthTwoH1ThreeFourth).
@@ -62,12 +65,16 @@ func (m *Model) renderOSPFDashboard() string {
 			Render("All OSPF Routes are advertised as Expected")
 		statusHeader = dashboardHeader
 		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf(m.logger)
-		m.viewport.SetContent(ospfDashboardLsdbSelf)
+		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
 	}
 
-	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), getOSPFGeneralInfoBox(m.logger))
+	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), getOSPFGeneralInfoBox(m.logger))
+	m.viewportRight.SetContent(rightSideDashboardContent)
 
-	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewport.View())
+	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
+
+	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewportLeft.View())
 
 	horizontalDashboard := lipgloss.JoinHorizontal(lipgloss.Top,
 		leftSideDashboard,
@@ -98,11 +105,7 @@ func getSystemResourcesBox(logger *logger.Logger) string {
 				"Memory Usage: "+memoryString)+"\n",
 	)
 
-	systemResources := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resources"),
-		systemStatistics,
-	)
-	return systemResources
+	return systemStatistics
 }
 
 func getOSPFGeneralInfoBox(logger *logger.Logger) string {
@@ -114,20 +117,50 @@ func getOSPFGeneralInfoBox(logger *logger.Logger) string {
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
 	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
 
+	var routerType []string
+	switch {
+	case ospfInformation.AsbrRouter != "" && ospfInformation.AbrType != "":
+		routerType = append(routerType, "Router Type: ASBR / ABR")
+	case ospfInformation.AsbrRouter != "":
+		routerType = append(routerType, "Router Type: ASBR")
+	case ospfInformation.AbrType != "":
+		routerType = append(routerType, "Router Type: ABR")
+	default:
+		routerType = append(routerType, "Router Type: Internal")
+	}
+
+	if ospfInformation.AbrType != "" {
+		routerType = append(routerType, "ABR Type: "+ospfInformation.AbrType)
+	}
+
 	ospfRouterInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
 		"OSPF Router ID: " + ospfInformation.RouterId + "\n" +
+			strings.Join(routerType, "\n") + "\n" +
 			"Last SPF Execution: " + lastSPFExecution.String() + "\n" +
 			"Total External LSAs: " + strconv.Itoa(int(ospfInformation.LsaExternalCounter)) + "\n" +
 			"Attached Areas: " + strconv.Itoa(int(ospfInformation.AttachedAreaCounter)) + "\n")
 
+	ospfAreas := make([]string, 0, len(ospfInformation.Areas))
+	for area := range ospfInformation.Areas {
+		ospfAreas = append(ospfAreas, area)
+	}
+	sort.Strings(ospfAreas)
+
 	var ospfAreaInformation []string
-	for areaID, areaData := range ospfInformation.Areas {
+	for _, areaID := range ospfAreas {
+		areaData := ospfInformation.Areas[areaID]
+
 		ospfAreaInformation = append(ospfAreaInformation,
 			styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("Area "+areaID))
 		ospfAreaInformation = append(ospfAreaInformation,
 			styles.H2TwoContentBoxesStyle().Width(styles.WidthTwoH2OneFourthBox).Render(
 				"Full Adjencencies: "+strconv.Itoa(int(areaData.NbrFullAdjacentCounter))+"\n"+
-					"Total LSAs: "+strconv.Itoa(int(areaData.LsaNumber))+"\n"))
+					"Total LSAs: "+strconv.Itoa(int(areaData.LsaNumber))+"\n"+
+					"Router LSAs: "+strconv.Itoa(int(areaData.LsaRouterNumber))+"\n"+
+					"Network LSAs: "+strconv.Itoa(int(areaData.LsaNetworkNumber))+"\n"+
+					"Summary LSAs: "+strconv.Itoa(int(areaData.LsaSummaryNumber))+"\n"+
+					"ASBR Summary LSAs: "+strconv.Itoa(int(areaData.LsaAsbrNumber))+"\n"+
+					"NSSA External LSAs: "+strconv.Itoa(int(areaData.LsaNssaNumber))))
 	}
 
 	renderedOSPFAreaInformation := lipgloss.JoinVertical(lipgloss.Left, ospfAreaInformation...)
@@ -484,7 +517,7 @@ func getOspfDashboardAnomalies(logger *logger.Logger) string {
 		logger.WithAttrs(map[string]interface{}{
 			"anomaly_type":         "Router (Type 1)",
 			"count":                routerAnomalyCount,
-			"has_under_advertised": ospfRouterAnomalies.HasUnderAdvertisedPrefixes,
+			"has_under_advertised": ospfRouterAnomalies.HasUnAdvertisedPrefixes,
 			"has_over_advertised":  ospfRouterAnomalies.HasOverAdvertisedPrefixes,
 			"has_duplicates":       ospfRouterAnomalies.HasDuplicatePrefixes,
 		}).Info("Router anomalies detected")
@@ -502,7 +535,7 @@ func getOspfDashboardAnomalies(logger *logger.Logger) string {
 		logger.WithAttrs(map[string]interface{}{
 			"anomaly_type":         "External (Type 5)",
 			"count":                externalAnomalyCount,
-			"has_under_advertised": ospfExternalAnomalies.HasUnderAdvertisedPrefixes,
+			"has_under_advertised": ospfExternalAnomalies.HasUnAdvertisedPrefixes,
 			"has_over_advertised":  ospfExternalAnomalies.HasOverAdvertisedPrefixes,
 			"has_duplicates":       ospfExternalAnomalies.HasDuplicatePrefixes,
 		}).Info("External anomalies detected")
@@ -520,7 +553,7 @@ func getOspfDashboardAnomalies(logger *logger.Logger) string {
 		logger.WithAttrs(map[string]interface{}{
 			"anomaly_type":         "NSSA External (Type 7)",
 			"count":                nssaAnomalyCount,
-			"has_under_advertised": ospfNSSAExternalAnomalies.HasUnderAdvertisedPrefixes,
+			"has_under_advertised": ospfNSSAExternalAnomalies.HasUnAdvertisedPrefixes,
 			"has_over_advertised":  ospfNSSAExternalAnomalies.HasOverAdvertisedPrefixes,
 			"has_duplicates":       ospfNSSAExternalAnomalies.HasDuplicatePrefixes,
 		}).Info("NSSA External anomalies detected")
@@ -556,7 +589,7 @@ func getOspfDashboardAnomalies(logger *logger.Logger) string {
 // Helper function to count total anomalies
 func countAnomalies(a *frrProto.AnomalyDetection) int {
 	count := 0
-	if a.HasUnderAdvertisedPrefixes {
+	if a.HasUnAdvertisedPrefixes {
 		count += len(a.MissingEntries)
 	}
 	if a.HasOverAdvertisedPrefixes {
@@ -591,7 +624,7 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 		}
 	}
 
-	if a.HasUnderAdvertisedPrefixes {
+	if a.HasUnAdvertisedPrefixes {
 		for _, missingEntry := range a.MissingEntries {
 			var firstCol string
 			if strings.Contains(lsaTypeHeader, "Router") {
@@ -604,7 +637,7 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 				firstCol,
 				"/" + missingEntry.PrefixLength,
 				missingEntry.LinkType,
-				"Underadvertised Route",
+				"Unadvertised Route",
 			})
 		}
 	}

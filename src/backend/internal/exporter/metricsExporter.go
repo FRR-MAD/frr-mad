@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"strings"
 	"sync"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -37,7 +38,6 @@ func NewMetricExporter(
 	m.initializeExternalMetrics(flags)
 	m.initializeNSSAExternalMetrics(flags)
 	m.initializeDatabaseMetrics(flags)
-	m.initializeDuplicateMetrics(flags)
 	m.initializeNeighborMetrics(flags)
 	m.initializeInterfaceMetrics(flags)
 	m.initializeRouteMetrics(flags)
@@ -56,7 +56,7 @@ func (m *MetricExporter) initializeRouterMetrics(flags map[string]*ParsedFlag) {
 		m.metrics["ospf_router_links"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_router_links_total",
-				Help: "Number of router links in OSPF",
+				Help: "Number of router interfaces in OSPF",
 			},
 			[]string{"area_id", "link_state_id"},
 		)
@@ -69,7 +69,7 @@ func (m *MetricExporter) initializeNetworkMetrics(flags map[string]*ParsedFlag) 
 		m.metrics["ospf_network_attached_routers"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_network_attached_routers_total",
-				Help: "Number of routers attached to OSPF network",
+				Help: "Number of attached routers announced in network LSA",
 			},
 			[]string{"area_id", "link_state_id"},
 		)
@@ -108,7 +108,7 @@ func (m *MetricExporter) initializeExternalMetrics(flags map[string]*ParsedFlag)
 		m.metrics["ospf_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_external_metric",
-				Help: "OSPF external route metric",
+				Help: "OSPF external LSA route metric",
 			},
 			[]string{"link_state_id", "metric_type"},
 		)
@@ -121,7 +121,7 @@ func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]*ParsedF
 		m.metrics["ospf_nssa_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_nssa_external_metric",
-				Help: "OSPF NSSA external route metric",
+				Help: "OSPF NSSA external LSA route metric",
 			},
 			[]string{"area_id", "link_state_id", "metric_type"},
 		)
@@ -134,22 +134,9 @@ func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag)
 		m.metrics["ospf_database_counts"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "frr_ospf_database_lsa_count",
-				Help: "Counts of different LSA types in OSPF database",
+				Help: "Amount of LSDB entries for each LSA type",
 			},
 			[]string{"area_id", "lsa_type"},
-		)
-	}
-}
-
-func (m *MetricExporter) initializeDuplicateMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFDuplicates"]; ok && flag.Enabled {
-		m.enabledMetrics["duplicates"] = true
-		m.metrics["ospf_duplicate_lsas"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_duplicate_lsa_count",
-				Help: "Count of duplicate OSPF LSAs",
-			},
-			[]string{"link_state_id"},
 		)
 	}
 }
@@ -197,12 +184,18 @@ func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]*ParsedFlag
 func (m *MetricExporter) initializeRouteMetrics(flags map[string]*ParsedFlag) {
 	if flag, ok := flags["RouteList"]; ok && flag.Enabled {
 		m.enabledMetrics["routes"] = true
-		m.metrics["route_metric"] = prometheus.NewGaugeVec(
+		m.metrics["installed_ospf_route"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_route_metric",
-				Help: "Routing protocol metric for installed routes",
+				Name: "frr_installed_ospf_route",
+				Help: "Routing protocol metric for installed ospf routes",
 			},
 			[]string{"prefix", "protocol", "vrf"},
+		)
+		m.metrics["installed_ospf_routes_count"] = prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Name: "frr_installed_ospf_routes_count",
+				Help: "Number of installed ospf routes from RIB",
+			},
 		)
 	}
 }
@@ -237,18 +230,15 @@ func (m *MetricExporter) Update() {
 	if m.enabledMetrics["database"] {
 		m.updateDatabaseMetrics()
 	}
-	//if m.enabledMetrics["duplicates"] {
-	//	m.updateDuplicateMetrics()
-	//}
 	if m.enabledMetrics["neighbors"] {
 		m.updateNeighborMetrics()
 	}
 	if m.enabledMetrics["interfaces"] {
 		m.updateInterfaceMetrics()
 	}
-	//if m.enabledMetrics["routes"] {
-	//	m.updateRouteMetrics()
-	//}
+	if m.enabledMetrics["routes"] {
+		m.updateRouteMetrics()
+	}
 }
 
 func (m *MetricExporter) updateRouterMetrics() {
@@ -267,6 +257,7 @@ func (m *MetricExporter) updateRouterMetrics() {
 func (m *MetricExporter) updateNetworkMetrics() {
 	if networkData := m.data.GetOspfNetworkData(); networkData != nil {
 		vec := m.metrics["ospf_network_attached_routers"].(*prometheus.GaugeVec)
+
 		vec.Reset()
 
 		for areaID, areaData := range networkData.NetStates {
@@ -342,17 +333,6 @@ func (m *MetricExporter) updateDatabaseMetrics() {
 	}
 }
 
-//func (m *MetricExporter) updateDuplicateMetrics() {
-//	if dupData := m.data.GetOspfDuplicates(); dupData != nil {
-//		vec := m.metrics["ospf_duplicate_lsas"].(*prometheus.GaugeVec)
-//		vec.Reset()
-//
-//		for _, lsa := range dupData.AsExternalLinkStates {
-//			vec.WithLabelValues(lsa.LinkStateId).Inc()
-//		}
-//	}
-//}
-
 func (m *MetricExporter) updateNeighborMetrics() {
 	if neighborData := m.data.GetOspfNeighbors(); neighborData != nil {
 		stateVec := m.metrics["ospf_neighbor_state"].(*prometheus.GaugeVec)
@@ -363,10 +343,10 @@ func (m *MetricExporter) updateNeighborMetrics() {
 		for iface, neighborList := range neighborData.Neighbors {
 			for _, neighbor := range neighborList.Neighbors {
 				stateValue := 0.0
-				switch neighbor.NbrState {
-				case "Full":
+				switch {
+				case strings.Contains(neighbor.NbrState, "Full"):
 					stateValue = 1.0
-				case "2-Way":
+				case strings.Contains(neighbor.NbrState, "2-Way"):
 					stateValue = 0.5
 				}
 
@@ -401,17 +381,21 @@ func (m *MetricExporter) updateInterfaceMetrics() {
 	}
 }
 
-//func (m *MetricExporter) updateRouteMetrics() {
-//if routeData := m.data.GetRoutes(); routeData != nil {
-//vec := m.metrics["route_metric"].(*prometheus.GaugeVec)
-//vec.Reset()
+func (m *MetricExporter) updateRouteMetrics() {
+	if routeData := m.data.GetRoutingInformationBase(); routeData != nil {
+		vec := m.metrics["installed_ospf_route"].(*prometheus.GaugeVec)
+		countMetric := m.metrics["installed_ospf_routes_count"].(prometheus.Gauge)
+		vec.Reset()
 
-//for vrf, routeEntry := range routeData.Routes {
-//for _, route := range routeEntry.Routes {
-//if route.Installed {
-//vec.WithLabelValues(route.Prefix, route.Protocol, vrf).Set(float64(route.Metric))
-//}
-//}
-//}
-//}
-//}
+		var counter float64
+		for vrf, routeEntry := range routeData.Routes {
+			for _, route := range routeEntry.Routes {
+				if route.Installed && route.Protocol == "ospf" {
+					counter++
+					vec.WithLabelValues(route.Prefix, route.Protocol, vrf).Set(float64(route.Metric))
+				}
+			}
+		}
+		countMetric.Set(counter)
+	}
+}

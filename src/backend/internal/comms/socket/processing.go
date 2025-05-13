@@ -7,7 +7,6 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// func processCommand(message *frrProto.Message) *frrProto.Response {
 func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
 	var response frrProto.Response
 
@@ -69,6 +68,8 @@ func (s *Socket) ospfProcessing(command string) *frrProto.Response {
 		return s.getOspfRouterData()
 	case "network":
 		return s.getOspfNetworkData()
+	case "networkAll":
+		return s.getOspfNetworkDataAll()
 	case "summary":
 		return s.getOspfSummaryData()
 	case "asbrSummary":
@@ -104,6 +105,10 @@ func (s *Socket) analysisProcessing(command string) *frrProto.Response {
 		return s.getExternalAnomaly()
 	case "nssaExternal":
 		return s.getNssaExternalAnomaly()
+	case "lsdbToRib":
+		return s.getLsdbToRibAnomaly()
+	case "ribToFib":
+		return s.getRibToFibAnomaly()
 
 	case "dummyRouterOne":
 		return getRouterAnomalyDummy1()

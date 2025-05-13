@@ -30,6 +30,7 @@ vendor
 src/vendor
 go.sum
 vendor
+src/go.work.sum
 
 # folders
 binaries

@@ -235,7 +235,7 @@ func (m *AppModel) View() string {
 
 	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)
 	contentWidth := m.windowSize.Width - 4
-	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.BorderContentBox - styles.FooterHeight
 
 	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize, m.logger)
 	footer := m.footer.Get()
