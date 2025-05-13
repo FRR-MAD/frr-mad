@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"strings"
 	"sync"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -336,10 +337,10 @@ func (m *MetricExporter) updateNeighborMetrics() {
 		for iface, neighborList := range neighborData.Neighbors {
 			for _, neighbor := range neighborList.Neighbors {
 				stateValue := 0.0
-				switch neighbor.NbrState {
-				case "Full":
+				switch {
+				case strings.Contains(neighbor.NbrState, "Full"):
 					stateValue = 1.0
-				case "2-Way":
+				case strings.Contains(neighbor.NbrState, "2-Way"):
 					stateValue = 0.5
 				}
 
