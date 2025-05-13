@@ -76,22 +76,18 @@ func TestRouterLsaHappy1(t *testing.T) {
 		}
 	})
 
-	// test should state Static File Router Data
-	//expectedPredictedRouterLSDB := &frrProto.IntraAreaLsa{}
-
 	isNssa, actualPredictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-
-	// Write Router Testing now, because parsing of static config, router config, static list and access list is successful
 
 	ana.RouterAnomalyAnalysisLSDB(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
 
-	//analyzer.RouterAnomalyAnalysis(accessList, shouldState, isState)
 	t.Run("TestGetAccessList", func(t *testing.T) {
 		assert.Equal(t, len(expectedAccessList), len(actualAccessList))
 		assert.True(t, cmp.Diff(expectedAccessListKeys, actualAccessListKeys, cmpopts.SortSlices(less)) == "")
 		for _, v := range actualAccessListKeys {
-			assert.Equal(t, actualAccessList[v], expectedAccessList[v])
+			assert.Equal(t, expectedAccessList[v], actualAccessList[v])
 		}
+		fmt.Println(expectedAccessListKeys)
+		fmt.Println(actualAccessListKeys)
 	})
 
 	t.Run("TestGetStaticRouteList", func(t *testing.T) {
@@ -102,7 +98,6 @@ func TestRouterLsaHappy1(t *testing.T) {
 		}
 	})
 
-	// test GetStaticFileRouterData
 	expectedPredictedRouterLSDBAreas := []string{} //done
 	actualPredictedRouterLSDBAreas := []string{}
 
@@ -138,8 +133,6 @@ func TestRouterLsaHappy1(t *testing.T) {
 		for _, key := range expectedPredictedRouterLSDBAreas {
 			assert.Equal(t, expectedPredictedRouterLSDBLsaTypePerArea[key], actualPredictedRouterLSDBLsaTypePerArea[key])
 		}
-		// expectedPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
-		// actualPredictedRouterLSDBIntPerArea := make(map[string][]*frrProto.Advertisement)
 
 		for _, key := range expectedPredictedRouterLSDBAreas {
 			assert.Equal(t, expectedPredictedRouterLSDBLsaTypePerArea[key], actualPredictedRouterLSDBLsaTypePerArea[key])
@@ -157,18 +150,6 @@ func TestRouterLsaHappy1(t *testing.T) {
 		}
 	})
 
-	// test GetStaticFileExternalData
-
-	// test GetStaticFileNssaExternalData
-
-	t.Run("TestStaticListEqualACL", func(t *testing.T) {
-
-	})
-
-	t.Run("TestStaticRoute", func(t *testing.T) {
-
-	})
-
 }
 
 func TestRouterLsaUnhappy1(t *testing.T) {
@@ -179,7 +160,6 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 	isRouterLSDB := getExpectedShouldRouterLSDBr101MissingEntries()
 	shouldRouterLSDB := getExpectedIsRouterLSDBr101Happy()
 	ana.RouterAnomalyAnalysisLSDB(accessList, &shouldRouterLSDB, isRouterLSDB)
-	// unhappy c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	expectedMissingEntrires := []*frrProto.Advertisement{
 		{
 			InterfaceAddress: "10.0.2.0",
@@ -219,7 +199,7 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 		},
 	}
 
-	ana.RouterAnomalyAnalysisLSDB(accessList, &shouldRouterLSDB2, isRouterLSDB2)
+	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB2, isRouterLSDB2)
 	t.Run("TestOveradvertised", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
 		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
@@ -478,14 +458,6 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 	// Run the analysis
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
 
-	fmt.Println("---------------------- Predicted ----------------------")
-	fmt.Println(predictedNssaExternalLSDB)
-	fmt.Println("---------------------- Predicted ----------------------")
-
-	fmt.Println("---------------------- Runtime ----------------------")
-	fmt.Println(runtimeNssaExternalLSDB)
-	fmt.Println("---------------------- Runtime ----------------------")
-
 	t.Run("TestNssaExternalNormalCase", func(t *testing.T) {
 		// In normal case, there should be no anomalies
 		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
@@ -510,15 +482,6 @@ func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
 	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
-	// fmt.Println("---------------------- Predicted ----------------------")
-	// fmt.Println(predictedNssaExternalLSDB)
-	// fmt.Println("---------------------- Predicted ----------------------")
-
-	// fmt.Println("---------------------- Runtime ----------------------")
-	// fmt.Println(runtimeNssaExternalLSDB)
-	// fmt.Println("---------------------- Runtime ----------------------")
-
-	// Run the analysis
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
 
 	t.Run("TestNssaExternalMissingRoutes", func(t *testing.T) {
