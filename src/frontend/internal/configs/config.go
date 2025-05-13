@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-
 var ConfigLocation = "/etc/frr-mad/main.yaml"
 
 type DefaultConfig struct {
