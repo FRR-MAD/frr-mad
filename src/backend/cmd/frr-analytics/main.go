@@ -147,8 +147,7 @@ func startApp(config *configs.Config) {
 	}
 
 	if app.Aggregator != nil && app.Analyzer != nil {
-		// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
-		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger, app.Analyzer.P2pMap)
+		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger)
 
 		go func() {
 			if err := app.Socket.Start(); err != nil {
@@ -189,8 +188,6 @@ func createLogger(name, filePath string) *logger.Logger {
 
 func getDebugLevel(level string) int {
 	switch level {
-	case "none":
-		return 99
 	case "debug":
 		return 2
 	case "error":

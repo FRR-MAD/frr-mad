@@ -27,10 +27,6 @@ message Response {
   ResponseValue data = 3;
 }
 
-message PeerInterfaceMap {
-  map<string, string> peer_interface_to_address = 1;
-}
-
 // ResponseValue represents a dynamic value (similar to interface{} in Go)
 message ResponseValue {
   oneof kind {
@@ -40,81 +36,28 @@ message ResponseValue {
     // Analyzer command message types
     Anomalies anomalies = 2;
     AnomalyDetection anomaly = 3;
-    PeerInterfaceMap peer_interface_to_address = 4;
 
     // New Aggregator service message types
-    GeneralOspfInformation general_ospf_information = 5;
-    OSPFDatabase ospf_database = 6;
-    OSPFRouterData ospf_router_data = 7;
-    OSPFNetworkData ospf_network_data = 8;
-    OSPFSummaryData ospf_summary_data = 9;
-    OSPFAsbrSummaryData ospf_asbr_summary_data = 10;
-    OSPFExternalData ospf_external_data = 11;
-    OSPFNssaExternalData ospf_nssa_external_data = 12;
-    OSPFExternalAll ospf_external_all = 13;
-    OSPFNssaExternalAll ospf_nssa_external_all = 14;
-    OSPFNeighbors ospf_neighbors = 15;
-    InterfaceList interfaces = 16;
-    RoutingInformationBase routing_information_base = 17;
-    RibFibSummaryRoutes rib_fib_summary_routes = 18;
-    StaticFRRConfiguration static_frr_configuration = 19;
-    SystemMetrics system_metrics = 20;
-    FRRRouterData frr_router_data = 21;
+    OSPFDatabase ospf_database = 4;
+    OSPFNetworkData ospf_network_data = 5;
+    OSPFSummaryData ospf_summary_data = 6;
+    OSPFAsbrSummaryData ospf_asbr_summary_data = 7;
+    OSPFExternalData ospf_external_data = 8;
+    OSPFNssaExternalData ospf_nssa_external_data = 9;
+    OSPFExternalAll ospf_external_all = 10;
+    OSPFNssaExternalAll ospf_nssa_external_all = 11;
+    OSPFNeighbors ospf_neighbors = 12;
+    InterfaceList interfaces = 13;
+    RoutingInformationBase routing_information_base = 14;
+    StaticFRRConfiguration static_frr_configuration = 15;
+    SystemMetrics system_metrics = 16;
+    FRRRouterData frr_router_data = 17;
+    OSPFRouterData ospf_router_data = 18;
   }
 }
 
 // ================ Aggregator payload Messages ================
 
-
-
-
-// ================ OLD setup ================
-
-message NetworkConfig {
-  string router_id = 1;
-  repeated OSPFArea areas = 2;
-  repeated OSPFInterfaceConfig interfaces = 3;
-}
-
-message OSPFArea {
-  string id = 1;
-  repeated string networks = 2;
-}
-
-message OSPFInterfaceConfig {
-  string name = 1;
-  string area = 2;
-  string IpAddress = 3;
-  bool passive = 4;
-  int32 cost = 5;
-}
-
-// ================ Main Aggregated Message ================
-message FullFRRData {
-  OSPFDatabase ospf_database = 1;
-  OSPFRouterData ospf_router_data = 2;
-  GeneralOspfInformation general_ospf_information = 3;
-  OSPFRouterData ospf_router_data_all = 4;
-  OSPFNetworkData ospf_network_data = 5;
-  OSPFNetworkData ospf_network_data_all = 6;
-  OSPFSummaryData ospf_summary_data = 7;
-  OSPFSummaryData ospf_summary_data_all = 8;
-  OSPFAsbrSummaryData ospf_asbr_summary_data = 9;
-  OSPFExternalData ospf_external_data = 10;
-  OSPFNssaExternalData ospf_nssa_external_data = 11;
-  OSPFExternalAll ospf_external_all = 12;
-  OSPFNssaExternalAll ospf_nssa_external_all = 13;
-  OSPFNeighbors ospf_neighbors = 14;
-  InterfaceList interfaces = 15;
-  RoutingInformationBase routing_information_base = 16;
-  RibFibSummaryRoutes rib_fib_summary_routes = 17;
-  StaticFRRConfiguration static_frr_configuration = 18;
-  SystemMetrics system_metrics = 19;
-  FRRRouterData frr_router_data = 20;
-}
-
-
-// ================ Aggregator Static FRRouting Configuration ================
 message StaticFRRConfiguration {
   string hostname = 1;
   string frr_version = 2;
@@ -200,57 +143,44 @@ message SystemMetrics {
   double memory_usage = 3;
 }
 
-// ================ Aggregator OSPF (general query) ====================
+// ================ OLD setup ================
 
-message GeneralOspfInformation {
+message NetworkConfig {
   string router_id = 1;
-  bool tos_routes_only = 2;
-  bool rfc2328_conform = 3;
-  int32 spf_schedule_delay_msecs = 4;
-  int32 holdtime_min_msecs = 5;
-  int32 holdtime_max_msecs = 6;
-  int32 holdtime_multiplier = 7;
-  int64 spf_last_executed_msecs = 8;
-  int32 spf_last_duration_msecs = 9;
-  int32 lsa_min_interval_msecs = 10;
-  int32 lsa_min_arrival_msecs = 11;
-  int32 write_multiplier = 12;
-  int32 refresh_timer_msecs = 13;
-  int32 maximum_paths = 14;
-  int32 preference = 15;
-  string asbr_router = 16;
-  string abr_type = 17;
-  int32 lsa_external_counter = 18;
-  int64 lsa_external_checksum = 19;
-  int32 lsa_asopaque_counter = 20;
-  int64 lsa_asopaque_checksum = 21;
-  int32 attached_area_counter = 22;
-  map<string, GeneralInfoOspfArea> areas = 23;
+  repeated OSPFArea areas = 2;
+  repeated OSPFInterfaceConfig interfaces = 3;
 }
 
-// Represents per-area statistics within the OSPF process.
-message GeneralInfoOspfArea {
-  bool backbone = 1;
-  int32 area_if_total_counter = 2;
-  int32 area_if_active_counter = 3;
-  int32 nbr_full_adjacent_counter = 4;
-  string authentication = 5;
-  int32 spf_executed_counter = 6;
-  int32 lsa_number = 7;
-  int32 lsa_router_number = 8;
-  int64 lsa_router_checksum = 9;
-  int32 lsa_network_number = 10;
-  int64 lsa_network_checksum = 11;
-  int32 lsa_summary_number = 12;
-  int64 lsa_summary_checksum = 13;
-  int32 lsa_asbr_number = 14;
-  int64 lsa_asbr_checksum = 15;
-  int32 lsa_nssa_number = 16;
-  int64 lsa_nssa_checksum = 17;
-  int32 lsa_opaque_link_number = 18;
-  int64 lsa_opaque_link_checksum = 19;
-  int32 lsa_opaque_area_number = 20;
-  int64 lsa_opaque_area_checksum = 21;
+message OSPFArea {
+  string id = 1;
+  repeated string networks = 2;
+}
+
+message OSPFInterfaceConfig {
+  string name = 1;
+  string area = 2;
+  string IpAddress = 3;
+  bool passive = 4;
+  int32 cost = 5;
+}
+
+// ================ Main Aggregated Message ================
+message FullFRRData {
+  OSPFDatabase ospf_database = 1;
+  OSPFRouterData ospf_router_data = 2;
+  OSPFNetworkData ospf_network_data = 3;
+  OSPFSummaryData ospf_summary_data = 4;
+  OSPFAsbrSummaryData ospf_asbr_summary_data = 5;
+  OSPFExternalData ospf_external_data = 6;
+  OSPFNssaExternalData ospf_nssa_external_data = 7;
+  OSPFExternalAll ospf_external_all = 8;
+  OSPFNssaExternalAll ospf_nssa_external_all = 9;
+  OSPFNeighbors ospf_neighbors = 10;
+  InterfaceList interfaces = 11;
+  RoutingInformationBase routing_information_base = 12;
+  StaticFRRConfiguration static_frr_configuration = 13;
+  SystemMetrics system_metrics = 14;
+  FRRRouterData frr_router_data = 15;
 }
 
 // ================ Aggregator LSA Router ====================
@@ -292,9 +222,8 @@ message OSPFRouterLSALink {
   string router_interface_address = 4 [json_name = "routerInterfaceAddress"];
   string network_address = 5 [json_name = "networkAddress"];
   string network_mask = 6 [json_name = "networkMask"];
-  string p2pInterfaceAddress = 7 [json_name ="p2pInterfaceAddress"];
-  int32 num_of_tos_metrics = 8 [json_name = "numOfTosMetrics"];
-  int32 tos0_metric = 9 [json_name = "tos0Metric"];
+  int32 num_of_tos_metrics = 7 [json_name = "numOfTosMetrics"];
+  int32 tos0_metric = 8 [json_name = "tos0Metric"];
 }
 
 // ================ Aggregator LSA Network ===================
@@ -600,7 +529,7 @@ message EvpnMh {
   int32 leave_count = 19;
 }
 
-// ================ Aggregator Routes ================
+// ================ Routes ================
 message RoutingInformationBase {
   map<string, RouteEntry> routes = 1;
 }
@@ -644,22 +573,6 @@ message Nexthop {
   int32 weight = 10;
 }
 
-// ================ Routes ================
-
-message RibFibSummaryRoutes {
-  repeated RouteSummary route_summaries = 1;
-  int32 routes_total = 2;
-  int32 routes_total_fib = 3;
-}
-
-message RouteSummary {
-  int32 fib = 1;
-  int32 rib = 2;
-  int32 fib_off_loaded = 3;
-  int32 fib_trapped = 4;
-  string type = 5;
-}
-
 // ================ Analyzer payload Messages ================
 
 // new
@@ -667,13 +580,12 @@ message AnomalyAnalysis {
   AnomalyDetection router_anomaly= 1;
   AnomalyDetection external_anomaly = 2;
   AnomalyDetection nssa_external_anomaly = 3;
-  AnomalyDetection lsdb_to_rib_anomaly = 4;
-  AnomalyDetection rib_to_fib_anomaly = 5;
+  AnomalyDetection fib_anomaly = 4;
 }
 
 message AnomalyDetection {
   bool HasOverAdvertisedPrefixes = 1;
-  bool HasUnAdvertisedPrefixes = 2;
+  bool HasUnderAdvertisedPrefixes = 2;
   bool HasDuplicatePrefixes = 3;
   bool HasMisconfiguredPrefixes = 4;
   repeated Advertisement superfluous_entries = 5;
@@ -686,8 +598,6 @@ message Advertisement {
   string LinkStateId = 2;
   string PrefixLength = 3;
   string LinkType = 4;
-  bool PBit = 5;
-  string Options = 6;
 }
 
 
@@ -744,7 +654,7 @@ message RibPrefixes {
 // Main message containing all anomaly types
 message Anomalies {
   repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
-  repeated AnomalyUnadvertisedRoute unadvertised_routes = 2;
+  repeated AnomalyUnderadvertisedRoute underadvertised_routes = 2;
   repeated AnomalyDuplicateRoute duplicate_routes = 3;
   repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
 }
@@ -766,7 +676,7 @@ message AnomalyOveradvertisedRoute {
 
 
 // Route should be advertised but is not
-message AnomalyUnadvertisedRoute {
+message AnomalyUnderadvertisedRoute {
   google.protobuf.Timestamp timestamp = 1;
   string service = 2;
   string is_advertised = 3;

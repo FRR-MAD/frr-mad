@@ -18,17 +18,18 @@ type Model struct {
 	ospfAnomalies      []string
 	hasAnomalyDetected bool
 	windowSize         *common.WindowSize
-	viewportLeft       viewport.Model
-	viewportRight      viewport.Model
+	viewport           viewport.Model
 	currentTime        time.Time
 	logger             *logger.Logger
 }
 
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
+	boxWidthForOne := windowSize.Width - 6
+	// subtract tab row, footer, and border heights.
+	outputHeight := windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 2
 
-	// Create the viewportLeft with the desired dimensions.
-	vpl := viewport.New(styles.ViewPortWidthThreeFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
-	vpr := viewport.New(styles.ViewPortWidthOneFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
+	// Create the viewport with the desired dimensions.
+	vp := viewport.New(boxWidthForOne, outputHeight)
 
 	return &Model{
 		title:              "Dashboard",
@@ -36,8 +37,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
 		windowSize:         windowSize,
-		viewportLeft:       vpl,
-		viewportRight:      vpr,
+		viewport:           vp,
 		logger:             appLogger,
 	}
 }

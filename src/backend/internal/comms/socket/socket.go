@@ -24,17 +24,15 @@ type Socket struct {
 	mutex      sync.Mutex
 	metrics    *frrProto.FullFRRData
 	anomalies  *frrProto.AnomalyAnalysis
-	p2pMap     *frrProto.PeerInterfaceMap
 	logger     *logger.Logger
 }
 
-func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger, p2pMap *frrProto.PeerInterfaceMap) *Socket {
+func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger) *Socket {
 	return &Socket{
 		socketPath: fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:      sync.Mutex{},
 		metrics:    metrics,
 		anomalies:  analysisResult,
-		p2pMap:     p2pMap,
 		logger:     logger,
 	}
 }
@@ -42,7 +40,6 @@ func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analy
 func (s *Socket) Start() error {
 	os.Remove(s.socketPath)
 
-	// TODO: add correct logger, this should be application level logger and not service level logger
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: s.socketPath, Net: "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)

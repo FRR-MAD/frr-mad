@@ -85,7 +85,7 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 				},
 			},
 		},
-		UnadvertisedRoutes: []*frrProto.AnomalyUnadvertisedRoute{
+		UnderadvertisedRoutes: []*frrProto.AnomalyUnderadvertisedRoute{
 			{
 				Timestamp:        now,
 				Service:          "ospf",
@@ -238,10 +238,10 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	anomalyResult := &frrProto.AnomalyAnalysis{}
 	//anomalies := &frrProto.Anomalies{
 	_ = &frrProto.Anomalies{
-		OveradvertisedRoutes: []*frrProto.AnomalyOveradvertisedRoute{{}, {}},
-		UnadvertisedRoutes:   []*frrProto.AnomalyUnadvertisedRoute{{}},
-		DuplicateRoutes:      []*frrProto.AnomalyDuplicateRoute{{}},
-		MisconfiguredRoutes:  []*frrProto.AnomalyMisconfiguredRoute{{}},
+		OveradvertisedRoutes:  []*frrProto.AnomalyOveradvertisedRoute{{}, {}},
+		UnderadvertisedRoutes: []*frrProto.AnomalyUnderadvertisedRoute{{}},
+		DuplicateRoutes:       []*frrProto.AnomalyDuplicateRoute{{}},
+		MisconfiguredRoutes:   []*frrProto.AnomalyMisconfiguredRoute{{}},
 	}
 
 	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
@@ -298,7 +298,7 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	anomalyResult.ExternalAnomaly.Reset()
 	anomalyResult.RouterAnomaly.Reset()
 	anomalyResult.NssaExternalAnomaly.Reset()
-	anomalyResult.RibToFibAnomaly.Reset()
+	anomalyResult.FibAnomaly.Reset()
 
 	// Second update: everything should reset to 0
 	frrMadExporter.Update()

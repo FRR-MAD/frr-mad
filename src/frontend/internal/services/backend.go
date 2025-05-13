@@ -3,11 +3,10 @@ package backend
 import (
 	"encoding/binary"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"io"
 	"net"
 	"time"
-
-	"google.golang.org/protobuf/encoding/protojson"
 
 	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 
@@ -155,24 +154,6 @@ func GetSystemResources() (int64, float64, float64, error) {
 	return cores, cpuUsage, memoryUsage, nil
 }
 
-func GetRIB() (*frrProto.RoutingInformationBase, error) {
-	response, err := SendMessage("frr", "rib", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetRoutingInformationBase(), nil
-}
-
-func GetRibFibSummary() (*frrProto.RibFibSummaryRoutes, error) {
-	response, err := SendMessage("frr", "ribfibSummary", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetRibFibSummaryRoutes(), nil
-}
-
 func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	response, err := SendMessage("ospf", "database", nil)
 	if err != nil {
@@ -182,49 +163,13 @@ func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	return response.Data.GetOspfDatabase(), nil
 }
 
-func GetOspfRouterDataSelf() (*frrProto.OSPFRouterData, error) {
+func GetOspfRouterData() (*frrProto.OSPFRouterData, error) {
 	response, err := SendMessage("ospf", "router", nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return response.Data.GetOspfRouterData(), nil
-}
-
-func GetOSPF() (*frrProto.GeneralOspfInformation, error) {
-	response, err := SendMessage("ospf", "generalInfo", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetGeneralOspfInformation(), nil
-}
-
-func GetOspfP2PInterfaceMapping() (*frrProto.PeerInterfaceMap, error) {
-	response, err := SendMessage("ospf", "peerMap", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetPeerInterfaceToAddress(), nil
-}
-
-func GetOspfNetworkDataSelf() (*frrProto.OSPFNetworkData, error) {
-	response, err := SendMessage("ospf", "network", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetOspfNetworkData(), nil
-}
-
-func GetOspfNeighbors() (*frrProto.OSPFNeighbors, error) {
-	response, err := SendMessage("ospf", "neighbors", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetOspfNeighbors(), nil
 }
 
 func GetOspfNeighborInterfaces() ([]string, error) {
@@ -244,7 +189,7 @@ func GetOspfNeighborInterfaces() ([]string, error) {
 	return neighborAddresses, nil
 }
 
-func GetOspfExternalDataSelf() (*frrProto.OSPFExternalData, error) {
+func GetOspfExternalData() (*frrProto.OSPFExternalData, error) {
 	response, err := SendMessage("ospf", "externalData", nil)
 	if err != nil {
 		return nil, err
@@ -253,7 +198,7 @@ func GetOspfExternalDataSelf() (*frrProto.OSPFExternalData, error) {
 	return response.Data.GetOspfExternalData(), nil
 }
 
-func GetOspfNssaExternalDataSelf() (*frrProto.OSPFNssaExternalData, error) {
+func GetOspfNssaExternalData() (*frrProto.OSPFNssaExternalData, error) {
 	response, err := SendMessage("ospf", "nssaExternalData", nil)
 	if err != nil {
 		return nil, err
@@ -287,7 +232,7 @@ func GetStaticFRRConfigurationPretty() (string, error) {
 }
 
 func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "dummyRouterOne", nil)
+	response, err := SendMessage("analysis", "router", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +241,7 @@ func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
 }
 
 func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "dummyExternalOne", nil)
+	response, err := SendMessage("analysis", "external", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +250,7 @@ func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
 }
 
 func GetNSSAExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "dummyNSSAExternalOne", nil)
+	response, err := SendMessage("analysis", "nssaExternal", nil)
 	if err != nil {
 		return nil, err
 	}

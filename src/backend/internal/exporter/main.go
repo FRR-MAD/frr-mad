@@ -49,6 +49,8 @@ func NewExporter(
 		}
 	}
 
+	fmt.Println(port)
+
 	registry := prometheus.NewRegistry()
 	flags := getFlagConfigs(config)
 	//flags, err := configs.GetFlagConfigs(config)

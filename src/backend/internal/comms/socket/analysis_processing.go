@@ -45,31 +45,3 @@ func (s *Socket) getNssaExternalAnomaly() *frrProto.Response {
 		Data:    value,
 	}
 }
-
-func (s *Socket) getLsdbToRibAnomaly() *frrProto.Response {
-	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.LsdbToRibAnomaly,
-		},
-	}
-
-	return &frrProto.Response{
-		Status:  "success",
-		Message: "Returning LSDB to RIB Anomaly Analysis",
-		Data:    value,
-	}
-}
-
-func (s *Socket) getRibToFibAnomaly() *frrProto.Response {
-	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.RibToFibAnomaly,
-		},
-	}
-
-	return &frrProto.Response{
-		Status:  "success",
-		Message: "Returning RIB to FIB Anomaly Analysis",
-		Data:    value,
-	}
-}

@@ -25,9 +25,9 @@ func TestMessageProcessing(t *testing.T) {
 
 	os.Remove("/tmp/test-message-socket")
 
-	mockLoggerInstance, mockAnalyzerInstance, mockMetrics, p2pMap := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockMetrics := getMockData()
 
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance)
 
 	go func() {
 		socketInstance.Start()
@@ -61,7 +61,7 @@ func TestMessageProcessing(t *testing.T) {
 		response := sendRequestAndGetResponse(t, request, "/tmp/test-message-socket")
 
 		assert.Equal(t, "success", response.Status)
-		assert.Equal(t, "Returning system metrics including CPU and memory", response.Message)
+		assert.Equal(t, "Returning magical system data", response.Message)
 
 		systemMetrics := response.Data.GetSystemMetrics()
 		assert.NotNil(t, systemMetrics)

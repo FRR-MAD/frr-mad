@@ -12,7 +12,6 @@ import (
 type Analyzer struct {
 	AnalysisResult *frrProto.AnomalyAnalysis
 	metrics        *frrProto.FullFRRData
-	P2pMap         *frrProto.PeerInterfaceMap
 	Logger         *logger.Logger
 	config         interface{}
 }
@@ -27,18 +26,14 @@ func InitAnalyzer(
 		RouterAnomaly:       initAnomalyDetection(),
 		ExternalAnomaly:     initAnomalyDetection(),
 		NssaExternalAnomaly: initAnomalyDetection(),
-		RibToFibAnomaly:     initAnomalyDetection(),
-		LsdbToRibAnomaly:    initAnomalyDetection(),
+		FibAnomaly:          initAnomalyDetection(),
 	}
 
 	return &Analyzer{
 		AnalysisResult: anomalyAnalysis,
 		metrics:        metrics,
-		P2pMap: &frrProto.PeerInterfaceMap{
-			PeerInterfaceToAddress: map[string]string{},
-		},
-		Logger: logger,
-		config: config,
+		Logger:         logger,
+		config:         config,
 	}
 }
 
@@ -57,12 +52,12 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 // TODO: implement misconfiguredPrefixes functionality
 func initAnomalyDetection() *frrProto.AnomalyDetection {
 	return &frrProto.AnomalyDetection{
-		HasOverAdvertisedPrefixes: false,
-		HasUnAdvertisedPrefixes:   false,
-		HasDuplicatePrefixes:      false,
-		HasMisconfiguredPrefixes:  false,
-		SuperfluousEntries:        []*frrProto.Advertisement{},
-		MissingEntries:            []*frrProto.Advertisement{},
-		DuplicateEntries:          []*frrProto.Advertisement{},
+		HasOverAdvertisedPrefixes:  false,
+		HasUnderAdvertisedPrefixes: false,
+		HasDuplicatePrefixes:       false,
+		HasMisconfiguredPrefixes:   false,
+		SuperfluousEntries:         []*frrProto.Advertisement{},
+		MissingEntries:             []*frrProto.Advertisement{},
+		DuplicateEntries:           []*frrProto.Advertisement{},
 	}
 }

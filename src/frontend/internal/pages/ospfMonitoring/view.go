@@ -31,12 +31,8 @@ func (m *Model) View() string {
 	} else if currentSubTabLocal == 1 {
 		return m.renderRouterMonitorTab()
 	} else if currentSubTabLocal == 2 {
-		return m.renderNetworkMonitorTab()
-	} else if currentSubTabLocal == 3 {
 		return m.renderExternalMonitorTab()
-	} else if currentSubTabLocal == 4 {
-		return m.renderNeighborMonitorTab()
-	} else if currentSubTabLocal == 5 {
+	} else if currentSubTabLocal == 3 {
 		return m.renderRunningConfigTab()
 	}
 	return m.renderLsdbMonitorTab()
@@ -140,11 +136,21 @@ func (m *Model) renderLsdbMonitorTab() string {
 		}
 
 		// Order all Table Data
-		common.SortTableByIPColumn(routerLinkStateTableData)
-		common.SortTableByIPColumn(networkLinkStateTableData)
-		common.SortTableByIPColumn(summaryLinkStateTableData)
-		common.SortTableByIPColumn(asbrSummaryLinkStateTableData)
-		common.SortTableByIPColumn(nssaExternalLinkStateTableData)
+		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
+			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
+		})
+		sort.Slice(networkLinkStateTableData, func(i, j int) bool {
+			return networkLinkStateTableData[i][0] < networkLinkStateTableData[j][0]
+		})
+		sort.Slice(summaryLinkStateTableData, func(i, j int) bool {
+			return summaryLinkStateTableData[i][0] < summaryLinkStateTableData[j][0]
+		})
+		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
+			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
+		})
+		sort.Slice(nssaExternalLinkStateTableData, func(i, j int) bool {
+			return nssaExternalLinkStateTableData[i][0] < nssaExternalLinkStateTableData[j][0]
+		})
 
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
@@ -317,8 +323,9 @@ func (m *Model) renderLsdbMonitorTab() string {
 	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
 
 	// Set viewport sizes and assign content to viewport
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Height = contentMaxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
 
@@ -330,13 +337,9 @@ func (m *Model) renderRouterMonitorTab() string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
-	routerLSASelf, err := backend.GetOspfRouterDataSelf()
+	routerLSASelf, err := backend.GetOspfRouterData()
 	if err != nil {
-		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
-	}
-	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping()
-	if err != nil {
-		return common.PrintBackendError(err, "GetOspfP2PInterfaceMapping")
+		return common.PrintBackendError(err, "GetOspfRouterData")
 	}
 
 	// extract and sort the map keys (areas)
@@ -349,7 +352,6 @@ func (m *Model) renderRouterMonitorTab() string {
 	var routerLSABlocks []string
 	for _, areaID := range routerLSAAreas {
 		areaData := routerLSASelf.RouterStates[areaID]
-
 		var transitTableData [][]string
 		var stubTableData [][]string
 		var point2pointTableData [][]string
@@ -376,16 +378,9 @@ func (m *Model) renderRouterMonitorTab() string {
 						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				} else if strings.Contains(link.LinkType, "point-to-point") {
-					var mappedAddress string
-					if addr, ok := p2pInterfaceMap.PeerInterfaceToAddress[link.RouterInterfaceAddress]; ok {
-						mappedAddress = addr
-					} else {
-						mappedAddress = "no mapping"
-					}
-
 					point2pointTableData = append(point2pointTableData, []string{
 						link.RouterInterfaceAddress,
-						mappedAddress,
+						"translate IP here",
 						strconv.Itoa(int(lsa.LsaAge)),
 					})
 				}
@@ -393,9 +388,15 @@ func (m *Model) renderRouterMonitorTab() string {
 		}
 
 		// Order all Table Data
-		common.SortTableByIPColumn(transitTableData)
-		common.SortTableByIPColumn(stubTableData)
-		common.SortTableByIPColumn(point2pointTableData)
+		sort.Slice(transitTableData, func(i, j int) bool {
+			return transitTableData[i][0] < transitTableData[j][0]
+		})
+		sort.Slice(stubTableData, func(i, j int) bool {
+			return stubTableData[i][0] < stubTableData[j][0]
+		})
+		sort.Slice(point2pointTableData, func(i, j int) bool {
+			return point2pointTableData[i][0] < point2pointTableData[j][0]
+		})
 
 		rowsTransit := len(transitTableData)
 		transitTable := components.NewOspfMonitorTable(
@@ -469,98 +470,11 @@ func (m *Model) renderRouterMonitorTab() string {
 		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = contentMaxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
-
-	return m.viewport.View()
-}
-
-func (m *Model) renderNetworkMonitorTab() string {
-	networkLSASelf, err := backend.GetOspfNetworkDataSelf()
-	if err != nil {
-		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
-	}
-	routerName, _, err := backend.GetRouterName()
-	if err != nil {
-		return common.PrintBackendError(err, "GetRouterName")
-	}
-
-	// extract and sort the map keys (areas)
-	networkLSAAreas := make([]string, 0, len(networkLSASelf.NetStates))
-	for area := range networkLSASelf.NetStates {
-		networkLSAAreas = append(networkLSAAreas, area)
-	}
-	sort.Strings(networkLSAAreas)
-
-	var networkLSABlocks []string
-	for _, areaID := range networkLSAAreas {
-		areaData := networkLSASelf.NetStates[areaID]
-		var networkTableData [][]string
-
-		for lsaID, lsa := range areaData.LsaEntries {
-			if lsaID == lsa.LinkStateId {
-				var attachedRouterList []string
-				for _, attachedRouter := range lsa.AttachedRouters {
-					attachedRouterList = append(attachedRouterList, attachedRouter.AttachedRouterId)
-				}
-				networkTableData = append(networkTableData, []string{
-					lsaID,
-					strconv.Itoa(int(lsa.NetworkMask)),
-					lsa.AdvertisingRouter,
-					strings.Join(attachedRouterList, "\n"),
-					strconv.Itoa(int(lsa.LsaAge)),
-				})
-			} else {
-				// TODO: print a pretty anomaly error when lsaID != linkstateID
-				return "Anomaly: LSA Mismatch"
-			}
-		}
-
-		// Order all Table Data
-		common.SortTableByIPColumn(networkTableData)
-
-		rowsNetwork := len(networkTableData)
-		networkTable := components.NewOspfMonitorMultilineTable(
-			[]string{
-				"Link State ID",
-				"CIDR",
-				"Advertising Router",
-				"Attached Routers",
-				"LSA Age",
-			},
-			rowsNetwork,
-		)
-		for _, r := range networkTableData {
-			networkTable = networkTable.Row(r...)
-		}
-
-		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", areaID))
-
-		networkTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForOne().Render("Network LSAs (Type 2)"),
-			styles.H2OneContentBoxCenterStyle().Render(networkTable.String()),
-			styles.H2OneBoxBottomBorderStyle().Render(""),
-		)
-
-		completeAreaNetworkLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, networkTableBox)
-
-		if areaData.LsaEntries != nil {
-			networkLSABlocks = append(networkLSABlocks, completeAreaNetworkLSAs+"\n\n")
-		}
-
-	}
-
-	if networkLSABlocks == nil {
-		return lipgloss.JoinHorizontal(lipgloss.Left,
-			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"))
-	}
-
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
-
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
 
 	return m.viewport.View()
 }
@@ -569,17 +483,13 @@ func (m *Model) renderExternalMonitorTab() string {
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
 
-	externalLSASelf, err := backend.GetOspfExternalDataSelf()
+	externalLSASelf, err := backend.GetOspfExternalData()
 	if err != nil {
-		return common.PrintBackendError(err, "GetOspfExternalDataSelf")
+		return common.PrintBackendError(err, "GetOspfExternalData")
 	}
-	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf()
+	nssaExternalDataSelf, err := backend.GetOspfNssaExternalData()
 	if err != nil {
-		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
-	}
-	routerName, _, err := backend.GetRouterName()
-	if err != nil {
-		return common.PrintBackendError(err, "GetRouterName")
+		return common.PrintBackendError(err, "GetOspfNssaExternalData")
 	}
 
 	// ===== OSPF External LSAs (Type 5) =====
@@ -602,7 +512,9 @@ func (m *Model) renderExternalMonitorTab() string {
 	}
 
 	// Order all Table Data
-	common.SortTableByIPColumn(externalTableData)
+	sort.Slice(externalTableData, func(i, j int) bool {
+		return externalTableData[i][0] < externalTableData[j][0]
+	})
 
 	rowsExternal := len(externalTableData)
 	externalTable := components.NewOspfMonitorTable([]string{
@@ -656,7 +568,9 @@ func (m *Model) renderExternalMonitorTab() string {
 			}
 
 			// Order all Table Data
-			common.SortTableByIPColumn(nssaExternalTableData)
+			sort.Slice(nssaExternalTableData, func(i, j int) bool {
+				return nssaExternalTableData[i][0] < nssaExternalTableData[j][0]
+			})
 
 			// create table for NSSA Exernal Link States with extracted data (nssaExternalTableData)
 			rowsNssaExternal := len(nssaExternalTableData)
@@ -690,15 +604,17 @@ func (m *Model) renderExternalMonitorTab() string {
 		}
 	}
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	contentMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = contentMaxHeight
 
 	var allLsaBlocks []string
 	if hasNssaExternalLSAs == false {
 		if externalTableData == nil {
 			allLsaBlocks = allLsaBlocks[:0]
 			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
-				styles.H1TitleStyleForOne().Render(routerName+" does not originate External LSAs (Type 5 or 7)"),
+				externalHeader,
+				"no self originating external advertisements",
 			))
 		} else {
 			allLsaBlocks = externalLsaBlock
@@ -708,78 +624,6 @@ func (m *Model) renderExternalMonitorTab() string {
 	}
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, allLsaBlocks...))
-
-	return m.viewport.View()
-}
-
-func (m *Model) renderNeighborMonitorTab() string {
-	ospfNeighbors, err := backend.GetOspfNeighbors()
-	if err != nil {
-		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
-	}
-
-	routerName, _, err := backend.GetRouterName()
-	if err != nil {
-		return common.PrintBackendError(err, "GetRouterName")
-	}
-
-	// extract and sort the map keys
-	ospfNeighborIDs := make([]string, 0, len(ospfNeighbors.Neighbors))
-	for neighborID := range ospfNeighbors.Neighbors {
-		ospfNeighborIDs = append(ospfNeighborIDs, neighborID)
-	}
-	list := common.SortedIpList(ospfNeighborIDs)
-	sort.Sort(&list)
-
-	var ospfNeighborTableData [][]string
-	for _, ospfNeighborID := range ospfNeighborIDs {
-		ospfNeighborList := ospfNeighbors.Neighbors[ospfNeighborID]
-
-		for _, ospfNeighbor := range ospfNeighborList.Neighbors {
-			ospfNeighborTableData = append(ospfNeighborTableData, []string{
-				ospfNeighborID,
-				ospfNeighbor.IfaceAddress,
-				ospfNeighbor.Role,
-				ospfNeighbor.Converged,
-				ospfNeighbor.IfaceName,
-				ospfNeighbor.UpTime,
-				ospfNeighbor.DeadTime,
-			})
-		}
-
-	}
-
-	// Create Table for NSSA External Link States and Fill with extracted nssaExternalLinkStateTableData
-	rowsOspfNeighbors := len(ospfNeighborTableData)
-	ospfNeighborTable := components.NewOspfMonitorTable(
-		[]string{
-			"Neighbor ID",
-			"Neighbor IP",
-			"Role",
-			"Converged",
-			"Internal Interface",
-			"Up Time",
-			"Dead Time",
-		},
-		rowsOspfNeighbors,
-	)
-	for _, r := range ospfNeighborTableData {
-		ospfNeighborTable = ospfNeighborTable.Row(r...)
-	}
-
-	ospfNeghborHeader := styles.H1TitleStyleForOne().Render("All OSPF Neighborships")
-
-	// create styled boxes for each external LSA Type (type 5 & 7)
-	ospfNeighborTableBox := lipgloss.JoinVertical(lipgloss.Left,
-		styles.H2TitleStyleForOne().Render("Router "+routerName+" has "+strconv.Itoa(len(ospfNeighborIDs))+" Neighbors"),
-		styles.H2OneContentBoxCenterStyle().Render(ospfNeighborTable.String()),
-		styles.H2OneBoxBottomBorderStyle().Render(""),
-	)
-
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
-
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
 
 	return m.viewport.View()
 }
@@ -809,8 +653,9 @@ func (m *Model) renderRunningConfigTab() string {
 	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
 
 	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = outputMaxHeight
 	m.viewport.SetContent(completeContent)
 
 	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())

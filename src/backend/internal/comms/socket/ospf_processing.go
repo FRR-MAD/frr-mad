@@ -4,24 +4,50 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-func (s *Socket) getOspfDatabase() *frrProto.Response {
+func (s *Socket) ospfDummyData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_OspfDatabase{
-			OspfDatabase: s.metrics.GetOspfDatabase(),
+		Kind: &frrProto.ResponseValue_StaticFrrConfiguration{
+			StaticFrrConfiguration: s.metrics.StaticFrrConfiguration,
 		},
 	}
 
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returning OSPF database",
+		Message: "Returning magical ospf data",
 		Data:    value,
 	}
 }
 
-func (s *Socket) getGeneralOspfInformation() *frrProto.Response {
+func (s *Socket) getRouterName() *frrProto.Response {
 	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_GeneralOspfInformation{
-			GeneralOspfInformation: s.metrics.GetGeneralOspfInformation(),
+		Kind: &frrProto.ResponseValue_FrrRouterData{
+			FrrRouterData: s.metrics.GetFrrRouterData(),
+		},
+	}
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "Returng FRR Router Data",
+		Data:    value,
+	}
+}
+
+func (s *Socket) getSystemResources() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_SystemMetrics{
+			SystemMetrics: s.metrics.GetSystemMetrics(),
+		},
+	}
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "Returning magical system data",
+		Data:    value,
+	}
+}
+
+func (s *Socket) getOspfDatabase() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_OspfDatabase{
+			OspfDatabase: s.metrics.GetOspfDatabase(),
 		},
 	}
 
@@ -49,19 +75,6 @@ func (s *Socket) getOspfNetworkData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfNetworkData{
 			OspfNetworkData: s.metrics.GetOspfNetworkData(),
-		},
-	}
-	return &frrProto.Response{
-		Status:  "success",
-		Message: "Returning OSPF network data self",
-		Data:    value,
-	}
-}
-
-func (s *Socket) getOspfNetworkDataAll() *frrProto.Response {
-	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_OspfNetworkData{
-			OspfNetworkData: s.metrics.GetOspfNetworkDataAll(),
 		},
 	}
 	return &frrProto.Response{
@@ -162,15 +175,28 @@ func (s *Socket) getInterfaces() *frrProto.Response {
 	}
 }
 
-func (s *Socket) getp2pMap() *frrProto.Response {
+func (s *Socket) getRoutingInformationBase() *frrProto.Response {
 	value := &frrProto.ResponseValue{
-		Kind: &frrProto.ResponseValue_PeerInterfaceToAddress{
-			PeerInterfaceToAddress: s.p2pMap,
+		Kind: &frrProto.ResponseValue_RoutingInformationBase{
+			RoutingInformationBase: s.metrics.GetRoutingInformationBase(),
 		},
 	}
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "Returning compounded P2P OSPF generated Interface Address to static Interface Address",
+		Message: "Returning routes",
+		Data:    value,
+	}
+}
+
+func (s *Socket) getStaticFrrConfiguration() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_StaticFrrConfiguration{
+			StaticFrrConfiguration: s.metrics.GetStaticFrrConfiguration(),
+		},
+	}
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "Returning static FRR configuration",
 		Data:    value,
 	}
 }
