@@ -118,13 +118,9 @@ func (m *Model) renderRibTab() string {
 	headers := lipgloss.JoinVertical(lipgloss.Left, ribHeader, tableHeaderContent)
 
 	// Configure viewport
-	contentMaxHeight := m.windowSize.Height -
-		styles.TabRowHeight -
-		styles.FooterHeight -
-		styles.HeightH1 -
-		3 - 2 // -3 (table Header) -2 (box border bottom style)
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	// -3 (table Header) -2 (box border bottom style)
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -228,13 +224,9 @@ func (m *Model) renderFibTab() string {
 	headers := lipgloss.JoinVertical(lipgloss.Left, fibHeader, tableHeaderContent)
 
 	// Configure viewport
-	contentMaxHeight := m.windowSize.Height -
-		styles.TabRowHeight -
-		styles.FooterHeight -
-		styles.HeightH1 -
-		3 - 2 // -3 (table Header) -2 (box border bottom style)
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	// -3 (table Header) -2 (box border bottom style)
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -346,13 +338,9 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	headers := lipgloss.JoinVertical(lipgloss.Left, partialRoutesHeader, tableHeaderContent)
 
 	// Configure viewport
-	contentMaxHeight := m.windowSize.Height -
-		styles.TabRowHeight -
-		styles.FooterHeight -
-		styles.HeightH1 -
-		3 - 2 // -3 (table Header) -2 (box border bottom style)
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = contentMaxHeight
+	// -3 (table Header) -2 (box border bottom style)
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
