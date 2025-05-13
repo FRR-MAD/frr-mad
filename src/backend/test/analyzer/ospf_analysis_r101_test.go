@@ -45,7 +45,7 @@ func TestRouterLsaHappy1(t *testing.T) {
 
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
 	expectedRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
@@ -171,8 +171,8 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 		},
 	}
 
-	t.Run("TestUnderadvertised", func(t *testing.T) {
-		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+	t.Run("TestUnadvertised", func(t *testing.T) {
+		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes)
 		assert.Equal(t, 2, len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
 		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
 		missingOne := false
@@ -186,7 +186,7 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	isRouterLSDB2, _ := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	isRouterLSDB2, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 	shouldRouterLSDB2 := getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy()
 	expectedSuperfluousEntrires := []*frrProto.Advertisement{
 		{
@@ -201,7 +201,7 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB2, isRouterLSDB2)
 	t.Run("TestOveradvertised", func(t *testing.T) {
-		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes)
 		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
 		assert.Equal(t, 2, len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
 		assert.Equal(t, len(expectedSuperfluousEntrires), len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
@@ -265,7 +265,7 @@ func TestExternalLsaHappy1(t *testing.T) {
 
 	//- runtimeExternalLSDB
 	expectedIsExternalLSDB := getExternalIsExternalLSDBr101()
-	actualIsExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualIsExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
@@ -344,7 +344,7 @@ func TestExternalLsaUnhappy1(t *testing.T) {
 	// Unadvertised: isExternalLSDB is empty
 	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
-		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.MissingEntries))
 		expectedMissingEntrires := []*frrProto.Advertisement{
 			{
@@ -372,7 +372,7 @@ func TestExternalLsaUnhappy1(t *testing.T) {
 	shouldExternalLSDB = analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.True(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
 		assert.Equal(t, 1, len(ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries))
 		expectedMissingEntrires := []*frrProto.Advertisement{
@@ -404,14 +404,14 @@ func TestAnomalyAnalysisHappy1(t *testing.T) {
 	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	isRouterLSDB, _ := analyzer.GetRuntimeRouterData(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	isRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
 
 	_, shouldRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 
 	t.Run("TestRouterLSAAnomalyTesting", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes)
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes)
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasMisconfiguredPrefixes)
 		assert.Empty(t, ana.AnalysisResult.RouterAnomaly.MissingEntries)
@@ -422,22 +422,18 @@ func TestAnomalyAnalysisHappy1(t *testing.T) {
 	//
 
 	predictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 	ana.ExternalAnomalyAnalysisLSDB(predictedExternalLSDB, runtimeExternalLSDB)
 
 	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasDuplicatePrefixes)
 		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasMisconfiguredPrefixes)
 		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.MissingEntries)
 		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.SuperfluousEntries)
 		assert.Empty(t, ana.AnalysisResult.ExternalAnomaly.DuplicateEntries)
 	})
-
-}
-
-func TestAnomalyAnalysisLsaFiveHappy1(t *testing.T) {
 
 }
 
@@ -453,7 +449,7 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 	// Get predicted and runtime NSSA-external LSDBs
 	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	// Run the analysis
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
@@ -461,7 +457,7 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 	t.Run("TestNssaExternalNormalCase", func(t *testing.T) {
 		// In normal case, there should be no anomalies
 		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes)
-		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.False(t, ana.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes)
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
@@ -480,13 +476,13 @@ func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
 	// Get predicted and runtime NSSA-external LSDBs
 	predictedNssaExternalLSDB := analyzer.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalData(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
 
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
 
 	t.Run("TestNssaExternalMissingRoutes", func(t *testing.T) {
 		// Should detect missing routes that should be advertised
-		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnderAdvertisedPrefixes)
+		assert.True(t, ana.AnalysisResult.NssaExternalAnomaly.HasUnAdvertisedPrefixes)
 		assert.NotEmpty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 	})
 }

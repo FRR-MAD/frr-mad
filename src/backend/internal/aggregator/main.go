@@ -9,9 +9,9 @@ import (
 )
 
 func InitAggregator(config configs.AggregatorConfig, logger *logger.Logger) *Collector {
-	metricsURL := config.FRRMetricsURL //config["FRRMetricsURL"]
-	configPath := config.FRRConfigPath //config["FRRConfigPath"]
-	socketPath := config.SocketPath    //config["SocketPath"]
+	metricsURL := config.FRRMetricsURL
+	configPath := config.FRRConfigPath
+	socketPath := config.SocketPath
 
 	return newCollector(metricsURL, configPath, socketPath, logger)
 }

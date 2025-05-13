@@ -8,7 +8,6 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-// GetStaticFileRouterData makes LSA type 1 prediction parsing
 func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
 	if config == nil || config.OspfConfig == nil {
 		return false, nil
@@ -24,9 +23,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 
 	areaMap := make(map[string]*frrProto.AreaAnalyzer)
 
-	// Process all interfaces
 	for _, iface := range config.Interfaces {
-		// Skip interfaces without an area -> they are not part of OSPF
 		peerInterface := false
 		for _, peer := range iface.InterfaceIpPrefixes {
 			if peer.PeerIpPrefix != nil {
@@ -49,7 +46,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 			a = &newArea
 		}
 
-		// Create advertisements from IP addresses
 		for _, interfaceIpPrefix := range iface.InterfaceIpPrefixes {
 			if interfaceIpPrefix.IpPrefix == nil {
 				continue
@@ -73,14 +69,12 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 	}
 
-	// Process virtual links if present
 	if config.OspfConfig != nil {
 		for _, ospfArea := range config.OspfConfig.Area {
 			if ospfArea.Type == "" {
 				continue
 			}
 
-			// Check if this is the area containing virtual links
 			if config.OspfConfig.VirtualLinkNeighbor != "" {
 				a, exists := areaMap[ospfArea.Name]
 				if !exists {
@@ -102,7 +96,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 				a.Links = append(a.Links, &adv)
 			}
 
-			// check if is nssa
 			switch ospfArea.Type {
 			case "nssa":
 				areaMap[ospfArea.Name].AreaType = "nssa"
@@ -117,7 +110,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 	}
 
-	// Convert map to slice for the final result
 	for _, a := range areaMap {
 		if len(a.Links) > 0 {
 			result.Areas = append(result.Areas, a)
@@ -131,7 +123,6 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		}
 	}
 
-	// If no areas were found, return nil
 	if len(result.Areas) == 0 {
 		return false, nil
 	} else if len(result.Areas) == 1 {
@@ -157,14 +148,12 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	// Create a single AreaAnalyzer for all routes
 	area := &frrProto.AreaAnalyzer{
 		LsaType: "AS-external-LSA",
 		Links:   []*frrProto.Advertisement{},
 	}
 	result.Areas = append(result.Areas, area)
 
-	// Loop through static routes in the configuration
 	for _, staticRoute := range config.StaticRoutes {
 		ipAddr := staticRoute.IpPrefix.IpAddress
 		prefixLen := staticRoute.IpPrefix.PrefixLength
@@ -172,7 +161,6 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 		if _, exists := staticRouteMap[ipAddr]; exists {
 			isAllowed := false
 
-			// TODO: does this really cover all scenarios?
 			if len(accessList) == 0 {
 				isAllowed = true
 			} else {
