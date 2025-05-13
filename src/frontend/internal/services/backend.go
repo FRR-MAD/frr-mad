@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
 
 	"google.golang.org/protobuf/proto"
@@ -30,6 +31,7 @@ func SendMessage(
 	service string,
 	command string,
 	params map[string]*frrProto.ResponseValue,
+	logger *logger.Logger,
 ) (*frrProto.Response, error) {
 	// Build top‐level Message
 	message := &frrProto.Message{
@@ -39,7 +41,7 @@ func SendMessage(
 	}
 
 	// Open the Unix socket
-	conn, err := openSocket(socketPath)
+	conn, err := openSocket(socketPath, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -47,20 +49,22 @@ func SendMessage(
 		err := conn.Close()
 		if err != nil {
 			// todo: log to logger
+			logger.Error(fmt.Sprintf("Failed to close connection: %s\n", err))
 			fmt.Printf("Failed to close connection: %s\n", err)
 		}
 	}(conn)
 
-	if err := sendProto(conn, message); err != nil {
+	if err := sendProto(conn, message, logger); err != nil {
 		return nil, err
 	}
 
-	res, err := receiveProto(conn)
+	res, err := receiveProto(conn, logger)
 	if err != nil {
 		return nil, err
 	}
 
 	if res.Status != "success" {
+		logger.Error(fmt.Sprintf("Error backend error sending and receiving proto status: %v message: %v", res.Status, res.Message))
 		return nil, fmt.Errorf("backend error: %s", res.Message)
 	}
 
@@ -68,9 +72,10 @@ func SendMessage(
 }
 
 // openSocket dials the Unix‐domain socket at path and returns a live connection.
-func openSocket(path string) (net.Conn, error) {
+func openSocket(path string, logger *logger.Logger) (net.Conn, error) {
 	conn, err := net.DialTimeout("unix", path, socketDialTimeout)
 	if err != nil {
+		logger.Error(fmt.Sprintf("unable to connect to %q:\n\nBackend message:\n%w", path, err))
 		return nil, fmt.Errorf("unable to connect to %q:\n\nBackend message:\n%w", path, err)
 	}
 	return conn, nil
@@ -78,19 +83,22 @@ func openSocket(path string) (net.Conn, error) {
 
 // sendProto marshals the given protobuf message, prefixes it with a 4‑byte
 // length header (little endian), and writes both to conn.
-func sendProto(conn net.Conn, message *frrProto.Message) error {
+func sendProto(conn net.Conn, message *frrProto.Message, logger *logger.Logger) error {
 	data, err := proto.Marshal(message)
 	if err != nil {
+		logger.Error(fmt.Sprintf("Error on mashal message (Proto): %v", err))
 		return fmt.Errorf("marshal error: %w", err)
 	}
 
 	var header [4]byte
 	binary.LittleEndian.PutUint32(header[:], uint32(len(data)))
 	if _, err := conn.Write(header[:]); err != nil {
+		logger.Error(fmt.Sprintf("Error sending length header (Proto): %v", err))
 		return fmt.Errorf("failed sending length header: %w", err)
 	}
 
 	if _, err := conn.Write(data); err != nil {
+		logger.Error(fmt.Sprintf("Error sending payload (Proto): %v", err))
 		return fmt.Errorf("failed sending payload: %w", err)
 	}
 
@@ -99,31 +107,35 @@ func sendProto(conn net.Conn, message *frrProto.Message) error {
 
 // receiveProto reads a 4‑byte length header, then that many bytes,
 // and unmarshals them into a Response.
-func receiveProto(conn net.Conn) (*frrProto.Response, error) {
+func receiveProto(conn net.Conn, logger *logger.Logger) (*frrProto.Response, error) {
 	// Read length header
 	var header [4]byte
 	if _, err := io.ReadFull(conn, header[:]); err != nil {
+		logger.Error(fmt.Sprintf("Error reading length header (Proto): %v", err))
 		return nil, fmt.Errorf("failed reading length header: %w", err)
 	}
 	length := binary.LittleEndian.Uint32(header[:])
 	if length > maxResponseSize {
+		logger.Error(fmt.Sprintf("Error response too big (Proto): %v bytes", length))
 		return nil, fmt.Errorf("response too big: %d bytes", length)
 	}
 
 	buf := make([]byte, length)
 	if _, err := io.ReadFull(conn, buf); err != nil {
+		logger.Error(fmt.Sprintf("Error failed reading payload (Proto): %v", err))
 		return nil, fmt.Errorf("failed reading payload: %w", err)
 	}
 
 	res := &frrProto.Response{}
 	if err := proto.Unmarshal(buf, res); err != nil {
+		logger.Error(fmt.Sprintf("Error on unmarshal message (Proto): %v", err))
 		return nil, fmt.Errorf("unmarshal error: %w", err)
 	}
 	return res, nil
 }
 
-func GetRouterName() (string, string, error) {
-	response, err := SendMessage("frr", "routerData", nil)
+func GetRouterName(logger *logger.Logger) (string, string, error) {
+	response, err := SendMessage("frr", "routerData", nil, logger)
 	if err != nil {
 		return "", "", err
 	}
@@ -136,9 +148,9 @@ func GetRouterName() (string, string, error) {
 	return routerName, ospfRouterId, nil
 }
 
-func GetSystemResources() (int64, float64, float64, error) {
+func GetSystemResources(logger *logger.Logger) (int64, float64, float64, error) {
 
-	response, err := SendMessage("system", "allResources", nil)
+	response, err := SendMessage("system", "allResources", nil, logger)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("rpc error: %w", err)
 	}
@@ -155,8 +167,8 @@ func GetSystemResources() (int64, float64, float64, error) {
 	return cores, cpuUsage, memoryUsage, nil
 }
 
-func GetRIB() (*frrProto.RoutingInformationBase, error) {
-	response, err := SendMessage("frr", "rib", nil)
+func GetRIB(logger *logger.Logger) (*frrProto.RoutingInformationBase, error) {
+	response, err := SendMessage("frr", "rib", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +176,8 @@ func GetRIB() (*frrProto.RoutingInformationBase, error) {
 	return response.Data.GetRoutingInformationBase(), nil
 }
 
-func GetRibFibSummary() (*frrProto.RibFibSummaryRoutes, error) {
-	response, err := SendMessage("frr", "ribfibSummary", nil)
+func GetRibFibSummary(logger *logger.Logger) (*frrProto.RibFibSummaryRoutes, error) {
+	response, err := SendMessage("frr", "ribfibSummary", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +185,8 @@ func GetRibFibSummary() (*frrProto.RibFibSummaryRoutes, error) {
 	return response.Data.GetRibFibSummaryRoutes(), nil
 }
 
-func GetLSDB() (*frrProto.OSPFDatabase, error) {
-	response, err := SendMessage("ospf", "database", nil)
+func GetLSDB(logger *logger.Logger) (*frrProto.OSPFDatabase, error) {
+	response, err := SendMessage("ospf", "database", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -182,8 +194,8 @@ func GetLSDB() (*frrProto.OSPFDatabase, error) {
 	return response.Data.GetOspfDatabase(), nil
 }
 
-func GetOspfRouterDataSelf() (*frrProto.OSPFRouterData, error) {
-	response, err := SendMessage("ospf", "router", nil)
+func GetOspfRouterDataSelf(logger *logger.Logger) (*frrProto.OSPFRouterData, error) {
+	response, err := SendMessage("ospf", "router", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +203,8 @@ func GetOspfRouterDataSelf() (*frrProto.OSPFRouterData, error) {
 	return response.Data.GetOspfRouterData(), nil
 }
 
-func GetOSPF() (*frrProto.GeneralOspfInformation, error) {
-	response, err := SendMessage("ospf", "generalInfo", nil)
+func GetOSPF(logger *logger.Logger) (*frrProto.GeneralOspfInformation, error) {
+	response, err := SendMessage("ospf", "generalInfo", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -200,8 +212,8 @@ func GetOSPF() (*frrProto.GeneralOspfInformation, error) {
 	return response.Data.GetGeneralOspfInformation(), nil
 }
 
-func GetOspfP2PInterfaceMapping() (*frrProto.PeerInterfaceMap, error) {
-	response, err := SendMessage("ospf", "peerMap", nil)
+func GetOspfP2PInterfaceMapping(logger *logger.Logger) (*frrProto.PeerInterfaceMap, error) {
+	response, err := SendMessage("ospf", "peerMap", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -209,8 +221,8 @@ func GetOspfP2PInterfaceMapping() (*frrProto.PeerInterfaceMap, error) {
 	return response.Data.GetPeerInterfaceToAddress(), nil
 }
 
-func GetOspfNetworkDataSelf() (*frrProto.OSPFNetworkData, error) {
-	response, err := SendMessage("ospf", "network", nil)
+func GetOspfNetworkDataSelf(logger *logger.Logger) (*frrProto.OSPFNetworkData, error) {
+	response, err := SendMessage("ospf", "network", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -218,8 +230,8 @@ func GetOspfNetworkDataSelf() (*frrProto.OSPFNetworkData, error) {
 	return response.Data.GetOspfNetworkData(), nil
 }
 
-func GetOspfNeighbors() (*frrProto.OSPFNeighbors, error) {
-	response, err := SendMessage("ospf", "neighbors", nil)
+func GetOspfNeighbors(logger *logger.Logger) (*frrProto.OSPFNeighbors, error) {
+	response, err := SendMessage("ospf", "neighbors", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +239,8 @@ func GetOspfNeighbors() (*frrProto.OSPFNeighbors, error) {
 	return response.Data.GetOspfNeighbors(), nil
 }
 
-func GetOspfNeighborInterfaces() ([]string, error) {
-	response, err := SendMessage("ospf", "neighbors", nil)
+func GetOspfNeighborInterfaces(logger *logger.Logger) ([]string, error) {
+	response, err := SendMessage("ospf", "neighbors", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -244,8 +256,8 @@ func GetOspfNeighborInterfaces() ([]string, error) {
 	return neighborAddresses, nil
 }
 
-func GetOspfExternalDataSelf() (*frrProto.OSPFExternalData, error) {
-	response, err := SendMessage("ospf", "externalData", nil)
+func GetOspfExternalDataSelf(logger *logger.Logger) (*frrProto.OSPFExternalData, error) {
+	response, err := SendMessage("ospf", "externalData", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -253,8 +265,8 @@ func GetOspfExternalDataSelf() (*frrProto.OSPFExternalData, error) {
 	return response.Data.GetOspfExternalData(), nil
 }
 
-func GetOspfNssaExternalDataSelf() (*frrProto.OSPFNssaExternalData, error) {
-	response, err := SendMessage("ospf", "nssaExternalData", nil)
+func GetOspfNssaExternalDataSelf(logger *logger.Logger) (*frrProto.OSPFNssaExternalData, error) {
+	response, err := SendMessage("ospf", "nssaExternalData", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -262,8 +274,8 @@ func GetOspfNssaExternalDataSelf() (*frrProto.OSPFNssaExternalData, error) {
 	return response.Data.GetOspfNssaExternalData(), nil
 }
 
-func GetStaticFRRConfigurationPretty() (string, error) {
-	response, err := SendMessage("ospf", "staticConfig", nil)
+func GetStaticFRRConfigurationPretty(logger *logger.Logger) (string, error) {
+	response, err := SendMessage("ospf", "staticConfig", nil, logger)
 	if err != nil {
 		return "", err
 	}
@@ -286,8 +298,8 @@ func GetStaticFRRConfigurationPretty() (string, error) {
 	return prettyJson, nil
 }
 
-func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "router", nil)
+func GetRouterAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "router", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +307,8 @@ func GetRouterAnomalies() (*frrProto.AnomalyDetection, error) {
 	return response.Data.GetAnomaly(), nil
 }
 
-func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "external", nil)
+func GetExternalAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "external", nil, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -304,8 +316,8 @@ func GetExternalAnomalies() (*frrProto.AnomalyDetection, error) {
 	return response.Data.GetAnomaly(), nil
 }
 
-func GetNSSAExternalAnomalies() (*frrProto.AnomalyDetection, error) {
-	response, err := SendMessage("analysis", "nssaExternal", nil)
+func GetNSSAExternalAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "nssaExternal", nil, logger)
 	if err != nil {
 		return nil, err
 	}

@@ -3,32 +3,47 @@ package common
 import (
 	"bytes"
 	"fmt"
-	tea "github.com/charmbracelet/bubbletea"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type OSPFMsg string
 
 type RunningConfigMsg string
 
-func RunCustomCommand(activeShell string, command string, timeout time.Duration) (string, error) {
+func RunCustomCommand(activeShell string, command string, timeout time.Duration, logger *logger.Logger) (string, error) {
+	logger.WithAttrs(map[string]interface{}{
+		"shell":   activeShell,
+		"command": command,
+		"timeout": timeout.String(),
+	}).Info("Executing command")
+
 	var cmd *exec.Cmd
 
 	if activeShell == "vtysh" {
 		cmd = exec.Command("vtysh", "-c", command)
 	} else if activeShell == "bash" {
-		// cmd = exec.Command(command)
 		args := strings.Fields(command)
 		if len(args) == 0 {
-			return "", fmt.Errorf("no command provided")
+			err := fmt.Errorf("no command provided")
+			logger.WithAttrs(map[string]interface{}{
+				"error": err.Error(),
+			}).Error("Empty command provided")
+			return "", err
 		}
 		cmd = exec.Command(args[0], args[1:]...)
 	} else {
 		args := strings.Fields(command)
 		if len(args) == 0 {
-			return "", fmt.Errorf("no command provided")
+			err := fmt.Errorf("no command provided")
+			logger.WithAttrs(map[string]interface{}{
+				"error": err.Error(),
+			}).Error("Empty command provided")
+			return "", err
 		}
 		cmd = exec.Command(args[0], args[1:]...)
 	}
@@ -37,7 +52,12 @@ func RunCustomCommand(activeShell string, command string, timeout time.Duration)
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 
+	logger.Debug("Starting command execution")
+
 	if err := cmd.Start(); err != nil {
+		logger.WithAttrs(map[string]interface{}{
+			"error": err.Error(),
+		}).Error("Failed to start command")
 		return "", err
 	}
 
@@ -48,23 +68,59 @@ func RunCustomCommand(activeShell string, command string, timeout time.Duration)
 
 	select {
 	case <-time.After(timeout):
-		err := cmd.Process.Kill()
-		if err != nil {
-			return "", err
+		killErr := cmd.Process.Kill()
+		if killErr != nil {
+			logger.WithAttrs(map[string]interface{}{
+				"error":         killErr.Error(),
+				"output_so_far": out.String(),
+			}).Error("Failed to kill timed-out command")
+			return "", killErr
 		}
-		return "", fmt.Errorf("command timed out")
+
+		timeoutErr := fmt.Errorf("command timed out")
+		logger.WithAttrs(map[string]interface{}{
+			"error":         timeoutErr.Error(),
+			"output_so_far": out.String(),
+		}).Warning("Command timed out")
+		return "", timeoutErr
+
 	case err := <-done:
-		if err != nil {
-			return "", fmt.Errorf("command error: %v\nOutput: %s", err, out.String())
+		output := out.String()
+
+		outputForLog := output
+		if len(outputForLog) > 500 { // Limit output size in logs
+			outputForLog = outputForLog[:500] + "... [truncated]"
 		}
-		return out.String(), nil
+
+		if err != nil {
+			logger.WithAttrs(map[string]interface{}{
+				"error":     err.Error(),
+				"output":    outputForLog,
+				"exit_code": getExitCode(err),
+			}).Error("Command execution failed")
+			return "", fmt.Errorf("command error: %v\nOutput: %s", err, output)
+		}
+
+		logger.WithAttrs(map[string]interface{}{
+			"output":        outputForLog,
+			"output_length": len(output),
+		}).Info("Command executed successfully")
+		return output, nil
 	}
 }
 
+// Helper function to extract exit code from error
+func getExitCode(err error) int {
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		return exitErr.ExitCode()
+	}
+	return -1
+}
+
 // FetchRunningConfig msg.type = msg.RunningConfigMsg --> triggers function in update
-func FetchRunningConfig() tea.Cmd {
+func FetchRunningConfig(logger *logger.Logger) tea.Cmd {
 	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
-		data, err := GetRunningConfig()
+		data, err := GetRunningConfig(logger)
 		if err != nil {
 			return RunningConfigMsg(fmt.Sprintf("Error: %v", err))
 		}
@@ -72,9 +128,10 @@ func FetchRunningConfig() tea.Cmd {
 	})
 }
 
-func GetRunningConfig() (string, error) {
+func GetRunningConfig(logger *logger.Logger) (string, error) {
 	vtyshOutput, err := exec.Command("vtysh", "-c", "show running-config").Output()
 	if err != nil {
+		logger.Error(fmt.Sprintf("Error fetching OSPF neighbor data: %v", err))
 		return "", fmt.Errorf("error fetching OSPF neighbor data: %v", err)
 	}
 
@@ -89,19 +146,21 @@ func ShowRunningConfig(data string) []string {
 }
 
 // FetchOSPFData msg.type = msg.OSPFMsg --> triggers function in update
-func FetchOSPFData() tea.Cmd {
+func FetchOSPFData(logger *logger.Logger) tea.Cmd {
 	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
-		data, err := GetOSPFData()
+		data, err := GetOSPFData(logger)
 		if err != nil {
+			logger.Error(fmt.Sprintf("Error on fetching ospf data: %v", err))
 			return OSPFMsg(fmt.Sprintf("Error: %v", err))
 		}
 		return OSPFMsg(data)
 	})
 }
 
-func GetOSPFData() (string, error) {
+func GetOSPFData(logger *logger.Logger) (string, error) {
 	vtyshOutput, err := exec.Command("vtysh", "-c", "show ip ospf neighbor").Output()
 	if err != nil {
+		logger.Error(fmt.Sprintf("Error on getting ospf data: %v", err))
 		return "", fmt.Errorf("error fetching OSPF neighbor data: %v", err)
 	}
 

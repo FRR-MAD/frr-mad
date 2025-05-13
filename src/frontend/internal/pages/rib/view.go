@@ -2,14 +2,15 @@ package rib
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 var currentSubTabLocal = -1
@@ -37,11 +38,11 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderRibTab() string {
-	rib, err := backend.GetRIB()
+	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
 	}
-	ribFibSummary, err := backend.GetRibFibSummary()
+	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
@@ -135,11 +136,11 @@ func (m *Model) renderRibTab() string {
 }
 
 func (m *Model) renderFibTab() string {
-	rib, err := backend.GetRIB()
+	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
 	}
-	ribFibSummary, err := backend.GetRibFibSummary()
+	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
@@ -241,11 +242,11 @@ func (m *Model) renderFibTab() string {
 }
 
 func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
-	rib, err := backend.GetRIB()
+	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
 	}
-	ribFibSummary, err := backend.GetRibFibSummary()
+	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}

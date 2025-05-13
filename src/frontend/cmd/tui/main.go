@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/pages/rib"
 	"log"
 	"os"
+
+	"github.com/ba2025-ysmprc/frr-tui/internal/pages/rib"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
@@ -55,7 +56,7 @@ func initModel(config *configs.Config) *AppModel {
 	debugLevel := getDebugLevel(config.Default.DebugLevel)
 	appLogger := createLogger("frr_mad_frontend", fmt.Sprintf("%v/frr_mad_frontend.log", config.Default.LogPath))
 	appLogger.SetDebugLevel(debugLevel)
-	appLogger.Info("Starting Frontend Moniotring")
+	appLogger.Info("Starting Frontend Application")
 
 	dashboardLogger := createLogger("dashboard_frontend", fmt.Sprintf("%v/dashboard_frontend.log", config.Default.LogPath))
 	dashboardLogger.SetDebugLevel(debugLevel)
@@ -236,7 +237,7 @@ func (m *AppModel) View() string {
 	contentWidth := m.windowSize.Width - 4
 	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.BorderContentBox - styles.FooterHeight
 
-	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize)
+	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize, m.logger)
 	footer := m.footer.Get()
 
 	return lipgloss.JoinVertical(

@@ -17,7 +17,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineDown(10)
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
-			return m, common.FetchOSPFData()
+			return m, common.FetchOSPFData(m.logger)
 		}
 	}
 

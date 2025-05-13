@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 
 	// "github.com/ba2025-ysmprc/frr-tui/pkg"
@@ -54,7 +55,7 @@ func (m *Model) renderOSPFDashboard() string {
 			Padding(0).
 			Render("Anomalies Detected!")
 		statusHeader = anomalyHeader
-		ospfDashboardAnomalies := getOspfDashboardAnomalies()
+		ospfDashboardAnomalies := getOspfDashboardAnomalies(m.logger)
 		m.viewportLeft.SetContent(ospfDashboardAnomalies)
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
@@ -63,12 +64,12 @@ func (m *Model) renderOSPFDashboard() string {
 			Padding(0).
 			Render("All OSPF Routes are advertised as Expected")
 		statusHeader = dashboardHeader
-		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf()
+		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf(m.logger)
 		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
-	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(), getOSPFGeneralInfoBox())
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), getOSPFGeneralInfoBox(m.logger))
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -83,8 +84,8 @@ func (m *Model) renderOSPFDashboard() string {
 	return horizontalDashboard
 }
 
-func getSystemResourcesBox() string {
-	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources()
+func getSystemResourcesBox(logger *logger.Logger) string {
+	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(logger)
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
 		cpuAmountString = "N/A"
@@ -107,8 +108,8 @@ func getSystemResourcesBox() string {
 	return systemStatistics
 }
 
-func getOSPFGeneralInfoBox() string {
-	ospfInformation, err := backend.GetOSPF()
+func getOSPFGeneralInfoBox(logger *logger.Logger) string {
+	ospfInformation, err := backend.GetOSPF(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOSPF")
 	}
@@ -173,10 +174,10 @@ func getOSPFGeneralInfoBox() string {
 	return ospfInformationBox
 }
 
-func getOspfDashboardLsdbSelf() string {
+func getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 	var lsdbSelfBlocks []string
 
-	lsdb, err := backend.GetLSDB()
+	lsdb, err := backend.GetLSDB(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetLSDB")
 	}
@@ -188,7 +189,7 @@ func getOspfDashboardLsdbSelf() string {
 	}
 	sort.Strings(lsdbAreas)
 
-	_, routerOSPFID, err := backend.GetRouterName()
+	_, routerOSPFID, err := backend.GetRouterName(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterName")
 	}
@@ -490,42 +491,72 @@ func getOspfDashboardLsdbSelf() string {
 	return lipgloss.JoinVertical(lipgloss.Left, lsdbSelfBlocks...)
 }
 
-func getOspfDashboardAnomalies() string {
-	ospfRouterAnomalies, err := backend.GetRouterAnomalies()
+func getOspfDashboardAnomalies(logger *logger.Logger) string {
+	ospfRouterAnomalies, err := backend.GetRouterAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
-	ospfExternalAnomalies, err := backend.GetExternalAnomalies()
+	ospfExternalAnomalies, err := backend.GetExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
-	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies()
+	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
 	}
 
 	var routerAnomalyTable string
+	var routerAnomalyCount int
 	if common.HasAnyAnomaly(ospfRouterAnomalies) {
+		routerAnomalyCount = countAnomalies(ospfRouterAnomalies)
 		routerAnomalyTable = createAnomalyTable(
 			ospfRouterAnomalies,
 			"Router Anomalies (Type 1 LSAs)",
 		)
+
+		logger.WithAttrs(map[string]interface{}{
+			"anomaly_type":         "Router (Type 1)",
+			"count":                routerAnomalyCount,
+			"has_under_advertised": ospfRouterAnomalies.HasUnAdvertisedPrefixes,
+			"has_over_advertised":  ospfRouterAnomalies.HasOverAdvertisedPrefixes,
+			"has_duplicates":       ospfRouterAnomalies.HasDuplicatePrefixes,
+		}).Info("Router anomalies detected")
 	}
 
 	var externalAnomalyTable string
+	var externalAnomalyCount int
 	if common.HasAnyAnomaly(ospfExternalAnomalies) {
+		externalAnomalyCount = countAnomalies(ospfExternalAnomalies)
 		externalAnomalyTable = createAnomalyTable(
 			ospfExternalAnomalies,
 			"External Link State Anomalies (Type 5 LSAs)",
 		)
+
+		logger.WithAttrs(map[string]interface{}{
+			"anomaly_type":         "External (Type 5)",
+			"count":                externalAnomalyCount,
+			"has_under_advertised": ospfExternalAnomalies.HasUnAdvertisedPrefixes,
+			"has_over_advertised":  ospfExternalAnomalies.HasOverAdvertisedPrefixes,
+			"has_duplicates":       ospfExternalAnomalies.HasDuplicatePrefixes,
+		}).Info("External anomalies detected")
 	}
 
 	var nssaExternalAnomalyTable string
+	var nssaAnomalyCount int
 	if common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		nssaAnomalyCount = countAnomalies(ospfNSSAExternalAnomalies)
 		nssaExternalAnomalyTable = createAnomalyTable(
 			ospfNSSAExternalAnomalies,
 			"NSSA External Link State Anomalies (Type 7 LSAs)",
 		)
+
+		logger.WithAttrs(map[string]interface{}{
+			"anomaly_type":         "NSSA External (Type 7)",
+			"count":                nssaAnomalyCount,
+			"has_under_advertised": ospfNSSAExternalAnomalies.HasUnAdvertisedPrefixes,
+			"has_over_advertised":  ospfNSSAExternalAnomalies.HasOverAdvertisedPrefixes,
+			"has_duplicates":       ospfNSSAExternalAnomalies.HasDuplicatePrefixes,
+		}).Info("NSSA External anomalies detected")
 	}
 
 	// prevents printing empty strings
@@ -540,9 +571,34 @@ func getOspfDashboardAnomalies() string {
 		allAnomaliesList = append(allAnomaliesList, nssaExternalAnomalyTable)
 	}
 
+	// Log summary if any anomalies were found
+	if len(allAnomaliesList) > 0 {
+		logger.WithAttrs(map[string]interface{}{
+			"total_anomalies":    routerAnomalyCount + externalAnomalyCount + nssaAnomalyCount,
+			"router_anomalies":   routerAnomalyCount,
+			"external_anomalies": externalAnomalyCount,
+			"nssa_anomalies":     nssaAnomalyCount,
+		}).Info("OSPF anomalies summary")
+	}
+
 	allAnomalies := lipgloss.JoinVertical(lipgloss.Left, allAnomaliesList...)
 
 	return allAnomalies
+}
+
+// Helper function to count total anomalies
+func countAnomalies(a *frrProto.AnomalyDetection) int {
+	count := 0
+	if a.HasUnAdvertisedPrefixes {
+		count += len(a.MissingEntries)
+	}
+	if a.HasOverAdvertisedPrefixes {
+		count += len(a.SuperfluousEntries)
+	}
+	if a.HasDuplicatePrefixes {
+		count += len(a.DuplicateEntries)
+	}
+	return count
 }
 
 func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) string {
