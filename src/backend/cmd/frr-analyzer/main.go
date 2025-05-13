@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -16,30 +17,42 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 )
 
-// Service represents a running service component of the application
 type Service struct {
 	Name   string
 	Active bool
 }
 
-// FrrMadApp represents the main application with its service components
 type FrrMadApp struct {
-	Analyzer   *analyzer.Analyzer
-	Aggregator *aggregator.Collector
-	Exporter   *exporter.Exporter
-	Socket     *socket.Socket
-	Logger     *logger.Logger
+	Analyzer     *analyzer.Analyzer
+	Aggregator   *aggregator.Collector
+	Exporter     *exporter.Exporter
+	Socket       *socket.Socket
+	Logger       *LoggerService
+	Config       ServiceConfig
+	Pid          int
+	PidFile      string
+	PollInterval time.Duration
+	DebugLevel   int
+}
+
+type ServiceConfig struct {
+	basis      configs.DefaultConfig
+	socket     configs.SocketConfig
+	aggregator configs.AggregatorConfig
+	analyzer   configs.AnalyzerConfig
+	exporter   configs.ExporterConfig
+}
+
+type LoggerService struct {
+	Application *logger.Logger
 }
 
 func main() {
-	// Create a custom flag set
 	cmdSet := flag.NewFlagSet("frr-mad", flag.ExitOnError)
 
-	// Define help text
 	cmdSet.Usage = func() {
 		fmt.Println("Usage: frr-mad [command] [options]")
 		fmt.Println("\nCommands:")
@@ -54,27 +67,69 @@ func main() {
 		os.Exit(1)
 	}
 
-	config, err := configs.LoadConfig()
+	configRaw, err := configs.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	createDirectories(config)
+	createDirectories(configRaw)
+	config := ServiceConfig{
+		basis:      configRaw.Default,
+		socket:     configRaw.Socket,
+		aggregator: configRaw.Aggregator,
+		analyzer:   configRaw.Analyzer,
+		exporter:   configRaw.Exporter,
+	}
+
+	debugLevel := getDebugLevel(config.basis.DebugLevel)
+	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
+	appLogger.SetDebugLevel(debugLevel)
+	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
+
+	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
+	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
+
+	logService := &LoggerService{
+		Application: appLogger,
+	}
+
+	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
+	pid, _ := readPidFile(pidFile)
+	app := &FrrMadApp{
+		Logger:       logService,
+		Pid:          pid,
+		PollInterval: pollInterval,
+		Config:       config,
+		DebugLevel:   debugLevel,
+		PidFile:      pidFile,
+	}
 
 	command := os.Args[1]
 
 	switch command {
 	case "start":
-		pidFile := fmt.Sprintf("%s/frr-mad.pid", config.Socket.UnixSocketLocation)
-		startApp(pidFile, config)
+		if os.Getenv("FRR_MAD_DAEMON") != "1" {
+			cmd := exec.Command(os.Args[0], os.Args[1:]...)
+			cmd.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
+			cmd.Start()
+
+			app.Logger.Application.Info(fmt.Sprintf("FRR-MAD started with PID %d", cmd.Process.Pid))
+			os.Exit(0)
+		} else {
+			app.startApp()
+		}
 	case "stop":
-		pidFile := fmt.Sprintf("%s/frr-mad.pid", config.Socket.UnixSocketLocation)
-		stopApp(pidFile)
+		app.stopApp()
+	case "restart":
+		fmt.Println("Restart FRR-MAD application...")
+		fmt.Println("Not implemented yet. Please restart the application manually.")
 	case "reload":
 		fmt.Println("Reloading the FRR-MAD configuration...")
 		fmt.Println("Not implemented yet. Please restart the application manually.")
 	case "help":
 		cmdSet.Usage()
+	case "debug":
+		app.startApp()
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		cmdSet.Usage()
@@ -82,102 +137,148 @@ func main() {
 	}
 }
 
-func startApp(currentPid string, config *configs.Config) {
+func (a *FrrMadApp) startApp() {
+	if isProcessRunning(a.Pid) && a.Pid != 0 {
+		fmt.Println("FRR-MAD is already running")
+		a.Logger.Application.Error("FRR-MAD is already running")
+		os.Exit(0)
+	}
 
-	// Extract configuration sections
-	defaultConfig := config.Default
-	socketConfig := config.Socket
-	aggregatorConfig := config.Aggregator
-	analyzerConfig := config.Analyzer
-	exporterConfig := config.Exporter
-
-	// Configure logging
-	debugLevel := getDebugLevel(defaultConfig.DebugLevel)
-	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", defaultConfig.LogPath))
-	appLogger.SetDebugLevel(debugLevel)
-	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
-
-	pollInterval := time.Duration(aggregatorConfig.PollInterval) * time.Second
-	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", aggregatorConfig.PollInterval))
+	pidFile := a.createPidFile()
+	defer os.Remove(pidFile)
 
 	services := []string{}
 	services = append(services, "analyzer")
 	services = append(services, "exporter")
 
-	app := &FrrMadApp{
-		Logger: appLogger,
-	}
-
-	pidFile := createPid(currentPid, socketConfig.UnixSocketLocation, appLogger)
-	defer os.Remove(pidFile)
-
 	for _, service := range services {
-		appLogger.Info(fmt.Sprintf("Starting %s service", service))
+		a.Logger.Application.Info(fmt.Sprintf("Starting %s service", service))
 		switch service {
 		case "analyzer":
-			if app.Aggregator == nil {
-				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", defaultConfig.LogPath))
-				aggregatorLogger.SetDebugLevel(debugLevel)
-				app.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+			if a.Aggregator == nil {
+				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", a.Config.basis.LogPath))
+				aggregatorLogger.SetDebugLevel(a.DebugLevel)
+				a.Aggregator = startAggregator(a.Config.aggregator, aggregatorLogger, a.PollInterval)
 			}
 
-			analyzerLogger := createLogger("analyzer", fmt.Sprintf("%v/analyzer.log", defaultConfig.LogPath))
-			analyzerLogger.SetDebugLevel(debugLevel)
-			app.Analyzer = startAnalyzer(analyzerConfig, analyzerLogger, pollInterval, app.Aggregator)
+			analyzerLogger := createLogger("analyzer", fmt.Sprintf("%v/analyzer.log", a.Config.basis.LogPath))
+			analyzerLogger.SetDebugLevel(a.DebugLevel)
+			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.PollInterval, a.Aggregator)
 
 		case "aggregator":
-			if app.Aggregator == nil {
-				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", defaultConfig.LogPath))
-				aggregatorLogger.SetDebugLevel(debugLevel)
-				app.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
+			if a.Aggregator == nil {
+				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", a.Config.basis.LogPath))
+				aggregatorLogger.SetDebugLevel(a.DebugLevel)
+				a.Aggregator = startAggregator(a.Config.aggregator, aggregatorLogger, a.PollInterval)
 			}
 
 		case "exporter":
-			exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", defaultConfig.LogPath))
-			exporterLogger.SetDebugLevel(debugLevel)
-			app.Exporter = startExporter(exporterConfig, exporterLogger, pollInterval, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult)
+			if a.Exporter == nil {
+				exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", a.Config.basis.LogPath))
+				exporterLogger.SetDebugLevel(a.DebugLevel)
+				a.Exporter = startExporter(a.Config.exporter, exporterLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
+			}
 		}
 	}
 
-	// TODO: create handler to check if all three services are started and close if not.
-	// Ensure aggregator is started if needed by other services
-	if app.Analyzer != nil && app.Aggregator == nil {
-		aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", defaultConfig.LogPath))
-		aggregatorLogger.SetDebugLevel(debugLevel)
-		app.Aggregator = startAggregator(aggregatorConfig, aggregatorLogger, pollInterval)
-	}
-
-	if app.Aggregator != nil && app.Analyzer != nil {
-		// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
-		app.Socket = socket.NewSocket(socketConfig, app.Aggregator.FullFrrData, app.Analyzer.AnalysisResult, appLogger, app.Analyzer.P2pMap)
+	// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
+	if a.Aggregator != nil && a.Analyzer != nil && a.Exporter != nil {
+		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Analyzer.Logger, a.Analyzer.P2pMap)
 
 		go func() {
-			if err := app.Socket.Start(); err != nil {
-				appLogger.Error(fmt.Sprintf("Error starting socket server: %s", err))
+			if err := a.Socket.Start(); err != nil {
+				a.Logger.Application.Error(fmt.Sprintf("Error starting socket server: %s", err))
 				os.Exit(1)
 			}
 		}()
 
-		appLogger.Info(fmt.Sprintf("Socket server listening at %s/%s",
-			socketConfig.UnixSocketLocation, socketConfig.UnixSocketName))
+		a.Logger.Application.Info(fmt.Sprintf("Socket server listening at %s/%s",
+			a.Config.socket.UnixSocketLocation, a.Config.socket.UnixSocketName))
 	} else {
-		appLogger.Error("Cannot start socket server: required services not available")
+		a.Logger.Application.Error("Cannot start socket server: required services not available")
 		os.Exit(1)
 	}
 
-	// Wait for termination signal
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigChan, syscall.SIGTERM)
 	<-sigChan
 
-	appLogger.Info("Received shutdown signal")
+	a.Logger.Application.Info("Received shutdown signal")
 
-	// Cleanup
-	if app.Socket != nil {
-		app.Socket.Close()
+	if a.Socket != nil {
+		a.Socket.Close()
 	}
 
-	appLogger.Info("FRR-MAD shutdown complete")
+	a.Logger.Application.Info("FRR-MAD shutdown complete")
+}
+
+func (a *FrrMadApp) createPidFile() string {
+	pid := os.Getpid()
+	pidFile := fmt.Sprintf("%s/frr-mad.pid", a.Config.socket.UnixSocketLocation)
+	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644); err != nil {
+		a.Logger.Application.Error(fmt.Sprintf("Failed to create PID file: %s", err))
+		os.Exit(1)
+	}
+	return pidFile
+}
+
+func (a *FrrMadApp) stopApp() {
+	if a.Pid == 0 {
+		a.Logger.Application.Error("Service is not running or PID file not found.")
+		os.Exit(1)
+	}
+
+	process, err := os.FindProcess(a.Pid)
+	if err != nil {
+		a.Logger.Application.Error(fmt.Sprintf("Process with PID %d not found: %v", a.Pid, err))
+		os.Exit(1)
+	}
+
+	err = process.Signal(syscall.SIGTERM)
+	if err != nil {
+		a.Logger.Application.Error(fmt.Sprintf("Failed to send SIGTERM to process: %v", err))
+		os.Exit(1)
+	}
+
+	time.Sleep(500 * time.Millisecond)
+
+	if isProcessRunning(a.Pid) {
+		a.Logger.Application.Error("Signal sent, but process is still running. It may take a moment to shut down...")
+	} else {
+		a.Logger.Application.Info("FRR-MAD successfully stopped")
+		if _, err := os.Stat(a.PidFile); !os.IsNotExist(err) {
+			os.Remove(a.PidFile)
+		}
+	}
+}
+
+func readPidFile(pidFile string) (int, error) {
+	if _, err := os.Stat(pidFile); os.IsNotExist(err) {
+		return 0, fmt.Errorf("PID file not found")
+	}
+
+	pidBytes, err := os.ReadFile(pidFile)
+	if err != nil {
+		return 0, fmt.Errorf("error reading PID file: %v", err)
+	}
+
+	pidStr := strings.TrimSpace(string(pidBytes))
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid PID in file: %v", err)
+	}
+
+	return pid, nil
+}
+
+func isProcessRunning(pid int) bool {
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+
+	err = process.Signal(syscall.Signal(0))
+	return err == nil
 }
 
 func createLogger(name, filePath string) *logger.Logger {
@@ -198,112 +299,5 @@ func getDebugLevel(level string) int {
 		return 1
 	default:
 		return 0
-	}
-}
-
-// Service starters
-func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
-	collector := aggregator.InitAggregator(config, logging)
-	aggregator.StartAggregator(collector, pollInterval)
-	logging.Info("Aggregator service started")
-	return collector
-}
-
-func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
-	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging)
-	analyzer.StartAnalyzer(detection, pollInterval)
-	logging.Info("Analyzer service started")
-	return detection
-}
-
-func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration, frrData *frrProto.FullFRRData, anomalyResult *frrProto.AnomalyAnalysis) *exporter.Exporter {
-	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult)
-
-	metricsExporter.Start()
-	logging.Info("Analyzer service started")
-	return metricsExporter
-}
-
-// Helper Functions
-func createDirectories(config *configs.Config) {
-	paths := []string{
-		config.Default.TempFiles,
-		config.Default.LogPath,
-		config.Socket.UnixSocketLocation,
-	}
-
-	for _, path := range paths {
-		if err := os.MkdirAll(path, 0755); err != nil {
-			fmt.Printf("Error creating directory %s: %v\n", path, err)
-			os.Exit(1)
-		}
-	}
-}
-
-func createPid(currentPid string, socketPath string, appLogger *logger.Logger) string {
-	// todo: error handling
-	pidBytes, _ := os.ReadFile(currentPid)
-	pidStr := strings.TrimSpace(string(pidBytes))
-	// todo: error handling
-	pid, _ := strconv.Atoi(pidStr)
-	// todo: error handling
-	process, _ := os.FindProcess(pid)
-	err := process.Signal(syscall.Signal(0))
-	if err == nil {
-		appLogger.Error("FRR-MAD is already running")
-		os.Exit(0)
-	}
-
-	pid = os.Getpid()
-	pidFile := fmt.Sprintf("%s/frr-mad.pid", socketPath)
-	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644); err != nil {
-		appLogger.Error(fmt.Sprintf("Failed to create PID file: %s", err))
-		os.Exit(1)
-	}
-	return pidFile
-}
-
-func stopApp(pidFile string) {
-
-	if _, err := os.Stat(pidFile); os.IsNotExist(err) {
-		//appLogger.Error("No running instance found (PID file not found)")
-		os.Exit(1)
-	}
-
-	pidBytes, err := os.ReadFile(pidFile)
-	if err != nil {
-		//appLogger.Error(fmt.Sprintf("Error reading PID file: %v\n", err))
-		os.Exit(1)
-	}
-
-	pidStr := strings.TrimSpace(string(pidBytes))
-	pid, err := strconv.Atoi(pidStr)
-	if err != nil {
-		//appLogger.Error(fmt.Sprintf("Invalid PID in file: %v\n", err))
-		os.Exit(1)
-	}
-
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		//appLogger.Error(fmt.Sprintf("Process with PID %d not found: %v\n", pid, err))
-		os.Exit(1)
-	}
-
-	err = process.Signal(syscall.SIGTERM)
-	if err != nil {
-		//appLogger.Error(fmt.Sprintf("Failed to send SIGTERM to process: %v\n", err))
-		os.Exit(1)
-	}
-
-	time.Sleep(500 * time.Millisecond)
-
-	err = process.Signal(syscall.Signal(0))
-	if err == nil {
-		//appLogger.Error("Signal sent, but process is still running. It may take a moment to shut down...")
-	} else {
-		//appLogger.Info("FRR-MAD successfully stopped")
-		if _, err := os.Stat(pidFile); !os.IsNotExist(err) {
-			os.Remove(pidFile)
-		}
 	}
 }
