@@ -32,9 +32,9 @@ Installation is fairly easy. Clone the repo and build it. The executable is comp
 
 ```sh
 mkdir -p /tmp/frr-mad-binaries/
-cd src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-analyzer ./cmd/frr-analytics
+cd src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-mad-analyzer ./cmd/frr-analyzer
 cd ../../
-cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-tui ./cmd/tui
+cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o /tmp/frr-mad-binaries/frr-mad-tui ./cmd/tui
 cd ../../
 ```
 
