@@ -27,36 +27,20 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderShellTab0() string {
-	// Calculate box width dynamically for one horizontal box based on terminal width
-	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
-	widthForOneH1 := m.windowSize.Width - 10
-	/* -2 (for border) */
-	//widthForTwoH1 := (widthForOneH1 - 2) / 2
-	/* -4 (for margin) (-2 for borders already subtracted in widthForOneH1) */
-	//widthForOneH2 := widthForOneH1 - 4
-	/* -4 (for margin) -2 (for border) */
-	//widthForTwoH2 := (widthForOneH2 - 6) / 2
-
-	widthForOneH1Box := widthForOneH1 - 2 // -4 (for margin)
-	//widthForTwoH1Box := widthForTwoH1 - 2 // -4 (for margin)
-	//widthForOneH2Box := widthForOneH2 - 2 // -4 (for margin)
-	//widthForTwoH2Box := widthForTwoH2 - 2 // -4 (for margin)
-
-	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - inputHeight - 2
 
 	// Update the viewport dimensions.
-	m.viewport.Width = widthForOneH1
-	m.viewport.Height = outputMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 1
 
 	// Update the viewport content with the latest bashOutput.
 	m.viewport.SetContent(m.bashOutput)
 
 	input := "Type bash command: "
 	if currentSubTabLocal == -1 {
-		input = styles.InactiveBoxStyle.Width(widthForOneH1Box).Render(input)
+		input = styles.InactiveBoxStyle.Width(styles.WidthOneH1Box).Render(input)
 	} else if currentSubTabLocal == 0 {
 		input += m.bashInput
-		input = styles.GeneralBoxStyle.Width(widthForOneH1Box).Render(input)
+		input = styles.GeneralBoxStyle.Width(styles.WidthOneH1Box).Render(input)
 	}
 
 	// return lipgloss.JoinVertical(lipgloss.Left, input, styles.TextOutputStyle.Render(m.bashOutput))
@@ -67,32 +51,15 @@ func (m *Model) renderShellTab0() string {
 }
 
 func (m *Model) renderShellTab1() string {
-	// Calculate box width dynamically for one horizontal box based on terminal width
-	// - 6 (padding+border contentBox) - 2 (for title border) -2 (to prevent errors)
-	widthForOneH1 := m.windowSize.Width - 10
-	/* -2 (for border) */
-	//widthForTwoH1 := (widthForOneH1 - 2) / 2
-	/* -4 (for margin) (-2 for borders already subtracted in widthForOneH1) */
-	//widthForOneH2 := widthForOneH1 - 4
-	/* -4 (for margin) -2 (for border) */
-	//widthForTwoH2 := (widthForOneH2 - 6) / 2
-
-	widthForOneH1Box := widthForOneH1 - 2 // -4 (for margin) +2 (has no border)
-	//widthForTwoH1Box := widthForTwoH1 - 2 // -4 (for margin) +2 (has no border)
-	//widthForOneH2Box := widthForOneH2 - 2 // -4 (for margin) +2 (has no border)
-	//widthForTwoH2Box := widthForTwoH2 - 2 // -4 (for margin) +2 (has no border)
-
-	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - inputHeight - 2
-
 	// Update the viewport dimensions.
-	m.viewport.Width = widthForOneH1
-	m.viewport.Height = outputMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 1
 
 	// Update the viewport content with the latest vtyshOutput.
 	m.viewport.SetContent(m.vtyshOutput)
 
 	input := "Type vtysh command: " + m.vtyshInput
-	input = styles.GeneralBoxStyle.Width(widthForOneH1Box).Render(input)
+	input = styles.GeneralBoxStyle.Width(styles.WidthOneH1Box).Render(input)
 
 	//return lipgloss.JoinVertical(lipgloss.Left, input, m.vtyshOutput)
 
@@ -136,11 +103,9 @@ func (m *Model) renderBackendTestTab() string {
 		lipgloss.NewStyle().Margin(0, 0, 0, 4).Render(testInfo),
 	)
 
-	outputMaxHeight := m.windowSize.Height - styles.TabRowHeight - styles.FooterHeight - 7
-
 	// Update the viewport dimensions.
-	m.viewport.Width = m.windowSize.Width - 6
-	m.viewport.Height = outputMaxHeight
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage - 7
 
 	// Update the viewport content with the latest backendResponse.
 	m.viewport.SetContent(m.backendResponse)

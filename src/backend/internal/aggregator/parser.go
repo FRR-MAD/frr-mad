@@ -40,6 +40,7 @@ func ParseGeneralOspfInformation(jsonData []byte) (*frrProto.GeneralOspfInformat
 	result.MaximumPaths = int32(getFloat(raw, "maximumPaths"))
 	result.Preference = int32(getFloat(raw, "preference"))
 	result.AsbrRouter = getString(raw, "asbrRouter")
+	result.AbrType = getString(raw, "abrType")
 	result.LsaExternalCounter = int32(getFloat(raw, "lsaExternalCounter"))
 	result.LsaExternalChecksum = int64(getFloat(raw, "lsaExternalChecksum"))
 	result.LsaAsopaqueCounter = int32(getFloat(raw, "lsaAsopaqueCounter"))

@@ -216,12 +216,13 @@ message GeneralOspfInformation {
   int32 maximum_paths = 14;
   int32 preference = 15;
   string asbr_router = 16;
-  int32 lsa_external_counter = 17;
-  int64 lsa_external_checksum = 18;
-  int32 lsa_asopaque_counter = 19;
-  int64 lsa_asopaque_checksum = 20;
-  int32 attached_area_counter = 21;
-  map<string, GeneralInfoOspfArea> areas = 22;
+  string abr_type = 17;
+  int32 lsa_external_counter = 18;
+  int64 lsa_external_checksum = 19;
+  int32 lsa_asopaque_counter = 20;
+  int64 lsa_asopaque_checksum = 21;
+  int32 attached_area_counter = 22;
+  map<string, GeneralInfoOspfArea> areas = 23;
 }
 
 // Represents per-area statistics within the OSPF process.

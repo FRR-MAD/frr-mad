@@ -1826,12 +1826,13 @@ type GeneralOspfInformation struct {
 	MaximumPaths          int32                           `protobuf:"varint,14,opt,name=maximum_paths,json=maximumPaths,proto3" json:"maximum_paths,omitempty"`
 	Preference            int32                           `protobuf:"varint,15,opt,name=preference,proto3" json:"preference,omitempty"`
 	AsbrRouter            string                          `protobuf:"bytes,16,opt,name=asbr_router,json=asbrRouter,proto3" json:"asbr_router,omitempty"`
-	LsaExternalCounter    int32                           `protobuf:"varint,17,opt,name=lsa_external_counter,json=lsaExternalCounter,proto3" json:"lsa_external_counter,omitempty"`
-	LsaExternalChecksum   int64                           `protobuf:"varint,18,opt,name=lsa_external_checksum,json=lsaExternalChecksum,proto3" json:"lsa_external_checksum,omitempty"`
-	LsaAsopaqueCounter    int32                           `protobuf:"varint,19,opt,name=lsa_asopaque_counter,json=lsaAsopaqueCounter,proto3" json:"lsa_asopaque_counter,omitempty"`
-	LsaAsopaqueChecksum   int64                           `protobuf:"varint,20,opt,name=lsa_asopaque_checksum,json=lsaAsopaqueChecksum,proto3" json:"lsa_asopaque_checksum,omitempty"`
-	AttachedAreaCounter   int32                           `protobuf:"varint,21,opt,name=attached_area_counter,json=attachedAreaCounter,proto3" json:"attached_area_counter,omitempty"`
-	Areas                 map[string]*GeneralInfoOspfArea `protobuf:"bytes,22,rep,name=areas,proto3" json:"areas,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	AbrType               string                          `protobuf:"bytes,17,opt,name=abr_type,json=abrType,proto3" json:"abr_type,omitempty"`
+	LsaExternalCounter    int32                           `protobuf:"varint,18,opt,name=lsa_external_counter,json=lsaExternalCounter,proto3" json:"lsa_external_counter,omitempty"`
+	LsaExternalChecksum   int64                           `protobuf:"varint,19,opt,name=lsa_external_checksum,json=lsaExternalChecksum,proto3" json:"lsa_external_checksum,omitempty"`
+	LsaAsopaqueCounter    int32                           `protobuf:"varint,20,opt,name=lsa_asopaque_counter,json=lsaAsopaqueCounter,proto3" json:"lsa_asopaque_counter,omitempty"`
+	LsaAsopaqueChecksum   int64                           `protobuf:"varint,21,opt,name=lsa_asopaque_checksum,json=lsaAsopaqueChecksum,proto3" json:"lsa_asopaque_checksum,omitempty"`
+	AttachedAreaCounter   int32                           `protobuf:"varint,22,opt,name=attached_area_counter,json=attachedAreaCounter,proto3" json:"attached_area_counter,omitempty"`
+	Areas                 map[string]*GeneralInfoOspfArea `protobuf:"bytes,23,rep,name=areas,proto3" json:"areas,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -1974,6 +1975,13 @@ func (x *GeneralOspfInformation) GetPreference() int32 {
 func (x *GeneralOspfInformation) GetAsbrRouter() string {
 	if x != nil {
 		return x.AsbrRouter
+	}
+	return ""
+}
+
+func (x *GeneralOspfInformation) GetAbrType() string {
+	if x != nil {
+		return x.AbrType
 	}
 	return ""
 }
@@ -7476,7 +7484,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\n" +
 	"cpu_amount\x18\x01 \x01(\x03R\tcpuAmount\x12\x1b\n" +
 	"\tcpu_usage\x18\x02 \x01(\x01R\bcpuUsage\x12!\n" +
-	"\fmemory_usage\x18\x03 \x01(\x01R\vmemoryUsage\"\x89\t\n" +
+	"\fmemory_usage\x18\x03 \x01(\x01R\vmemoryUsage\"\xa4\t\n" +
 	"\x16GeneralOspfInformation\x12\x1b\n" +
 	"\trouter_id\x18\x01 \x01(\tR\brouterId\x12&\n" +
 	"\x0ftos_routes_only\x18\x02 \x01(\bR\rtosRoutesOnly\x12'\n" +
@@ -7497,13 +7505,14 @@ const file_protocol_proto_rawDesc = "" +
 	"preference\x18\x0f \x01(\x05R\n" +
 	"preference\x12\x1f\n" +
 	"\vasbr_router\x18\x10 \x01(\tR\n" +
-	"asbrRouter\x120\n" +
-	"\x14lsa_external_counter\x18\x11 \x01(\x05R\x12lsaExternalCounter\x122\n" +
-	"\x15lsa_external_checksum\x18\x12 \x01(\x03R\x13lsaExternalChecksum\x120\n" +
-	"\x14lsa_asopaque_counter\x18\x13 \x01(\x05R\x12lsaAsopaqueCounter\x122\n" +
-	"\x15lsa_asopaque_checksum\x18\x14 \x01(\x03R\x13lsaAsopaqueChecksum\x122\n" +
-	"\x15attached_area_counter\x18\x15 \x01(\x05R\x13attachedAreaCounter\x12F\n" +
-	"\x05areas\x18\x16 \x03(\v20.communication.GeneralOspfInformation.AreasEntryR\x05areas\x1a\\\n" +
+	"asbrRouter\x12\x19\n" +
+	"\babr_type\x18\x11 \x01(\tR\aabrType\x120\n" +
+	"\x14lsa_external_counter\x18\x12 \x01(\x05R\x12lsaExternalCounter\x122\n" +
+	"\x15lsa_external_checksum\x18\x13 \x01(\x03R\x13lsaExternalChecksum\x120\n" +
+	"\x14lsa_asopaque_counter\x18\x14 \x01(\x05R\x12lsaAsopaqueCounter\x122\n" +
+	"\x15lsa_asopaque_checksum\x18\x15 \x01(\x03R\x13lsaAsopaqueChecksum\x122\n" +
+	"\x15attached_area_counter\x18\x16 \x01(\x05R\x13attachedAreaCounter\x12F\n" +
+	"\x05areas\x18\x17 \x03(\v20.communication.GeneralOspfInformation.AreasEntryR\x05areas\x1a\\\n" +
 	"\n" +
 	"AreasEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x128\n" +
