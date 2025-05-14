@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -67,47 +68,48 @@ func main() {
 		os.Exit(1)
 	}
 
-	configRaw, err := configs.LoadConfig()
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
+	// configRaw, err := configs.LoadConfig()
+	// if err != nil {
+	// 	log.Fatalf("Failed to load configuration: %v", err)
+	// }
 
-	createDirectories(configRaw)
-	config := ServiceConfig{
-		basis:      configRaw.Default,
-		socket:     configRaw.Socket,
-		aggregator: configRaw.Aggregator,
-		analyzer:   configRaw.Analyzer,
-		exporter:   configRaw.Exporter,
-	}
+	// createDirectories(configRaw)
+	// config := ServiceConfig{
+	// 	basis:      configRaw.Default,
+	// 	socket:     configRaw.Socket,
+	// 	aggregator: configRaw.Aggregator,
+	// 	analyzer:   configRaw.Analyzer,
+	// 	exporter:   configRaw.Exporter,
+	// }
 
-	debugLevel := getDebugLevel(config.basis.DebugLevel)
-	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
-	appLogger.SetDebugLevel(debugLevel)
-	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
+	// debugLevel := getDebugLevel(config.basis.DebugLevel)
+	// appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
+	// appLogger.SetDebugLevel(debugLevel)
+	// appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
 
-	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
-	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
+	// pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
+	// appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
 
-	logService := &LoggerService{
-		Application: appLogger,
-	}
+	// logService := &LoggerService{
+	// 	Application: appLogger,
+	// }
 
-	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
-	pid, _ := readPidFile(pidFile)
-	app := &FrrMadApp{
-		Logger:       logService,
-		Pid:          pid,
-		PollInterval: pollInterval,
-		Config:       config,
-		DebugLevel:   debugLevel,
-		PidFile:      pidFile,
-	}
+	// pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
+	// pid, _ := readPidFile(pidFile)
+	// app := &FrrMadApp{
+	// 	Logger:       logService,
+	// 	Pid:          pid,
+	// 	PollInterval: pollInterval,
+	// 	Config:       config,
+	// 	DebugLevel:   debugLevel,
+	// 	PidFile:      pidFile,
+	// }
 
 	command := os.Args[1]
 
 	switch command {
 	case "start":
+		app := loadMadApplication()
 		if os.Getenv("FRR_MAD_DAEMON") != "1" {
 			cmd := exec.Command(os.Args[0], os.Args[1:]...)
 			cmd.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
@@ -119,6 +121,7 @@ func main() {
 			app.startApp()
 		}
 	case "stop":
+		app := loadMadApplication()
 		app.stopApp()
 	case "restart":
 		fmt.Println("Restart FRR-MAD application...")
@@ -128,7 +131,12 @@ func main() {
 		fmt.Println("Not implemented yet. Please restart the application manually.")
 	case "help":
 		cmdSet.Usage()
+	case "testing":
+		createMmap("massiveContent")
+	case "access":
+		readMmap()
 	case "debug":
+		app := loadMadApplication()
 		app.startApp()
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
@@ -252,6 +260,56 @@ func (a *FrrMadApp) stopApp() {
 	}
 }
 
+func loadMadApplication() *FrrMadApp {
+	// covered!
+	configRaw, err := configs.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	createDirectories(configRaw)
+	// covered!
+	config := ServiceConfig{
+		basis:      configRaw.Default,
+		socket:     configRaw.Socket,
+		aggregator: configRaw.Aggregator,
+		analyzer:   configRaw.Analyzer,
+		exporter:   configRaw.Exporter,
+	}
+
+	// covered!
+	debugLevel := getDebugLevel(config.basis.DebugLevel)
+
+	// covered!
+	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
+	appLogger.SetDebugLevel(debugLevel)
+	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
+
+	// covered!
+	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
+
+	// covered!
+	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
+
+	// covered!
+	logService := &LoggerService{
+		Application: appLogger,
+	}
+
+	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
+	pid, _ := readPidFile(pidFile)
+	app := &FrrMadApp{
+		Logger:       logService,
+		Pid:          pid,
+		PollInterval: pollInterval,
+		Config:       config,
+		DebugLevel:   debugLevel,
+		PidFile:      pidFile,
+	}
+
+	return app
+}
+
 func readPidFile(pidFile string) (int, error) {
 	if _, err := os.Stat(pidFile); os.IsNotExist(err) {
 		return 0, fmt.Errorf("PID file not found")
@@ -300,4 +358,103 @@ func getDebugLevel(level string) int {
 	default:
 		return 0
 	}
+}
+
+func createMmap(foo string) {
+	//func (a *FrrMadApp) createMmap(foo string) {
+
+	appDir := "/tmp/frr-mad"
+
+	filePath := filepath.Join(appDir, "unixsocklocation")
+
+	flags := os.O_RDWR | os.O_CREATE
+
+	f, err := os.OpenFile(filePath, flags, 0600)
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	//dataToWrite := "foobar barfoo"
+	dataToWrite := "/var/run/frr-mad/analyzer.sock"
+
+	err = f.Truncate(int64(len(dataToWrite)))
+	if err != nil {
+		fmt.Printf("Error writing to file: %v\n", err)
+		os.Exit(1)
+	}
+
+	_, err = f.WriteString(dataToWrite)
+	if err != nil {
+		fmt.Printf("Error writing to file: %v\n", err)
+		os.Exit(1)
+	}
+
+	f.Sync()
+	err = os.Chmod(filePath, 0400) // 0400 = only owner can read
+	if err != nil {
+		fmt.Printf("Error changing file permissions: %v\n", err)
+	}
+
+	fileInfo, err := f.Stat()
+	if err != nil {
+		fmt.Printf("Error getting file info: %v\n", err)
+		os.Exit(1)
+	}
+	size := fileInfo.Size()
+
+	// Memory map the file (read-only if we're not writing)
+	//prot := syscall.PROT_READ
+	prot := syscall.PROT_WRITE
+	data, err := syscall.Mmap(int(f.Fd()), 0, int(size), prot, syscall.MAP_SHARED)
+	if err != nil {
+		fmt.Printf("Error mapping file: %v\n", err)
+		os.Exit(1)
+	}
+	defer syscall.Munmap(data)
+
+}
+
+func readMmap() {
+	appDir := "/tmp/frr-mad"
+	filePath := filepath.Join(appDir, "unixsocklocation")
+
+	// Open the file read-only
+	f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	// Get file size
+	fileInfo, err := f.Stat()
+	if err != nil {
+		fmt.Printf("Error getting file info: %v\n", err)
+		os.Exit(1)
+	}
+	size := fileInfo.Size()
+
+	data, err := syscall.Mmap(
+		int(f.Fd()),        // File descriptor
+		0,                  // Offset
+		int(size),          // Length
+		syscall.PROT_READ,  // Protection (read-only)
+		syscall.MAP_SHARED, // Flags (shared between processes)
+	)
+	if err != nil {
+		fmt.Printf("Error mapping file: %v\n", err)
+		os.Exit(1)
+	}
+	defer syscall.Munmap(data)
+
+	// Read the data from the mapped memory
+	sharedString := string(data)
+	fmt.Printf("Read from shared memory: %s\n", sharedString)
+
+}
+
+func (a *FrrMadApp) createMmap(foo string) {
+
 }

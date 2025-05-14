@@ -59,7 +59,7 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	fmt.Println("Loading configuration file:", ConfigLocation)
+	//fmt.Println("Loading configuration file:", ConfigLocation)
 
 	yamlPath := getYAMLPath()
 	return loadYAMLConfig(yamlPath)
