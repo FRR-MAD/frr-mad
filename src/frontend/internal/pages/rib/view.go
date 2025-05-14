@@ -259,7 +259,7 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 		if routeSummary == nil {
 			continue
 		}
-		if strings.ToLower(routeSummary.Type) == protocolName {
+		if strings.Contains(strings.ToLower(routeSummary.Type), protocolName) {
 			amountOfRibRoutes = strconv.Itoa(int(routeSummary.Rib))
 			break
 		}
@@ -271,8 +271,6 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	}
 	list := common.SortedPrefixList(routes)
 	sort.Sort(&list)
-
-	// return strings.Join(routes, "\n")
 
 	var partialRIBRoutesTableData [][]string
 

@@ -52,6 +52,5 @@ func (f *Footer) Get() string {
 // SetMainMenuOptions appends only main menu infos which were stored in defaultcontent
 func (f *Footer) SetMainMenuOptions() {
 	f.content = nil
-	// defaultcontentoptions := []string{"'ctrl + c': exit FRR-MAD", "'enter': enter sub tabs"}
 	f.AppendMultiple(f.mainMenuContent)
 }

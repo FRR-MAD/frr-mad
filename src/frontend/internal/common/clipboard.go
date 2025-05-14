@@ -1,7 +1,9 @@
 package common
 
 import (
+	"encoding/base64"
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 )
@@ -37,4 +39,22 @@ func CopyToClipboard(text string) error {
 
 	in.Close()
 	return cmd.Wait()
+}
+
+func copyOSC52(data string) error {
+	// 1) Base64-encode
+	enc := base64.StdEncoding.EncodeToString([]byte(data))
+
+	// 2) Build the OSC 52 sequence
+	seq := fmt.Sprintf("\x1b]52;c;%s\a", enc)
+
+	// 3) If running inside tmux, wrap it so tmux passes it through
+	if os.Getenv("TMUX") != "" {
+		// tmux escape: P + tmux; + ESC + sequence + ESC + \
+		seq = fmt.Sprintf("\x1bPtmux;\x1b%s\x1b\\", seq)
+	}
+
+	// 4) Print to stdout
+	_, err := os.Stdout.WriteString(seq)
+	return err
 }

@@ -18,6 +18,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "up":
 			if m.showAnomalyOverlay {
 				m.viewport.LineUp(10)
+			} else if m.showExportOverlay {
+				if m.cursor > 0 {
+					m.cursor--
+				}
 			} else {
 				m.viewportLeft.LineUp(10)
 				m.viewportRight.LineUp(10)
@@ -25,6 +29,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "down":
 			if m.showAnomalyOverlay {
 				m.viewport.LineDown(10)
+			} else if m.showExportOverlay {
+				if m.cursor < len(m.exportData)-1 {
+					m.cursor++
+				}
 			} else {
 				m.viewportLeft.LineDown(10)
 				m.viewportRight.LineDown(10)
@@ -32,11 +40,22 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData(m.logger)
+		case "enter":
+			return m, nil
 		case "a":
-			m.showAnomalyOverlay = !m.showAnomalyOverlay
+			if !m.showExportOverlay {
+				m.showAnomalyOverlay = !m.showAnomalyOverlay
+			}
+		case "e":
+			if !m.showAnomalyOverlay {
+				m.showExportOverlay = !m.showExportOverlay
+			}
 		case "esc":
 			if m.showAnomalyOverlay {
 				m.showAnomalyOverlay = false
+				return m, nil
+			} else if m.showExportOverlay {
+				m.showExportOverlay = false
 				return m, nil
 			}
 		}

@@ -183,6 +183,8 @@ func H1BadTitleStyle() lipgloss.Style {
 		BorderForeground(lipgloss.Color(BadRed))
 }
 
+var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00005f")).Background(lipgloss.Color(NormalBeige)).Bold(true)
+
 // ----------------------------
 // Box Styling
 // ----------------------------
@@ -496,4 +498,18 @@ func H2TwoBoxBottomBorderStyle() lipgloss.Style {
 	return H2TitleStyleForTwo().
 		BorderBottom(true).
 		BorderTop(false)
+}
+
+// ----------------------------
+// Helper functions
+// ----------------------------
+
+func VerticallyCenter(content string, termHeight int) string {
+	lines := lipgloss.Height(content)
+	padding := (termHeight - lines) / 2
+	if padding < 0 {
+		padding = 0
+	}
+	pad := lipgloss.NewStyle().MarginTop(padding)
+	return pad.Render(content)
 }

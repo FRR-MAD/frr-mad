@@ -16,9 +16,13 @@ type Model struct {
 	title              string
 	subTabs            []string
 	footer             []string
-	ospfAnomalies      []string
+	cursor             int
+	exportChoices      []string
+	exportData         map[string]string
+	ospfAnomalies      []string // to be deleted
 	hasAnomalyDetected bool
 	showAnomalyOverlay bool
+	showExportOverlay  bool
 	windowSize         *common.WindowSize
 	viewport           viewport.Model
 	viewportLeft       viewport.Model
@@ -37,10 +41,14 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:              "Dashboard",
 		subTabs:            []string{"OSPF", "BGP"},
-		footer:             []string{"[r] refresh", "[↑/↓] scroll", "[a] show/hide anomaly details"},
+		footer:             []string{"[e] export options", "[r] refresh", "[↑/↓] scroll", "[a] anomaly details"},
+		cursor:             0,
+		exportChoices:      []string{"OSPF Data", "Link-State Database"},
+		exportData:         make(map[string]string),
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
+		showExportOverlay:  false,
 		windowSize:         windowSize,
 		viewport:           vp,
 		viewportLeft:       vpl,

@@ -30,17 +30,34 @@ func (m *Model) DashboardView(currentSubTab int) string {
 }
 
 func (m *Model) View() string {
-	if currentSubTabLocal == 0 {
+	switch currentSubTabLocal {
+	case 0:
 		if m.showAnomalyOverlay {
 			return m.renderAnomalyDetails()
+		} else if m.showExportOverlay {
+			return m.renderExportOptions()
 		} else {
 			m.detectAnomaly()
 			return m.renderOSPFDashboard()
 		}
-	} else if currentSubTabLocal == 1 {
+	case 1:
 		return "TBD"
+
+	default:
+		return m.renderOSPFDashboard()
 	}
-	return m.renderOSPFDashboard()
+
+	//if currentSubTabLocal == 0 {
+	//	if m.showAnomalyOverlay {
+	//		return m.renderAnomalyDetails()
+	//	} else {
+	//		m.detectAnomaly()
+	//		return m.renderOSPFDashboard()
+	//	}
+	//} else if currentSubTabLocal == 1 {
+	//	return "TBD"
+	//}
+	//return m.renderOSPFDashboard()
 }
 
 func (m *Model) renderOSPFDashboard() string {
@@ -59,7 +76,7 @@ func (m *Model) renderOSPFDashboard() string {
 			Padding(0).
 			Render("Anomalies Detected!")
 		statusHeader = anomalyHeader
-		ospfDashboardAnomalies := getOspfDashboardAnomalies(m.logger)
+		ospfDashboardAnomalies := m.getOspfDashboardAnomalies(m.logger)
 		m.viewportLeft.SetContent(ospfDashboardAnomalies)
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
@@ -68,12 +85,12 @@ func (m *Model) renderOSPFDashboard() string {
 			Padding(0).
 			Render("All OSPF Routes are advertised as Expected")
 		statusHeader = dashboardHeader
-		ospfDashboardLsdbSelf := getOspfDashboardLsdbSelf(m.logger)
+		ospfDashboardLsdbSelf := m.getOspfDashboardLsdbSelf(m.logger)
 		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
-	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), getOSPFGeneralInfoBox(m.logger))
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox(m.logger))
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -112,11 +129,12 @@ func getSystemResourcesBox(logger *logger.Logger) string {
 	return systemStatistics
 }
 
-func getOSPFGeneralInfoBox(logger *logger.Logger) string {
+func (m *Model) getOSPFGeneralInfoBox(logger *logger.Logger) string {
 	ospfInformation, err := backend.GetOSPF(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOSPF")
 	}
+	m.exportData["GetOSPF"] = common.PrettyPrintJSON(ospfInformation)
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
 	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
@@ -178,13 +196,14 @@ func getOSPFGeneralInfoBox(logger *logger.Logger) string {
 	return ospfInformationBox
 }
 
-func getOspfDashboardLsdbSelf(logger *logger.Logger) string {
+func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 	var lsdbSelfBlocks []string
 
 	lsdb, err := backend.GetLSDB(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetLSDB")
 	}
+	m.exportData["GetLSDB"] = common.PrettyPrintJSON(lsdb)
 
 	// extract and sort the map keys
 	lsdbAreas := make([]string, 0, len(lsdb.Areas))
@@ -495,19 +514,24 @@ func getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 	return lipgloss.JoinVertical(lipgloss.Left, lsdbSelfBlocks...)
 }
 
-func getOspfDashboardAnomalies(logger *logger.Logger) string {
+func (m *Model) getOspfDashboardAnomalies(logger *logger.Logger) string {
 	ospfRouterAnomalies, err := backend.GetRouterAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
+	m.exportData["GetRouterAnomalies"] = common.PrettyPrintJSON(ospfRouterAnomalies)
+
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
+	m.exportData["GetExternalAnomalies"] = common.PrettyPrintJSON(ospfExternalAnomalies)
+
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
 	}
+	m.exportData["GetNSSAExternalAnomalies"] = common.PrettyPrintJSON(ospfNSSAExternalAnomalies)
 
 	var routerAnomalyTable string
 	var routerAnomalyCount int
@@ -713,6 +737,26 @@ func (m *Model) renderAnomalyDetails() string {
 	m.viewport.SetContent(anomalyDetailsOverlay)
 
 	return m.viewport.View()
+}
+
+func (m *Model) renderExportOptions() string {
+	output := styles.TextTitleStyle.Render("Choose an option to export:") + "\n\n"
+	for i, choice := range m.exportChoices {
+		line := fmt.Sprintf("  %s", choice)
+		if i == m.cursor {
+			line = styles.SelectedOptionStyle.Render(" > " + choice + " ")
+		} else {
+			line = "   " + choice
+		}
+		output += line + "\n"
+	}
+	output += "\nPress e to quit."
+
+	styledOutput := styles.H1OneContentBoxCenterStyle().Render(output)
+
+	return styles.VerticallyCenter(styledOutput, styles.HeightBasis)
+
+	//return "hello"
 }
 
 // ============================== //

@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"net"
 	"sort"
 
@@ -60,4 +62,15 @@ func bytesCompare(a, b []byte) int {
 		}
 	}
 	return len(a) - len(b)
+}
+
+func PrettyPrintJSON(msg proto.Message) string {
+	out, err := protojson.MarshalOptions{
+		Indent:          "  ",
+		EmitUnpopulated: true,
+	}.Marshal(msg)
+	if err != nil {
+		return "Failed to marshal proto message to JSON: " + err.Error()
+	}
+	return string(out)
 }
