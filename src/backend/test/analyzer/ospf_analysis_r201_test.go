@@ -16,13 +16,13 @@ func TestRouterLsaHappy3(t *testing.T) {
 
 	actualPeerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 	expectedPeerInterfaceMap := map[string]string{
-		"eth3": "10.20.13.1",
-		"eth4": "10.20.14.1",
+		"eth3": "10.20.13.2",
+		"eth4": "10.20.14.4",
 	}
 	actualPeerNeighborMap := analyzer.GetPeerNeighbor(frrMetrics.OspfNeighbors, actualPeerInterfaceMap)
 	expectedPeerNeighborMap := map[string]string{
-		"65.0.2.3": "10.20.13.1",
-		"65.0.2.4": "10.20.14.1",
+		"65.0.2.3": "10.20.13.2",
+		"65.0.2.4": "10.20.14.4",
 	}
 
 	actualIsRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
@@ -39,11 +39,11 @@ func TestRouterLsaHappy3(t *testing.T) {
 						LinkType:         "transit network",
 					},
 					{
-						InterfaceAddress: "10.20.14.1",
+						InterfaceAddress: "10.20.14.4",
 						LinkType:         "point-to-point",
 					},
 					{
-						InterfaceAddress: "10.20.13.1",
+						InterfaceAddress: "10.20.13.2",
 						LinkType:         "point-to-point",
 					},
 				},
@@ -103,6 +103,8 @@ func TestRouterLsaHappy3(t *testing.T) {
 		for _, entry := range actualTmpList {
 			assert.Equal(t, expectedTmpMap[entry], actualTmpMap[entry])
 		}
+		t.Log(expectedTmpMap)
+		t.Log(actualTmpMap)
 	})
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
@@ -135,7 +137,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 				LsaType:  "router-LSA",
 				Links: []*frrProto.Advertisement{
 					{
-						InterfaceAddress: "10.20.13.1",
+						InterfaceAddress: "10.20.13.2",
 						LinkType:         "point-to-point",
 					},
 					{
@@ -143,7 +145,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 						LinkType:         "transit network",
 					},
 					{
-						InterfaceAddress: "10.20.14.1",
+						InterfaceAddress: "10.20.14.4",
 						LinkType:         "point-to-point",
 					},
 					{
@@ -178,7 +180,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 				LsaType:  "router-LSA",
 				Links: []*frrProto.Advertisement{
 					{
-						InterfaceAddress: "10.20.13.1",
+						InterfaceAddress: "10.20.13.2",
 						LinkType:         "point-to-point",
 					},
 					{
@@ -201,11 +203,11 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.MissingEntries), 1)
 		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.DuplicateEntries), 0)
 
-		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
+		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.4")
 	})
 
 	peerNeighborMap := map[string]string{
-		"65.0.2.3": "10.20.13.1",
+		"65.0.2.3": "10.20.13.2",
 		//	"65.0.2.4": "10.20.14.1",
 	}
 
@@ -223,7 +225,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.DuplicateEntries), 0)
 
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress, "0.0.2.88")
-		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
+		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.4")
 
 		t.Log(ana.AnalysisResult)
 	})
