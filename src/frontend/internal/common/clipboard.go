@@ -41,7 +41,7 @@ func CopyToClipboard(text string) error {
 	return cmd.Wait()
 }
 
-func copyOSC52(data string) error {
+func CopyOSC52(data string) error {
 	// 1) Base64-encode
 	enc := base64.StdEncoding.EncodeToString([]byte(data))
 

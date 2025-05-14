@@ -41,6 +41,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData(m.logger)
 		case "enter":
+			err := common.CopyOSC52("Flag: test copy to clipboard, nice it works on linux!")
+			if err != nil {
+				return nil, nil
+			}
+			// m.exportData["GetOSPF"]
+
+			m.exportChoices = append(m.exportChoices, "enter pressed")
 			return m, nil
 		case "a":
 			if !m.showExportOverlay {
