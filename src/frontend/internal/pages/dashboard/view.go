@@ -664,7 +664,15 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 }
 
 func (m *Model) renderAnomalyDetails() string {
-	anomalyProcessTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("Anomaly Detection Process")
+	m.viewport.Width = styles.ViewPortWidthCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage
+
+	// ===== IMPORTANT: If a line break happens automatically in the TUI,                ===== //
+	// =====            lipgloss renders an extra line which breaks the viewport Height. ===== //
+	// ===== Solution:  Use newline '\n' after maximum 149 characters                    ===== //
+	// =====            to ensure minimum supported width of FRR-MAD-TUI (157)           ===== //
+
+	anomalyProcessTitle := styles.TextTitleStyle.Padding(0, 0, 0, 0).Render("Anomaly Detection Process")
 	anomalyProcessText1 := "The frr-mad-analyzer predicts a 'should-state' for the router based on its static FRR configuration. This includes:\n"
 	anomalyPossibilities := []string{
 		"Interface addresses that should be announced in Type 1 Router LSAs",
@@ -673,7 +681,8 @@ func (m *Model) renderAnomalyDetails() string {
 	for i, item := range anomalyPossibilities {
 		anomalyPossibilities[i] = " > " + item // →
 	}
-	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state. If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
+	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state.\n" +
+		"If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
 
 	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("OSPF Anomaly Types")
 	anomalyTypes := [][]string{
@@ -701,7 +710,9 @@ func (m *Model) renderAnomalyDetails() string {
 		anomalyTypesTable.String(),
 	)
 
-	return anomalyDetailsOverlay
+	m.viewport.SetContent(anomalyDetailsOverlay)
+
+	return m.viewport.View()
 }
 
 // ============================== //

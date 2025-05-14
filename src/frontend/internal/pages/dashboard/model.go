@@ -20,6 +20,7 @@ type Model struct {
 	hasAnomalyDetected bool
 	showAnomalyOverlay bool
 	windowSize         *common.WindowSize
+	viewport           viewport.Model
 	viewportLeft       viewport.Model
 	viewportRight      viewport.Model
 	currentTime        time.Time
@@ -28,7 +29,8 @@ type Model struct {
 
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
-	// Create the viewportLeft with the desired dimensions.
+	// Create the viewports with the desired dimensions.
+	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
 	vpl := viewport.New(styles.ViewPortWidthThreeFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
 	vpr := viewport.New(styles.ViewPortWidthOneFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
 
@@ -40,6 +42,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
 		windowSize:         windowSize,
+		viewport:           vp,
 		viewportLeft:       vpl,
 		viewportRight:      vpr,
 		logger:             appLogger,
