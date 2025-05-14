@@ -31,8 +31,12 @@ func (m *Model) DashboardView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		m.detectAnomaly()
-		return m.renderOSPFDashboard()
+		if m.showAnomalyOverlay {
+			return "Anomaly Info"
+		} else {
+			m.detectAnomaly()
+			return m.renderOSPFDashboard()
+		}
 	} else if currentSubTabLocal == 1 {
 		return "TBD"
 	}

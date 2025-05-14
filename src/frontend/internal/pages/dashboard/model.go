@@ -35,7 +35,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:              "Dashboard",
 		subTabs:            []string{"OSPF", "BGP"},
-		footer:             []string{"[r] refresh", "[↑/↓] scroll", "[a] anomaly details"},
+		footer:             []string{"[r] refresh", "[↑/↓] scroll", "[a] show/hide anomaly details"},
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,

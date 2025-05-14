@@ -24,6 +24,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData(m.logger)
+		case "a":
+			m.showAnomalyOverlay = !m.showAnomalyOverlay
+		case "esc":
+			if m.showAnomalyOverlay {
+				m.showAnomalyOverlay = false
+				return m, nil
+			}
 		}
 
 	case common.OSPFMsg:
