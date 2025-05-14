@@ -32,7 +32,7 @@ func (m *Model) DashboardView(currentSubTab int) string {
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
 		if m.showAnomalyOverlay {
-			return "Anomaly Info"
+			return m.renderAnomalyDetails()
 		} else {
 			m.detectAnomaly()
 			return m.renderOSPFDashboard()
@@ -590,21 +590,6 @@ func getOspfDashboardAnomalies(logger *logger.Logger) string {
 	return allAnomalies
 }
 
-// Helper function to count total anomalies
-func countAnomalies(a *frrProto.AnomalyDetection) int {
-	count := 0
-	if a.HasUnAdvertisedPrefixes {
-		count += len(a.MissingEntries)
-	}
-	if a.HasOverAdvertisedPrefixes {
-		count += len(a.SuperfluousEntries)
-	}
-	if a.HasDuplicatePrefixes {
-		count += len(a.DuplicateEntries)
-	}
-	return count
-}
-
 func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) string {
 	// extract data for tables
 	var tableData [][]string
@@ -678,6 +663,62 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	return tableBox
 }
 
+func (m *Model) renderAnomalyDetails() string {
+	anomalyProcessTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("Anomaly Detection Process")
+	anomalyProcessText1 := "The frr-mad-analyzer predicts a 'should-state' for the router based on its static FRR configuration. This includes:\n"
+	anomalyPossibilities := []string{
+		"Interface addresses that should be announced in Type 1 Router LSAs",
+		"Type 5 External LSAs and Type 7 NSSA External LSAs expected from static routes",
+	}
+	for i, item := range anomalyPossibilities {
+		anomalyPossibilities[i] = " > " + item // →
+	}
+	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state. If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
+
+	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("OSPF Anomaly Types")
+	anomalyTypes := [][]string{
+		{"Unadvertised", "A prefix that is expected to be announced (advertised) to other devices in the network but is missing."},
+		{"Overadvertised", "A prefix that is being announced (advertised) to other devices in the network but should not be."},
+		{"Duplicated", "A prefix that is present multiple times in the Link-State Database."},
+	}
+	anomalyTypesTable := components.NewAnomalyTypesTable(
+		[]string{
+			"Anomaly Type",
+			"Description",
+		},
+		3,
+	)
+	for _, r := range anomalyTypes {
+		anomalyTypesTable = anomalyTypesTable.Row(r...)
+	}
+
+	anomalyDetailsOverlay := lipgloss.JoinVertical(lipgloss.Left,
+		anomalyProcessTitle,
+		anomalyProcessText1,
+		strings.Join(anomalyPossibilities, "\n"),
+		anomalyProcessText2,
+		anomalyTypesTitle,
+		anomalyTypesTable.String(),
+	)
+
+	return anomalyDetailsOverlay
+}
+
 // ============================== //
-// HELPERS: BACKEND CALLS         //
+// HELPERS:                       //
 // ============================== //
+
+// countAnomalies return the total amount of detected anomalies
+func countAnomalies(a *frrProto.AnomalyDetection) int {
+	count := 0
+	if a.HasUnAdvertisedPrefixes {
+		count += len(a.MissingEntries)
+	}
+	if a.HasOverAdvertisedPrefixes {
+		count += len(a.SuperfluousEntries)
+	}
+	if a.HasDuplicatePrefixes {
+		count += len(a.DuplicateEntries)
+	}
+	return count
+}
