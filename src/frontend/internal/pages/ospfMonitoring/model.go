@@ -12,6 +12,7 @@ import (
 type Model struct {
 	title         string
 	subTabs       []string
+	footer        []string
 	runningConfig []string
 	expandedMode  bool
 	windowSize    *common.WindowSize
@@ -30,6 +31,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		// 'Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
 		subTabs:       []string{"LSDB", "Router LSAs", "Network LSAs", "External LSAs", "Neighbors", "Running Config"},
+		footer:        []string{"[r] refresh", "[↑/↓] scroll", "[e] export OSPF data"},
 		runningConfig: []string{"Fetching running config..."},
 		expandedMode:  false,
 		windowSize:    windowSize,
@@ -50,11 +52,7 @@ func (m *Model) GetSubTabsLength() int {
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
-	keyBoardOptions := []string{
-		"[r] refresh",
-		"[↑/↓] scroll",
-		"[e] export OSPF data",
-	}
+	keyBoardOptions := m.footer
 	return common.FooterOption{
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,
