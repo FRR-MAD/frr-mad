@@ -15,8 +15,10 @@ import (
 type Model struct {
 	title              string
 	subTabs            []string
+	footer             []string
 	ospfAnomalies      []string
 	hasAnomalyDetected bool
+	showAnomalyOverlay bool
 	windowSize         *common.WindowSize
 	viewportLeft       viewport.Model
 	viewportRight      viewport.Model
@@ -33,8 +35,10 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:              "Dashboard",
 		subTabs:            []string{"OSPF", "BGP"},
+		footer:             []string{"[r] refresh", "[↑/↓] scroll", "[a] anomaly details"},
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
+		showAnomalyOverlay: false,
 		windowSize:         windowSize,
 		viewportLeft:       vpl,
 		viewportRight:      vpr,
@@ -54,11 +58,7 @@ func (m *Model) GetSubTabsLength() int {
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
-	keyBoardOptions := []string{
-		"[r] refresh",
-		"[↑/↓] scroll",
-		// "[e] export everything",
-	}
+	keyBoardOptions := m.footer
 	return common.FooterOption{
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,

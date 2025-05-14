@@ -12,6 +12,7 @@ import (
 type Model struct {
 	title      string
 	subTabs    []string
+	footer     []string
 	windowSize *common.WindowSize
 	viewport   viewport.Model
 	logger     *logger.Logger
@@ -25,6 +26,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:      "RIB",
 		subTabs:    []string{"RIB", "FIB", "RIB-OSPF", "RIB-BGP", "RIB-Connected", "RIB-Static"},
+		footer:     []string{"[r] refresh", "[↑/↓] scroll"},
 		windowSize: windowSize,
 		viewport:   vp,
 		logger:     appLogger,
@@ -43,11 +45,7 @@ func (m *Model) GetSubTabsLength() int {
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
-	keyBoardOptions := []string{
-		"[r] refresh",
-		"[↑/↓] scroll",
-		// "[e] export everything",
-	}
+	keyBoardOptions := m.footer
 	return common.FooterOption{
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,
