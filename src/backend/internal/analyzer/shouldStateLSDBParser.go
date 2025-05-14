@@ -25,9 +25,12 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 
 	for _, iface := range config.Interfaces {
 		peerInterface := false
+		peerIpPrefix := ""
 		for _, peer := range iface.InterfaceIpPrefixes {
 			if peer.PeerIpPrefix != nil {
 				peerInterface = true
+				peerIpPrefix = peer.PeerIpPrefix.IpAddress
+				fmt.Println(peerIpPrefix)
 			}
 		}
 		if iface.Area == "" {
@@ -61,6 +64,7 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
 			} else if peerInterface {
 				adv.LinkType = "point-to-point"
+				adv.InterfaceAddress = peerIpPrefix
 			} else {
 				adv.LinkType = "transit network"
 			}
