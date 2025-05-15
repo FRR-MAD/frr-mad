@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"time"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
@@ -22,6 +23,7 @@ type Model struct {
 	title              string
 	subTabs            []string
 	footer             []string
+	toast              toast.Model
 	cursor             int
 	exportOptions      []ExportOption
 	exportData         map[string]string

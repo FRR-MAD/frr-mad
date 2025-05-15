@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"sort"
 	"strings"
 	"time"
@@ -30,34 +31,36 @@ func (m *Model) DashboardView(currentSubTab int) string {
 }
 
 func (m *Model) View() string {
+	var body string
 	switch currentSubTabLocal {
 	case 0:
 		if m.showAnomalyOverlay {
-			return m.renderAnomalyDetails()
+			body = m.renderAnomalyDetails()
 		} else if m.showExportOverlay {
-			return m.renderExportOptions()
+			body = m.renderExportOptions()
 		} else {
 			m.detectAnomaly()
-			return m.renderOSPFDashboard()
+			body = m.renderOSPFDashboard()
 		}
 	case 1:
-		return "TBD"
-
+		body = "TBD"
 	default:
-		return m.renderOSPFDashboard()
+		body = m.renderOSPFDashboard()
 	}
 
-	//if currentSubTabLocal == 0 {
-	//	if m.showAnomalyOverlay {
-	//		return m.renderAnomalyDetails()
-	//	} else {
-	//		m.detectAnomaly()
-	//		return m.renderOSPFDashboard()
-	//	}
-	//} else if currentSubTabLocal == 1 {
-	//	return "TBD"
-	//}
-	//return m.renderOSPFDashboard()
+	toastView := m.toast.View()
+	if toastView == "" {
+		return body
+	}
+
+	totalW := styles.WidthBasis
+	totalH := styles.HeightBasis
+	toastW := lipgloss.Width(toastView)
+
+	x := totalW - toastW - 2
+	y := 0
+
+	return toast.Overlay(body, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderOSPFDashboard() string {

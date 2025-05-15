@@ -4,6 +4,7 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"time"
 
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
@@ -11,6 +12,9 @@ import (
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var toastCmd tea.Cmd
+	m.toast, toastCmd = m.toast.Update(msg)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -52,28 +56,32 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				data, ok := m.exportData[opt.MapKey]
 				if !ok {
-					// TODO: add a status to the model to dispay status messages to the user
-					// m.status = fmt.Sprintf("No data for %q", opt.MapKey)
-					break
+					return m, tea.Batch(
+						toastCmd,
+						toast.Show("No Data available", 10*time.Second),
+					)
 				}
 
-				err := common.WriteExportToFile(data, opt.Filename, m.exportDirectory)
-				if err != nil {
-					m.logger.Error(fmt.Sprintf("Failed to Export %s", opt.Filename))
-					// m.status = fmt.Sprintf("Export error: %v", err)
-				} else {
-					m.logger.Info(fmt.Sprintf("Exported %s", opt.Filename))
-					//m.status = fmt.Sprintf("Exported %q to /tmp/frr-mad/exports/%s", opt.Label, opt.Filename)
+				if err := common.WriteExportToFile(data, opt.Filename, m.exportDirectory); err != nil {
+					return m, tea.Batch(
+						toastCmd,
+						toast.Show(fmt.Sprintf("Export failed: %v", err), 10*time.Second),
+					)
 				}
-			} else {
-				return m, nil
+
+				return m, tea.Batch(
+					toastCmd,
+					toast.Show(fmt.Sprintf("Exported %s.json\nto %s/", opt.Filename, m.exportDirectory), 10*time.Second),
+				)
 			}
+			return m, nil
 		case "a":
 			if !m.showExportOverlay {
 				m.showAnomalyOverlay = !m.showAnomalyOverlay
 			}
 		case "e":
 			if !m.showAnomalyOverlay {
+				m.toast = toast.New()
 				m.showExportOverlay = !m.showExportOverlay
 			}
 		case "esc":
@@ -81,6 +89,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.showAnomalyOverlay = false
 				return m, nil
 			} else if m.showExportOverlay {
+				m.toast = toast.New()
 				m.showExportOverlay = false
 				return m, nil
 			}
