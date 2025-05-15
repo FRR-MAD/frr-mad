@@ -15,12 +15,9 @@ import (
 type Model struct {
 	title              string
 	subTabs            []string
-	footer             []string
 	ospfAnomalies      []string
 	hasAnomalyDetected bool
-	showAnomalyOverlay bool
 	windowSize         *common.WindowSize
-	viewport           viewport.Model
 	viewportLeft       viewport.Model
 	viewportRight      viewport.Model
 	currentTime        time.Time
@@ -29,20 +26,16 @@ type Model struct {
 
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
-	// Create the viewports with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
+	// Create the viewportLeft with the desired dimensions.
 	vpl := viewport.New(styles.ViewPortWidthThreeFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
 	vpr := viewport.New(styles.ViewPortWidthOneFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
 
 	return &Model{
 		title:              "Dashboard",
 		subTabs:            []string{"OSPF", "BGP"},
-		footer:             []string{"[r] refresh", "[↑/↓] scroll", "[a] show/hide anomaly details"},
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
-		showAnomalyOverlay: false,
 		windowSize:         windowSize,
-		viewport:           vp,
 		viewportLeft:       vpl,
 		viewportRight:      vpr,
 		logger:             appLogger,
@@ -61,7 +54,11 @@ func (m *Model) GetSubTabsLength() int {
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
-	keyBoardOptions := m.footer
+	keyBoardOptions := []string{
+		"[r] refresh",
+		"[↑/↓] scroll",
+		// "[e] export everything",
+	}
 	return common.FooterOption{
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,

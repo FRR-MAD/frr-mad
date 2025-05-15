@@ -15,7 +15,7 @@ func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertis
 		result[iface.InterfaceAddress] = &frrProto.Advertisement{
 			InterfaceAddress: iface.InterfaceAddress,
 			PrefixLength:     iface.PrefixLength,
-			//LinkType:         iface.LinkType,
+			LinkType:         iface.LinkType,
 		}
 	}
 
