@@ -10,7 +10,6 @@ import (
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 
-	// "github.com/ba2025-ysmprc/frr-tui/pkg"
 	"strconv"
 
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
