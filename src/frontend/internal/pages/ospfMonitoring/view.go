@@ -5,16 +5,12 @@ import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-
-	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
-
-	// "github.com/charmbracelet/bubbles/table"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -707,7 +703,6 @@ func (m *Model) renderExternalMonitorTab() string {
 				styles.H2OneContentBoxCenterStyle().Render(nssaExternalTable.String()),
 				styles.H2OneBoxBottomBorderStyle().Render(""),
 			)
-			// var completeNssaExternalBox string
 			completeNssaExternalBox := lipgloss.JoinVertical(lipgloss.Left, nssaExternalHeader, nssaExternalDataBox)
 
 			nssaExternalLsaBlock = append(nssaExternalLsaBlock, completeNssaExternalBox+"\n\n")
@@ -834,67 +829,9 @@ func (m *Model) renderRunningConfigTab() string {
 
 	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
 
-	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
 	m.viewport.Width = styles.ViewPortWidthCompletePage
 	m.viewport.Height = styles.ViewPortHeightCompletePage
 	m.viewport.SetContent(completeContent)
 
-	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
-
 	return m.viewport.View()
 }
-
-//func (m *Model) renderExportOptions() string {
-//	m.viewportRightHalf.Width = styles.ViewPortWidthHalf
-//	m.viewportRightHalf.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
-//
-//	options := make([]common.ExportOption, len(m.exportOptions))
-//	copy(options, m.exportOptions)
-//	sort.Slice(options, func(i, j int) bool {
-//		return options[i].Label < options[j].Label
-//	})
-//
-//	// 2) Clamp the cursor into [0, len(options)-1]
-//	if m.cursor < 0 {
-//		m.cursor = 0
-//	} else if m.cursor >= len(options) {
-//		m.cursor = len(options) - 1
-//	}
-//
-//	s := styles.TextTitleStyle.Render("Choose an option to export:") + "\n\n"
-//	for i, opt := range options {
-//		cursor := "   "
-//		label := opt.Label
-//		if i == m.cursor {
-//			cursor = styles.SelectedOptionCursorStyle.Render(" ➔ ")
-//			label = styles.SelectedOptionStyle.Render(label + " ")
-//		}
-//		s += fmt.Sprintf("%s%s\n", cursor, label)
-//	}
-//	s += styles.FooterBoxStyle.Render("\n\n[Tab / Shift+Tab] move selection down/up one option")
-//	s += styles.FooterBoxStyle.Render("\n[↑/↓] scroll preview\n")
-//	s += styles.FooterBoxStyle.Render("\n[e] quit export options.")
-//
-//	styledMenu := styles.H1TwoContentBoxCenterStyle().Render(s)
-//
-//	activeOption := options[m.cursor]
-//	preview := m.exportData[activeOption.MapKey]
-//	if preview == "" {
-//		preview = "<no data for " + activeOption.MapKey + ">"
-//	}
-//
-//	m.viewportRightHalf.SetContent(preview)
-//
-//	previewHeader := styles.H1TitleStyleForTwo().
-//		Render("Preview for: " + activeOption.Filename)
-//	exportPreview := lipgloss.JoinVertical(lipgloss.Left,
-//		previewHeader,
-//		styles.H1TwoContentBoxesStyle().Render(m.viewportRightHalf.View()),
-//	)
-//
-//	return lipgloss.JoinHorizontal(
-//		lipgloss.Top,
-//		styles.VerticallyCenter(styledMenu, styles.HeightBasis),
-//		exportPreview,
-//	)
-//}

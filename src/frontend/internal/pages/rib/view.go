@@ -2,6 +2,7 @@ package rib
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,20 +22,45 @@ func (m *Model) RibView(currentSubTab int) string {
 }
 
 func (m *Model) View() string {
-	if currentSubTabLocal == 0 {
-		return m.renderRibTab()
-	} else if currentSubTabLocal == 1 {
-		return m.renderFibTab()
-	} else if currentSubTabLocal == 2 {
-		return m.renderRibWithProtocolFilterTab("ospf")
-	} else if currentSubTabLocal == 3 {
-		return m.renderRibWithProtocolFilterTab("bgp")
-	} else if currentSubTabLocal == 4 {
-		return m.renderRibWithProtocolFilterTab("connected")
-	} else if currentSubTabLocal == 5 {
-		return m.renderRibWithProtocolFilterTab("static")
+	var body string
+
+	if m.showExportOverlay {
+		body = components.RenderExportOptions(
+			m.exportOptions,
+			m.exportData,
+			&m.cursor,
+			&m.viewportRightHalf,
+		)
+	} else {
+		switch currentSubTabLocal {
+		case 0:
+			body = m.renderRibTab()
+		case 1:
+			body = m.renderFibTab()
+		case 2:
+			body = m.renderRibWithProtocolFilterTab("ospf")
+		case 3:
+			body = m.renderRibWithProtocolFilterTab("bgp")
+		case 4:
+			body = m.renderRibWithProtocolFilterTab("connected")
+		case 5:
+			body = m.renderRibWithProtocolFilterTab("static")
+		default:
+			body = m.renderRibTab()
+		}
 	}
-	return m.renderRibTab()
+
+	toastView := m.toast.View()
+	if toastView == "" {
+		return body
+	}
+
+	totalW := styles.WidthBasis
+	totalH := styles.HeightBasis
+	x := 2
+	y := 0
+
+	return toast.Overlay(body, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderRibTab() string {

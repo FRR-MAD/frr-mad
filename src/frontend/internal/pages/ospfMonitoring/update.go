@@ -48,8 +48,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if m.showExportOverlay {
 				if len(m.exportOptions) == 0 {
-					// m.status = "No export options available"
-					break
+					return m, nil
 				}
 
 				opt := m.exportOptions[m.cursor]
