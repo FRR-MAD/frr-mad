@@ -26,6 +26,6 @@ func NewAnomalyBox(title, content string, style lipgloss.Style, width int) *Anom
 // Render returns the rendered anomaly box as a string.
 func (a *AnomalyBox) Render() string {
 	// Combine the styled title and the content.
-	boxContent := styles.TextTitleStyle.Render(a.Title) + "\n" + a.Content
+	boxContent := styles.BoxTitleStyle.Render(a.Title) + "\n" + a.Content
 	return a.Style.Width(a.Width).Render(boxContent)
 }

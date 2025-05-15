@@ -6,6 +6,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+const inputHeight = 3
+
 var currentSubTabLocal = -1
 
 func (m *Model) ShellView(currentSubTab int) string {
@@ -75,22 +77,22 @@ func (m *Model) renderBackendTestTab() string {
 	var serviceBox, commandBox string
 	if m.activeBackendInput == "service" {
 		serviceBox = lipgloss.JoinVertical(lipgloss.Left,
-			styles.TextTitleStyle.Render("Enter Service:"),
+			styles.BoxTitleStyle.Render("Enter Service:"),
 			styles.GeneralBoxStyle.Width(20).Render(m.backendServiceInput),
 		)
 
 		commandBox = lipgloss.JoinVertical(lipgloss.Left,
-			styles.TextTitleStyle.Render("Enter Command:"),
+			styles.BoxTitleStyle.Render("Enter Command:"),
 			styles.InactiveBoxStyle.Width(20).Render(m.backendCommandInput),
 		)
 	} else {
 		serviceBox = lipgloss.JoinVertical(lipgloss.Left,
-			styles.TextTitleStyle.Render("Enter Service:"),
+			styles.BoxTitleStyle.Render("Enter Service:"),
 			styles.InactiveBoxStyle.Width(20).Render(m.backendServiceInput),
 		)
 
 		commandBox = lipgloss.JoinVertical(lipgloss.Left,
-			styles.TextTitleStyle.Render("Enter Command:"),
+			styles.BoxTitleStyle.Render("Enter Command:"),
 			styles.GeneralBoxStyle.Width(20).Render(m.backendCommandInput),
 		)
 	}

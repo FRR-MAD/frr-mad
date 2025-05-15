@@ -115,7 +115,7 @@ var NavyBlue = "#5f87af"
 // Text Styling                             //
 // ======================================== //
 
-var TextTitleStyle = lipgloss.NewStyle().
+var BoxTitleStyle = lipgloss.NewStyle().
 	Bold(true).
 	Border(lipgloss.NormalBorder()).
 	BorderTop(false).
