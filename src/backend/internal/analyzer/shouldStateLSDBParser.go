@@ -133,6 +133,8 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		result.RouterType = "abr"
 	}
 
+	// TODO: proto.merge for should state
+
 	return isNssa, result
 }
 
