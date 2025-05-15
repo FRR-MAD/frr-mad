@@ -66,3 +66,8 @@ func initAnomalyDetection() *frrProto.AnomalyDetection {
 		DuplicateEntries:          []*frrProto.Advertisement{},
 	}
 }
+
+func jsonPrettyPrint(jsonObj *interface{}) string {
+
+	return ""
+}

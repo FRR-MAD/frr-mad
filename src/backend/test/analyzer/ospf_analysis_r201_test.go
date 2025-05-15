@@ -103,8 +103,6 @@ func TestRouterLsaHappy3(t *testing.T) {
 		for _, entry := range actualTmpList {
 			assert.Equal(t, expectedTmpMap[entry], actualTmpMap[entry])
 		}
-		t.Log(expectedTmpMap)
-		t.Log(actualTmpMap)
 	})
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
@@ -227,6 +225,5 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress, "0.0.2.88")
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.4")
 
-		t.Log(ana.AnalysisResult)
 	})
 }
