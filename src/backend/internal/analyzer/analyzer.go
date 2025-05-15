@@ -39,19 +39,22 @@ func (c *Analyzer) AnomalyAnalysis() {
 	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	fibMap := GetFIB(c.metrics.RoutingInformationBase)
-
 	receivedSummaryLSDB := GetRuntimeSummaryData(c.metrics.OspfSummaryDataAll, hostname)
 	receivedNetworkLSDB := GetRuntimeNetworkData(c.metrics.OspfNetworkDataAll, hostname)
 	receivedExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalAll, hostname)
 	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(c.metrics.OspfNssaExternalAll, hostname)
+
 	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(c.metrics.OspfRouterData, hostname, peerNeighborMap)
+
 	isExternalLSDB := GetRuntimeExternalDataSelf(c.metrics.OspfExternalData, staticRouteMap, hostname)
+
 	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname, c.Logger)
 
 	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	//}
 
 	if isNssa {
 		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB, isExternalLSDB)
@@ -60,7 +63,6 @@ func (c *Analyzer) AnomalyAnalysis() {
 	c.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
 	//c.UpdateMetrics(p2pMap)
-
 	proto.Merge(c.P2pMap, &p2pMap)
 }
 
@@ -164,7 +166,7 @@ func GetPeerNetworkAddress(config *frrProto.StaticFRRConfiguration) map[string]s
 	for _, iface := range config.Interfaces {
 		for _, i := range iface.InterfaceIpPrefixes {
 			if i.HasPeer {
-				peerMap[iface.Name] = i.PeerIpPrefix.IpAddress
+				peerMap[iface.Name] = i.IpPrefix.IpAddress
 			}
 		}
 	}
@@ -179,7 +181,7 @@ func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]st
 		for _, neighbor := range neighbors.Neighbors {
 			iface := strings.Split(neighbor.IfaceName, ":")
 			if _, exists := peerInterface[iface[0]]; exists {
-				result[key] = neighbor.IfaceAddress
+				result[key] = iface[1]
 			}
 		}
 	}
@@ -190,4 +192,5 @@ func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]st
 func (a *Analyzer) UpdateMetrics(p2pMap frrProto.PeerInterfaceMap) {
 
 	proto.Merge(a.P2pMap, &p2pMap)
+
 }

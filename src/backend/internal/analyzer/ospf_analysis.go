@@ -1,7 +1,9 @@
 package analyzer
 
 import (
+	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
@@ -9,9 +11,10 @@ import (
 
 func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
 	result := &frrProto.AnomalyDetection{
-		SuperfluousEntries: []*frrProto.Advertisement{},
-		MissingEntries:     []*frrProto.Advertisement{},
-		DuplicateEntries:   []*frrProto.Advertisement{},
+		HasMisconfiguredPrefixes: false,
+		SuperfluousEntries:       []*frrProto.Advertisement{},
+		MissingEntries:           []*frrProto.Advertisement{},
+		DuplicateEntries:         []*frrProto.Advertisement{},
 	}
 
 	lsdbList := []string{}
@@ -48,7 +51,6 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, re
 		}
 	}
 
-	a.AnalysisResult.LsdbToRibAnomaly.HasUnAdvertisedPrefixes = result.HasUnAdvertisedPrefixes
 	a.AnalysisResult.LsdbToRibAnomaly.MissingEntries = result.MissingEntries
 
 }
@@ -59,75 +61,54 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	result := &frrProto.AnomalyDetection{
-		SuperfluousEntries: []*frrProto.Advertisement{},
-		MissingEntries:     []*frrProto.Advertisement{},
-		DuplicateEntries:   []*frrProto.Advertisement{},
+		HasUnAdvertisedPrefixes:   false,
+		HasOverAdvertisedPrefixes: false,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries:        []*frrProto.Advertisement{},
+		MissingEntries:            []*frrProto.Advertisement{},
+		DuplicateEntries:          []*frrProto.Advertisement{},
 	}
 
-	//isStateMap := make(map[string]*frrProto.Advertisement)
+	isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
-	//shouldStateMap := make(map[string]*frrProto.Advertisement)
+	shouldStateMap := make(map[string]*frrProto.Advertisement)
 
-	// for _, area := range isState.Areas {
-	// 	for i := range area.Links {
-	// 		link := area.Links[i]
-	// 		key := getAdvertisementKey(link)
-	// 		isStateMap[key] = &frrProto.Advertisement{
-	// 			InterfaceAddress: link.InterfaceAddress,
-	// 			LinkType:         link.LinkType,
-	// 		}
-	// 		if link.LinkType == strings.ToLower("Stub Network") {
-	// 			isStateMap[key].PrefixLength = link.PrefixLength
-	// 		}
-	// 	}
-	// }
-
-	isStateMap := Foobar1(isState)
-	shouldStateMap := Foobar2(shouldState)
+	for _, area := range isState.Areas {
+		for i := range area.Links {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			isStateMap[key] = &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkType:         link.LinkType,
+			}
+			if link.LinkType == strings.ToLower("Stub Network") {
+				isStateMap[key].PrefixLength = link.PrefixLength
+			}
+		}
+	}
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
 			link := area.Links[i]
 			key := getAdvertisementKey(link)
-			adv := &frrProto.Advertisement{
+			shouldStateMap[key] = &frrProto.Advertisement{
 				InterfaceAddress: link.InterfaceAddress,
 				LinkType:         link.LinkType,
 			}
 			if link.LinkType == strings.ToLower("Stub Network") {
-				shouldStateMap[key] = adv
 				shouldStateMap[key].PrefixLength = link.PrefixLength
-			} else if link.LinkType == strings.ToLower("unknown") {
-				adv.LinkStateId = link.LinkStateId
-				shouldStateMap[link.InterfaceAddress] = adv
-				shouldStateMap[link.LinkStateId] = adv
-				shouldStateMap[link.InterfaceAddress].PrefixLength = link.PrefixLength
-				shouldStateMap[link.LinkStateId].PrefixLength = link.PrefixLength
-			} else {
-				shouldStateMap[key] = adv
 			}
+
 		}
 	}
 
-	// unadvertised
 	for key, shouldLink := range shouldStateMap {
-		isMissing := false
-		if shouldLink.LinkType == strings.ToLower("unknown") {
-			_, isTransit := isStateMap[shouldLink.LinkStateId]
-			_, isStub := isStateMap[shouldLink.InterfaceAddress]
-			if !isTransit && !isStub {
-				isMissing = true
-			}
-		} else {
-			if _, exists := isStateMap[key]; !exists {
-				isMissing = true
-			}
-		}
-		if isMissing {
+		if _, exists := isStateMap[key]; !exists {
 			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
-	// overadvertised
 	for key, isLink := range isStateMap {
 		if _, exists := shouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
@@ -142,15 +123,24 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 
 	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
+	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
 	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
+	a.AnalysisResult.RouterAnomaly.DuplicateEntries = result.DuplicateEntries
 	return isStateMap, shouldStateMap
 
 }
 
+func writeBoolTarget(source bool) bool {
+	if source {
+		return source
+	}
+	return false
+}
+
 func getAdvertisementKey(adv *frrProto.Advertisement) string {
 	if adv.LinkType == "transit network" {
-		return adv.InterfaceAddress
+		return normalizeNetworkAddress(adv.InterfaceAddress)
 	}
 	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
 }
@@ -158,9 +148,21 @@ func getAdvertisementKey(adv *frrProto.Advertisement) string {
 func getKeyWithFallback(primary, fallback, prefixLength string) string {
 	addr := normalizeNetworkAddress(primary)
 	if addr == "" {
-		addr = fallback
+		addr = normalizeNetworkAddress(fallback)
 	}
-	return addr
+	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
+}
+
+// 32 is fallback and default
+func normalizePrefixLength(prefixLength string) string {
+	if prefixLength == "" {
+		return "32"
+	}
+	i, err := strconv.Atoi(prefixLength)
+	if err != nil {
+		return "32"
+	}
+	return strconv.Itoa(i)
 }
 
 func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
@@ -330,8 +332,10 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 		}
 	}
 
+	// P-bit validation
 	a.checkNssaPBitTranslation(isState, externalState, result)
 
+	// Update analysis result
 	a.AnalysisResult.NssaExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.NssaExternalAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.NssaExternalAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
@@ -374,6 +378,39 @@ func filterUnique(lsaList []string) []string {
 	return uniqueNames
 }
 
+func isSublist(lsdbList, fibList []int) bool {
+	if len(fibList) == 0 {
+		return true
+	}
+
+	if len(fibList) > len(lsdbList) {
+		return false
+	}
+
+	if len(lsdbList) == len(fibList) {
+		for i := range lsdbList {
+			if lsdbList[i] != fibList[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	for i := 0; i <= len(lsdbList)-len(fibList); i++ {
+		found := true
+		for j := 0; j < len(fibList); j++ {
+			if lsdbList[i+j] != fibList[j] {
+				found = false
+				break
+			}
+		}
+		if found {
+			return true
+		}
+	}
+
+	return false
+}
 func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, externalState *frrProto.InterAreaLsa, result *frrProto.AnomalyDetection) {
 	if externalState == nil {
 		return
@@ -401,53 +438,4 @@ func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, ex
 			}
 		}
 	}
-}
-
-func Foobar1(isState *frrProto.IntraAreaLsa) map[string]*frrProto.Advertisement {
-	result := make(map[string]*frrProto.Advertisement)
-
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			result[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				result[key].PrefixLength = link.PrefixLength
-			}
-		}
-	}
-
-	return result
-}
-
-func Foobar2(shouldState *frrProto.IntraAreaLsa) map[string]*frrProto.Advertisement {
-	result := make(map[string]*frrProto.Advertisement)
-	for _, area := range shouldState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			adv := &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				result[key] = adv
-				result[key].PrefixLength = link.PrefixLength
-			} else if link.LinkType == strings.ToLower("unknown") {
-				adv.LinkStateId = link.LinkStateId
-				result[link.InterfaceAddress] = adv
-				result[link.LinkStateId] = adv
-				result[link.InterfaceAddress].PrefixLength = link.PrefixLength
-				result[link.LinkStateId].PrefixLength = link.PrefixLength
-			} else {
-				result[key] = adv
-			}
-		}
-	}
-
-	return result
-
 }

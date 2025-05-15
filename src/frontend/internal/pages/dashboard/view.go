@@ -31,12 +31,8 @@ func (m *Model) DashboardView(currentSubTab int) string {
 
 func (m *Model) View() string {
 	if currentSubTabLocal == 0 {
-		if m.showAnomalyOverlay {
-			return m.renderAnomalyDetails()
-		} else {
-			m.detectAnomaly()
-			return m.renderOSPFDashboard()
-		}
+		m.detectAnomaly()
+		return m.renderOSPFDashboard()
 	} else if currentSubTabLocal == 1 {
 		return "TBD"
 	}
@@ -590,27 +586,38 @@ func getOspfDashboardAnomalies(logger *logger.Logger) string {
 	return allAnomalies
 }
 
+// Helper function to count total anomalies
+func countAnomalies(a *frrProto.AnomalyDetection) int {
+	count := 0
+	if a.HasUnAdvertisedPrefixes {
+		count += len(a.MissingEntries)
+	}
+	if a.HasOverAdvertisedPrefixes {
+		count += len(a.SuperfluousEntries)
+	}
+	if a.HasDuplicatePrefixes {
+		count += len(a.DuplicateEntries)
+	}
+	return count
+}
+
 func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) string {
 	// extract data for tables
 	var tableData [][]string
 
-	// TODO: add all anomaly types
-
+	// TODO: add all anomily types
 	if a.HasOverAdvertisedPrefixes {
 		for _, superfluousEntry := range a.SuperfluousEntries {
 			var firstCol string
-			var cidr string
 			if strings.Contains(lsaTypeHeader, "Router") {
 				firstCol = superfluousEntry.InterfaceAddress
-				cidr = ""
 			} else {
 				firstCol = superfluousEntry.LinkStateId
-				cidr = "/" + superfluousEntry.PrefixLength
 			}
 
 			tableData = append(tableData, []string{
 				firstCol,
-				cidr,
+				"/" + superfluousEntry.PrefixLength,
 				superfluousEntry.LinkType,
 				"Overadvertised Route",
 			})
@@ -620,18 +627,15 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	if a.HasUnAdvertisedPrefixes {
 		for _, missingEntry := range a.MissingEntries {
 			var firstCol string
-			var cidr string
 			if strings.Contains(lsaTypeHeader, "Router") {
 				firstCol = missingEntry.InterfaceAddress
-				cidr = ""
 			} else {
 				firstCol = missingEntry.LinkStateId
-				cidr = "/" + missingEntry.PrefixLength
 			}
 
 			tableData = append(tableData, []string{
 				firstCol,
-				cidr,
+				"/" + missingEntry.PrefixLength,
 				missingEntry.LinkType,
 				"Unadvertised Route",
 			})
@@ -670,73 +674,6 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	return tableBox
 }
 
-func (m *Model) renderAnomalyDetails() string {
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
-
-	// ===== IMPORTANT: If a line break happens automatically in the TUI,                ===== //
-	// =====            lipgloss renders an extra line which breaks the viewport Height. ===== //
-	// ===== Solution:  Use newline '\n' after maximum 149 characters                    ===== //
-	// =====            to ensure minimum supported width of FRR-MAD-TUI (157)           ===== //
-
-	anomalyProcessTitle := styles.TextTitleStyle.Padding(0, 0, 0, 0).Render("Anomaly Detection Process")
-	anomalyProcessText1 := "The frr-mad-analyzer predicts a 'should-state' for the router based on its static FRR configuration. This includes:\n"
-	anomalyPossibilities := []string{
-		"Interface addresses that should be announced in Type 1 Router LSAs",
-		"Type 5 External LSAs and Type 7 NSSA External LSAs expected from static routes",
-	}
-	for i, item := range anomalyPossibilities {
-		anomalyPossibilities[i] = " > " + item // →
-	}
-	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state.\n" +
-		"If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
-
-	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("OSPF Anomaly Types")
-	anomalyTypes := [][]string{
-		{"Unadvertised", "A prefix that is expected to be announced (advertised) to other devices in the network but is missing."},
-		{"Overadvertised", "A prefix that is being announced (advertised) to other devices in the network but should not be."},
-		{"Duplicated", "A prefix that is present multiple times in the Link-State Database."},
-	}
-	anomalyTypesTable := components.NewAnomalyTypesTable(
-		[]string{
-			"Anomaly Type",
-			"Description",
-		},
-		3,
-	)
-	for _, r := range anomalyTypes {
-		anomalyTypesTable = anomalyTypesTable.Row(r...)
-	}
-
-	anomalyDetailsOverlay := lipgloss.JoinVertical(lipgloss.Left,
-		anomalyProcessTitle,
-		anomalyProcessText1,
-		strings.Join(anomalyPossibilities, "\n"),
-		anomalyProcessText2,
-		anomalyTypesTitle,
-		anomalyTypesTable.String(),
-	)
-
-	m.viewport.SetContent(anomalyDetailsOverlay)
-
-	return m.viewport.View()
-}
-
 // ============================== //
-// HELPERS:                       //
+// HELPERS: BACKEND CALLS         //
 // ============================== //
-
-// countAnomalies return the total amount of detected anomalies
-func countAnomalies(a *frrProto.AnomalyDetection) int {
-	count := 0
-	if a.HasUnAdvertisedPrefixes {
-		count += len(a.MissingEntries)
-	}
-	if a.HasOverAdvertisedPrefixes {
-		count += len(a.SuperfluousEntries)
-	}
-	if a.HasDuplicatePrefixes {
-		count += len(a.DuplicateEntries)
-	}
-	return count
-}
