@@ -12,13 +12,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type ExportOption struct {
+	Label    string
+	MapKey   string
+	Filename string
+}
+
 type Model struct {
 	title              string
 	subTabs            []string
 	footer             []string
 	cursor             int
-	exportChoices      []string
+	exportOptions      []ExportOption
 	exportData         map[string]string
+	exportDirectory    string
 	ospfAnomalies      []string // to be deleted
 	hasAnomalyDetected bool
 	showAnomalyOverlay bool
@@ -43,8 +50,9 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		subTabs:            []string{"OSPF", "BGP"},
 		footer:             []string{"[e] export options", "[r] refresh", "[↑/↓] scroll", "[a] anomaly details"},
 		cursor:             0,
-		exportChoices:      []string{"OSPF Data", "Link-State Database"},
+		exportOptions:      []ExportOption{},
 		exportData:         make(map[string]string),
+		exportDirectory:    "/tmp/frr-mad/exports",
 		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
@@ -84,8 +92,28 @@ func reloadView() tea.Cmd {
 
 func (m *Model) detectAnomaly() {
 	ospfRouterAnomalies, _ := backend.GetRouterAnomalies(m.logger)
+	m.exportData["GetRouterAnomalies"] = common.PrettyPrintJSON(ospfRouterAnomalies)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "anomalies - router (LSA type 1)",
+		MapKey:   "GetRouterAnomalies",
+		Filename: "type1_router_anomalies",
+	})
+
 	ospfExternalAnomalies, _ := backend.GetExternalAnomalies(m.logger)
+	m.exportData["GetExternalAnomalies"] = common.PrettyPrintJSON(ospfExternalAnomalies)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "anomalies - external (LSA type 5)",
+		MapKey:   "GetExternalAnomalies",
+		Filename: "type5_external_anomalies",
+	})
+
 	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies(m.logger)
+	m.exportData["GetNSSAExternalAnomalies"] = common.PrettyPrintJSON(ospfNSSAExternalAnomalies)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "anomalies - nssa external (LSA type 7)",
+		MapKey:   "GetNSSAExternalAnomalies",
+		Filename: "type7_nssa_external_anomalies",
+	})
 
 	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
 		common.HasAnyAnomaly(ospfExternalAnomalies) ||
@@ -103,4 +131,14 @@ func (m *Model) Init() tea.Cmd {
 		common.FetchOSPFData(m.logger),
 		reloadView(),
 	)
+}
+
+// addOption adds opt to slice only if no existing entry has the same MapKey.
+func addOption(opts []ExportOption, opt ExportOption) []ExportOption {
+	for _, e := range opts {
+		if e.MapKey == opt.MapKey {
+			return opts // already present
+		}
+	}
+	return append(opts, opt)
 }

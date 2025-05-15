@@ -3,6 +3,7 @@ package dashboard
 import (
 	// "math/rand/v2"
 
+	"fmt"
 	"time"
 
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
@@ -41,14 +42,32 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData(m.logger)
 		case "enter":
-			err := common.CopyOSC52("Flag: test copy to clipboard, nice it works on linux!")
-			if err != nil {
-				return nil, nil
-			}
-			// m.exportData["GetOSPF"]
+			if m.showExportOverlay {
+				if len(m.exportOptions) == 0 {
+					// m.status = "No export options available"
+					break
+				}
 
-			m.exportChoices = append(m.exportChoices, "enter pressed")
-			return m, nil
+				opt := m.exportOptions[m.cursor]
+
+				data, ok := m.exportData[opt.MapKey]
+				if !ok {
+					// TODO: add a status to the model to dispay status messages to the user
+					// m.status = fmt.Sprintf("No data for %q", opt.MapKey)
+					break
+				}
+
+				err := common.WriteExportToFile(data, opt.Filename, m.exportDirectory)
+				if err != nil {
+					m.logger.Error(fmt.Sprintf("Failed to Export %s", opt.Filename))
+					// m.status = fmt.Sprintf("Export error: %v", err)
+				} else {
+					m.logger.Info(fmt.Sprintf("Exported %s", opt.Filename))
+					//m.status = fmt.Sprintf("Exported %q to /tmp/frr-mad/exports/%s", opt.Label, opt.Filename)
+				}
+			} else {
+				return m, nil
+			}
 		case "a":
 			if !m.showExportOverlay {
 				m.showAnomalyOverlay = !m.showAnomalyOverlay

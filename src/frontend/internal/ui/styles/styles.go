@@ -103,13 +103,15 @@ var Grey = "#444444"        // Usage: inactive components, options, H2 Title
 var NormalBeige = "#d7d7af" // Usage: H1 Title
 var GoodGreen = "#5f875f"   // Usage: Box border when content good
 var BadRed = "#d70000"      // Usage: Box border when content bad
-var NavyBlue = "#5f87af"
+var LightBlue = "#5f87af"   // Usage: Text color to highlight every second row in a table
+var NavyBlue = "#00005f"    // Usage: Text color if on NormalBeige background
+var Black = "#000000"
 
 //var MainBlue = "111" // Usage: Active Tab, Content Border
 //var Grey = "238"          // Usage: inactive components, options
 //var NormalBeige = "187"   // Usage: Box Border when content good
 //var BadRed = "#160"        // Usage: Box Border when content bad
-//var NavyBlue = "237"
+//var LightBlue = "237"
 
 // ======================================== //
 // Text Styling                             //
@@ -183,7 +185,7 @@ func H1BadTitleStyle() lipgloss.Style {
 		BorderForeground(lipgloss.Color(BadRed))
 }
 
-var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00005f")).Background(lipgloss.Color(NormalBeige)).Bold(true)
+var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(NavyBlue)).Background(lipgloss.Color(NormalBeige)).Bold(true)
 
 // ----------------------------
 // Box Styling
@@ -413,7 +415,7 @@ var (
 	MultilineCellStyle      = lipgloss.NewStyle().Padding(0, 1, 1, 1)
 	LastCellOfMultiline     = lipgloss.NewStyle().Padding(0, 1)
 	BadCellStyle            = lipgloss.NewStyle().Padding(0, 1)
-	EvenRowCell             = NormalCellStyle.Foreground(lipgloss.Color(NavyBlue))
+	EvenRowCell             = NormalCellStyle.Foreground(lipgloss.Color(LightBlue))
 )
 
 func BuildTableStyles() table.Styles {
@@ -441,7 +443,7 @@ func BuildTableStyles() table.Styles {
 
 	// 3) Selected row: swap fg/bg for high contrast
 	s.Selected = s.Selected.
-		Foreground(lipgloss.Color(NavyBlue)).
+		Foreground(lipgloss.Color(LightBlue)).
 		Bold(true)
 
 	return s
@@ -499,6 +501,8 @@ func H2TwoBoxBottomBorderStyle() lipgloss.Style {
 		BorderBottom(true).
 		BorderTop(false)
 }
+
+var SelectedOptionCursorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(Black)).Background(lipgloss.Color(NormalBeige)).Bold(true)
 
 // ----------------------------
 // Helper functions

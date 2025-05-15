@@ -135,6 +135,11 @@ func (m *Model) getOSPFGeneralInfoBox(logger *logger.Logger) string {
 		return common.PrintBackendError(err, "GetOSPF")
 	}
 	m.exportData["GetOSPF"] = common.PrettyPrintJSON(ospfInformation)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "summary of the current OSPF router",
+		MapKey:   "GetOSPF",
+		Filename: "general_ospf_information",
+	})
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
 	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
@@ -204,6 +209,11 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 		return common.PrintBackendError(err, "GetLSDB")
 	}
 	m.exportData["GetLSDB"] = common.PrettyPrintJSON(lsdb)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "complete Link-State Database",
+		MapKey:   "GetLSDB",
+		Filename: "link-state_database",
+	})
 
 	// extract and sort the map keys
 	lsdbAreas := make([]string, 0, len(lsdb.Areas))
@@ -520,18 +530,33 @@ func (m *Model) getOspfDashboardAnomalies(logger *logger.Logger) string {
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
 	m.exportData["GetRouterAnomalies"] = common.PrettyPrintJSON(ospfRouterAnomalies)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "anomalies - router (LSA type 1)",
+		MapKey:   "GetRouterAnomalies",
+		Filename: "type1_router_anomalies",
+	})
 
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
 	m.exportData["GetExternalAnomalies"] = common.PrettyPrintJSON(ospfExternalAnomalies)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "anomalies - external (LSA type 5)",
+		MapKey:   "GetExternalAnomalies",
+		Filename: "type5_external_anomalies",
+	})
 
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
 	}
 	m.exportData["GetNSSAExternalAnomalies"] = common.PrettyPrintJSON(ospfNSSAExternalAnomalies)
+	m.exportOptions = addOption(m.exportOptions, ExportOption{
+		Label:    "anomalies - nssa external (LSA type 7)",
+		MapKey:   "GetNSSAExternalAnomalies",
+		Filename: "type7_nssa_external_anomalies",
+	})
 
 	var routerAnomalyTable string
 	var routerAnomalyCount int
@@ -740,23 +765,25 @@ func (m *Model) renderAnomalyDetails() string {
 }
 
 func (m *Model) renderExportOptions() string {
-	output := styles.TextTitleStyle.Render("Choose an option to export:") + "\n\n"
-	for i, choice := range m.exportChoices {
-		line := fmt.Sprintf("  %s", choice)
+	opts := make([]ExportOption, len(m.exportOptions))
+	copy(opts, m.exportOptions)
+	sort.Slice(opts, func(i, j int) bool {
+		return opts[i].Label < opts[j].Label
+	})
+
+	s := styles.TextTitleStyle.Render("Choose an option to export:") + "\n\n"
+	for i, opt := range opts {
+		cursor := "   "
+		label := opt.Label
 		if i == m.cursor {
-			line = styles.SelectedOptionStyle.Render(" > " + choice + " ")
-		} else {
-			line = "   " + choice
+			cursor = styles.SelectedOptionCursorStyle.Render(" ➔ ")
+			label = styles.SelectedOptionStyle.Render(label + " ")
 		}
-		output += line + "\n"
+		s += fmt.Sprintf("%s%s\n", cursor, label)
 	}
-	output += "\nPress e to quit."
-
-	styledOutput := styles.H1OneContentBoxCenterStyle().Render(output)
-
-	return styles.VerticallyCenter(styledOutput, styles.HeightBasis)
-
-	//return "hello"
+	s += "\nPress e to quit."
+	styled := styles.H1OneContentBoxCenterStyle().Render(s)
+	return styles.VerticallyCenter(styled, styles.HeightBasis)
 }
 
 // ============================== //

@@ -160,9 +160,20 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.currentSubTab = -1
 			m.footer.SetMainMenuOptions()
 		case "ctrl+c":
-			return m, tea.Quit
-		}
 
+			return m, tea.Batch(
+				tea.ClearScreen,
+				tea.Quit,
+			)
+		}
+	//case tea.MouseEvent:
+	//	return m, nil
+	//case tea.MouseMsg:
+	//	return m, nil
+	//case tea.MouseAction:
+	//	return m, nil
+	//case tea.MouseButton:
+	//	return m, nil
 	case tea.WindowSizeMsg:
 		m.windowSize.Width = msg.Width
 		m.windowSize.Height = msg.Height
@@ -256,7 +267,9 @@ func main() {
 	}
 
 	maybeUpdateTERM()
-	p := tea.NewProgram(initModel(config))
+	p := tea.NewProgram(initModel(config), tea.WithAltScreen())
+	// TODO: find a way to fix the TUI that you cant scroll away
+	// TODO: the problem with mouseMotion is, you cannot highlight text anymore with the mouse
 	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v\n", err)
