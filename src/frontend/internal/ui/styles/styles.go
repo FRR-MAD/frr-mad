@@ -48,6 +48,7 @@ var (
 	WidthTwoH2ThreeFourthBox int
 
 	ViewPortWidthCompletePage int
+	ViewPortWidthHalf         int
 	ViewPortWidthThreeFourth  int
 	ViewPortWidthOneFourth    int
 
@@ -83,6 +84,7 @@ func SetWindowSizes(window common.WindowSize) {
 	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
 
 	ViewPortWidthCompletePage = WidthBasis + 2
+	ViewPortWidthHalf = WidthTwoH1 + 2
 	ViewPortWidthThreeFourth = WidthTwoH1ThreeFourth + 2
 	ViewPortWidthOneFourth = WidthTwoH1OneFourth + 2
 
@@ -236,6 +238,12 @@ func H1OneContentBoxCenterStyle() lipgloss.Style {
 
 func H1TwoContentBoxesStyle() lipgloss.Style {
 	return H1OneContentBoxStyle().
+		Width(WidthTwoH1Box)
+}
+
+func H1TwoContentBoxCenterStyle() lipgloss.Style {
+	return H1ContentBoxStyle().
+		Align(lipgloss.Center).
 		Width(WidthTwoH1Box)
 }
 

@@ -24,9 +24,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.showAnomalyOverlay {
 				m.viewport.LineUp(10)
 			} else if m.showExportOverlay {
-				if m.cursor > 0 {
-					m.cursor--
-				}
+				m.viewportRightHalf.LineUp(10)
 			} else {
 				m.viewportLeft.LineUp(10)
 				m.viewportRight.LineUp(10)
@@ -35,9 +33,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.showAnomalyOverlay {
 				m.viewport.LineDown(10)
 			} else if m.showExportOverlay {
-				if m.cursor < len(m.exportData)-1 {
-					m.cursor++
-				}
+				m.viewportRightHalf.LineDown(10)
 			} else {
 				m.viewportLeft.LineDown(10)
 				m.viewportRight.LineDown(10)
@@ -45,6 +41,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData(m.logger)
+		case "tab":
+			if m.showExportOverlay && len(m.exportOptions) > 0 {
+				m.cursor = (m.cursor + 1) % len(m.exportOptions)
+				m.viewportRightHalf.GotoTop()
+			}
+		case "shift+tab":
+			if m.showExportOverlay && len(m.exportOptions) > 0 {
+				m.cursor = (m.cursor - 1 + len(m.exportOptions)) % len(m.exportOptions)
+				m.viewportRightHalf.GotoTop()
+			}
 		case "enter":
 			if m.showExportOverlay {
 				if len(m.exportOptions) == 0 {
@@ -71,7 +77,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				return m, tea.Batch(
 					toastCmd,
-					toast.Show(fmt.Sprintf("Exported %s.json\nto %s/", opt.Filename, m.exportDirectory), 10*time.Second),
+					toast.Show(fmt.Sprintf("Exported %s\nto %s/%s",
+						opt.Label, m.exportDirectory, opt.Filename),
+						10*time.Second),
 				)
 			}
 			return m, nil
@@ -81,7 +89,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "e":
 			if !m.showAnomalyOverlay {
-				m.toast = toast.New()
+				if m.showExportOverlay {
+					m.toast = toast.New()
+				} else {
+					err := m.fetchLatestData()
+					if err != nil {
+						m.logger.Error("Error while fetching all backend data for dashboard")
+						return m, tea.Batch(
+							toastCmd,
+							toast.Show(fmt.Sprintf("Fetching data failed:\n%v", err), 10*time.Second),
+						)
+					}
+				}
 				m.showExportOverlay = !m.showExportOverlay
 			}
 		case "esc":

@@ -55,9 +55,7 @@ func (m *Model) View() string {
 
 	totalW := styles.WidthBasis
 	totalH := styles.HeightBasis
-	toastW := lipgloss.Width(toastView)
-
-	x := totalW - toastW - 2
+	x := 2
 	y := 0
 
 	return toast.Overlay(body, toastView, x, y, totalW, totalH)
@@ -137,12 +135,6 @@ func (m *Model) getOSPFGeneralInfoBox(logger *logger.Logger) string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetOSPF")
 	}
-	m.exportData["GetOSPF"] = common.PrettyPrintJSON(ospfInformation)
-	m.exportOptions = addOption(m.exportOptions, ExportOption{
-		Label:    "summary of the current OSPF router",
-		MapKey:   "GetOSPF",
-		Filename: "general_ospf_information",
-	})
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
 	lastSPFExecution = lastSPFExecution.Truncate(time.Second) // remove sub-second precision
@@ -211,12 +203,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetLSDB")
 	}
-	m.exportData["GetLSDB"] = common.PrettyPrintJSON(lsdb)
-	m.exportOptions = addOption(m.exportOptions, ExportOption{
-		Label:    "complete Link-State Database",
-		MapKey:   "GetLSDB",
-		Filename: "link-state_database",
-	})
 
 	// extract and sort the map keys
 	lsdbAreas := make([]string, 0, len(lsdb.Areas))
@@ -240,11 +226,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 		var asbrSummaryLinkStateTableData [][]string
 		var nssaExternalLinkStateTableData [][]string
 
-		//var amountOfRouterLS string
-		//var amountOfNetworkLS string
-		//var amountOfSummaryLS string
-		//var amountOfAsSummaryLS string
-
 		// loop through LSAs (type 1-4 + Type 7) and extract self-originating data for tables
 		for _, routerLinkState := range lsaTypes.RouterLinkStates {
 			if routerLinkState.Base.AdvertisedRouter == routerOSPFID {
@@ -255,11 +236,7 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 				})
 			}
 		}
-		//if routerLinkStateTableData != nil {
-		//	amountOfRouterLS = strconv.Itoa(int(lsaTypes.RouterLinkStatesCount))
-		//} else {
-		//	amountOfRouterLS = "0"
-		//}
+
 		for _, networkLinkState := range lsaTypes.NetworkLinkStates {
 			if networkLinkState.Base.AdvertisedRouter == routerOSPFID {
 				networkLinkStateTableData = append(networkLinkStateTableData, []string{
@@ -269,11 +246,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 				})
 			}
 		}
-		//if networkLinkStateTableData != nil {
-		//	amountOfNetworkLS = strconv.Itoa(int(lsaTypes.NetworkLinkStatesCount))
-		//} else {
-		//	amountOfNetworkLS = "0"
-		//}
 
 		for _, summaryLinkState := range lsaTypes.SummaryLinkStates {
 			if summaryLinkState.Base.AdvertisedRouter == routerOSPFID {
@@ -284,11 +256,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 				})
 			}
 		}
-		//if summaryLinkStateTableData == nil {
-		//	amountOfSummaryLS = "0"
-		//} else {
-		//	amountOfSummaryLS = strconv.Itoa(int(lsaTypes.SummaryLinkStatesCount))
-		//}
 
 		for _, asbrSummaryLinkState := range lsaTypes.AsbrSummaryLinkStates {
 			if asbrSummaryLinkState.Base.AdvertisedRouter == routerOSPFID {
@@ -299,11 +266,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 				})
 			}
 		}
-		//if asbrSummaryLinkStateTableData == nil {
-		//	amountOfAsSummaryLS = "0"
-		//} else {
-		//	amountOfAsSummaryLS = strconv.Itoa(int(lsaTypes.AsbrSummaryLinkStatesCount))
-		//}
 
 		for _, nssaExternalLinkStates := range lsaTypes.NssaExternalLinkStates {
 			nssaExternalLinkStateTableData = append(nssaExternalLinkStateTableData, []string{
@@ -471,7 +433,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 
 	// ===== External LSA =====
 	var asExternalLinkStateTableData [][]string
-	//var amountOfExternalLS string
 	for _, asExternalLinkState := range lsdb.AsExternalLinkStates {
 		if asExternalLinkState.Base.AdvertisedRouter == routerOSPFID {
 			asExternalLinkStateTableData = append(asExternalLinkStateTableData, []string{
@@ -482,11 +443,6 @@ func (m *Model) getOspfDashboardLsdbSelf(logger *logger.Logger) string {
 			})
 		}
 	}
-	//if asExternalLinkStateTableData == nil {
-	//	amountOfExternalLS = "0"
-	//} else {
-	//	amountOfExternalLS = strconv.Itoa(int(lsdb.AsExternalCount))
-	//}
 
 	// Create Table for External Link States and Fill with extracted asExternalLinkStateTableData
 	rowsExternal := len(asExternalLinkStateTableData)
@@ -532,34 +488,16 @@ func (m *Model) getOspfDashboardAnomalies(logger *logger.Logger) string {
 	if err != nil {
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
-	m.exportData["GetRouterAnomalies"] = common.PrettyPrintJSON(ospfRouterAnomalies)
-	m.exportOptions = addOption(m.exportOptions, ExportOption{
-		Label:    "anomalies - router (LSA type 1)",
-		MapKey:   "GetRouterAnomalies",
-		Filename: "type1_router_anomalies",
-	})
 
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
-	m.exportData["GetExternalAnomalies"] = common.PrettyPrintJSON(ospfExternalAnomalies)
-	m.exportOptions = addOption(m.exportOptions, ExportOption{
-		Label:    "anomalies - external (LSA type 5)",
-		MapKey:   "GetExternalAnomalies",
-		Filename: "type5_external_anomalies",
-	})
 
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
 	}
-	m.exportData["GetNSSAExternalAnomalies"] = common.PrettyPrintJSON(ospfNSSAExternalAnomalies)
-	m.exportOptions = addOption(m.exportOptions, ExportOption{
-		Label:    "anomalies - nssa external (LSA type 7)",
-		MapKey:   "GetNSSAExternalAnomalies",
-		Filename: "type7_nssa_external_anomalies",
-	})
 
 	var routerAnomalyTable string
 	var routerAnomalyCount int
@@ -768,14 +706,24 @@ func (m *Model) renderAnomalyDetails() string {
 }
 
 func (m *Model) renderExportOptions() string {
-	opts := make([]ExportOption, len(m.exportOptions))
-	copy(opts, m.exportOptions)
-	sort.Slice(opts, func(i, j int) bool {
-		return opts[i].Label < opts[j].Label
+	m.viewportRightHalf.Width = styles.ViewPortWidthHalf
+	m.viewportRightHalf.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+
+	options := make([]ExportOption, len(m.exportOptions))
+	copy(options, m.exportOptions)
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].Label < options[j].Label
 	})
 
+	// 2) Clamp the cursor into [0, len(options)-1]
+	if m.cursor < 0 {
+		m.cursor = 0
+	} else if m.cursor >= len(options) {
+		m.cursor = len(options) - 1
+	}
+
 	s := styles.TextTitleStyle.Render("Choose an option to export:") + "\n\n"
-	for i, opt := range opts {
+	for i, opt := range options {
 		cursor := "   "
 		label := opt.Label
 		if i == m.cursor {
@@ -784,9 +732,32 @@ func (m *Model) renderExportOptions() string {
 		}
 		s += fmt.Sprintf("%s%s\n", cursor, label)
 	}
-	s += "\nPress e to quit."
-	styled := styles.H1OneContentBoxCenterStyle().Render(s)
-	return styles.VerticallyCenter(styled, styles.HeightBasis)
+	s += styles.FooterBoxStyle.Render("\n\n[Tab / Shift+Tab] move selection down/up one option")
+	s += styles.FooterBoxStyle.Render("\n[↑/↓] scroll preview\n")
+	s += styles.FooterBoxStyle.Render("\n[e] quit export options.")
+
+	styledMenu := styles.H1TwoContentBoxCenterStyle().Render(s)
+
+	activeOption := options[m.cursor]
+	preview := m.exportData[activeOption.MapKey]
+	if preview == "" {
+		preview = "<no data for " + activeOption.MapKey + ">"
+	}
+
+	m.viewportRightHalf.SetContent(preview)
+
+	previewHeader := styles.H1TitleStyleForTwo().
+		Render("Preview for: " + activeOption.Filename)
+	exportPreview := lipgloss.JoinVertical(lipgloss.Left,
+		previewHeader,
+		styles.H1TwoContentBoxesStyle().Render(m.viewportRightHalf.View()),
+	)
+
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		styles.VerticallyCenter(styledMenu, styles.HeightBasis),
+		exportPreview,
+	)
 }
 
 // ============================== //
