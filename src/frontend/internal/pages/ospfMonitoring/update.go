@@ -7,7 +7,7 @@ import (
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	tea "github.com/charmbracelet/bubbletea"
-	"time"
+	"sort"
 )
 
 // Update handles incoming messages and updates the dashboard state.
@@ -51,28 +51,33 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				opt := m.exportOptions[m.cursor]
+				opts := make([]common.ExportOption, len(m.exportOptions))
+				copy(opts, m.exportOptions)
+				sort.Slice(opts, func(i, j int) bool {
+					return opts[i].Label < opts[j].Label
+				})
+
+				opt := opts[m.cursor]
 
 				data, ok := m.exportData[opt.MapKey]
 				if !ok {
 					return m, tea.Batch(
 						toastCmd,
-						toast.Show("No Data available", 10*time.Second),
+						toast.Show("No Data available"),
 					)
 				}
 
 				if err := common.WriteExportToFile(data, opt.Filename, m.exportDirectory); err != nil {
 					return m, tea.Batch(
 						toastCmd,
-						toast.Show(fmt.Sprintf("Export failed: %v", err), 10*time.Second),
+						toast.Show(fmt.Sprintf("Export failed: %v", err)),
 					)
 				}
 
 				return m, tea.Batch(
 					toastCmd,
-					toast.Show(fmt.Sprintf("Exported %s\nto %s/%s",
-						opt.Label, m.exportDirectory, opt.Filename),
-						10*time.Second),
+					toast.Show(fmt.Sprintf("Exported to: %s/%s",
+						m.exportDirectory, opt.Filename)),
 				)
 			} else {
 				return m, common.FetchRunningConfig(m.logger)
@@ -87,7 +92,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.logger.Error("Error while fetching all backend data for OSPF Monitor")
 					return m, tea.Batch(
 						toastCmd,
-						toast.Show(fmt.Sprintf("Fetching data failed:\n%v", err), 10*time.Second),
+						toast.Show(fmt.Sprintf("Fetching data failed:\n%v", err)),
 					)
 				}
 			}
