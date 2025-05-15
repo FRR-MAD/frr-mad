@@ -194,15 +194,6 @@ func GetLSDB(logger *logger.Logger) (*frrProto.OSPFDatabase, error) {
 	return response.Data.GetOspfDatabase(), nil
 }
 
-func GetOspfRouterDataSelf(logger *logger.Logger) (*frrProto.OSPFRouterData, error) {
-	response, err := SendMessage("ospf", "router", nil, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Data.GetOspfRouterData(), nil
-}
-
 func GetOSPF(logger *logger.Logger) (*frrProto.GeneralOspfInformation, error) {
 	response, err := SendMessage("ospf", "generalInfo", nil, logger)
 	if err != nil {
@@ -210,6 +201,15 @@ func GetOSPF(logger *logger.Logger) (*frrProto.GeneralOspfInformation, error) {
 	}
 
 	return response.Data.GetGeneralOspfInformation(), nil
+}
+
+func GetOspfRouterDataSelf(logger *logger.Logger) (*frrProto.OSPFRouterData, error) {
+	response, err := SendMessage("ospf", "router", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfRouterData(), nil
 }
 
 func GetOspfP2PInterfaceMapping(logger *logger.Logger) (*frrProto.PeerInterfaceMap, error) {
@@ -254,6 +254,24 @@ func GetOspfNeighborInterfaces(logger *logger.Logger) ([]string, error) {
 	}
 
 	return neighborAddresses, nil
+}
+
+func GetOspfSummaryDataSelf(logger *logger.Logger) (*frrProto.OSPFSummaryData, error) {
+	response, err := SendMessage("ospf", "summary", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfSummaryData(), nil
+}
+
+func GetOspfAsbrSummaryDataSelf(logger *logger.Logger) (*frrProto.OSPFAsbrSummaryData, error) {
+	response, err := SendMessage("ospf", "asbrSummary", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetOspfAsbrSummaryData(), nil
 }
 
 func GetOspfExternalDataSelf(logger *logger.Logger) (*frrProto.OSPFExternalData, error) {

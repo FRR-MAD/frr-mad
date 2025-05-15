@@ -105,7 +105,7 @@ func (m *Model) fetchLatestData() error {
 	}
 	m.exportData["GetOspfRouterDataSelf"] = common.PrettyPrintJSON(routerLSASelf)
 	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "link-state database router self-originating",
+		Label:    "lsdb type 1 router self-originating",
 		MapKey:   "GetOspfRouterDataSelf",
 		Filename: "lsdb_ruoter_self.json",
 	})
@@ -116,9 +116,31 @@ func (m *Model) fetchLatestData() error {
 	}
 	m.exportData["GetOspfNetworkDataSelf"] = common.PrettyPrintJSON(networkLSASelf)
 	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "link-state database network self-originating",
+		Label:    "lsdb type 2 network self-originating",
 		MapKey:   "GetOspfNetworkDataSelf",
 		Filename: "lsdb_network_self.json",
+	})
+
+	summaryLSASelf, err := backend.GetOspfSummaryDataSelf(m.logger)
+	if err != nil {
+		return nil
+	}
+	m.exportData["GetOspfSummaryDataSelf"] = common.PrettyPrintJSON(summaryLSASelf)
+	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
+		Label:    "lsdb type 3 summary self-originating",
+		MapKey:   "GetOspfSummaryDataSelf",
+		Filename: "lsdb_summary_self.json",
+	})
+
+	asbrSummaryLSASelf, err := backend.GetOspfAsbrSummaryDataSelf(m.logger)
+	if err != nil {
+		return nil
+	}
+	m.exportData["GetOspfAsbrSummaryDataSelf"] = common.PrettyPrintJSON(asbrSummaryLSASelf)
+	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
+		Label:    "lsdb type 4 asbr summary self-originating",
+		MapKey:   "GetOspfAsbrSummaryDataSelf",
+		Filename: "lsdb_asbr_summary_self.json",
 	})
 
 	externalLSASelf, err := backend.GetOspfExternalDataSelf(m.logger)
@@ -127,7 +149,7 @@ func (m *Model) fetchLatestData() error {
 	}
 	m.exportData["GetOspfExternalDataSelf"] = common.PrettyPrintJSON(externalLSASelf)
 	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "link-state database external self-originating",
+		Label:    "lsdb type 5 external self-originating",
 		MapKey:   "GetOspfExternalDataSelf",
 		Filename: "lsdb_external_self.json",
 	})
@@ -138,7 +160,7 @@ func (m *Model) fetchLatestData() error {
 	}
 	m.exportData["GetOspfNssaExternalDataSelf"] = common.PrettyPrintJSON(nssaExternalDataSelf)
 	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "link-state database nssa external self-originating",
+		Label:    "lsdb type 7 nssa external self-originating",
 		MapKey:   "GetOspfNssaExternalDataSelf",
 		Filename: "lsdb_nssa_external_self.json",
 	})
