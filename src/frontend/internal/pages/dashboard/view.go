@@ -709,7 +709,7 @@ func (m *Model) renderExportOptions() string {
 	m.viewportRightHalf.Width = styles.ViewPortWidthHalf
 	m.viewportRightHalf.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
 
-	options := make([]ExportOption, len(m.exportOptions))
+	options := make([]common.ExportOption, len(m.exportOptions))
 	copy(options, m.exportOptions)
 	sort.Slice(options, func(i, j int) bool {
 		return options[i].Label < options[j].Label

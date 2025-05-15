@@ -39,6 +39,22 @@ type FooterOption struct {
 	PageOptions []string
 }
 
+type ExportOption struct {
+	Label    string
+	MapKey   string
+	Filename string
+}
+
+// AddExportOption adds options to ExportOption slice only if no existing entry has the same MapKey.
+func AddExportOption(opts []ExportOption, opt ExportOption) []ExportOption {
+	for _, e := range opts {
+		if e.MapKey == opt.MapKey {
+			return opts // already present
+		}
+	}
+	return append(opts, opt)
+}
+
 // ================================ //
 // TYPES                            //
 // ================================ //

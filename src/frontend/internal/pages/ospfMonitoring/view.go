@@ -2,6 +2,7 @@ package ospfMonitoring
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 
@@ -26,20 +27,40 @@ func (m *Model) OSPFView(currentSubTab int) string {
 }
 
 func (m *Model) View() string {
-	if currentSubTabLocal == 0 {
-		return m.renderLsdbMonitorTab()
-	} else if currentSubTabLocal == 1 {
-		return m.renderRouterMonitorTab()
-	} else if currentSubTabLocal == 2 {
-		return m.renderNetworkMonitorTab()
-	} else if currentSubTabLocal == 3 {
-		return m.renderExternalMonitorTab()
-	} else if currentSubTabLocal == 4 {
-		return m.renderNeighborMonitorTab()
-	} else if currentSubTabLocal == 5 {
-		return m.renderRunningConfigTab()
+	var body string
+
+	if m.showExportOverlay {
+		body = m.renderExportOptions()
+	} else {
+		switch currentSubTabLocal {
+		case 0:
+			body = m.renderLsdbMonitorTab()
+		case 1:
+			body = m.renderRouterMonitorTab()
+		case 2:
+			body = m.renderNetworkMonitorTab()
+		case 3:
+			body = m.renderExternalMonitorTab()
+		case 4:
+			body = m.renderNeighborMonitorTab()
+		case 5:
+			body = m.renderRunningConfigTab()
+		default:
+			body = m.renderLsdbMonitorTab()
+		}
 	}
-	return m.renderLsdbMonitorTab()
+
+	toastView := m.toast.View()
+	if toastView == "" {
+		return body
+	}
+
+	totalW := styles.WidthBasis
+	totalH := styles.HeightBasis
+	x := 2
+	y := 0
+
+	return toast.Overlay(body, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderLsdbMonitorTab() string {
@@ -816,4 +837,59 @@ func (m *Model) renderRunningConfigTab() string {
 	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
 
 	return m.viewport.View()
+}
+
+func (m *Model) renderExportOptions() string {
+	m.viewportRightHalf.Width = styles.ViewPortWidthHalf
+	m.viewportRightHalf.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+
+	options := make([]common.ExportOption, len(m.exportOptions))
+	copy(options, m.exportOptions)
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].Label < options[j].Label
+	})
+
+	// 2) Clamp the cursor into [0, len(options)-1]
+	if m.cursor < 0 {
+		m.cursor = 0
+	} else if m.cursor >= len(options) {
+		m.cursor = len(options) - 1
+	}
+
+	s := styles.TextTitleStyle.Render("Choose an option to export:") + "\n\n"
+	for i, opt := range options {
+		cursor := "   "
+		label := opt.Label
+		if i == m.cursor {
+			cursor = styles.SelectedOptionCursorStyle.Render(" ➔ ")
+			label = styles.SelectedOptionStyle.Render(label + " ")
+		}
+		s += fmt.Sprintf("%s%s\n", cursor, label)
+	}
+	s += styles.FooterBoxStyle.Render("\n\n[Tab / Shift+Tab] move selection down/up one option")
+	s += styles.FooterBoxStyle.Render("\n[↑/↓] scroll preview\n")
+	s += styles.FooterBoxStyle.Render("\n[e] quit export options.")
+
+	styledMenu := styles.H1TwoContentBoxCenterStyle().Render(s)
+
+	activeOption := options[m.cursor]
+	preview := m.exportData[activeOption.MapKey]
+	if preview == "" {
+		preview = "<no data for " + activeOption.MapKey + ">"
+	}
+
+	m.viewportRightHalf.SetContent(preview)
+
+	previewHeader := styles.H1TitleStyleForTwo().
+		Render("Preview for: " + activeOption.Filename)
+	exportPreview := lipgloss.JoinVertical(lipgloss.Left,
+		previewHeader,
+		styles.H1TwoContentBoxesStyle().Render(m.viewportRightHalf.View()),
+	)
+
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		styles.VerticallyCenter(styledMenu, styles.HeightBasis),
+		exportPreview,
+	)
 }

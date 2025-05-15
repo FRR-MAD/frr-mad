@@ -274,6 +274,15 @@ func GetOspfNssaExternalDataSelf(logger *logger.Logger) (*frrProto.OSPFNssaExter
 	return response.Data.GetOspfNssaExternalData(), nil
 }
 
+func GetStaticFRRConfiguration(logger *logger.Logger) (*frrProto.StaticFRRConfiguration, error) {
+	response, err := SendMessage("ospf", "staticConfig", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetStaticFrrConfiguration(), nil
+}
+
 func GetStaticFRRConfigurationPretty(logger *logger.Logger) (string, error) {
 	response, err := SendMessage("ospf", "staticConfig", nil, logger)
 	if err != nil {
