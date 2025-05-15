@@ -64,23 +64,26 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
-	isStateMap := make(map[string]*frrProto.Advertisement)
+	//isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
-	shouldStateMap := make(map[string]*frrProto.Advertisement)
+	//shouldStateMap := make(map[string]*frrProto.Advertisement)
 
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			isStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				isStateMap[key].PrefixLength = link.PrefixLength
-			}
-		}
-	}
+	// for _, area := range isState.Areas {
+	// 	for i := range area.Links {
+	// 		link := area.Links[i]
+	// 		key := getAdvertisementKey(link)
+	// 		isStateMap[key] = &frrProto.Advertisement{
+	// 			InterfaceAddress: link.InterfaceAddress,
+	// 			LinkType:         link.LinkType,
+	// 		}
+	// 		if link.LinkType == strings.ToLower("Stub Network") {
+	// 			isStateMap[key].PrefixLength = link.PrefixLength
+	// 		}
+	// 	}
+	// }
+
+	isStateMap := Foobar1(isState)
+	shouldStateMap := Foobar2(shouldState)
 
 	for _, area := range shouldState.Areas {
 		for i := range area.Links {
@@ -106,8 +109,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	// unadvertised
-	// is in shouldSate, but not in isState
-	// loop through shouldState and check with is State
 	for key, shouldLink := range shouldStateMap {
 		isMissing := false
 		if shouldLink.LinkType == strings.ToLower("unknown") {
@@ -127,9 +128,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	// overadvertised
-	// is in isState, but not in shouldState
-	// loop through isState and check with shouldState
-	// because I don't know what kind of link type shouldState is (either transit or stub) I have to check both these networks differently
 	for key, isLink := range isStateMap {
 		if _, exists := shouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
@@ -403,4 +401,53 @@ func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, ex
 			}
 		}
 	}
+}
+
+func Foobar1(isState *frrProto.IntraAreaLsa) map[string]*frrProto.Advertisement {
+	result := make(map[string]*frrProto.Advertisement)
+
+	for _, area := range isState.Areas {
+		for i := range area.Links {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			result[key] = &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkType:         link.LinkType,
+			}
+			if link.LinkType == strings.ToLower("Stub Network") {
+				result[key].PrefixLength = link.PrefixLength
+			}
+		}
+	}
+
+	return result
+}
+
+func Foobar2(shouldState *frrProto.IntraAreaLsa) map[string]*frrProto.Advertisement {
+	result := make(map[string]*frrProto.Advertisement)
+	for _, area := range shouldState.Areas {
+		for i := range area.Links {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			adv := &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkType:         link.LinkType,
+			}
+			if link.LinkType == strings.ToLower("Stub Network") {
+				result[key] = adv
+				result[key].PrefixLength = link.PrefixLength
+			} else if link.LinkType == strings.ToLower("unknown") {
+				adv.LinkStateId = link.LinkStateId
+				result[link.InterfaceAddress] = adv
+				result[link.LinkStateId] = adv
+				result[link.InterfaceAddress].PrefixLength = link.PrefixLength
+				result[link.LinkStateId].PrefixLength = link.PrefixLength
+			} else {
+				result[key] = adv
+			}
+		}
+	}
+
+	return result
+
 }

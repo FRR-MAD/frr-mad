@@ -1,7 +1,6 @@
 package aggregator_test
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,7 +8,6 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
 )
 
 func TestParseStaticFRRConfig(t *testing.T) {
@@ -630,21 +628,4 @@ func TestParseConfigEdgeCases(t *testing.T) {
 	if config == nil {
 		t.Fatal("Expected non-nil config for malformed file")
 	}
-}
-
-func TestCustom(t *testing.T) {
-	configPath := "./mock-files/julian-router.conf"
-
-	config, err := aggregator.ParseStaticFRRConfig(configPath)
-	if err != nil {
-		t.Fatalf("ParseStaticFRRConfig configR103 failed: %v", err)
-	}
-
-	//prettyJSON, err := json.MarshalIndent(config, "", "  ")
-
-	//t.Logf("Pretty JSON:\n%s\n\n", prettyJSON)
-	_, shouldRouterLSDB := analyzer.GetStaticFileRouterData(config)
-	prettyJSON2, _ := json.MarshalIndent(shouldRouterLSDB, "", "  ")
-	t.Logf("Pretty JSON:\n%s\n\n", prettyJSON2)
-
 }

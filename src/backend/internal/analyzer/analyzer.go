@@ -190,5 +190,4 @@ func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]st
 func (a *Analyzer) UpdateMetrics(p2pMap frrProto.PeerInterfaceMap) {
 
 	proto.Merge(a.P2pMap, &p2pMap)
-
 }
