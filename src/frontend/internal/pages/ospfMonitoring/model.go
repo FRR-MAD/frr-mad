@@ -41,7 +41,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		// 'Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
 		subTabs:           []string{"LSDB", "Router LSAs", "Network LSAs", "External LSAs", "Neighbors", "Running Config"},
-		footer:            []string{"[e] export options", "[r] refresh", "[↑/↓] scroll", "[e] export OSPF data"},
+		footer:            []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll", "[e] export OSPF data"},
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),

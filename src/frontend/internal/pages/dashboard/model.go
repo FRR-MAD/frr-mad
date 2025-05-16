@@ -46,7 +46,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:              "Dashboard",
 		subTabs:            []string{"OSPF", "BGP"},
-		footer:             []string{"[e] export options", "[r] refresh", "[↑/↓] scroll", "[a] anomaly details"},
+		footer:             []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll", "[a] anomaly details"},
 		cursor:             0,
 		exportOptions:      []common.ExportOption{},
 		exportData:         make(map[string]string),
