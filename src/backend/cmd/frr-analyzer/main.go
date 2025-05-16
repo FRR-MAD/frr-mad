@@ -1,12 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -18,6 +18,7 @@ import (
 	socket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
 	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/spf13/cobra"
 )
 
 type Service struct {
@@ -51,88 +52,104 @@ type LoggerService struct {
 }
 
 func main() {
-	cmdSet := flag.NewFlagSet("frr-mad", flag.ExitOnError)
-
-	cmdSet.Usage = func() {
-		fmt.Println("Usage: frr-mad [command] [options]")
-		fmt.Println("\nCommands:")
-		fmt.Println("  start   - Start the FRR Monitoring and Analysis Daemon")
-		fmt.Println("  stop    - Stop a running FRR-MAD instance")
-		fmt.Println("  reload  - Reload configuration for a running FRR-MAD")
-		fmt.Println("  help    - Display this help message")
+	var configFile string
+	var rootCmd = &cobra.Command{
+		Use:   os.Args[0],
+		Short: "FRR-MAD application",
+		Long:  `A CLI tool for managing the FRR-MAD application.`,
 	}
 
-	if len(os.Args) < 2 {
-		cmdSet.Usage()
-		os.Exit(1)
+	var startCmd = &cobra.Command{
+		Use:   "start",
+		Short: "Start the FRR-MAD application",
+		Run: func(cmd *cobra.Command, args []string) {
+			confPath, app := loadMadApplication(configFile)
+			if os.Getenv("FRR_MAD_DAEMON") != "1" {
+				createdConfiguration(confPath)
+				command := exec.Command(os.Args[0], os.Args[1:]...)
+				command.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
+				command.Start()
+
+				app.Logger.Application.Info(fmt.Sprintf("FRR-MAD started with PID %d", command.Process.Pid))
+				os.Exit(0)
+			} else {
+				app.startApp()
+			}
+		},
 	}
 
-	configRaw, err := configs.LoadConfig()
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+	var stopCmd = &cobra.Command{
+		Use:   "stop",
+		Short: "Stop the FRR-MAD application",
+		Run: func(cmd *cobra.Command, args []string) {
+			_, app := loadMadApplication(configFile)
+			app.stopApp()
+		},
 	}
 
-	createDirectories(configRaw)
-	config := ServiceConfig{
-		basis:      configRaw.Default,
-		socket:     configRaw.Socket,
-		aggregator: configRaw.Aggregator,
-		analyzer:   configRaw.Analyzer,
-		exporter:   configRaw.Exporter,
+	var restartCmd = &cobra.Command{
+		Use:   "restart",
+		Short: "Restart the FRR-MAD application",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Restart FRR-MAD application...")
+			fmt.Println("Not implemented yet. Please restart the application manually with stop and start.")
+		},
 	}
 
-	debugLevel := getDebugLevel(config.basis.DebugLevel)
-	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
-	appLogger.SetDebugLevel(debugLevel)
-	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
-
-	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
-	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
-
-	logService := &LoggerService{
-		Application: appLogger,
+	var reloadCmd = &cobra.Command{
+		Use:    "reload",
+		Short:  "Reload the FRR-MAD configuration",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Reloading the FRR-MAD configuration...")
+			fmt.Println("Not implemented yet. Please restart the application manually with stop and start.")
+		},
 	}
 
-	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
-	pid, _ := readPidFile(pidFile)
-	app := &FrrMadApp{
-		Logger:       logService,
-		Pid:          pid,
-		PollInterval: pollInterval,
-		Config:       config,
-		DebugLevel:   debugLevel,
-		PidFile:      pidFile,
+	var testingCmd = &cobra.Command{
+		Use:    "testing",
+		Short:  "Run tests on the application",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			createdConfiguration(configFile)
+		},
 	}
 
-	command := os.Args[1]
+	var accessCmd = &cobra.Command{
+		Use:    "access",
+		Short:  "Access application data",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+		},
+	}
 
-	switch command {
-	case "start":
-		if os.Getenv("FRR_MAD_DAEMON") != "1" {
-			cmd := exec.Command(os.Args[0], os.Args[1:]...)
-			cmd.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
-			cmd.Start()
-
-			app.Logger.Application.Info(fmt.Sprintf("FRR-MAD started with PID %d", cmd.Process.Pid))
-			os.Exit(0)
-		} else {
+	var debugCmd = &cobra.Command{
+		Use:    "debug",
+		Short:  "Run the application in debug mode",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			confPath, app := loadMadApplication(configFile)
+			createdConfiguration(confPath)
 			app.startApp()
-		}
-	case "stop":
-		app.stopApp()
-	case "restart":
-		fmt.Println("Restart FRR-MAD application...")
-		fmt.Println("Not implemented yet. Please restart the application manually.")
-	case "reload":
-		fmt.Println("Reloading the FRR-MAD configuration...")
-		fmt.Println("Not implemented yet. Please restart the application manually.")
-	case "help":
-		cmdSet.Usage()
-	case "debug":
-		app.startApp()
-	default:
-		fmt.Printf("Unknown command: %s\n", command)
-		cmdSet.Usage()
+		},
+	}
+
+	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+	testingCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+
+	rootCmd.AddCommand(startCmd)
+	rootCmd.AddCommand(stopCmd)
+	rootCmd.AddCommand(restartCmd)
+	rootCmd.AddCommand(reloadCmd)
+	rootCmd.AddCommand(testingCmd)
+	rootCmd.AddCommand(accessCmd)
+	rootCmd.AddCommand(debugCmd)
+
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -252,6 +269,47 @@ func (a *FrrMadApp) stopApp() {
 	}
 }
 
+func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
+	confgPath, configRaw, err := configs.LoadConfig(overwriteConfigPath)
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	createDirectories(configRaw)
+	config := ServiceConfig{
+		basis:      configRaw.Default,
+		socket:     configRaw.Socket,
+		aggregator: configRaw.Aggregator,
+		analyzer:   configRaw.Analyzer,
+		exporter:   configRaw.Exporter,
+	}
+
+	debugLevel := getDebugLevel(config.basis.DebugLevel)
+	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
+	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
+	pid, _ := readPidFile(pidFile)
+
+	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
+	appLogger.SetDebugLevel(debugLevel)
+	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
+	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
+
+	logService := &LoggerService{
+		Application: appLogger,
+	}
+
+	app := &FrrMadApp{
+		Logger:       logService,
+		Pid:          pid,
+		PollInterval: pollInterval,
+		Config:       config,
+		DebugLevel:   debugLevel,
+		PidFile:      pidFile,
+	}
+
+	return confgPath, app
+}
+
 func readPidFile(pidFile string) (int, error) {
 	if _, err := os.Stat(pidFile); os.IsNotExist(err) {
 		return 0, fmt.Errorf("PID file not found")
@@ -300,4 +358,19 @@ func getDebugLevel(level string) int {
 	default:
 		return 0
 	}
+}
+
+func createdConfiguration(configPath string) error {
+	appDir := "/tmp"
+
+	sourcePath := filepath.Join(configPath)
+	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
+
+	content, _ := os.ReadFile(sourcePath)
+	err := os.WriteFile(destinationPath, content, 0444)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
