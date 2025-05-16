@@ -21,6 +21,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const applicationVersion = "0.9.1"
+
 type Service struct {
 	Name   string
 	Active bool
@@ -134,6 +136,14 @@ func main() {
 		},
 	}
 
+	var versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "show version number and exit",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(applicationVersion)
+		},
+	}
+
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	testingCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
@@ -145,6 +155,7 @@ func main() {
 	rootCmd.AddCommand(testingCmd)
 	rootCmd.AddCommand(accessCmd)
 	rootCmd.AddCommand(debugCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
@@ -200,7 +211,7 @@ func (a *FrrMadApp) startApp() {
 
 	// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
 	if a.Aggregator != nil && a.Analyzer != nil && a.Exporter != nil {
-		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Analyzer.Logger, a.Analyzer.P2pMap)
+		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Analyzer.Logger, a.Analyzer.AnalyserStateParserResults)
 
 		go func() {
 			if err := a.Socket.Start(); err != nil {

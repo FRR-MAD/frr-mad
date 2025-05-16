@@ -165,7 +165,7 @@ func (s *Socket) getInterfaces() *frrProto.Response {
 func (s *Socket) getp2pMap() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_PeerInterfaceToAddress{
-			PeerInterfaceToAddress: s.p2pMap,
+			PeerInterfaceToAddress: s.parsedAnalyzerData.P2PMap,
 		},
 	}
 	return &frrProto.Response{

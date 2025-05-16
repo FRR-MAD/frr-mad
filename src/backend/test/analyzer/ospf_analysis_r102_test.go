@@ -95,7 +95,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 
 	})
 
-	isNssa, actualPredictedRouterLSDB := analyzer.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+	isNssa, actualPredictedRouterLSDB := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
 
 	ana.RouterAnomalyAnalysisLSDB(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
 
@@ -207,6 +207,7 @@ func TestRouterLsaUnhappy2(t *testing.T) {
 
 func TestExternalLsaHappy2(t *testing.T) {
 
+	ana := initAnalyzer()
 	less := func(a, b string) bool { return a < b }
 	frrMetrics := getR102FRRdata()
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
@@ -231,7 +232,7 @@ func TestExternalLsaHappy2(t *testing.T) {
 			},
 		},
 	}
-	actualPredictedExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	actualPredictedExternalLSDB := ana.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 
 	t.Run("TestExternalDataStaticShouldAndIs", func(t *testing.T) {
 
@@ -343,7 +344,7 @@ func TestExternalLsaUnhappy2(t *testing.T) {
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 	staticList := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 
-	shouldExternalLSDB := analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	shouldExternalLSDB := ana.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 	isExternalLSDB := getIsExternalLSDBr102OverUnhappy()
 
 	// Unadvertised: isExternalLSDB is empty
@@ -374,7 +375,7 @@ func TestExternalLsaUnhappy2(t *testing.T) {
 	ana = initAnalyzer()
 	frrMetrics = getR102FRRdata()
 	isExternalLSDB = getIsExternalLSDBr102UnUnhappy()
-	shouldExternalLSDB = analyzer.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
+	shouldExternalLSDB = ana.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticList)
 	ana.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	t.Run("TestUnadvertisedPrefix", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes)
