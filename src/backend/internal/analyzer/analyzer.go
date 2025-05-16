@@ -62,6 +62,10 @@ func (a *Analyzer) AnomalyAnalysis() {
 	a.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
 	//a.UpdateMetrics(p2pMap)
+
+	a.AnalyserStateParserResults.ShouldRouterLsdb.Reset()
+	a.AnalyserStateParserResults.ShouldExternalLsdb.Reset()
+	a.AnalyserStateParserResults.ShouldNssaExternalLsdb.Reset()
 	proto.Merge(a.AnalyserStateParserResults.ShouldRouterLsdb, shouldRouterLSDB)
 	proto.Merge(a.AnalyserStateParserResults.ShouldExternalLsdb, shouldExternalLSDB)
 	proto.Merge(a.AnalyserStateParserResults.ShouldNssaExternalLsdb, shouldNssaExternalLSDB)
