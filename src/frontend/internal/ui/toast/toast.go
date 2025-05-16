@@ -46,9 +46,11 @@ func (m Model) View() string {
 	}
 	style := lipgloss.NewStyle().
 		Padding(1, 1).
-		Margin(1, 0).
+		Margin(1, 2, 0, 2).
 		Background(lipgloss.Color(styles.Grey)).
-		Foreground(lipgloss.Color("#ffffff"))
+		Foreground(lipgloss.Color("#ffffff")).
+		Align(lipgloss.Center).
+		Width(styles.WidthTwoH1Box)
 	return style.Render(m.text)
 }
 

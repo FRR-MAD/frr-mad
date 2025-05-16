@@ -59,7 +59,7 @@ func (m *Model) View() string {
 
 	totalW := styles.WidthBasis
 	totalH := styles.HeightBasis
-	x := 2
+	x := 0
 	y := 0
 
 	return toast.Overlay(body, toastView, x, y, totalW, totalH)

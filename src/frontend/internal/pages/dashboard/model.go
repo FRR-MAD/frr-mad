@@ -136,7 +136,7 @@ func (m *Model) fetchLatestData() error {
 	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
 		Label:    "anomalies - nssa external (LSA type 7)",
 		MapKey:   "GetNSSAExternalAnomalies",
-		Filename: "type7_nssa_external_anomalies.json",
+		Filename: "type7_nssa_anomalies.json",
 	})
 
 	ospfInformation, err := backend.GetOSPF(m.logger)
