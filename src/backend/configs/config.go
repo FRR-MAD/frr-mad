@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -23,7 +24,6 @@ type SocketConfig struct {
 }
 
 type AnalyzerConfig struct {
-	Foo string `mapstructure:"foo"`
 }
 
 type AggregatorConfig struct {
@@ -58,14 +58,24 @@ type Config struct {
 	Exporter   ExporterConfig   `mapstructure:"exporter"`
 }
 
-func LoadConfig() (*Config, error) {
-	fmt.Println("Loading configuration file:", ConfigLocation)
+func LoadConfig(overwriteConfigPath string) (string, *Config, error) {
+	if overwriteConfigPath != "" {
+		ConfigLocation = overwriteConfigPath
+	}
+
+	file, err := os.Open(ConfigLocation)
+	if err != nil {
+		return "", nil, fmt.Errorf("error opening file: %w", err)
+	}
+	defer file.Close()
 
 	yamlPath := getYAMLPath()
-	return loadYAMLConfig(yamlPath)
+	result, err := loadYAMLConfig(yamlPath)
+	return ConfigLocation, result, err
 }
 
 func getYAMLPath() string {
+
 	base := strings.TrimSuffix(ConfigLocation, filepath.Ext(ConfigLocation))
 	return base + ".yaml"
 }
