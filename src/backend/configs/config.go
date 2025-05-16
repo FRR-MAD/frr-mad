@@ -58,14 +58,16 @@ type Config struct {
 	Exporter   ExporterConfig   `mapstructure:"exporter"`
 }
 
-func LoadConfig() (*Config, error) {
-	//fmt.Println("Loading configuration file:", ConfigLocation)
-
-	yamlPath := getYAMLPath()
+func LoadConfig(overwriteConfigPath string) (*Config, error) {
+	yamlPath := getYAMLPath(overwriteConfigPath)
 	return loadYAMLConfig(yamlPath)
 }
 
-func getYAMLPath() string {
+func getYAMLPath(configPath string) string {
+	if configPath != "" {
+		ConfigLocation = configPath
+	}
+
 	base := strings.TrimSuffix(ConfigLocation, filepath.Ext(ConfigLocation))
 	return base + ".yaml"
 }
