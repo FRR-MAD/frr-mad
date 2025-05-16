@@ -43,6 +43,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// FetchOSPFData returns a cmd and eventually triggers case msg.OSPFMsg
 			return m, common.FetchOSPFData(m.logger)
+		case "home":
+			if m.showExportOverlay {
+				m.viewportRightHalf.GotoTop()
+			} else if m.showAnomalyOverlay {
+				m.viewport.GotoTop()
+			} else {
+				m.viewportRight.GotoTop()
+				m.viewportLeft.GotoTop()
+			}
+		case "end":
+			if m.showExportOverlay {
+				m.viewportRightHalf.GotoBottom()
+			} else if m.showAnomalyOverlay {
+				m.viewport.GotoBottom()
+			} else {
+				m.viewportRight.GotoBottom()
+				m.viewportLeft.GotoBottom()
+			}
 		case "tab":
 			if m.showExportOverlay && len(m.exportOptions) > 0 {
 				m.cursor = (m.cursor + 1) % len(m.exportOptions)

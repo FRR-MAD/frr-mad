@@ -21,6 +21,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineUp(10)
 		case "down":
 			m.viewport.LineDown(10)
+		case "home":
+			m.viewport.GotoTop()
+		case "end":
+			m.viewport.GotoBottom()
 		case "backspace":
 			if currentSubTabLocal == 0 && len(m.bashInput) > 0 {
 				m.bashInput = m.bashInput[:len(m.bashInput)-1]
