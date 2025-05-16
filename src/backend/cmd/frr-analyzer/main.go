@@ -63,8 +63,9 @@ func main() {
 		Use:   "start",
 		Short: "Start the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := loadMadApplication(configFile)
+			confPath, app := loadMadApplication(configFile)
 			if os.Getenv("FRR_MAD_DAEMON") != "1" {
+				createdConfiguration(confPath)
 				command := exec.Command(os.Args[0], os.Args[1:]...)
 				command.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
 				command.Start()
@@ -81,7 +82,7 @@ func main() {
 		Use:   "stop",
 		Short: "Stop the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := loadMadApplication(configFile)
+			_, app := loadMadApplication(configFile)
 			app.stopApp()
 		},
 	}
@@ -110,10 +111,7 @@ func main() {
 		Short:  "Run tests on the application",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			createMmap("massiveContent")
-			if configFile != "" {
-				fmt.Printf("Using config file: %s\n", configFile)
-			}
+			createdConfiguration(configFile)
 		},
 	}
 
@@ -122,7 +120,6 @@ func main() {
 		Short:  "Access application data",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			readMmap()
 		},
 	}
 
@@ -131,7 +128,8 @@ func main() {
 		Short:  "Run the application in debug mode",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			app := loadMadApplication(configFile)
+			confPath, app := loadMadApplication(configFile)
+			createdConfiguration(confPath)
 			app.startApp()
 		},
 	}
@@ -271,8 +269,8 @@ func (a *FrrMadApp) stopApp() {
 	}
 }
 
-func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
-	configRaw, err := configs.LoadConfig(overwriteConfigPath)
+func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
+	confgPath, configRaw, err := configs.LoadConfig(overwriteConfigPath)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -309,7 +307,7 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 		PidFile:      pidFile,
 	}
 
-	return app
+	return confgPath, app
 }
 
 func readPidFile(pidFile string) (int, error) {
@@ -362,101 +360,17 @@ func getDebugLevel(level string) int {
 	}
 }
 
-func createMmap(foo string) {
-	//func (a *FrrMadApp) createMmap(foo string) {
+func createdConfiguration(configPath string) error {
+	appDir := "/tmp"
 
-	appDir := "/tmp/frr-mad"
+	sourcePath := filepath.Join(configPath)
+	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
 
-	filePath := filepath.Join(appDir, "unixsocklocation")
-
-	flags := os.O_RDWR | os.O_CREATE
-
-	f, err := os.OpenFile(filePath, flags, 0600)
+	content, _ := os.ReadFile(sourcePath)
+	err := os.WriteFile(destinationPath, content, 0444)
 	if err != nil {
-		fmt.Printf("Error opening file: %v\n", err)
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	//dataToWrite := "foobar barfoo"
-	dataToWrite := "/var/run/frr-mad/analyzer.sock"
-
-	err = f.Truncate(int64(len(dataToWrite)))
-	if err != nil {
-		fmt.Printf("Error writing to file: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
-	_, err = f.WriteString(dataToWrite)
-	if err != nil {
-		fmt.Printf("Error writing to file: %v\n", err)
-		os.Exit(1)
-	}
-
-	f.Sync()
-	err = os.Chmod(filePath, 0400) // 0400 = only owner can read
-	if err != nil {
-		fmt.Printf("Error changing file permissions: %v\n", err)
-	}
-
-	fileInfo, err := f.Stat()
-	if err != nil {
-		fmt.Printf("Error getting file info: %v\n", err)
-		os.Exit(1)
-	}
-	size := fileInfo.Size()
-
-	// Memory map the file (read-only if we're not writing)
-	//prot := syscall.PROT_READ
-	prot := syscall.PROT_WRITE
-	data, err := syscall.Mmap(int(f.Fd()), 0, int(size), prot, syscall.MAP_SHARED)
-	if err != nil {
-		fmt.Printf("Error mapping file: %v\n", err)
-		os.Exit(1)
-	}
-	defer syscall.Munmap(data)
-
-}
-
-func readMmap() {
-	appDir := "/tmp/frr-mad"
-	filePath := filepath.Join(appDir, "unixsocklocation")
-
-	// Open the file read-only
-	f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
-	if err != nil {
-		fmt.Printf("Error opening file: %v\n", err)
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	// Get file size
-	fileInfo, err := f.Stat()
-	if err != nil {
-		fmt.Printf("Error getting file info: %v\n", err)
-		os.Exit(1)
-	}
-	size := fileInfo.Size()
-
-	data, err := syscall.Mmap(
-		int(f.Fd()),        // File descriptor
-		0,                  // Offset
-		int(size),          // Length
-		syscall.PROT_READ,  // Protection (read-only)
-		syscall.MAP_SHARED, // Flags (shared between processes)
-	)
-	if err != nil {
-		fmt.Printf("Error mapping file: %v\n", err)
-		os.Exit(1)
-	}
-	defer syscall.Munmap(data)
-
-	// Read the data from the mapped memory
-	sharedString := string(data)
-	fmt.Printf("Read from shared memory: %s\n", sharedString)
-
-}
-
-func (a *FrrMadApp) createMmap(foo string) {
-
+	return nil
 }

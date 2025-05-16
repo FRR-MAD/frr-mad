@@ -4,5 +4,5 @@
 package configs
 
 func init() {
-	ConfigLocation = "/app/local/docker-config.conf"
+	ConfigLocation = "/app/local/docker-config.yaml"
 }

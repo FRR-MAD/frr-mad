@@ -4,5 +4,5 @@
 package configs
 
 func init() {
-	ConfigLocation = "../../local/dev-config.conf"
+	ConfigLocation = "../../local/dev-config.yaml"
 }
