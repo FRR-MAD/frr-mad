@@ -35,16 +35,15 @@ func (a *Analyzer) AnomalyAnalysis() {
 	peerNeighborMap := GetPeerNeighbor(a.metrics.OspfNeighbors, peerInterfaceMap)
 	hostname := a.metrics.StaticFrrConfiguration.Hostname
 
-	isNssa, shouldRouterLSDB := GetStaticFileRouterData(a.metrics.StaticFrrConfiguration)
-	shouldExternalLSDB := GetStaticFileExternalData(a.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	isNssa, shouldRouterLSDB := a.GetStaticFileRouterData(a.metrics.StaticFrrConfiguration)
+	shouldExternalLSDB := a.GetStaticFileExternalData(a.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	shouldNssaExternalLSDB := a.GetStaticFileNssaExternalData(a.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	fibMap := GetFIB(a.metrics.RoutingInformationBase)
 	receivedSummaryLSDB := GetRuntimeSummaryData(a.metrics.OspfSummaryDataAll, hostname)
 	receivedNetworkLSDB := GetRuntimeNetworkData(a.metrics.OspfNetworkDataAll, hostname)
 	receivedExternalLSDB := GetRuntimeExternalData(a.metrics.OspfExternalAll, hostname)
 	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(a.metrics.OspfNssaExternalAll, hostname)
-
-	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(a.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
 	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(a.metrics.OspfRouterData, hostname, peerNeighborMap)
 
@@ -63,6 +62,10 @@ func (a *Analyzer) AnomalyAnalysis() {
 	a.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
 	//a.UpdateMetrics(p2pMap)
+	proto.Merge(a.AnalyserStateParserResults.ShouldRouterLsdb, shouldRouterLSDB)
+	proto.Merge(a.AnalyserStateParserResults.ShouldExternalLsdb, shouldExternalLSDB)
+	proto.Merge(a.AnalyserStateParserResults.ShouldNssaExternalLsdb, shouldNssaExternalLSDB)
+	proto.Merge(a.AnalyserStateParserResults.P2PMap, &p2pMap)
 	proto.Merge(a.P2pMap, &p2pMap)
 }
 

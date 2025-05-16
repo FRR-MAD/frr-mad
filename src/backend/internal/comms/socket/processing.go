@@ -110,6 +110,9 @@ func (s *Socket) analysisProcessing(command string) *frrProto.Response {
 	case "ribToFib":
 		return s.getRibToFibAnomaly()
 
+	case "shouldParsedLsdb":
+		return s.getShouldParsedLsdb()
+
 	case "dummyRouterOne":
 		return getRouterAnomalyDummy1()
 	case "dummyExternalOne":

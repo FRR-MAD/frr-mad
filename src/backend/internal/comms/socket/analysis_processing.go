@@ -73,3 +73,17 @@ func (s *Socket) getRibToFibAnomaly() *frrProto.Response {
 		Data:    value,
 	}
 }
+
+func (s *Socket) getShouldParsedLsdb() *frrProto.Response {
+	value := &frrProto.ResponseValue{
+		Kind: &frrProto.ResponseValue_ParsedAnalyzerData{
+			ParsedAnalyzerData: s.parsedAnalyzerData,
+		},
+	}
+
+	return &frrProto.Response{
+		Status:  "success",
+		Message: "",
+		Data:    value,
+	}
+}

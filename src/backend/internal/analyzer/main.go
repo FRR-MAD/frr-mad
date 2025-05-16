@@ -10,11 +10,12 @@ import (
 /*
  */
 type Analyzer struct {
-	AnalysisResult *frrProto.AnomalyAnalysis
-	metrics        *frrProto.FullFRRData
-	P2pMap         *frrProto.PeerInterfaceMap
-	Logger         *logger.Logger
-	config         interface{}
+	AnalysisResult             *frrProto.AnomalyAnalysis
+	AnalyserStateParserResults *frrProto.ParsedAnalyzerData
+	metrics                    *frrProto.FullFRRData
+	P2pMap                     *frrProto.PeerInterfaceMap
+	Logger                     *logger.Logger
+	config                     interface{}
 }
 
 func InitAnalyzer(
@@ -31,9 +32,19 @@ func InitAnalyzer(
 		LsdbToRibAnomaly:    initAnomalyDetection(),
 	}
 
+	analyserStateParserResults := &frrProto.ParsedAnalyzerData{
+		ShouldRouterLsdb:       &frrProto.IntraAreaLsa{},
+		ShouldExternalLsdb:     &frrProto.InterAreaLsa{},
+		ShouldNssaExternalLsdb: &frrProto.InterAreaLsa{},
+		P2PMap: &frrProto.PeerInterfaceMap{
+			PeerInterfaceToAddress: map[string]string{},
+		},
+	}
+
 	return &Analyzer{
-		AnalysisResult: anomalyAnalysis,
-		metrics:        metrics,
+		AnalysisResult:             anomalyAnalysis,
+		AnalyserStateParserResults: analyserStateParserResults,
+		metrics:                    metrics,
 		P2pMap: &frrProto.PeerInterfaceMap{
 			PeerInterfaceToAddress: map[string]string{},
 		},
