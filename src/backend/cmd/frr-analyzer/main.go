@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const applicationVersion = "0.9.1"
+const applicationVersion = "0.9.2"
 
 type Service struct {
 	Name   string
