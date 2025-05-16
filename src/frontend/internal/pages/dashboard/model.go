@@ -161,6 +161,21 @@ func (m *Model) fetchLatestData() error {
 		Filename: "link-state_database.json",
 	})
 
+	parsedShouldStates, err := backend.GetParsedShouldStates(m.logger)
+	if err != nil {
+		return err
+	}
+	//routerShould := parsedShouldStates.ShouldRouterLsdb
+	//externalShould := parsedShouldStates.ShouldExternalLsdb
+	//nssaExternalShould := parsedShouldStates.ShouldNssaExternalLsdb
+
+	m.exportData["GetParsedShouldStates"] = common.PrettyPrintJSON(parsedShouldStates)
+	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
+		Label:    "predicted should state of lsdb",
+		MapKey:   "GetParsedShouldStates",
+		Filename: "should_state_lsdb.json",
+	})
+
 	return nil
 }
 
