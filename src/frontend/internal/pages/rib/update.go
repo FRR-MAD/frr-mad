@@ -31,6 +31,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.viewport.LineDown(10)
 			}
 			return m, nil
+		case "home":
+			if m.showExportOverlay {
+				m.viewportRightHalf.GotoTop()
+			} else {
+				m.viewport.GotoTop()
+			}
+		case "end":
+			if m.showExportOverlay {
+				m.viewportRightHalf.GotoBottom()
+			} else {
+				m.viewport.GotoBottom()
+			}
 		case "tab":
 			if m.showExportOverlay && len(m.exportOptions) > 0 {
 				m.cursor = (m.cursor + 1) % len(m.exportOptions)
