@@ -4,8 +4,6 @@ package communication;
 option go_package = "github.com/ba2025-ysmprc/frr-tui/backend/pkg;pkg";
 	
 
-import "google/protobuf/timestamp.proto";
-
 // Message represents the top-level message structure
 message Message {
   string service = 1;
@@ -38,7 +36,8 @@ message ResponseValue {
     string string_value = 1;
 
     // Analyzer command message types
-    Anomalies anomalies = 2;
+    // Anomalies anomalies = 2;
+    ParsedAnalyzerData parsed_analyzer_data = 2;
     AnomalyDetection anomaly = 3;
     PeerInterfaceMap peer_interface_to_address = 4;
 
@@ -740,60 +739,12 @@ message RibPrefixes {
   string next_hop_address = 4;
 }
 
-// old
-// Main message containing all anomaly types
-message Anomalies {
-  repeated AnomalyOveradvertisedRoute overadvertised_routes = 1;
-  repeated AnomalyUnadvertisedRoute unadvertised_routes = 2;
-  repeated AnomalyDuplicateRoute duplicate_routes = 3;
-  repeated AnomalyMisconfiguredRoute misconfigured_routes = 4;
+message ParsedAnalyzerData {
+  IntraAreaLsa should_router_lsdb = 1;
+  InterAreaLsa should_external_lsdb = 2;
+  InterAreaLsa should_nssa_external_lsdb = 3;
+  PeerInterfaceMap p2p_map = 4;
 }
-
-// Router information
-message RouterAttribute {
-  string router_name = 1;
-  string router_id = 2;
-}
-
-// Route is advertised but should not be
-message AnomalyOveradvertisedRoute {
-  google.protobuf.Timestamp timestamp = 1;
-  string service = 2;
-  string is_advertised = 3;
-  string should_advertised = 4;
-  RouterAttribute router = 5;
-}
-
-
-// Route should be advertised but is not
-message AnomalyUnadvertisedRoute {
-  google.protobuf.Timestamp timestamp = 1;
-  string service = 2;
-  string is_advertised = 3;
-  string should_advertised = 4;
-  RouterAttribute router = 5;
-}
-
-// Route is advertised multiple times when it should be advertised once
-message AnomalyDuplicateRoute {
-  google.protobuf.Timestamp timestamp = 1;
-  string service = 2;
-  string is_advertised = 3;
-  string should_advertised = 4;
-  RouterAttribute router = 5;
-}
-
-// Wrong advertisment, not fitting any above
-message AnomalyMisconfiguredRoute {
-  google.protobuf.Timestamp timestamp = 1;
-  string service = 2;
-  string is_advertised = 3;
-  string should_advertised = 4;
-  RouterAttribute router = 5;
-}
-
-
-
 
 // Main message containing the router information
 message OspfRouterInfo {
