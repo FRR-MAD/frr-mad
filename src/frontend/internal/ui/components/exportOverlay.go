@@ -44,9 +44,14 @@ func RenderExportOptions(
 		}
 		s += fmt.Sprintf("%s%s\n", prefix, label)
 	}
-	s += styles.FooterBoxStyle.Render("\n\n[Tab/Shift+Tab] move selection down/up one option")
-	s += styles.FooterBoxStyle.Render("\n[↑/↓] scroll preview\n")
-	s += styles.FooterBoxStyle.Render("\n[e] quit export options.")
+	s += styles.FooterBoxStyle.Render("\n\n[Tab Shift+Tab] move selection down/up one option")
+	s += styles.FooterBoxStyle.Render("\n[↑ ↓ home end] scroll preview\n")
+	s += styles.FooterBoxStyle.Render("\n[e] quit export options | [enter] export current selection")
+
+	//i := styles.FooterBoxStyle.Render("[Tab Shift+Tab] move selection down/up one option")
+	//i += styles.FooterBoxStyle.Render("\n[↑ ↓ home end] scroll preview\n")
+	//i2 := styles.FooterBoxStyle.Render("[enter] export current selection")
+	//i2 += styles.FooterBoxStyle.Render("\n[e] quit export options")
 
 	menu := styles.H1TwoContentBoxCenterStyle().Render(s)
 
