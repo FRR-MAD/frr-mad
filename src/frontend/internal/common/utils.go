@@ -2,7 +2,11 @@ package common
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"net"
+	"os"
+	"path/filepath"
 	"sort"
 
 	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
@@ -60,4 +64,43 @@ func bytesCompare(a, b []byte) int {
 		}
 	}
 	return len(a) - len(b)
+}
+
+func PrettyPrintJSON(msg proto.Message) string {
+	out, err := protojson.MarshalOptions{
+		Indent:          "  ",
+		EmitUnpopulated: true,
+	}.Marshal(msg)
+	if err != nil {
+		return "Failed to marshal proto message to JSON: " + err.Error()
+	}
+	return string(out)
+}
+
+// WriteExportToFile writes `data` into a file named `filename` under /tmp/frr-mad/exports.
+// Ensures the filename ends with .json; truncates existing files.
+func WriteExportToFile(data string, filename string, directory string) error {
+	// TODO: add path to config file
+	exportDir := directory
+	if err := os.MkdirAll(exportDir, 0755); err != nil {
+		return err
+	}
+
+	// ensure .json extension
+	if filepath.Ext(filename) != ".json" {
+		filename = filename + ".json"
+	}
+
+	path := filepath.Join(exportDir, filename)
+	// open file with truncate + create flags
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(data + "\n"); err != nil {
+		return err
+	}
+	return nil
 }

@@ -9,6 +9,39 @@ This Project is split into two parts:
 - **frr-analyzer**: The analysis system that consits of aggregation, analysis and information exporting. It spawns a socket, which the frr-tui unit uses to fetch all necessary data. The exporter collects routing data and exports them via the well-defined Prometheus Node Exporter uri. 
 - **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
 
+Currently the backend application features. By simply executing the application, all available options are present.
+```sh
+r101:/app# frr-analyzer
+A CLI tool for managing the FRR-MAD application.
+
+Usage:
+  frr-analyzer [command]
+
+Available Commands:
+  help        Help about any command
+  restart     Restart the FRR-MAD application
+  start       Start the FRR-MAD application
+  stop        Stop the FRR-MAD application
+  version     show version number and exit
+
+Flags:
+  -h, --help   help for analyzer_frr
+
+Use "frr-analyzer [command] --help" for more information about a command.
+```
+
+### Starting the Application
+#### Daemon
+```sh
+/path/to/frr-analyzer  start --configFile /path/to/configuration
+```
+
+#### Frontend
+```sh
+/path/to/frr-tui
+```
+
+
 ### frr-analyzer
 Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
 ```sh
@@ -40,7 +73,7 @@ cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' 
 cd ../../
 ```
 
-Provided is a default configuration file. Creating it will start the application. 
+Provided is a default configuration file. Creating it will start the application. The configuration file location is either placed in the /etc/frr-mad folder or can be provided with the `--configFile` option.
 
 ```sh
 mkdir -p /etc/frr-mad
@@ -90,7 +123,10 @@ The default folders for this application are:
 - Unix socket location: /var/run/frr-mad
 
 
-That's all there is to the installation and setup.
+Once the setup is done, the applicaiton can be started by simply executing it with the appropriate command (and option). The application will spawn a daemon running in the background.
+```sh
+frr-analyzer start --configFile /path/to/my/configuration
+```
 
 ## Project Structure
 

@@ -27,43 +27,50 @@ type OspfRedistribution struct {
 	Metric   string `json:"metric"`
 }
 
-func (c *Analyzer) AnomalyAnalysis() {
+func (a *Analyzer) AnomalyAnalysis() {
 
-	accessList := GetAccessList(c.metrics.StaticFrrConfiguration)
-	staticRouteMap := GetStaticRouteList(c.metrics.StaticFrrConfiguration, accessList)
-	peerInterfaceMap := GetPeerNetworkAddress(c.metrics.StaticFrrConfiguration)
-	peerNeighborMap := GetPeerNeighbor(c.metrics.OspfNeighbors, peerInterfaceMap)
-	hostname := c.metrics.StaticFrrConfiguration.Hostname
+	accessList := GetAccessList(a.metrics.StaticFrrConfiguration)
+	staticRouteMap := GetStaticRouteList(a.metrics.StaticFrrConfiguration, accessList)
+	peerInterfaceMap := GetPeerNetworkAddress(a.metrics.StaticFrrConfiguration)
+	peerNeighborMap := GetPeerNeighbor(a.metrics.OspfNeighbors, peerInterfaceMap)
+	hostname := a.metrics.StaticFrrConfiguration.Hostname
 
-	isNssa, shouldRouterLSDB := GetStaticFileRouterData(c.metrics.StaticFrrConfiguration)
-	shouldExternalLSDB := GetStaticFileExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	isNssa, shouldRouterLSDB := a.GetStaticFileRouterData(a.metrics.StaticFrrConfiguration)
+	shouldExternalLSDB := a.GetStaticFileExternalData(a.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	shouldNssaExternalLSDB := a.GetStaticFileNssaExternalData(a.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
 
-	fibMap := GetFIB(c.metrics.RoutingInformationBase)
-	receivedSummaryLSDB := GetRuntimeSummaryData(c.metrics.OspfSummaryDataAll, hostname)
-	receivedNetworkLSDB := GetRuntimeNetworkData(c.metrics.OspfNetworkDataAll, hostname)
-	receivedExternalLSDB := GetRuntimeExternalData(c.metrics.OspfExternalAll, hostname)
-	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(c.metrics.OspfNssaExternalAll, hostname)
+	fibMap := GetFIB(a.metrics.RoutingInformationBase)
+	receivedSummaryLSDB := GetRuntimeSummaryData(a.metrics.OspfSummaryDataAll, hostname)
+	receivedNetworkLSDB := GetRuntimeNetworkData(a.metrics.OspfNetworkDataAll, hostname)
+	receivedExternalLSDB := GetRuntimeExternalData(a.metrics.OspfExternalAll, hostname)
+	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(a.metrics.OspfNssaExternalAll, hostname)
 
-	shouldNssaExternalLSDB := GetStaticFileNssaExternalData(c.metrics.StaticFrrConfiguration, accessList, staticRouteMap)
+	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(a.metrics.OspfRouterData, hostname, peerNeighborMap)
 
-	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(c.metrics.OspfRouterData, hostname, peerNeighborMap)
+	isExternalLSDB := GetRuntimeExternalDataSelf(a.metrics.OspfExternalData, staticRouteMap, hostname)
 
-	isExternalLSDB := GetRuntimeExternalDataSelf(c.metrics.OspfExternalData, staticRouteMap, hostname)
+	isNssaExternalLSDB := GetNssaExternalData(a.metrics.OspfNssaExternalData, staticRouteMap, a.metrics.StaticFrrConfiguration.Hostname, a.Logger)
 
-	isNssaExternalLSDB := GetNssaExternalData(c.metrics.OspfNssaExternalData, staticRouteMap, c.metrics.StaticFrrConfiguration.Hostname, c.Logger)
-
-	c.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
-	c.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
+	a.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
+	a.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
 	//}
 
 	if isNssa {
-		c.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB, isExternalLSDB)
+		a.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB, isExternalLSDB)
 	}
 	// TODO: implement ribMap -> fibMap analysis, if necessary?
-	c.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
+	a.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
-	//c.UpdateMetrics(p2pMap)
-	proto.Merge(c.P2pMap, &p2pMap)
+	//a.UpdateMetrics(p2pMap)
+
+	a.AnalyserStateParserResults.ShouldRouterLsdb.Reset()
+	a.AnalyserStateParserResults.ShouldExternalLsdb.Reset()
+	a.AnalyserStateParserResults.ShouldNssaExternalLsdb.Reset()
+	proto.Merge(a.AnalyserStateParserResults.ShouldRouterLsdb, shouldRouterLSDB)
+	proto.Merge(a.AnalyserStateParserResults.ShouldExternalLsdb, shouldExternalLSDB)
+	proto.Merge(a.AnalyserStateParserResults.ShouldNssaExternalLsdb, shouldNssaExternalLSDB)
+	proto.Merge(a.AnalyserStateParserResults.P2PMap, &p2pMap)
+	proto.Merge(a.P2pMap, &p2pMap)
 }
 
 func maskToPrefixLength(mask string) string {

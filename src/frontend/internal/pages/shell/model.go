@@ -3,6 +3,7 @@ package shell
 import (
 	"github.com/ba2025-ysmprc/frr-mad/src/logger"
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -11,6 +12,7 @@ import (
 type Model struct {
 	title               string
 	subTabs             []string
+	footer              []string
 	windowSize          *common.WindowSize
 	activeShell         string
 	bashInput           string
@@ -27,19 +29,23 @@ type Model struct {
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
-	boxWidthForOne := windowSize.Width - 10
-	if boxWidthForOne < 20 {
-		boxWidthForOne = 20
-	}
-	// For example: subtract tab row, footer, and input area heights.
-	outputHeight := windowSize.Height - 6 - 1 - 3 - 2
+	//boxWidthForOne := windowSize.Width - 10
+	//if boxWidthForOne < 20 {
+	//	boxWidthForOne = 20
+	//}
+	//// For example: subtract tab row, footer, and input area heights.
+	//outputHeight := windowSize.Height - 6 - 1 - 3 - 2
+	//
+	//// Create the viewport with the desired dimensions.
+	//vp := viewport.New(boxWidthForOne, outputHeight)
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(boxWidthForOne, outputHeight)
+	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage-styles.HeightH1-2)
 
 	return &Model{
 		title:               "Shell",
 		subTabs:             []string{"bash", "vtysh", "Backend Test"},
+		footer:              []string{"[enter]: execute command", "[↑ ↓ home end] scroll", "[backspace]: delete last character"},
 		windowSize:          windowSize,
 		activeShell:         "",
 		backendServiceInput: "",
@@ -77,11 +83,7 @@ func (m *Model) ClearOutput() {
 }
 
 func (m *Model) GetFooterOptions() common.FooterOption {
-	keyBoardOptions := []string{
-		"[enter]: execute command",
-		"[↑/↓] scroll",
-		"[backspace]: delete last character",
-	}
+	keyBoardOptions := m.footer
 	return common.FooterOption{
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,

@@ -19,23 +19,24 @@ var execMutex sync.Mutex
 var isRunning bool = true
 
 type Socket struct {
-	socketPath string
-	listener   net.Listener
-	mutex      sync.Mutex
-	metrics    *frrProto.FullFRRData
-	anomalies  *frrProto.AnomalyAnalysis
-	p2pMap     *frrProto.PeerInterfaceMap
-	logger     *logger.Logger
+	socketPath         string
+	listener           net.Listener
+	mutex              sync.Mutex
+	metrics            *frrProto.FullFRRData
+	anomalies          *frrProto.AnomalyAnalysis
+	p2pMap             *frrProto.PeerInterfaceMap
+	parsedAnalyzerData *frrProto.ParsedAnalyzerData
+	logger             *logger.Logger
 }
 
-func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger, p2pMap *frrProto.PeerInterfaceMap) *Socket {
+func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger, parsedAnalyzerData *frrProto.ParsedAnalyzerData) *Socket {
 	return &Socket{
-		socketPath: fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
-		mutex:      sync.Mutex{},
-		metrics:    metrics,
-		anomalies:  analysisResult,
-		p2pMap:     p2pMap,
-		logger:     logger,
+		socketPath:         fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
+		mutex:              sync.Mutex{},
+		metrics:            metrics,
+		anomalies:          analysisResult,
+		parsedAnalyzerData: parsedAnalyzerData,
+		logger:             logger,
 	}
 }
 

@@ -2,18 +2,15 @@ package ospfMonitoring
 
 import (
 	"fmt"
+	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-
-	// frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
 	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
-
-	// "github.com/charmbracelet/bubbles/table"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -26,20 +23,45 @@ func (m *Model) OSPFView(currentSubTab int) string {
 }
 
 func (m *Model) View() string {
-	if currentSubTabLocal == 0 {
-		return m.renderLsdbMonitorTab()
-	} else if currentSubTabLocal == 1 {
-		return m.renderRouterMonitorTab()
-	} else if currentSubTabLocal == 2 {
-		return m.renderNetworkMonitorTab()
-	} else if currentSubTabLocal == 3 {
-		return m.renderExternalMonitorTab()
-	} else if currentSubTabLocal == 4 {
-		return m.renderNeighborMonitorTab()
-	} else if currentSubTabLocal == 5 {
-		return m.renderRunningConfigTab()
+	var body string
+
+	if m.showExportOverlay {
+		body = components.RenderExportOptions(
+			m.exportOptions,
+			m.exportData,
+			&m.cursor,
+			&m.viewportRightHalf,
+		)
+	} else {
+		switch currentSubTabLocal {
+		case 0:
+			body = m.renderLsdbMonitorTab()
+		case 1:
+			body = m.renderRouterMonitorTab()
+		case 2:
+			body = m.renderNetworkMonitorTab()
+		case 3:
+			body = m.renderExternalMonitorTab()
+		case 4:
+			body = m.renderNeighborMonitorTab()
+		case 5:
+			body = m.renderRunningConfigTab()
+		default:
+			body = m.renderLsdbMonitorTab()
+		}
 	}
-	return m.renderLsdbMonitorTab()
+
+	toastView := m.toast.View()
+	if toastView == "" {
+		return body
+	}
+
+	totalW := styles.WidthBasis
+	totalH := styles.HeightBasis
+	x := 0
+	y := 0
+
+	return toast.Overlay(body, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderLsdbMonitorTab() string {
@@ -681,7 +703,6 @@ func (m *Model) renderExternalMonitorTab() string {
 				styles.H2OneContentBoxCenterStyle().Render(nssaExternalTable.String()),
 				styles.H2OneBoxBottomBorderStyle().Render(""),
 			)
-			// var completeNssaExternalBox string
 			completeNssaExternalBox := lipgloss.JoinVertical(lipgloss.Left, nssaExternalHeader, nssaExternalDataBox)
 
 			nssaExternalLsaBlock = append(nssaExternalLsaBlock, completeNssaExternalBox+"\n\n")
@@ -808,12 +829,9 @@ func (m *Model) renderRunningConfigTab() string {
 
 	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
 
-	// completeColoredContent := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(completeContent)
 	m.viewport.Width = styles.ViewPortWidthCompletePage
 	m.viewport.Height = styles.ViewPortHeightCompletePage
 	m.viewport.SetContent(completeContent)
-
-	// runningConfigBox := lipgloss.NewStyle().Padding(0, 5).Render(m.viewport.View())
 
 	return m.viewport.View()
 }

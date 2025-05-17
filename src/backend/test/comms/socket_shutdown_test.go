@@ -23,9 +23,9 @@ func TestSocketShutdown(t *testing.T) {
 
 	os.Remove(socketPath)
 
-	mockLoggerInstance, mockAnalyzerInstance, mockMetrics, p2pMap := getMockData()
+	mockLoggerInstance, mockAnalyzerInstance, mockMetrics, parsedAnalyzerdata := getMockData()
 
-	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, p2pMap)
+	socketInstance := socket.NewSocket(config, mockMetrics, mockAnalyzerInstance.AnalysisResult, mockLoggerInstance, parsedAnalyzerdata)
 
 	socketErrChan := make(chan error, 1)
 	go func() {

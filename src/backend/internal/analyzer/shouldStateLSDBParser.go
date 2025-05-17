@@ -8,7 +8,7 @@ import (
 	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
 )
 
-func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
+func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
 	if config == nil || config.OspfConfig == nil {
 		return false, nil
 	}
@@ -133,11 +133,13 @@ func GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *fr
 		result.RouterType = "abr"
 	}
 
+	// TODO: proto.merge for should state
+
 	return isNssa, result
 }
 
 // GetStaticFileExternalData makes LSA type 5 prediction parsing
-func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
+func (a *Analyzer) GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
@@ -197,7 +199,7 @@ func GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessLi
 
 // GetStaticFileNssaExternalData makes LSA type 7 prediction parsing
 // TODO: finish this
-func GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
+func (a *Analyzer) GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
 		return nil
 	}
