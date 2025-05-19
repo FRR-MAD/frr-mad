@@ -15,6 +15,7 @@ type Model struct {
 	title             string
 	subTabs           []string
 	footer            []string
+	readOnlyMode      bool
 	toast             toast.Model
 	cursor            int
 	exportOptions     []common.ExportOption
@@ -42,6 +43,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		// because the key '9' is mapped to the last element of the list.
 		subTabs:           []string{"LSDB", "Router LSAs", "Network LSAs", "External LSAs", "Neighbors", "Running Config"},
 		footer:            []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll", "[e] export OSPF data"},
+		readOnlyMode:      true,
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),

@@ -7,17 +7,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/components"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var currentSubTabLocal = -1
 
-func (m *Model) RibView(currentSubTab int) string {
+func (m *Model) RibView(currentSubTab int, readOnlyMode bool) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
 	return m.View()
 }
 

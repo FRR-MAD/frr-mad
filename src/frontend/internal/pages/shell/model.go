@@ -13,6 +13,7 @@ type Model struct {
 	title               string
 	subTabs             []string
 	footer              []string
+	readOnlyMode        bool
 	windowSize          *common.WindowSize
 	activeShell         string
 	bashInput           string
@@ -36,6 +37,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		title:               "Shell",
 		subTabs:             []string{"bash", "vtysh", "Backend Test"},
 		footer:              []string{"[enter]: execute command", "[↑ ↓ home end] scroll", "[backspace]: delete last character"},
+		readOnlyMode:        true,
 		windowSize:          windowSize,
 		activeShell:         "",
 		backendServiceInput: "",

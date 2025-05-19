@@ -13,11 +13,11 @@ import (
 
 	"strconv"
 
+	"github.com/charmbracelet/lipgloss"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/components"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	frrProto "github.com/frr-mad/frr-tui/pkg"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var (
@@ -25,8 +25,9 @@ var (
 )
 
 // DashboardView is the updated View function. This allows to call View with an argument.
-func (m *Model) DashboardView(currentSubTab int) string {
+func (m *Model) DashboardView(currentSubTab int, readOnlyMode bool) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
 	return m.View()
 }
 
@@ -433,7 +434,7 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 			activeOptionalLSATypes,
 		)
 
-		lsdbSelfBlocks = append(lsdbSelfBlocks, completeAreaLSDBSelf+"\n\n")
+		lsdbSelfBlocks = append(lsdbSelfBlocks, completeAreaLSDBSelf)
 	}
 
 	// ===== External LSA =====

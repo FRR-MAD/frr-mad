@@ -101,16 +101,27 @@ func SetWindowSizes(window common.WindowSize) {
 // Colors                                   //
 // ======================================== //
 
-var MainBlue = "#5f87ff"    // Usage: Active Menu Tab, Content Border
-var Grey = "#444444"        // Usage: inactive components, options, H2 Title
-var NormalBeige = "#d7d7af" // Usage: H1 Title
-var GoodGreen = "#5f875f"   // Usage: Box border when content good
-var BadRed = "#d70000"      // Usage: Box border when content bad
-var LightBlue = "#5f87af"   // Usage: Text color to highlight every second row in a table
-var NavyBlue = "#00005f"    // Usage: Text color if on NormalBeige background
+func ChangeReadWriteMode(readOnlyMode bool) {
+	if readOnlyMode {
+		TuiColor = readModeBlue
+	} else {
+		TuiColor = writeModeCoral
+	}
+}
+
+var readModeBlue = "#5f87ff"   // Usage: Read Only Mode --> Active Menu Tab, Content Border
+var writeModeCoral = "#FF3B30" // Usage: Read/Write Mode --> Active Menu Tab, Content Border
+var Grey = "#444444"           // Usage: inactive components, options, H2 Title
+var NormalBeige = "#d7d7af"    // Usage: H1 Title
+var GoodGreen = "#5f875f"      // Usage: Box border when content good
+var BadRed = "#d70000"         // Usage: Box border when content bad
+var LightBlue = "#5f87af"      // Usage: Text color to highlight every second row in a table
+var NavyBlue = "#00005f"       // Usage: Text color if on NormalBeige background
 var Black = "#000000"
 
-//var MainBlue = "111" // Usage: Active Tab, Content Border
+var TuiColor = readModeBlue
+
+//var readModeBlue = "111" // Usage: Active Tab, Content Border
 //var Grey = "238"          // Usage: inactive components, options
 //var NormalBeige = "187"   // Usage: Box Border when content good
 //var BadRed = "#160"        // Usage: Box Border when content bad
@@ -194,10 +205,12 @@ var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(NavyBlue
 // Box Styling
 // ----------------------------
 
-var ContentBoxStyle = lipgloss.NewStyle().
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color(MainBlue)).
-	Padding(0, 2)
+func ContentBoxStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(TuiColor)).
+		Padding(0, 2)
+}
 
 var GeneralBoxStyle = lipgloss.NewStyle().
 	Border(lipgloss.RoundedBorder()).
@@ -378,30 +391,38 @@ var OSPFMonitoringTableTitleBorder = lipgloss.Border{
 // Tab Styling
 // ----------------------------
 
-var ActiveTabBoxStyle = lipgloss.NewStyle().
-	Border(ActiveTabBorder).
-	BorderForeground(lipgloss.Color(MainBlue)).
-	Padding(0, 4).
-	Bold(true).
-	Underline(true)
+func ActiveTabBoxStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(ActiveTabBorder).
+		BorderForeground(lipgloss.Color(TuiColor)).
+		Padding(0, 4).
+		Bold(true).
+		Underline(true)
+}
 
-var ActiveTabBoxLockedStyle = ActiveTabBoxStyle.
-	Bold(false).
-	Underline(false)
+func ActiveTabBoxLockedStyle() lipgloss.Style {
+	return ActiveTabBoxStyle().
+		Bold(false).
+		Underline(false)
+}
 
-var InactiveTabBoxStyle = lipgloss.NewStyle().
-	Border(InactiveTabBorder).
-	BorderForeground(lipgloss.Color(Grey)).
-	BorderBottomForeground(lipgloss.Color(MainBlue)).
-	Padding(0, 4).
-	Bold(false)
+func InactiveTabBoxStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(InactiveTabBorder).
+		BorderForeground(lipgloss.Color(Grey)).
+		BorderBottomForeground(lipgloss.Color(TuiColor)).
+		Padding(0, 4).
+		Bold(false)
+}
 
-var TabGap = lipgloss.NewStyle().
-	Border(InactiveTabBorder).
-	BorderForeground(lipgloss.Color(MainBlue)).
-	BorderTop(false).
-	BorderLeft(false).
-	BorderRight(false)
+func TabGap() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(InactiveTabBorder).
+		BorderForeground(lipgloss.Color(TuiColor)).
+		BorderTop(false).
+		BorderLeft(false).
+		BorderRight(false)
+}
 
 var ActiveSubTabBoxStyle = lipgloss.NewStyle().
 	Padding(0, 4, 0, 0).

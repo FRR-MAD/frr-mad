@@ -37,6 +37,7 @@ type AppModel struct {
 	currentView   AppState
 	tabs          []common.Tab
 	currentSubTab int
+	readOnlyMode  bool
 	windowSize    *common.WindowSize
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
@@ -71,6 +72,7 @@ func initModel(config *configs.Config) *AppModel {
 		currentView:   ViewDashboard,
 		tabs:          []common.Tab{},
 		currentSubTab: -1,
+		readOnlyMode:  true,
 		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize, dashboardLogger),
 		ospf:          ospfMonitoring.New(windowSize, ospfLogger),
@@ -147,6 +149,9 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc":
 			m.currentSubTab = -1
 			m.footer.SetMainMenuOptions()
+		case "ctrl+w":
+			m.readOnlyMode = !m.readOnlyMode
+			styles.ChangeReadWriteMode(m.readOnlyMode)
 		case "ctrl+c":
 			return m, tea.Batch(
 				tea.ClearScreen,
@@ -200,16 +205,16 @@ func (m *AppModel) View() string {
 	var content string
 	switch m.currentView {
 	case ViewDashboard:
-		content = m.dashboard.DashboardView(m.currentSubTab)
+		content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode)
 		subTabsLength = m.dashboard.GetSubTabsLength()
 	case ViewOSPF:
-		content = m.ospf.OSPFView(m.currentSubTab)
+		content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode)
 		subTabsLength = m.ospf.GetSubTabsLength()
 	case ViewRIB:
-		content = m.rib.RibView(m.currentSubTab)
+		content = m.rib.RibView(m.currentSubTab, m.readOnlyMode)
 		subTabsLength = m.rib.GetSubTabsLength()
 	case ViewShell:
-		content = m.shell.ShellView(m.currentSubTab)
+		content = m.shell.ShellView(m.currentSubTab, m.readOnlyMode)
 		subTabsLength = m.shell.GetSubTabsLength()
 	default:
 		return "Unknown view"
@@ -225,7 +230,7 @@ func (m *AppModel) View() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
-		styles.ContentBoxStyle.Width(contentWidth).Height(contentHeight).Render(content),
+		styles.ContentBoxStyle().Width(contentWidth).Height(contentHeight).Render(content),
 		styles.FooterBoxStyle.Width(contentWidth).Render(footer),
 	)
 }

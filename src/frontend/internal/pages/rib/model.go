@@ -15,6 +15,7 @@ type Model struct {
 	title             string
 	subTabs           []string
 	footer            []string
+	readOnlyMode      bool
 	toast             toast.Model
 	cursor            int
 	exportOptions     []common.ExportOption
@@ -37,6 +38,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		title:             "RIB",
 		subTabs:           []string{"RIB", "FIB", "RIB-OSPF", "RIB-BGP", "RIB-Connected", "RIB-Static"},
 		footer:            []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll"},
+		readOnlyMode:      true,
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),

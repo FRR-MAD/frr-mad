@@ -17,8 +17,9 @@ import (
 
 var currentSubTabLocal = -1
 
-func (m *Model) OSPFView(currentSubTab int) string {
+func (m *Model) OSPFView(currentSubTab int, readOnlyMode bool) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
 	return m.View()
 }
 
@@ -268,8 +269,13 @@ func (m *Model) renderLsdbMonitorTab() string {
 			styles.H2OneBoxBottomBorderStyle().Render(""),
 		)
 
-		horizontalRouterAndNetworkLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, routerTableBox, networkTableBox)
-		horizontalSummaryAndAsbrSummaryLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, summaryTableBox, asbrSummaryTableBox)
+		verticalRouterAndSummaryLinkStates := lipgloss.JoinVertical(lipgloss.Left, routerTableBox, summaryTableBox)
+		verticalNetworkAndAsbrSummaryLinkStates := lipgloss.JoinVertical(lipgloss.Left, networkTableBox, asbrSummaryTableBox)
+
+		type1to4Total := lipgloss.JoinHorizontal(lipgloss.Left,
+			verticalRouterAndSummaryLinkStates,
+			verticalNetworkAndAsbrSummaryLinkStates,
+		)
 
 		var optionalLSAType7 []string
 		if nssaExternalLinkStateTableData != nil {
@@ -282,12 +288,11 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 		completeAreaLSDB := lipgloss.JoinVertical(lipgloss.Left,
 			areaHeader,
-			horizontalRouterAndNetworkLinkStates,
-			horizontalSummaryAndAsbrSummaryLinkStates,
+			type1to4Total,
 			activeOptionalLSATypes,
 		)
 
-		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB+"\n")
+		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB)
 	}
 
 	// ===== External LSA =====

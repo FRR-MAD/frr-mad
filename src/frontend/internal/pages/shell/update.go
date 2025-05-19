@@ -84,6 +84,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.clearBackendInput()
 				m.activeBackendInput = "service"
 			}
+		case "ctrl+w":
+			m.ClearInput()
 		//case "w":
 		//	err := common.CopyToClipboard(m.backendResponse)
 		//	if err != nil {
