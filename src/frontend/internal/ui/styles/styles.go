@@ -1,9 +1,9 @@
 package styles
 
 import (
-	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/frr-mad/frr-tui/internal/common"
 )
 
 // ======================================== //
@@ -20,8 +20,9 @@ const (
 	MarginX3                  = 6
 	MarginX4                  = 8
 
-	TabRowHeight = 4
-	FooterHeight = 1
+	TabRowHeight           = 4
+	FooterHeight           = 1
+	AdditionalFooterHeight = 2
 )
 
 var (
