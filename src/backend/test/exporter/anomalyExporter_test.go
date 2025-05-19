@@ -4,9 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"

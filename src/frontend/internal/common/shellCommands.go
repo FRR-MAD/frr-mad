@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/frr-mad/frr-mad/src/logger"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

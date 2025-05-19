@@ -9,8 +9,8 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
-	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
+	"github.com/frr-mad/frr-mad/src/logger"
+	frrProto "github.com/frr-mad/frr-tui/pkg"
 
 	"google.golang.org/protobuf/proto"
 )

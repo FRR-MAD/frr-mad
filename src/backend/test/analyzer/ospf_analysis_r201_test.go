@@ -3,8 +3,8 @@ package analyzer_test
 import (
 	"testing"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/stretchr/testify/assert"
 )
 

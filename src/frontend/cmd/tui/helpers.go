@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/frr-mad/frr-tui/internal/common"
 	"os"
 )
 

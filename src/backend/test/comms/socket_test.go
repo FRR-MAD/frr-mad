@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/comms/socket"
+	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/stretchr/testify/assert"
 )
 

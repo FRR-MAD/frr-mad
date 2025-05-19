@@ -4,12 +4,12 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/frr-mad/frr-tui/internal/common"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

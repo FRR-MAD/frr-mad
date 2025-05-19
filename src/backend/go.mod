@@ -1,9 +1,9 @@
-module github.com/ba2025-ysmprc/frr-mad/src/backend
+module github.com/frr-mad/frr-mad/src/backend
 
 go 1.24.2
 
 require (
-	github.com/ba2025-ysmprc/frr-mad/src/logger v0.0.0-00010101000000-000000000000
+	github.com/frr-mad/frr-mad/src/logger v0.0.0-00010101000000-000000000000
 	github.com/google/go-cmp v0.7.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/client_model v0.6.2
@@ -38,4 +38,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ba2025-ysmprc/frr-mad/src/logger => ../logger
+replace github.com/frr-mad/frr-mad/src/logger => ../logger

@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/exporter"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/aggregator"
+	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
+	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/logger"
 )
 
 func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {

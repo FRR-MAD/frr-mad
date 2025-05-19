@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {

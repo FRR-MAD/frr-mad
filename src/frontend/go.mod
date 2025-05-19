@@ -1,12 +1,12 @@
-module github.com/ba2025-ysmprc/frr-tui
+module github.com/frr-mad/frr-tui
 
 go 1.24.2
 
 require (
-	github.com/ba2025-ysmprc/frr-mad/src/logger v0.0.0-00010101000000-000000000000
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.3.4
 	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/frr-mad/frr-mad/src/logger v0.0.0-00010101000000-000000000000
 	github.com/spf13/viper v1.20.1
 	google.golang.org/protobuf v1.36.6
 )
@@ -47,4 +47,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ba2025-ysmprc/frr-mad/src/logger => ../logger
+replace github.com/frr-mad/frr-mad/src/logger => ../logger

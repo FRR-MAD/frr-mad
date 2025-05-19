@@ -7731,7 +7731,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\x1a_designated_router_addressB\x1b\n" +
 	"\x19_router_interface_addressB\x12\n" +
 	"\x10_network_addressB\x0f\n" +
-	"\r_network_maskB2Z0github.com/ba2025-ysmprc/frr-tui/backend/pkg;pkgb\x06proto3"
+	"\r_network_maskB,Z*github.com/frr-mad/frr-tui/backend/pkg;pkgb\x06proto3"
 
 var (
 	file_protocol_proto_rawDescOnce sync.Once
