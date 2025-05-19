@@ -3,10 +3,10 @@ package components
 import (
 	"strings"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-mad/src/logger"
+	"github.com/frr-mad/frr-tui/internal/common"
+	backend "github.com/frr-mad/frr-tui/internal/services"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
 )
 

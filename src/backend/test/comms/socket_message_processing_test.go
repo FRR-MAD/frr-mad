@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/comms/socket"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/comms/socket"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )

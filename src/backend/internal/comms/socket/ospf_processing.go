@@ -1,7 +1,7 @@
 package socket
 
 import (
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 func (s *Socket) getOspfDatabase() *frrProto.Response {

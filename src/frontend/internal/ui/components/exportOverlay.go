@@ -2,8 +2,8 @@ package components
 
 import (
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-tui/internal/common"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
 	"sort"

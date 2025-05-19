@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package communication;
-option go_package = "github.com/ba2025-ysmprc/frr-tui/backend/pkg;pkg";
+option go_package = "github.com/frr-mad/frr-tui/backend/pkg;pkg";
 	
 
 // Message represents the top-level message structure

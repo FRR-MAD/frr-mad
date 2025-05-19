@@ -1,7 +1,7 @@
 package shell
 
 import (
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 
 	"github.com/charmbracelet/lipgloss"
 )

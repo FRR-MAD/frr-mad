@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

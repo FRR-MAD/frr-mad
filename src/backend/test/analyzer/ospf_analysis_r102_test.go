@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/internal/analyzer"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
