@@ -26,9 +26,6 @@ const (
 	ViewDashboard AppState = iota
 	ViewOSPF
 	ViewRIB
-	// code for Presentation slides
-	//ViewOSPF2
-	//ViewOSPF3
 	ViewShell
 	// add here new Views
 	totalViews
@@ -95,44 +92,35 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "1":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewDashboard
-			} else {
-				m.currentSubTab = 0
-			}
-		case "2":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewOSPF
-			} else if subTabsLength >= 2 {
-				m.currentSubTab = 1
-			}
-		case "3":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewRIB
-			} else if subTabsLength >= 3 {
-				m.currentSubTab = 2
-			}
-		case "4":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewShell
-			} else if subTabsLength >= 4 {
-				m.currentSubTab = 3
-			}
-		case "9":
-			if m.currentSubTab == -1 {
-				break
-			} else {
-				m.currentSubTab = subTabsLength - 1
-			}
-		// code for Presentation slides
-		//case "4":
+		//case "1+2":
 		//	if m.currentSubTab == -1 {
-		//		m.currentView = ViewOSPF2
+		//		m.currentView = ViewDashboard
+		//	} else {
+		//		m.currentSubTab = 0
 		//	}
-		//case "5":
+		//case "ctrl+t":
 		//	if m.currentSubTab == -1 {
-		//		m.currentView = ViewOSPF3
+		//		m.currentView = ViewOSPF
+		//	} else if subTabsLength >= 2 {
+		//		m.currentSubTab = 1
+		//	}
+		//case "shift+3":
+		//	if m.currentSubTab == -1 {
+		//		m.currentView = ViewRIB
+		//	} else if subTabsLength >= 3 {
+		//		m.currentSubTab = 2
+		//	}
+		//case "alt+4":
+		//	if m.currentSubTab == -1 {
+		//		m.currentView = ViewShell
+		//	} else if subTabsLength >= 4 {
+		//		m.currentSubTab = 3
+		//	}
+		//case "shift+9":
+		//	if m.currentSubTab == -1 {
+		//		break
+		//	} else {
+		//		m.currentSubTab = subTabsLength - 1
 		//	}
 		case "right":
 			if m.currentSubTab == -1 {
@@ -160,7 +148,6 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.currentSubTab = -1
 			m.footer.SetMainMenuOptions()
 		case "ctrl+c":
-
 			return m, tea.Batch(
 				tea.ClearScreen,
 				tea.Quit,
@@ -198,15 +185,6 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.rib.Update(msg)
 		m.rib = updatedModel.(*rib.Model)
 		return m, cmd
-	// code for Presentation slides
-	//case ViewOSPF2:
-	//	updatedModel, cmd := m.ospf.Update(msg)
-	//	m.ospf = updatedModel.(*ospfMonitoring.Model)
-	//	return m, cmd
-	//case ViewOSPF3:
-	//	updatedModel, cmd := m.ospf.Update(msg)
-	//	m.ospf = updatedModel.(*ospfMonitoring.Model)
-	//	return m, cmd
 	case ViewShell:
 		updatedModel, cmd := m.shell.Update(msg)
 		m.shell = updatedModel.(*shell.Model)
@@ -230,13 +208,6 @@ func (m *AppModel) View() string {
 	case ViewRIB:
 		content = m.rib.RibView(m.currentSubTab)
 		subTabsLength = m.rib.GetSubTabsLength()
-	// code for Presentation slides
-	//case ViewOSPF2:
-	//	content = m.ospf.OSPFView(m.currentSubTab)
-	//	subTabsLength = m.ospf.GetSubTabsLength()
-	//case ViewOSPF3:
-	//	content = m.ospf.OSPFView(m.currentSubTab)
-	//	subTabsLength = m.ospf.GetSubTabsLength()
 	case ViewShell:
 		content = m.shell.ShellView(m.currentSubTab)
 		subTabsLength = m.shell.GetSubTabsLength()

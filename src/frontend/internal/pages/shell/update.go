@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
-	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -36,7 +36,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.backendCommandInput = m.backendCommandInput[:len(m.backendCommandInput)-1]
 			}
 		case "tab":
-			m.activeBackendInput = "command"
+			if currentSubTabLocal == 2 {
+				m.activeBackendInput = "command"
+			}
 		case "left", "right":
 			m.ClearInput()
 			m.ClearOutput()
