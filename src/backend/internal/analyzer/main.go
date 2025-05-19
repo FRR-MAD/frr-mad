@@ -23,6 +23,7 @@ func InitAnalyzer(
 	metrics *frrProto.FullFRRData,
 	logger *logger.Logger,
 ) *Analyzer {
+	logger.Info("Initializing analyzer")
 
 	anomalyAnalysis := &frrProto.AnomalyAnalysis{
 		RouterAnomaly:       initAnomalyDetection(),
@@ -31,6 +32,8 @@ func InitAnalyzer(
 		RibToFibAnomaly:     initAnomalyDetection(),
 		LsdbToRibAnomaly:    initAnomalyDetection(),
 	}
+
+	logger.Debug("Created empty anomaly detection structures")
 
 	analyserStateParserResults := &frrProto.ParsedAnalyzerData{
 		ShouldRouterLsdb:       &frrProto.IntraAreaLsa{},
@@ -54,12 +57,20 @@ func InitAnalyzer(
 }
 
 func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
+	analyzer.Logger.WithAttrs(map[string]interface{}{
+		"interval": pollInterval.String(),
+	}).Info("Starting analyzer")
+
 	ticker := time.NewTicker(pollInterval)
 
 	go func() {
 		defer ticker.Stop()
 		for range ticker.C {
+			start := time.Now()
 			analyzer.AnomalyAnalysis()
+			analyzer.Logger.WithAttrs(map[string]interface{}{
+				"duration": time.Since(start).String(),
+			}).Debug("Completed analysis cycle")
 		}
 	}()
 

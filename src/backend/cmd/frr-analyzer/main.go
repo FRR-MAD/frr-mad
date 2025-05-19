@@ -72,7 +72,10 @@ func main() {
 				command.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
 				command.Start()
 
-				app.Logger.Application.Info(fmt.Sprintf("FRR-MAD started with PID %d", command.Process.Pid))
+				app.Logger.Application.WithAttrs(map[string]interface{}{
+					"child_pid":   command.Process.Pid,
+					"config_file": confPath,
+				}).Info("FRR-MAD daemon started")
 				os.Exit(0)
 			} else {
 				app.startApp()
@@ -207,8 +210,20 @@ func (a *FrrMadApp) startApp() {
 		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Analyzer.Logger, a.Analyzer.AnalyserStateParserResults)
 
 		go func() {
+			a.Logger.Application.WithAttrs(map[string]interface{}{
+				"socket_path": fmt.Sprintf("%s/%s",
+					a.Config.socket.UnixSocketLocation,
+					a.Config.socket.UnixSocketName),
+			}).Info("Starting socket server")
+
 			if err := a.Socket.Start(); err != nil {
-				a.Logger.Application.Error(fmt.Sprintf("Error starting socket server: %s", err))
+				a.Logger.Application.WithAttrs(map[string]interface{}{
+					"error": err.Error(),
+					"socket_path": fmt.Sprintf("%s/%s",
+						a.Config.socket.UnixSocketLocation,
+						a.Config.socket.UnixSocketName),
+				}).Error("Socket server failed")
+
 				os.Exit(1)
 			}
 		}()
@@ -236,6 +251,10 @@ func (a *FrrMadApp) startApp() {
 func (a *FrrMadApp) createPidFile() string {
 	pid := os.Getpid()
 	pidFile := fmt.Sprintf("%s/frr-mad.pid", a.Config.socket.UnixSocketLocation)
+	a.Logger.Application.WithAttrs(map[string]interface{}{
+		"path": pidFile,
+		"pid":  pid,
+	}).Debug("Creating PID file")
 	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644); err != nil {
 		a.Logger.Application.Error(fmt.Sprintf("Failed to create PID file: %s", err))
 		os.Exit(1)
@@ -244,6 +263,11 @@ func (a *FrrMadApp) createPidFile() string {
 }
 
 func (a *FrrMadApp) stopApp() {
+	a.Logger.Application.WithAttrs(map[string]interface{}{
+		"pid":      a.Pid,
+		"pid_file": a.PidFile,
+	}).Info("Initiating shutdown")
+
 	if a.Pid == 0 {
 		a.Logger.Application.Error("Service is not running or PID file not found.")
 		os.Exit(1)
@@ -264,9 +288,13 @@ func (a *FrrMadApp) stopApp() {
 	time.Sleep(500 * time.Millisecond)
 
 	if isProcessRunning(a.Pid) {
-		a.Logger.Application.Error("Signal sent, but process is still running. It may take a moment to shut down...")
+		a.Logger.Application.WithAttrs(map[string]interface{}{
+			"pid": a.Pid,
+		}).Warning("Process still running after signal")
 	} else {
-		a.Logger.Application.Info("FRR-MAD successfully stopped")
+		a.Logger.Application.WithAttrs(map[string]interface{}{
+			"pid": a.Pid,
+		}).Info("Process terminated successfully")
 		if _, err := os.Stat(a.PidFile); !os.IsNotExist(err) {
 			os.Remove(a.PidFile)
 		}
@@ -295,8 +323,13 @@ func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
 
 	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
 	appLogger.SetDebugLevel(debugLevel)
-	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
-	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
+
+	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", applicationVersion))
+	appLogger.WithAttrs(map[string]interface{}{
+		"config_path":              confgPath,
+		"debug_level":              config.basis.DebugLevel,
+		"poll_interval in seconds": config.aggregator.PollInterval,
+	}).Info("Configuration loaded")
 
 	logService := &LoggerService{
 		Application: appLogger,

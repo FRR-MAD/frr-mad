@@ -3,6 +3,7 @@ package exporter
 import (
 	"strings"
 	"sync"
+	"time"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -23,6 +24,8 @@ func NewMetricExporter(
 	logger *logger.Logger,
 	flags map[string]*ParsedFlag,
 ) *MetricExporter {
+	logger.Debug("Initializing metric exporter")
+
 	m := &MetricExporter{
 		data:           data,
 		metrics:        make(map[string]prometheus.Collector),
@@ -46,6 +49,15 @@ func NewMetricExporter(
 	for _, metric := range m.metrics {
 		registry.MustRegister(metric)
 	}
+
+	enabled := []string{}
+	for k := range m.enabledMetrics {
+		enabled = append(enabled, k)
+	}
+	logger.WithAttrs(map[string]interface{}{
+		"enabled_metrics": enabled,
+		"total_metrics":   len(m.metrics),
+	}).Info("Metric exporter initialized")
 
 	return m
 }
@@ -205,8 +217,12 @@ func (m *MetricExporter) Update() {
 	defer m.mutex.Unlock()
 
 	if m.data == nil {
+		m.logger.Debug("Skipping metric update - no data available")
 		return
 	}
+
+	m.logger.Debug("Starting metric update")
+	start := time.Now()
 
 	// Update all enabledMetrics
 	if m.enabledMetrics["router"] {
@@ -239,6 +255,10 @@ func (m *MetricExporter) Update() {
 	if m.enabledMetrics["routes"] {
 		m.updateRouteMetrics()
 	}
+
+	m.logger.WithAttrs(map[string]interface{}{
+		"duration": time.Since(start).String(),
+	}).Debug("Completed metric update")
 }
 
 func (m *MetricExporter) updateRouterMetrics() {

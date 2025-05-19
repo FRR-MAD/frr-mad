@@ -18,6 +18,8 @@ type AnomalyExporter struct {
 }
 
 func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus.Registerer, logger *logger.Logger) *AnomalyExporter {
+	logger.Debug("Initializing anomaly exporter")
+
 	a := &AnomalyExporter{
 		anomalies:     anomalies,
 		activeAlerts:  make(map[string]bool),
@@ -66,6 +68,11 @@ func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus
 		a.alertCounters[ct.name] = c
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"gauges_registered":   len(a.gauges),
+		"counters_registered": len(a.alertCounters),
+	}).Debug("Anomaly exporter metrics registered")
+
 	return a
 }
 
@@ -74,8 +81,11 @@ func (a *AnomalyExporter) Update() {
 	defer a.mutex.Unlock()
 
 	if a.anomalies == nil {
+		a.logger.Debug("Skipping anomaly update - no anomaly data available")
 		return
 	}
+
+	a.logger.Debug("Updating anomaly metrics")
 
 	// Process overadvertised routes
 	overCount :=
@@ -109,6 +119,12 @@ func (a *AnomalyExporter) Update() {
 	// len(a.anomalies.NssaExternalAnomaly.())
 	// a.gauges["ospf_misconfigured_route_present"].Set(boolToFloat(misCount > 0))
 	// a.alertCounters["ospf_misconfigured_routes_total"].Set(float64(misCount))
+
+	a.logger.WithAttrs(map[string]interface{}{
+		"overadvertised": overCount,
+		"unadvertised":   underCount,
+		"duplicate":      dupCount,
+	}).Debug("Anomaly metrics updated")
 }
 
 func boolToFloat(b bool) float64 {
