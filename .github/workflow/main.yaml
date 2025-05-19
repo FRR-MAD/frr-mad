@@ -2,9 +2,9 @@ name: Feature Branch to Staging Workflow
 
 on:
   push:
-    branches:
-      - 'feature/**'
-      - 'fix/**'
+#    branches:
+#      - 'feature/**'
+#      - 'fix/**'
 
 jobs:
   test:
