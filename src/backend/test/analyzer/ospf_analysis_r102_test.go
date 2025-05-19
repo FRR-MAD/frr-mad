@@ -53,7 +53,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 	}
 
 	// Runtime parsing of router
-	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap, ana.Logger)
 
 	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
@@ -278,7 +278,7 @@ func TestExternalLsaHappy2(t *testing.T) {
 			},
 		},
 	}
-	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualRuntimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
 
 	//TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {

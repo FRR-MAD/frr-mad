@@ -5,13 +5,17 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 )
 
-func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
-	intraAreaLsa := frrProto.IntraAreaLsa{
+func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string, logger *logger.Logger) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
+	logger.Debug("Parsing router LSDB data")
+	start := time.Now()
+
+	intraAreaLsa := &frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
@@ -20,6 +24,12 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 	p2pMap := frrProto.PeerInterfaceMap{
 		PeerInterfaceToAddress: map[string]string{},
 	}
+
+	logger.WithAttrs(map[string]interface{}{
+		"router_id":      config.RouterId,
+		"areas":          len(config.RouterStates),
+		"peer_neighbors": len(peerNeighbor),
+	}).Debug("Starting router LSDB parsing")
 
 	for areaName, routerArea := range config.RouterStates {
 		for lsaName, lsaEntry := range routerArea.LsaEntries {
@@ -89,13 +99,29 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 
 	intraAreaLsa.Hostname = hostname
 
-	return &intraAreaLsa, p2pMap
+	if len(p2pMap.PeerInterfaceToAddress) > 0 {
+		logger.WithAttrs(map[string]interface{}{
+			"p2p_mappings": len(p2pMap.PeerInterfaceToAddress),
+		}).Debug("Created peer interface mappings")
+	}
+
+	logger.WithAttrs(map[string]interface{}{
+		"duration":     time.Since(start).String(),
+		"areas_parsed": len(intraAreaLsa.Areas),
+		"total_links":  countTotalLinks(intraAreaLsa),
+	}).Debug("Completed router LSDB parsing")
+
+	return intraAreaLsa, p2pMap
 }
 
-func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
+func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, logger *logger.Logger) *frrProto.IntraAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping router data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing full router LSDB data")
+	start := time.Now()
 
 	result := &frrProto.IntraAreaLsa{
 		Hostname: hostname,
@@ -128,13 +154,23 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frr
 		}
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":    time.Since(start).String(),
+		"lsas_parsed": len(routerLsdb.Links),
+	}).Debug("Completed full router LSDB parsing")
+
 	return result
 }
 
-func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string) *frrProto.IntraAreaLsa {
+func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string, logger *logger.Logger) *frrProto.IntraAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping network data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing network LSDB data")
+	start := time.Now()
+
 	result := &frrProto.IntraAreaLsa{
 		Hostname: hostname,
 		RouterId: config.RouterId,
@@ -158,14 +194,24 @@ func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string) *f
 		}
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":     time.Since(start).String(),
+		"network_lsas": len(networkLsdb.Links),
+	}).Debug("Completed network LSDB parsing")
+
 	return result
 
 }
 
-func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string) *frrProto.InterAreaLsa {
+func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string, logger *logger.Logger) *frrProto.InterAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping summary data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing summary LSDB data")
+	start := time.Now()
+
 	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
 		RouterId: config.RouterId,
@@ -189,16 +235,25 @@ func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string) *f
 		}
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":     time.Since(start).String(),
+		"summary_lsas": len(summaryLsdb.Links),
+	}).Debug("Completed summary LSDB parsing")
+
 	return result
 }
 
 // lsa type 5 parsing, this will only return static routes, as BGP routes aren't useful in ospf analysis
 // Since AS-external-LSA (type 5) doesn't belong to a specific area,
 // we'll create a single "area" to represent the AS external links
-func GetRuntimeExternalDataSelf(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string) *frrProto.InterAreaLsa {
+func GetRuntimeExternalDataSelf(config *frrProto.OSPFExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string, logger *logger.Logger) *frrProto.InterAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping external data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing self-originated external LSDB data")
+	start := time.Now()
 
 	// TODO: check if redistribute has a route-map and only if compare to route-map lists
 	result := &frrProto.InterAreaLsa{
@@ -228,13 +283,23 @@ func GetRuntimeExternalDataSelf(config *frrProto.OSPFExternalData, staticRouteMa
 		externalArea.Links = append(externalArea.Links, &adv)
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":      time.Since(start).String(),
+		"external_lsas": len(externalArea.Links),
+		"static_routes": len(staticRouteMap),
+	}).Debug("Completed self-originated external LSDB parsing")
+
 	return result
 }
 
-func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string) *frrProto.InterAreaLsa {
+func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string, logger *logger.Logger) *frrProto.InterAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping external data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing all external LSDB data")
+	start := time.Now()
 
 	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
@@ -259,14 +324,23 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string) *
 		externalArea.Links = append(externalArea.Links, &adv)
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":      time.Since(start).String(),
+		"external_lsas": len(externalArea.Links),
+	}).Debug("Completed external LSDB parsing")
+
 	return result
 }
 
 // lsa type 7 parsing
 func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, staticRouteMap map[string]*frrProto.StaticList, hostname string, logger *logger.Logger) *frrProto.InterAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping NSSA external data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing NSSA external LSDB data")
+	start := time.Now()
 
 	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
@@ -306,13 +380,23 @@ func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, staticRouteMap m
 		result.Areas = append(result.Areas, &nssaAreaObj)
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":   time.Since(start).String(),
+		"nssa_areas": len(result.Areas),
+		"nssa_lsas":  countTotalLinksNSSA(result),
+	}).Debug("Completed NSSA external LSDB parsing")
+
 	return result
 }
 
-func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname string) *frrProto.InterAreaLsa {
+func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname string, logger *logger.Logger) *frrProto.InterAreaLsa {
 	if config == nil {
+		logger.Debug("Skipping NSSA external data parsing - nil input")
 		return nil
 	}
+
+	logger.Debug("Parsing all NSSA external LSDB data")
+	start := time.Now()
 
 	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
@@ -339,15 +423,30 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 		}
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"duration":  time.Since(start).String(),
+		"nssa_lsas": len(externalArea.Links),
+	}).Debug("Completed NSSA external LSDB parsing")
+
 	return result
 
 }
 
-func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {
+func GetFIB(rib *frrProto.RoutingInformationBase, logger *logger.Logger) map[string]frrProto.RibPrefixes {
+	if rib == nil {
+		logger.Debug("Skipping FIB parsing - nil RIB input")
+		return nil
+	}
+
+	logger.Debug("Building FIB mapping from RIB")
+	start := time.Now()
 
 	OspfFibMap := map[string]frrProto.RibPrefixes{}
+	ospfCount := 0
+
 	for prefix, routes := range rib.Routes {
 		for _, routeEntry := range routes.Routes {
+			ospfCount++
 			for _, route := range routeEntry.Nexthops {
 				if route.Fib {
 					OspfFibMap[prefix] = frrProto.RibPrefixes{
@@ -360,6 +459,12 @@ func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixe
 			}
 		}
 	}
+
+	logger.WithAttrs(map[string]interface{}{
+		"duration":          time.Since(start).String(),
+		"ospf_routes":       ospfCount,
+		"total_fib_entries": len(OspfFibMap),
+	}).Debug("Completed FIB mapping")
 
 	return OspfFibMap
 }
@@ -376,4 +481,21 @@ func getNetworkAddress(prefix string, prefixLength int32) string {
 
 	return network.String()
 
+}
+
+// Helper functions
+func countTotalLinks(lsa *frrProto.IntraAreaLsa) int {
+	count := 0
+	for _, area := range lsa.Areas {
+		count += len(area.Links)
+	}
+	return count
+}
+
+func countTotalLinksNSSA(lsa *frrProto.InterAreaLsa) int {
+	count := 0
+	for _, area := range lsa.Areas {
+		count += len(area.Links)
+	}
+	return count
 }

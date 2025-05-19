@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
 	if config == nil || config.OspfConfig == nil {
+		a.Logger.Debug("Skipping router data parsing - nil config or OSPF config")
 		return false, nil
 	}
+
+	a.Logger.Debug("Parsing static router configuration")
+	start := time.Now()
 
 	isNssa := false
 
@@ -69,6 +74,11 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		}
 	}
 
+	a.Logger.WithAttrs(map[string]interface{}{
+		"interfaces_processed": len(config.Interfaces),
+		"areas_found":          len(areaMap),
+	}).Debug("Processed interface configurations")
+
 	if config.OspfConfig != nil {
 		for _, ospfArea := range config.OspfConfig.Area {
 			if ospfArea.Type == "" {
@@ -108,6 +118,11 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				areaMap[ospfArea.Name].AreaType = "normal"
 			}
 		}
+
+		a.Logger.WithAttrs(map[string]interface{}{
+			"ospf_areas":     len(config.OspfConfig.Area),
+			"has_nssa_areas": isNssa,
+		}).Debug("Processed OSPF area configurations")
 	}
 
 	for _, a := range areaMap {
@@ -135,14 +150,29 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 
 	// TODO: proto.merge for should state
 
+	a.Logger.WithAttrs(map[string]interface{}{
+		"duration":    time.Since(start).String(),
+		"router_type": result.RouterType,
+		"total_links": countTotalLinks(result),
+	}).Debug("Completed static router configuration parsing")
+
 	return isNssa, result
 }
 
 // GetStaticFileExternalData makes LSA type 5 prediction parsing
 func (a *Analyzer) GetStaticFileExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
+		a.Logger.Debug("Skipping external data parsing - nil config or OSPF config")
 		return nil
 	}
+
+	a.Logger.Debug("Parsing static external route configuration")
+	start := time.Now()
+
+	a.Logger.WithAttrs(map[string]interface{}{
+		"static_routes": len(config.StaticRoutes),
+		"access_lists":  len(accessList),
+	}).Debug("Starting external route analysis")
 
 	result := &frrProto.InterAreaLsa{
 		Hostname: config.Hostname,
@@ -193,16 +223,25 @@ func (a *Analyzer) GetStaticFileExternalData(config *frrProto.StaticFRRConfigura
 		}
 	}
 
+	a.Logger.WithAttrs(map[string]interface{}{
+		"duration":        time.Since(start).String(),
+		"external_routes": len(area.Links),
+		"filtered_routes": len(config.StaticRoutes) - len(area.Links),
+	}).Debug("Completed static external route parsing")
+
 	return result
 
 }
 
 // GetStaticFileNssaExternalData makes LSA type 7 prediction parsing
-// TODO: finish this
 func (a *Analyzer) GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer, staticRouteMap map[string]*frrProto.StaticList) *frrProto.InterAreaLsa {
 	if config == nil || config.OspfConfig == nil {
+		a.Logger.Debug("Skipping NSSA external data parsing - nil config or OSPF config")
 		return nil
 	}
+
+	a.Logger.Debug("Parsing static NSSA external route configuration")
+	start := time.Now()
 
 	result := &frrProto.InterAreaLsa{
 		Hostname: config.Hostname,
@@ -218,6 +257,10 @@ func (a *Analyzer) GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfi
 			break
 		}
 	}
+	a.Logger.WithAttrs(map[string]interface{}{
+		"nssa_area":     nssaAreaID,
+		"static_routes": len(config.StaticRoutes),
+	}).Debug("Starting NSSA external route analysis")
 
 	// Create a single AreaAnalyzer for all routes
 	area := &frrProto.AreaAnalyzer{
@@ -264,6 +307,11 @@ func (a *Analyzer) GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfi
 			}
 		}
 	}
+
+	a.Logger.WithAttrs(map[string]interface{}{
+		"duration":    time.Since(start).String(),
+		"nssa_routes": len(area.Links),
+	}).Debug("Completed static NSSA external route parsing")
 
 	return result
 }
