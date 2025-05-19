@@ -1,7 +1,7 @@
 package styles
 
 import (
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )

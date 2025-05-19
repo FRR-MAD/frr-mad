@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
+	frrProto "github.com/frr-mad/frr-tui/pkg"
 )
 
 func ContainsString(slice []string, s string) bool {

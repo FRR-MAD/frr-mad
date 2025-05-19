@@ -3,7 +3,7 @@ package analyzer_test
 import (
 	"strconv"
 
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertisement, []string) {

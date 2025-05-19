@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
+	"github.com/frr-mad/frr-tui/internal/common"
+	backend "github.com/frr-mad/frr-tui/internal/services"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/protobuf/encoding/protojson"
 )

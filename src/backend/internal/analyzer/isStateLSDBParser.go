@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/logger"
 )
 
 func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
