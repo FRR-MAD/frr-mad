@@ -2,15 +2,15 @@ package ospfMonitoring
 
 import (
 	"fmt"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
-	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-tui/internal/common"
+	backend "github.com/frr-mad/frr-tui/internal/services"
+	"github.com/frr-mad/frr-tui/internal/ui/components"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 
 	"github.com/charmbracelet/lipgloss"
 )

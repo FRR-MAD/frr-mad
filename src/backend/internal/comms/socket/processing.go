@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {

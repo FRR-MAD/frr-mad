@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	frrSocket "github.com/ba2025-ysmprc/frr-mad/src/backend/internal/aggregator/frrsockets"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
+	frrSocket "github.com/frr-mad/frr-mad/src/backend/internal/aggregator/frrsockets"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 type Fetcher struct {

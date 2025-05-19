@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/logger"
 )
 
 func InitAggregator(config configs.AggregatorConfig, logger *logger.Logger) *Collector {

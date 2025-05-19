@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/backend/configs"
-	frrProto "github.com/ba2025-ysmprc/frr-mad/src/backend/pkg"
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
+	"github.com/frr-mad/frr-mad/src/backend/configs"
+	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
+	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

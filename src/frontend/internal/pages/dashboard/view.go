@@ -6,17 +6,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
-	"github.com/ba2025-ysmprc/frr-mad/src/logger"
-	"github.com/ba2025-ysmprc/frr-tui/internal/common"
+	"github.com/frr-mad/frr-mad/src/logger"
+	"github.com/frr-mad/frr-tui/internal/common"
 
 	"strconv"
 
-	backend "github.com/ba2025-ysmprc/frr-tui/internal/services"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/components"
-	"github.com/ba2025-ysmprc/frr-tui/internal/ui/styles"
-	frrProto "github.com/ba2025-ysmprc/frr-tui/pkg"
+	backend "github.com/frr-mad/frr-tui/internal/services"
+	"github.com/frr-mad/frr-tui/internal/ui/components"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	frrProto "github.com/frr-mad/frr-tui/pkg"
 	"github.com/charmbracelet/lipgloss"
 )
 
