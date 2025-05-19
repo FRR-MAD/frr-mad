@@ -11,17 +11,14 @@ import (
 )
 
 func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, *frrProto.PeerInterfaceMap) {
-	if config == nil {
-		return nil, nil
-	}
-
 	result := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
+		Hostname: hostname,
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	// TODO: change to pointer
-	p2pMap := frrProto.PeerInterfaceMap{
+	// TODO
+	p2pMap := &frrProto.PeerInterfaceMap{
 		PeerInterfaceToAddress: map[string]string{},
 	}
 
@@ -91,9 +88,7 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 		}
 	}
 
-	result.Hostname = hostname
-
-	return &result, &p2pMap
+	return &result, p2pMap
 }
 
 func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
@@ -347,14 +342,14 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 
 }
 
-func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {
+func GetFIB(rib *frrProto.RoutingInformationBase) map[string]*frrProto.RibPrefixes {
 
-	OspfFibMap := map[string]frrProto.RibPrefixes{}
+	OspfFibMap := map[string]*frrProto.RibPrefixes{}
 	for prefix, routes := range rib.Routes {
 		for _, routeEntry := range routes.Routes {
 			for _, route := range routeEntry.Nexthops {
 				if route.Fib {
-					OspfFibMap[prefix] = frrProto.RibPrefixes{
+					OspfFibMap[prefix] = &frrProto.RibPrefixes{
 						Prefix:         routeEntry.Prefix,
 						PrefixLength:   strconv.FormatInt(int64(routeEntry.PrefixLen), 10),
 						NextHopAddress: route.Ip,

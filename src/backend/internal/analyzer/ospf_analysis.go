@@ -9,7 +9,7 @@ import (
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
-func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
+func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
 	result := &frrProto.AnomalyDetection{
 		SuperfluousEntries: []*frrProto.Advertisement{},
 		MissingEntries:     []*frrProto.Advertisement{},
@@ -50,6 +50,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, re
 		}
 	}
 
+	a.AnalysisResult.LsdbToRibAnomaly.HasUnAdvertisedPrefixes = result.HasUnAdvertisedPrefixes
 	a.AnalysisResult.LsdbToRibAnomaly.MissingEntries = result.MissingEntries
 
 }
@@ -87,19 +88,39 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 		for i := range area.Links {
 			link := area.Links[i]
 			key := getAdvertisementKey(link)
-			shouldStateMap[key] = &frrProto.Advertisement{
+			adv := &frrProto.Advertisement{
 				InterfaceAddress: link.InterfaceAddress,
 				LinkType:         link.LinkType,
 			}
 			if link.LinkType == strings.ToLower("Stub Network") {
+				shouldStateMap[key] = adv
 				shouldStateMap[key].PrefixLength = link.PrefixLength
+			} else if link.LinkType == strings.ToLower("unknown") {
+				adv.LinkStateId = link.LinkStateId
+				shouldStateMap[link.InterfaceAddress] = adv
+				shouldStateMap[link.LinkStateId] = adv
+				shouldStateMap[link.InterfaceAddress].PrefixLength = link.PrefixLength
+				shouldStateMap[link.LinkStateId].PrefixLength = link.PrefixLength
+			} else {
+				shouldStateMap[key] = adv
 			}
-
 		}
 	}
 
 	for key, shouldLink := range shouldStateMap {
-		if _, exists := isStateMap[key]; !exists {
+		isMissing := false
+		if shouldLink.LinkType == strings.ToLower("unknown") {
+			_, isTransit := isStateMap[shouldLink.LinkStateId]
+			_, isStub := isStateMap[shouldLink.InterfaceAddress]
+			if !isTransit && !isStub {
+				isMissing = true
+			}
+		} else {
+			if _, exists := isStateMap[key]; !exists {
+				isMissing = true
+			}
+		}
+		if isMissing {
 			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
@@ -118,10 +139,8 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 
 	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
-	a.AnalysisResult.RouterAnomaly.HasDuplicatePrefixes = len(result.DuplicateEntries) > 0
 	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
-	a.AnalysisResult.RouterAnomaly.DuplicateEntries = result.DuplicateEntries
 	return isStateMap, shouldStateMap
 
 }

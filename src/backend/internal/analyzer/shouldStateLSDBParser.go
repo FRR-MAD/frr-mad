@@ -81,7 +81,9 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				adv.LinkType = "virtual link"
 
 			} else {
-				adv.LinkType = "transit network"
+				adv.LinkType = "unknown"
+				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
+				adv.LinkStateId = interfaceIpPrefix.IpPrefix.IpAddress
 			}
 
 			areaTmpMap[targetArea] = append(areaTmpMap[targetArea], &adv)
@@ -128,8 +130,6 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 	} else {
 		result.RouterType = "abr"
 	}
-
-	// TODO: proto.merge for should state
 
 	return isNssa, result
 }
