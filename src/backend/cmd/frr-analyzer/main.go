@@ -193,13 +193,6 @@ func (a *FrrMadApp) startApp() {
 			analyzerLogger.SetDebugLevel(a.DebugLevel)
 			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.PollInterval, a.Aggregator)
 
-		case "aggregator":
-			if a.Aggregator == nil {
-				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", a.Config.basis.LogPath))
-				aggregatorLogger.SetDebugLevel(a.DebugLevel)
-				a.Aggregator = startAggregator(a.Config.aggregator, aggregatorLogger, a.PollInterval)
-			}
-
 		case "exporter":
 			if a.Exporter == nil {
 				exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", a.Config.basis.LogPath))

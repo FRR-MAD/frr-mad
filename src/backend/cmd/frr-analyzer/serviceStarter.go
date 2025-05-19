@@ -31,7 +31,7 @@ func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollIn
 	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult)
 
 	metricsExporter.Start()
-	logging.Info("Analyzer service started")
+	logging.Info("Exporter service started")
 	return metricsExporter
 }
 
