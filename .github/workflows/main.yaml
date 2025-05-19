@@ -1,0 +1,15 @@
+name: Feature Branch to Staging Workflow
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
+
+jobs:
+  test:
+    name: Test Feature Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4

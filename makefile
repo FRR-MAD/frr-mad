@@ -8,6 +8,9 @@ PROTO_BACKEND_DEST := src/backend/pkg
 PROTO_TEMPCLIENT_DEST := tempClient/pkg
 PROTO_FRONTEND_DEST := src/frontend/pkg
 
+all:
+	@echo working
+
 .PHONY: run/backend run/backend/local run/backend/prod
 run/backend:
 	@cd $(BACKEND_SRC) && go mod tidy
