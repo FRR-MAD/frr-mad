@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const applicationVersion = "0.9.2"
+const applicationVersion = "0.9.3"
 
 type Service struct {
 	Name   string
@@ -55,6 +55,7 @@ type LoggerService struct {
 
 func main() {
 	var configFile string
+	var example string
 	var rootCmd = &cobra.Command{
 		Use:   os.Args[0],
 		Short: "FRR-MAD application",
@@ -145,6 +146,7 @@ func main() {
 	}
 
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+	startCmd.Flags().StringVarP(&example, "example", "", "", "example")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	testingCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 

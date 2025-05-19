@@ -11,10 +11,9 @@ import (
 
 func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
 	result := &frrProto.AnomalyDetection{
-		HasMisconfiguredPrefixes: false,
-		SuperfluousEntries:       []*frrProto.Advertisement{},
-		MissingEntries:           []*frrProto.Advertisement{},
-		DuplicateEntries:         []*frrProto.Advertisement{},
+		SuperfluousEntries: []*frrProto.Advertisement{},
+		MissingEntries:     []*frrProto.Advertisement{},
+		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
 	lsdbList := []string{}
@@ -61,13 +60,9 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	result := &frrProto.AnomalyDetection{
-		HasUnAdvertisedPrefixes:   false,
-		HasOverAdvertisedPrefixes: false,
-		HasDuplicatePrefixes:      false,
-		HasMisconfiguredPrefixes:  false,
-		SuperfluousEntries:        []*frrProto.Advertisement{},
-		MissingEntries:            []*frrProto.Advertisement{},
-		DuplicateEntries:          []*frrProto.Advertisement{},
+		SuperfluousEntries: []*frrProto.Advertisement{},
+		MissingEntries:     []*frrProto.Advertisement{},
+		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
 	isStateMap := make(map[string]*frrProto.Advertisement)
@@ -131,16 +126,11 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 
 }
 
-func writeBoolTarget(source bool) bool {
-	if source {
-		return source
-	}
-	return false
-}
-
 func getAdvertisementKey(adv *frrProto.Advertisement) string {
 	if adv.LinkType == "transit network" {
 		return normalizeNetworkAddress(adv.InterfaceAddress)
+	} else if strings.Contains(strings.ToLower(adv.LinkType), "virtual link") {
+		return adv.InterfaceAddress + "/32"
 	}
 	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
 }
@@ -153,7 +143,6 @@ func getKeyWithFallback(primary, fallback, prefixLength string) string {
 	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
 }
 
-// 32 is fallback and default
 func normalizePrefixLength(prefixLength string) string {
 	if prefixLength == "" {
 		return "32"

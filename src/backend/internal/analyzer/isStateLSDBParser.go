@@ -10,8 +10,12 @@ import (
 	"github.com/frr-mad/frr-mad/src/logger"
 )
 
-func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
-	intraAreaLsa := frrProto.IntraAreaLsa{
+func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, *frrProto.PeerInterfaceMap) {
+	if config == nil {
+		return nil, nil
+	}
+
+	result := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
@@ -24,9 +28,9 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 	for areaName, routerArea := range config.RouterStates {
 		for lsaName, lsaEntry := range routerArea.LsaEntries {
 			var currentArea *frrProto.AreaAnalyzer
-			for i := range intraAreaLsa.Areas {
-				if intraAreaLsa.Areas[i].AreaName == areaName {
-					currentArea = intraAreaLsa.Areas[i]
+			for i := range result.Areas {
+				if result.Areas[i].AreaName == areaName {
+					currentArea = result.Areas[i]
 					break
 				}
 			}
@@ -37,8 +41,8 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 					LsaType:  lsaEntry.LsaType,
 					Links:    []*frrProto.Advertisement{},
 				}
-				intraAreaLsa.Areas = append(intraAreaLsa.Areas, &newArea)
-				currentArea = intraAreaLsa.Areas[len(intraAreaLsa.Areas)-1]
+				result.Areas = append(result.Areas, &newArea)
+				currentArea = result.Areas[len(result.Areas)-1]
 			}
 
 			for routerName, routerLink := range lsaEntry.RouterLinks {
@@ -87,9 +91,9 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 		}
 	}
 
-	intraAreaLsa.Hostname = hostname
+	result.Hostname = hostname
 
-	return &intraAreaLsa, p2pMap
+	return &result, &p2pMap
 }
 
 func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {

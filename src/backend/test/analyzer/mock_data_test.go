@@ -28,7 +28,15 @@ func getMockData() (map[string]interface{}, *frrProto.FullFRRData, *logger.Logge
 		"key3": true,
 	}
 
-	metrics := &frrProto.FullFRRData{}
+	metrics := &frrProto.FullFRRData{
+		GeneralOspfInformation: &frrProto.GeneralOspfInformation{
+			Areas: map[string]*frrProto.GeneralInfoOspfArea{
+				"0.0.0.0": {
+					Backbone: true,
+				},
+			},
+		},
+	}
 	logger, _ := logger.NewLogger("testing", "/tmp/testing.log")
 
 	return config, metrics, logger
@@ -2648,6 +2656,13 @@ func getR201FRRdata() *frrProto.FullFRRData {
 		OspfRouterData:         ospfRouterData,
 		OspfExternalData:       ospfExternalData,
 		OspfNeighbors:          ospfNeighbors,
+		GeneralOspfInformation: &frrProto.GeneralOspfInformation{
+			Areas: map[string]*frrProto.GeneralInfoOspfArea{
+				"0.0.0.0": {
+					Backbone: true,
+				},
+			},
+		},
 	}
 
 	return metrics

@@ -1,7 +1,6 @@
 package analyzer_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -77,7 +76,6 @@ func TestRouterLsaHappy1(t *testing.T) {
 	})
 
 	isNssa, actualPredictedRouterLSDB := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-
 	ana.RouterAnomalyAnalysisLSDB(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
 
 	t.Run("TestGetAccessList", func(t *testing.T) {
@@ -86,8 +84,6 @@ func TestRouterLsaHappy1(t *testing.T) {
 		for _, v := range actualAccessListKeys {
 			assert.Equal(t, expectedAccessList[v], actualAccessList[v])
 		}
-		fmt.Println(expectedAccessListKeys)
-		fmt.Println(actualAccessListKeys)
 	})
 
 	t.Run("TestGetStaticRouteList", func(t *testing.T) {
@@ -129,21 +125,21 @@ func TestRouterLsaHappy1(t *testing.T) {
 		assert.Equal(t, expectedShouldRouterLSDB.RouterId, actualPredictedRouterLSDB.RouterId)
 		assert.Equal(t, len(expectedPredictedRouterLSDBAreas), len(actualPredictedRouterLSDBAreas))
 		assert.True(t, cmp.Diff(expectedPredictedRouterLSDBAreas, actualPredictedRouterLSDBAreas, cmpopts.SortSlices(less)) == "")
-
+		//
 		for _, key := range expectedPredictedRouterLSDBAreas {
 			assert.Equal(t, expectedPredictedRouterLSDBLsaTypePerArea[key], actualPredictedRouterLSDBLsaTypePerArea[key])
 		}
-
+		//
 		for _, key := range expectedPredictedRouterLSDBAreas {
 			assert.Equal(t, expectedPredictedRouterLSDBLsaTypePerArea[key], actualPredictedRouterLSDBLsaTypePerArea[key])
 		}
-
+		//
 		for _, key := range expectedPredictedRouterLSDBAreas {
 			expectedIfaceMap, expectedIfaceList := getIfaceMap(expectedPredictedRouterLSDBIntPerArea[key])
 			actualIfaceMap, actualIfaceList := getIfaceMap(actualPredictedRouterLSDBIntPerArea[key])
 			assert.Equal(t, len(expectedIfaceList), len(actualIfaceList))
 			assert.True(t, cmp.Diff(expectedIfaceList, actualIfaceList, cmpopts.SortSlices(less)) == "")
-
+			//
 			for _, ifaceKey := range expectedIfaceList {
 				assert.Equal(t, expectedIfaceMap[ifaceKey], actualIfaceMap[ifaceKey])
 			}
