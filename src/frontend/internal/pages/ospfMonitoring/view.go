@@ -461,30 +461,77 @@ func (m *Model) renderRouterMonitorTab() string {
 
 		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", areaID))
 
-		transitTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render("Transit Networks"),
-			styles.H2TwoContentBoxesCenterStyle().Render(transitTable.String()),
-			styles.H2TwoBoxBottomBorderStyle().Render(""),
-		)
-		stubTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render("Stub Networks"),
-			styles.H2TwoContentBoxesCenterStyle().Render(stubTable.String()),
-			styles.H2TwoBoxBottomBorderStyle().Render(""),
-		)
-		point2pointTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render("Point-to-Point Networks"),
-			styles.H2TwoContentBoxesCenterStyle().Render(point2pointTable.String()),
-			styles.H2TwoBoxBottomBorderStyle().Render(""),
-		)
-
-		var verticalTables string
-		if len(transitTableBox) < len(stubTableBox) {
-			verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox)
+		var transitTableBox string
+		if len(transitTableData) != 0 {
+			transitTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("Transit Networks"),
+				styles.H2TwoContentBoxesCenterStyle().Render(transitTable.String()),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
 		} else {
-			verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox)
+			transitTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("NoTransit Networks"),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
 		}
 
-		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
+		var stubTableBox string
+		if len(stubTableData) != 0 {
+			stubTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("Stub Networks"),
+				styles.H2TwoContentBoxesCenterStyle().Render(stubTable.String()),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		} else {
+			stubTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("No Stub Networks"),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		}
+
+		var point2pointTableBox string
+		if len(point2pointTableData) != 0 {
+			point2pointTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("Point-to-Point Networks"),
+				styles.H2TwoContentBoxesCenterStyle().Render(point2pointTable.String()),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		} else {
+			point2pointTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("No Point-to-Point Networks"),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		}
+
+		var verticalTables string
+		var horizontalTables string
+		//if len(transitTableData) != 0 {
+		//	if len(stubTableData) != 0 {
+		//		if len(point2pointTableData) != 0 {
+		//			if len(transitTableBox) < len(stubTableBox) {
+		//				verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox, fmt.Sprintf("t: %q", stubTableData))
+		//				horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, verticalTables, stubTableBox)
+		//			} else {
+		//				verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox, fmt.Sprintf("t2: %q", stubTableData))
+		//				horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
+		//			}
+		//		} else {
+		//			horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, stubTableBox)
+		//		}
+		//	} else {
+		//		horizontalTables = transitTableBox
+		//	}
+		//} else {
+		//	areaHeader = styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s has no OSPF interface", areaID))
+		//}
+
+		if len(transitTableBox) < len(stubTableBox) {
+			verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox)
+			horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, verticalTables, stubTableBox)
+		} else {
+			verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox)
+			horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
+		}
 
 		completeAreaRouterLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, horizontalTables)
 
