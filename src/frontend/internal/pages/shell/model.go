@@ -36,7 +36,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:               "Shell",
 		subTabs:             []string{"bash", "vtysh", "Backend Test"},
-		footer:              []string{"[↑ ↓ home end] scroll", "[enter]: execute command"},
+		footer:              []string{"[↑ ↓ home end] scroll", "[enter] execute command"},
 		readOnlyMode:        true,
 		windowSize:          windowSize,
 		activeShell:         "",
