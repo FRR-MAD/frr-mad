@@ -102,9 +102,9 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		}
 	}
 
-	for _, a := range areaMap {
-		if len(a.Links) > 0 {
-			result.Areas = append(result.Areas, a)
+	for _, area := range areaMap {
+		if len(area.Links) > 0 {
+			result.Areas = append(result.Areas, area)
 		}
 	}
 
