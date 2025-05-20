@@ -74,3 +74,14 @@ func zeroLastOctetString(ipAddress string) string {
 
 	return strings.Join(parts, ".")
 }
+
+func getUnknown(config *frrProto.IntraAreaLsa) bool {
+	for _, area := range config.Areas {
+		for _, link := range area.Links {
+			if link.LinkType == "unknown" && link.LinkStateId == "10.20.12.1" {
+				return true
+			}
+		}
+	}
+	return false
+}
