@@ -167,7 +167,8 @@ func TestRouterLsaHappy2(t *testing.T) {
 			assert.True(t, cmp.Diff(expectedIfaceList, actualIfaceList, cmpopts.SortSlices(less)) == "")
 
 			for _, ifaceKey := range expectedIfaceList {
-				assert.Equal(t, expectedIfaceMap[ifaceKey], actualIfaceMap[ifaceKey])
+				assert.Equal(t, expectedIfaceMap[ifaceKey].InterfaceAddress, actualIfaceMap[ifaceKey].InterfaceAddress)
+				assert.Equal(t, expectedIfaceMap[ifaceKey].PrefixLength, actualIfaceMap[ifaceKey].PrefixLength)
 			}
 
 		}

@@ -133,8 +133,3 @@ func getMockData() (*logger.Logger, *analyzer.Analyzer, *frrProto.FullFRRData, *
 
 	return mockLoggerInstance, mockAnalyzerInstance, mockMetrics, mockParsedAnalyzerdata
 }
-
-// Helper for handling optional string fields
-func stringPtr(s string) *string {
-	return &s
-}

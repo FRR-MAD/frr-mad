@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const applicationVersion = "0.9.2"
+const applicationVersion = "0.9.3"
 
 type Service struct {
 	Name   string
@@ -108,23 +108,6 @@ func main() {
 		},
 	}
 
-	var testingCmd = &cobra.Command{
-		Use:    "testing",
-		Short:  "Run tests on the application",
-		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
-			createdConfiguration(configFile)
-		},
-	}
-
-	var accessCmd = &cobra.Command{
-		Use:    "access",
-		Short:  "Access application data",
-		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
-		},
-	}
-
 	var debugCmd = &cobra.Command{
 		Use:    "debug",
 		Short:  "Run the application in debug mode",
@@ -146,14 +129,11 @@ func main() {
 
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
-	testingCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)
 	rootCmd.AddCommand(restartCmd)
 	rootCmd.AddCommand(reloadCmd)
-	rootCmd.AddCommand(testingCmd)
-	rootCmd.AddCommand(accessCmd)
 	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(versionCmd)
 
