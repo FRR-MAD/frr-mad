@@ -22,13 +22,13 @@ aggregator:
 
 exporter:
   Port: 9091
-  OSPFRouterData: (collector.ospf.router,"Collect OSPF router information metrics",true)
-  OSPFNetworkData: (collector.ospf.network,"Collect OSPF network information metrics",true)
-  OSPFSummaryData: (collector.ospf.summary,"Collect OSPF summary information metrics",true)
-  OSPFAsbrSummaryData: (collector.ospf.asbr-summary,"Collect OSPF ASBR summary information metrics",true)
-  OSPFExternalData: (collector.ospf.external,"Collect OSPF external route information metrics",true)
-  OSPFNssaExternalData: (collector.ospf.nssa-external,"Collect OSPF NSSA external route information metrics",true)
-  OSPFDatabase: (collector.ospf.database,"Collect OSPF database information metrics",true)
-  OSPFNeighbors: (collector.ospf.neighbors,"Collect OSPF neighbor information metrics",true)
-  InterfaceList: (collector.interface.list,"Collect interface list information metrics",true)
-  RouteList: (collector.route.list,"Collect route list information metrics",true)
+  OSPFRouterData: false
+  OSPFNetworkData: true
+  OSPFSummaryData: false
+  OSPFAsbrSummaryData: false
+  OSPFExternalData: false
+  OSPFNssaExternalData: false
+  OSPFDatabase: false
+  OSPFNeighbors: false
+  InterfaceList: false
+  RouteList: true

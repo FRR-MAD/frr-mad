@@ -27,8 +27,8 @@ func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time
 	return detection
 }
 
-func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration, frrData *frrProto.FullFRRData, anomalyResult *frrProto.AnomalyAnalysis) *exporter.Exporter {
-	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult)
+func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollInterval time.Duration, frrData *frrProto.FullFRRData, anomalyResult *frrProto.AnomalyAnalysis, flags map[string]bool) *exporter.Exporter {
+	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult, flags)
 
 	metricsExporter.Start()
 	logging.Info("Analyzer service started")

@@ -19,17 +19,17 @@ func TestMetricExporter_WithData(t *testing.T) {
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
-	flags := map[string]*exporter.ParsedFlag{
-		"OSPFRouterData":       {Enabled: true},
-		"OSPFNetworkData":      {Enabled: true},
-		"OSPFSummaryData":      {Enabled: true},
-		"OSPFAsbrSummaryData":  {Enabled: true},
-		"OSPFExternalData":     {Enabled: true},
-		"OSPFNssaExternalData": {Enabled: true},
-		"OSPFDatabase":         {Enabled: true},
-		"OSPFNeighbors":        {Enabled: true},
-		"InterfaceList":        {Enabled: true},
-		"RouteList":            {Enabled: true},
+	flags := map[string]bool{
+		"OSPFRouterData":       true,
+		"OSPFNetworkData":      true,
+		"OSPFSummaryData":      true,
+		"OSPFAsbrSummaryData":  true,
+		"OSPFExternalData":     true,
+		"OSPFNssaExternalData": true,
+		"OSPFDatabase":         true,
+		"OSPFNeighbors":        true,
+		"InterfaceList":        true,
+		"RouteList":            true,
 	}
 
 	// Create test data
@@ -319,17 +319,17 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Only router, network, external & duplicates are enabled:
-	flags := map[string]*exporter.ParsedFlag{
-		"OSPFRouterData":       {Enabled: true},
-		"OSPFNetworkData":      {Enabled: true},
-		"OSPFSummaryData":      {Enabled: false},
-		"OSPFAsbrSummaryData":  {Enabled: false},
-		"OSPFExternalData":     {Enabled: true},
-		"OSPFNssaExternalData": {Enabled: false},
-		"OSPFDatabase":         {Enabled: false},
-		"OSPFNeighbors":        {Enabled: false},
-		"InterfaceList":        {Enabled: false},
-		"RouteList":            {Enabled: true}, // Enable RouteList for this test
+	flags := map[string]bool{
+		"OSPFRouterData":       true,
+		"OSPFNetworkData":      true,
+		"OSPFSummaryData":      false,
+		"OSPFAsbrSummaryData":  false,
+		"OSPFExternalData":     true,
+		"OSPFNssaExternalData": false,
+		"OSPFDatabase":         false,
+		"OSPFNeighbors":        false,
+		"InterfaceList":        false,
+		"RouteList":            true,
 	}
 
 	// ── Build a COMPLETE FullFRRData payload ─────────────────────────────────────
@@ -505,17 +505,17 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
-	flags := map[string]*exporter.ParsedFlag{
-		"OSPFRouterData":       {Enabled: false},
-		"OSPFNetworkData":      {Enabled: false},
-		"OSPFSummaryData":      {Enabled: false},
-		"OSPFAsbrSummaryData":  {Enabled: false},
-		"OSPFExternalData":     {Enabled: false},
-		"OSPFNssaExternalData": {Enabled: false},
-		"OSPFDatabase":         {Enabled: false},
-		"OSPFNeighbors":        {Enabled: false},
-		"InterfaceList":        {Enabled: false},
-		"RouteList":            {Enabled: false},
+	flags := map[string]bool{
+		"OSPFRouterData":       false,
+		"OSPFNetworkData":      false,
+		"OSPFSummaryData":      false,
+		"OSPFAsbrSummaryData":  false,
+		"OSPFExternalData":     false,
+		"OSPFNssaExternalData": false,
+		"OSPFDatabase":         false,
+		"OSPFNeighbors":        false,
+		"InterfaceList":        false,
+		"RouteList":            false,
 	}
 
 	// Create test data
@@ -574,17 +574,17 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 	assert.NoError(t, err)
 
 	// enable _all_ metrics so flags don't filter us out
-	flags := map[string]*exporter.ParsedFlag{
-		"OSPFRouterData":       {Enabled: true},
-		"OSPFNetworkData":      {Enabled: true},
-		"OSPFSummaryData":      {Enabled: true},
-		"OSPFAsbrSummaryData":  {Enabled: true},
-		"OSPFExternalData":     {Enabled: true},
-		"OSPFNssaExternalData": {Enabled: true},
-		"OSPFDatabase":         {Enabled: true},
-		"OSPFNeighbors":        {Enabled: true},
-		"InterfaceList":        {Enabled: true},
-		"RouteList":            {Enabled: true},
+	flags := map[string]bool{
+		"OSPFRouterData":       true,
+		"OSPFNetworkData":      true,
+		"OSPFSummaryData":      true,
+		"OSPFAsbrSummaryData":  true,
+		"OSPFExternalData":     true,
+		"OSPFNssaExternalData": true,
+		"OSPFDatabase":         true,
+		"OSPFNeighbors":        true,
+		"InterfaceList":        true,
+		"RouteList":            true,
 	}
 
 	tests := []struct {
@@ -835,10 +835,10 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// We'll focus on the three requested data types
-	flags := map[string]*exporter.ParsedFlag{
-		"OSPFRouterData":  {Enabled: true},
-		"OSPFNetworkData": {Enabled: true},
-		"OSPFSummaryData": {Enabled: true},
+	flags := map[string]bool{
+		"OSPFRouterData":  true,
+		"OSPFNetworkData": true,
+		"OSPFSummaryData": true,
 	}
 
 	// Helper function to find metric value

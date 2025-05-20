@@ -21,7 +21,7 @@ func NewMetricExporter(
 	data *frrProto.FullFRRData,
 	registry prometheus.Registerer,
 	logger *logger.Logger,
-	flags map[string]*ParsedFlag,
+	flags map[string]bool,
 ) *MetricExporter {
 	m := &MetricExporter{
 		data:           data,
@@ -50,8 +50,8 @@ func NewMetricExporter(
 	return m
 }
 
-func (m *MetricExporter) initializeRouterMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFRouterData"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeRouterMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFRouterData"]; ok && flag {
 		m.enabledMetrics["router"] = true
 		m.metrics["ospf_router_links"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -63,8 +63,8 @@ func (m *MetricExporter) initializeRouterMetrics(flags map[string]*ParsedFlag) {
 	}
 }
 
-func (m *MetricExporter) initializeNetworkMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFNetworkData"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeNetworkMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFNetworkData"]; ok && flag {
 		m.enabledMetrics["network"] = true
 		m.metrics["ospf_network_attached_routers"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -76,8 +76,8 @@ func (m *MetricExporter) initializeNetworkMetrics(flags map[string]*ParsedFlag) 
 	}
 }
 
-func (m *MetricExporter) initializeSummaryMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFSummaryData"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeSummaryMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFSummaryData"]; ok && flag {
 		m.enabledMetrics["summary"] = true
 		m.metrics["ospf_summary_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -89,8 +89,8 @@ func (m *MetricExporter) initializeSummaryMetrics(flags map[string]*ParsedFlag) 
 	}
 }
 
-func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFAsbrSummaryData"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFAsbrSummaryData"]; ok && flag {
 		m.enabledMetrics["asbr_summary"] = true
 		m.metrics["ospf_asbr_summary_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -102,8 +102,8 @@ func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]*ParsedFl
 	}
 }
 
-func (m *MetricExporter) initializeExternalMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFExternalData"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeExternalMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFExternalData"]; ok && flag {
 		m.enabledMetrics["external"] = true
 		m.metrics["ospf_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -115,8 +115,8 @@ func (m *MetricExporter) initializeExternalMetrics(flags map[string]*ParsedFlag)
 	}
 }
 
-func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFNssaExternalData"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFNssaExternalData"]; ok && flag {
 		m.enabledMetrics["nssa_external"] = true
 		m.metrics["ospf_nssa_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -128,8 +128,8 @@ func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]*ParsedF
 	}
 }
 
-func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFDatabase"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFDatabase"]; ok && flag {
 		m.enabledMetrics["database"] = true
 		m.metrics["ospf_database_counts"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -141,8 +141,8 @@ func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag)
 	}
 }
 
-func (m *MetricExporter) initializeNeighborMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFNeighbors"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeNeighborMetrics(flags map[string]bool) {
+	if flag, ok := flags["OSPFNeighbors"]; ok && flag {
 		m.enabledMetrics["neighbors"] = true
 		m.metrics["ospf_neighbor_state"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -161,8 +161,8 @@ func (m *MetricExporter) initializeNeighborMetrics(flags map[string]*ParsedFlag)
 	}
 }
 
-func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["InterfaceList"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]bool) {
+	if flag, ok := flags["InterfaceList"]; ok && flag {
 		m.enabledMetrics["interfaces"] = true
 		m.metrics["interface_operational_status"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -181,8 +181,8 @@ func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]*ParsedFlag
 	}
 }
 
-func (m *MetricExporter) initializeRouteMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["RouteList"]; ok && flag.Enabled {
+func (m *MetricExporter) initializeRouteMetrics(flags map[string]bool) {
+	if flag, ok := flags["RouteList"]; ok && flag {
 		m.enabledMetrics["routes"] = true
 		m.metrics["installed_ospf_route"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
