@@ -193,123 +193,123 @@ func TestMetricExporter_WithData(t *testing.T) {
 	}
 
 	// Router metrics
-	assert.Equal(t, 3.0, getMetricValue("frr_ospf_router_links_total", map[string]string{
+	assert.Equal(t, 3.0, getMetricValue("frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "1.1.1.1",
 	}))
-	assert.Equal(t, 2.0, getMetricValue("frr_ospf_router_links_total", map[string]string{
+	assert.Equal(t, 2.0, getMetricValue("frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "2.2.2.2",
 	}))
 
 	// Network metrics
-	assert.Equal(t, 2.0, getMetricValue("frr_ospf_network_attached_routers_total", map[string]string{
+	assert.Equal(t, 2.0, getMetricValue("frr_mad_ospf_network_attached_routers_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "192.168.1.1",
 	}))
 
 	// Summary metrics
-	assert.Equal(t, 10.0, getMetricValue("frr_ospf_summary_metric", map[string]string{
+	assert.Equal(t, 10.0, getMetricValue("frr_mad_ospf_summary_metric", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "10.0.0.0",
 	}))
 
 	// ASBR summary metrics
-	assert.Equal(t, 20.0, getMetricValue("frr_ospf_asbr_summary_metric", map[string]string{
+	assert.Equal(t, 20.0, getMetricValue("frr_mad_ospf_asbr_summary_metric", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "3.3.3.3",
 	}))
 
 	// External metrics
-	assert.Equal(t, 30.0, getMetricValue("frr_ospf_external_metric", map[string]string{
+	assert.Equal(t, 30.0, getMetricValue("frr_mad_ospf_external_metric", map[string]string{
 		"link_state_id": "4.4.4.4",
 		"metric_type":   "E2",
 	}))
 
 	// NSSA external metrics
-	assert.Equal(t, 40.0, getMetricValue("frr_ospf_nssa_external_metric", map[string]string{
+	assert.Equal(t, 40.0, getMetricValue("frr_mad_ospf_nssa_external_metric", map[string]string{
 		"area_id":       "0.0.0.1",
 		"link_state_id": "5.5.5.5",
 		"metric_type":   "E1",
 	}))
 
 	// Database metrics
-	assert.Equal(t, 5.0, getMetricValue("frr_ospf_database_lsa_count", map[string]string{
+	assert.Equal(t, 5.0, getMetricValue("frr_mad_ospf_database_lsa_count", map[string]string{
 		"area_id":  "0.0.0.0",
 		"lsa_type": "router",
 	}))
-	assert.Equal(t, 3.0, getMetricValue("frr_ospf_database_lsa_count", map[string]string{
+	assert.Equal(t, 3.0, getMetricValue("frr_mad_ospf_database_lsa_count", map[string]string{
 		"area_id":  "0.0.0.0",
 		"lsa_type": "network",
 	}))
-	assert.Equal(t, 2.0, getMetricValue("frr_ospf_database_lsa_count", map[string]string{
+	assert.Equal(t, 2.0, getMetricValue("frr_mad_ospf_database_lsa_count", map[string]string{
 		"area_id":  "0.0.0.0",
 		"lsa_type": "summary",
 	}))
-	assert.Equal(t, 1.0, getMetricValue("frr_ospf_database_lsa_count", map[string]string{
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_ospf_database_lsa_count", map[string]string{
 		"area_id":  "0.0.0.0",
 		"lsa_type": "asbr_summary",
 	}))
-	assert.Equal(t, 4.0, getMetricValue("frr_ospf_database_lsa_count", map[string]string{
+	assert.Equal(t, 4.0, getMetricValue("frr_mad_ospf_database_lsa_count", map[string]string{
 		"area_id":  "0",
 		"lsa_type": "external",
 	}))
 
 	// Neighbor metrics
-	assert.Equal(t, 1.0, getMetricValue("frr_ospf_neighbor_state", map[string]string{
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_ospf_neighbor_state", map[string]string{
 		"neighbor_id": "7.7.7.7",
 		"interface":   "eth0",
 	}))
-	assert.Equal(t, 0.5, getMetricValue("frr_ospf_neighbor_state", map[string]string{
+	assert.Equal(t, 0.5, getMetricValue("frr_mad_ospf_neighbor_state", map[string]string{
 		"neighbor_id": "8.8.8.8",
 		"interface":   "eth0",
 	}))
-	assert.Equal(t, 60.0, getMetricValue("frr_ospf_neighbor_uptime_seconds", map[string]string{
+	assert.Equal(t, 60.0, getMetricValue("frr_mad_ospf_neighbor_uptime_seconds", map[string]string{
 		"neighbor_id": "7.7.7.7",
 		"interface":   "eth0",
 	}))
-	assert.Equal(t, 30.0, getMetricValue("frr_ospf_neighbor_uptime_seconds", map[string]string{
+	assert.Equal(t, 30.0, getMetricValue("frr_mad_ospf_neighbor_uptime_seconds", map[string]string{
 		"neighbor_id": "8.8.8.8",
 		"interface":   "eth0",
 	}))
 
 	// Interface metrics
-	assert.Equal(t, 1.0, getMetricValue("frr_interface_operational_status", map[string]string{
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_interface_operational_status", map[string]string{
 		"interface": "eth0",
 		"vrf":       "default",
 	}))
-	assert.Equal(t, 0.0, getMetricValue("frr_interface_operational_status", map[string]string{
+	assert.Equal(t, 0.0, getMetricValue("frr_mad_interface_operational_status", map[string]string{
 		"interface": "eth1",
 		"vrf":       "default",
 	}))
-	assert.Equal(t, 1.0, getMetricValue("frr_interface_admin_status", map[string]string{
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_interface_admin_status", map[string]string{
 		"interface": "eth0",
 		"vrf":       "default",
 	}))
-	assert.Equal(t, 1.0, getMetricValue("frr_interface_admin_status", map[string]string{
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_interface_admin_status", map[string]string{
 		"interface": "eth1",
 		"vrf":       "default",
 	}))
 
 	// Route metrics
-	assert.Equal(t, 100.0, getMetricValue("frr_installed_ospf_route", map[string]string{
+	assert.Equal(t, 100.0, getMetricValue("frr_mad_installed_ospf_route", map[string]string{
 		"prefix":   "10.0.0.0/24",
 		"protocol": "ospf",
 		"vrf":      "default",
 	}))
-	assert.Equal(t, 150.0, getMetricValue("frr_installed_ospf_route", map[string]string{
+	assert.Equal(t, 150.0, getMetricValue("frr_mad_installed_ospf_route", map[string]string{
 		"prefix":   "172.16.0.0/16",
 		"protocol": "ospf",
 		"vrf":      "default",
 	}))
-	assert.Equal(t, 50.0, getMetricValue("frr_installed_ospf_route", map[string]string{
+	assert.Equal(t, 50.0, getMetricValue("frr_mad_installed_ospf_route", map[string]string{
 		"prefix":   "10.1.0.0/24",
 		"protocol": "ospf",
 		"vrf":      "vrf1",
 	}))
 
 	// Route count metric
-	assert.Equal(t, 3.0, getUnlabeledMetricValue("frr_installed_ospf_routes_count"))
+	assert.Equal(t, 3.0, getUnlabeledMetricValue("frr_mad_installed_ospf_routes_count"))
 }
 
 func TestMetricExporter_WithPartialData(t *testing.T) {
@@ -466,31 +466,31 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 
 	// ── Assert only the enabled metrics appear ──────────────────────────────────
 	// Router & network & external & route metrics should be present:
-	assert.Equal(t, 3.0, getValue("frr_ospf_router_links_total", map[string]string{
+	assert.Equal(t, 3.0, getValue("frr_mad_ospf_router_links_total", map[string]string{
 		"area_id": "0.0.0.0", "link_state_id": "1.1.1.1",
 	}))
-	assert.Equal(t, 2.0, getValue("frr_ospf_network_attached_routers_total", map[string]string{
+	assert.Equal(t, 2.0, getValue("frr_mad_ospf_network_attached_routers_total", map[string]string{
 		"area_id": "0.0.0.0", "link_state_id": "192.168.1.1",
 	}))
-	assert.Equal(t, 30.0, getValue("frr_ospf_external_metric", map[string]string{
+	assert.Equal(t, 30.0, getValue("frr_mad_ospf_external_metric", map[string]string{
 		"link_state_id": "4.4.4.4", "metric_type": "E2",
 	}))
-	assert.Equal(t, 100.0, getValue("frr_installed_ospf_route", map[string]string{
+	assert.Equal(t, 100.0, getValue("frr_mad_installed_ospf_route", map[string]string{
 		"prefix": "10.0.0.0/24", "protocol": "ospf", "vrf": "default",
 	}))
-	assert.Equal(t, 1.0, getValue("frr_installed_ospf_routes_count", map[string]string{}))
+	assert.Equal(t, 1.0, getValue("frr_mad_installed_ospf_routes_count", map[string]string{}))
 
 	// And every other metric (summary, ASBR, NSSA, DB, neighbors, interfaces)
 	// should NOT be registered:
 	disabled := []string{
-		"frr_ospf_summary_metric",
-		"frr_ospf_asbr_summary_metric",
-		"frr_ospf_nssa_external_metric",
-		"frr_ospf_database_lsa_count",
-		"frr_ospf_neighbor_state",
-		"frr_ospf_neighbor_uptime_seconds",
-		"frr_interface_operational_status",
-		"frr_interface_admin_status",
+		"frr_mad_ospf_summary_metric",
+		"frr_mad_ospf_asbr_summary_metric",
+		"frr_mad_ospf_nssa_external_metric",
+		"frr_mad_ospf_database_lsa_count",
+		"frr_mad_ospf_neighbor_state",
+		"frr_mad_ospf_neighbor_uptime_seconds",
+		"frr_mad_interface_operational_status",
+		"frr_mad_interface_admin_status",
 	}
 	for _, name := range disabled {
 		for _, mf := range metrics {
@@ -542,18 +542,18 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedMetrics := []string{
-		"frr_ospf_router_links_total",
-		"frr_ospf_network_attached_routers_total",
-		"frr_ospf_summary_metric",
-		"frr_ospf_asbr_summary_metric",
-		"frr_ospf_external_metric",
-		"frr_ospf_nssa_external_metric",
-		"frr_ospf_database_lsa_count",
-		"frr_ospf_neighbor_state",
-		"frr_ospf_neighbor_uptime_seconds",
-		"frr_interface_operational_status",
-		"frr_interface_admin_status",
-		"frr_installed_ospf_route",
+		"frr_mad_ospf_router_links_total",
+		"frr_mad_ospf_network_attached_routers_total",
+		"frr_mad_ospf_summary_metric",
+		"frr_mad_ospf_asbr_summary_metric",
+		"frr_mad_ospf_external_metric",
+		"frr_mad_ospf_nssa_external_metric",
+		"frr_mad_ospf_database_lsa_count",
+		"frr_mad_ospf_neighbor_state",
+		"frr_mad_ospf_neighbor_uptime_seconds",
+		"frr_mad_interface_operational_status",
+		"frr_mad_interface_admin_status",
+		"frr_mad_installed_ospf_route",
 	}
 
 	for _, expected := range expectedMetrics {
@@ -619,7 +619,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					"1.1.1.1": {NumOfLinks: 5},
 				}
 			},
-			metricName:   "frr_ospf_router_links_total",
+			metricName:   "frr_mad_ospf_router_links_total",
 			keepLabels:   map[string]string{"area_id": "0.0.0.0", "link_state_id": "1.1.1.1"},
 			keepValue:    3.0,
 			removeLabels: map[string]string{"area_id": "0.0.0.0", "link_state_id": "2.2.2.2"},
@@ -649,7 +649,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					"x": {AttachedRouters: map[string]*frrProto.AttachedRouter{"A": {AttachedRouterId: "A"}}},
 				}
 			},
-			metricName:   "frr_ospf_network_attached_routers_total",
+			metricName:   "frr_mad_ospf_network_attached_routers_total",
 			keepLabels:   map[string]string{"area_id": "0.0.0.0", "link_state_id": "x"},
 			keepValue:    2.0,
 			removeLabels: nil, // nothing to remove by key change
@@ -676,7 +676,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					"X": {Tos0Metric: 11},
 				}
 			},
-			metricName:   "frr_ospf_summary_metric",
+			metricName:   "frr_mad_ospf_summary_metric",
 			keepLabels:   map[string]string{"area_id": "0.0.0.0", "link_state_id": "X"},
 			keepValue:    7.0,
 			removeLabels: map[string]string{"area_id": "0.0.0.0", "link_state_id": "Y"},
@@ -699,7 +699,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					"e1": {Metric: 5, MetricType: "E1"},
 				}
 			},
-			metricName:   "frr_ospf_external_metric",
+			metricName:   "frr_mad_ospf_external_metric",
 			keepLabels:   map[string]string{"link_state_id": "e1", "metric_type": "E1"},
 			keepValue:    4.0,
 			removeLabels: map[string]string{"link_state_id": "e2", "metric_type": "E2"},
@@ -722,7 +722,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					"ifA": {OperationalStatus: "Down", AdministrativeStatus: "Up", VrfName: "vrf"},
 				}
 			},
-			metricName:   "frr_interface_operational_status",
+			metricName:   "frr_mad_interface_operational_status",
 			keepLabels:   map[string]string{"interface": "ifA", "vrf": "vrf"},
 			keepValue:    1.0,
 			removeLabels: map[string]string{"interface": "ifB", "vrf": "vrf"},
@@ -749,7 +749,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 					{Prefix: "p1", Protocol: "ospf", Metric: 15, Installed: true},
 				}
 			},
-			metricName:   "frr_installed_ospf_route",
+			metricName:   "frr_mad_installed_ospf_route",
 			keepLabels:   map[string]string{"prefix": "p1", "protocol": "ospf", "vrf": "vrf"},
 			keepValue:    10.0,
 			removeLabels: nil,
@@ -956,31 +956,31 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 	metrics, err := registry.Gather()
 	assert.NoError(t, err)
 
-	assert.True(t, metricExists(metrics, "frr_ospf_router_links_total", map[string]string{}))
-	assert.Equal(t, 2, countMetrics(metrics, "frr_ospf_router_links_total"), "Should have exactly 2 router metrics")
-	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_ospf_router_links_total", map[string]string{
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_router_links_total", map[string]string{}))
+	assert.Equal(t, 2, countMetrics(metrics, "frr_mad_ospf_router_links_total"), "Should have exactly 2 router metrics")
+	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "1.1.1.1",
 	}))
-	assert.Equal(t, 2.0, getMetricValue(metrics, "frr_ospf_router_links_total", map[string]string{
+	assert.Equal(t, 2.0, getMetricValue(metrics, "frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "2.2.2.2",
 	}))
 
-	assert.True(t, metricExists(metrics, "frr_ospf_network_attached_routers_total", map[string]string{}))
-	assert.Equal(t, 1, countMetrics(metrics, "frr_ospf_network_attached_routers_total"), "Should have exactly 1 network metric")
-	assert.Equal(t, 2.0, getMetricValue(metrics, "frr_ospf_network_attached_routers_total", map[string]string{
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_network_attached_routers_total", map[string]string{}))
+	assert.Equal(t, 1, countMetrics(metrics, "frr_mad_ospf_network_attached_routers_total"), "Should have exactly 1 network metric")
+	assert.Equal(t, 2.0, getMetricValue(metrics, "frr_mad_ospf_network_attached_routers_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "192.168.1.1",
 	}))
 
-	assert.True(t, metricExists(metrics, "frr_ospf_summary_metric", map[string]string{}))
-	assert.Equal(t, 2, countMetrics(metrics, "frr_ospf_summary_metric"), "Should have exactly 2 summary metrics")
-	assert.Equal(t, 10.0, getMetricValue(metrics, "frr_ospf_summary_metric", map[string]string{
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_summary_metric", map[string]string{}))
+	assert.Equal(t, 2, countMetrics(metrics, "frr_mad_ospf_summary_metric"), "Should have exactly 2 summary metrics")
+	assert.Equal(t, 10.0, getMetricValue(metrics, "frr_mad_ospf_summary_metric", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "10.0.0.0",
 	}))
-	assert.Equal(t, 20.0, getMetricValue(metrics, "frr_ospf_summary_metric", map[string]string{
+	assert.Equal(t, 20.0, getMetricValue(metrics, "frr_mad_ospf_summary_metric", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "10.0.1.0",
 	}))
@@ -999,13 +999,13 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 	metrics, err = registry.Gather()
 	assert.NoError(t, err)
 
-	assert.False(t, metricExists(metrics, "frr_ospf_router_links_total", map[string]string{}),
+	assert.False(t, metricExists(metrics, "frr_mad_ospf_router_links_total", map[string]string{}),
 		"Router metrics should not exist when there's no data")
 
-	assert.False(t, metricExists(metrics, "frr_ospf_network_attached_routers_total", map[string]string{}),
+	assert.False(t, metricExists(metrics, "frr_mad_ospf_network_attached_routers_total", map[string]string{}),
 		"Network metrics should not exist when there's no data")
 
-	assert.False(t, metricExists(metrics, "frr_ospf_summary_metric", map[string]string{}),
+	assert.False(t, metricExists(metrics, "frr_mad_ospf_summary_metric", map[string]string{}),
 		"Summary metrics should not exist when there's no data")
 
 	// PART 3: Test with partial data (simulating partial outage)
@@ -1033,19 +1033,19 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 	metrics, err = registry.Gather()
 	assert.NoError(t, err)
 
-	assert.True(t, metricExists(metrics, "frr_ospf_router_links_total", map[string]string{}),
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_router_links_total", map[string]string{}),
 		"Router metrics should exist with partial data")
-	assert.Equal(t, 1, countMetrics(metrics, "frr_ospf_router_links_total"),
+	assert.Equal(t, 1, countMetrics(metrics, "frr_mad_ospf_router_links_total"),
 		"Should have exactly 1 router metric with partial data")
-	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_ospf_router_links_total", map[string]string{
+	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "1.1.1.1",
 	}))
 
-	assert.False(t, metricExists(metrics, "frr_ospf_network_attached_routers_total", map[string]string{}),
+	assert.False(t, metricExists(metrics, "frr_mad_ospf_network_attached_routers_total", map[string]string{}),
 		"Network metrics should not exist with partial data")
 
-	assert.False(t, metricExists(metrics, "frr_ospf_summary_metric", map[string]string{}),
+	assert.False(t, metricExists(metrics, "frr_mad_ospf_summary_metric", map[string]string{}),
 		"Summary metrics should not exist with partial data")
 
 	// PART 4: Test with new data after outage
@@ -1103,31 +1103,31 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 	metrics, err = registry.Gather()
 	assert.NoError(t, err)
 
-	assert.True(t, metricExists(metrics, "frr_ospf_router_links_total", map[string]string{}))
-	assert.Equal(t, 2, countMetrics(metrics, "frr_ospf_router_links_total"), "Should have exactly 2 router metrics")
-	assert.Equal(t, 5.0, getMetricValue(metrics, "frr_ospf_router_links_total", map[string]string{
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_router_links_total", map[string]string{}))
+	assert.Equal(t, 2, countMetrics(metrics, "frr_mad_ospf_router_links_total"), "Should have exactly 2 router metrics")
+	assert.Equal(t, 5.0, getMetricValue(metrics, "frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "3.3.3.3",
 	}))
-	assert.Equal(t, 1.0, getMetricValue(metrics, "frr_ospf_router_links_total", map[string]string{
+	assert.Equal(t, 1.0, getMetricValue(metrics, "frr_mad_ospf_router_links_total", map[string]string{
 		"area_id":       "0.0.0.1",
 		"link_state_id": "4.4.4.4",
 	}))
 
-	assert.True(t, metricExists(metrics, "frr_ospf_network_attached_routers_total", map[string]string{}))
-	assert.Equal(t, 1, countMetrics(metrics, "frr_ospf_network_attached_routers_total"), "Should have exactly 1 network metric")
-	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_ospf_network_attached_routers_total", map[string]string{
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_network_attached_routers_total", map[string]string{}))
+	assert.Equal(t, 1, countMetrics(metrics, "frr_mad_ospf_network_attached_routers_total"), "Should have exactly 1 network metric")
+	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_mad_ospf_network_attached_routers_total", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "172.16.1.1",
 	}))
 
-	assert.True(t, metricExists(metrics, "frr_ospf_summary_metric", map[string]string{}))
-	assert.Equal(t, 2, countMetrics(metrics, "frr_ospf_summary_metric"), "Should have exactly 2 summary metrics")
-	assert.Equal(t, 30.0, getMetricValue(metrics, "frr_ospf_summary_metric", map[string]string{
+	assert.True(t, metricExists(metrics, "frr_mad_ospf_summary_metric", map[string]string{}))
+	assert.Equal(t, 2, countMetrics(metrics, "frr_mad_ospf_summary_metric"), "Should have exactly 2 summary metrics")
+	assert.Equal(t, 30.0, getMetricValue(metrics, "frr_mad_ospf_summary_metric", map[string]string{
 		"area_id":       "0.0.0.0",
 		"link_state_id": "192.168.0.0",
 	}))
-	assert.Equal(t, 15.0, getMetricValue(metrics, "frr_ospf_summary_metric", map[string]string{
+	assert.Equal(t, 15.0, getMetricValue(metrics, "frr_mad_ospf_summary_metric", map[string]string{
 		"area_id":       "0.0.0.1",
 		"link_state_id": "172.16.0.0",
 	}))

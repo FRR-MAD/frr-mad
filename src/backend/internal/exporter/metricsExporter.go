@@ -55,7 +55,7 @@ func (m *MetricExporter) initializeRouterMetrics(flags map[string]*ParsedFlag) {
 		m.enabledMetrics["router"] = true
 		m.metrics["ospf_router_links"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_router_links_total",
+				Name: "frr_mad_ospf_router_links_total",
 				Help: "Number of router interfaces in OSPF",
 			},
 			[]string{"area_id", "link_state_id"},
@@ -68,7 +68,7 @@ func (m *MetricExporter) initializeNetworkMetrics(flags map[string]*ParsedFlag) 
 		m.enabledMetrics["network"] = true
 		m.metrics["ospf_network_attached_routers"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_network_attached_routers_total",
+				Name: "frr_mad_ospf_network_attached_routers_total",
 				Help: "Number of attached routers announced in network LSA",
 			},
 			[]string{"area_id", "link_state_id"},
@@ -81,7 +81,7 @@ func (m *MetricExporter) initializeSummaryMetrics(flags map[string]*ParsedFlag) 
 		m.enabledMetrics["summary"] = true
 		m.metrics["ospf_summary_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_summary_metric",
+				Name: "frr_mad_ospf_summary_metric",
 				Help: "OSPF summary LSA metric",
 			},
 			[]string{"area_id", "link_state_id"},
@@ -94,7 +94,7 @@ func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]*ParsedFl
 		m.enabledMetrics["asbr_summary"] = true
 		m.metrics["ospf_asbr_summary_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_asbr_summary_metric",
+				Name: "frr_mad_ospf_asbr_summary_metric",
 				Help: "OSPF ASBR summary LSA metric",
 			},
 			[]string{"area_id", "link_state_id"},
@@ -107,7 +107,7 @@ func (m *MetricExporter) initializeExternalMetrics(flags map[string]*ParsedFlag)
 		m.enabledMetrics["external"] = true
 		m.metrics["ospf_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_external_metric",
+				Name: "frr_mad_ospf_external_metric",
 				Help: "OSPF external LSA route metric",
 			},
 			[]string{"link_state_id", "metric_type"},
@@ -120,7 +120,7 @@ func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]*ParsedF
 		m.enabledMetrics["nssa_external"] = true
 		m.metrics["ospf_nssa_external_metric"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_nssa_external_metric",
+				Name: "frr_mad_ospf_nssa_external_metric",
 				Help: "OSPF NSSA external LSA route metric",
 			},
 			[]string{"area_id", "link_state_id", "metric_type"},
@@ -133,7 +133,7 @@ func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag)
 		m.enabledMetrics["database"] = true
 		m.metrics["ospf_database_counts"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_database_lsa_count",
+				Name: "frr_mad_ospf_database_lsa_count",
 				Help: "Amount of LSDB entries for each LSA type",
 			},
 			[]string{"area_id", "lsa_type"},
@@ -146,14 +146,14 @@ func (m *MetricExporter) initializeNeighborMetrics(flags map[string]*ParsedFlag)
 		m.enabledMetrics["neighbors"] = true
 		m.metrics["ospf_neighbor_state"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_neighbor_state",
+				Name: "frr_mad_ospf_neighbor_state",
 				Help: "OSPF neighbor state (1=Full, 0.5=2-Way, 0=Down)",
 			},
 			[]string{"neighbor_id", "interface"},
 		)
 		m.metrics["ospf_neighbor_uptime"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_ospf_neighbor_uptime_seconds",
+				Name: "frr_mad_ospf_neighbor_uptime_seconds",
 				Help: "OSPF neighbor uptime in seconds",
 			},
 			[]string{"neighbor_id", "interface"},
@@ -166,14 +166,14 @@ func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]*ParsedFlag
 		m.enabledMetrics["interfaces"] = true
 		m.metrics["interface_operational_status"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_interface_operational_status",
+				Name: "frr_mad_interface_operational_status",
 				Help: "Network interface operational status (1=Up, 0=Down)",
 			},
 			[]string{"interface", "vrf"},
 		)
 		m.metrics["interface_admin_status"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_interface_admin_status",
+				Name: "frr_mad_interface_admin_status",
 				Help: "Network interface administrative status (1=Up, 0=Down)",
 			},
 			[]string{"interface", "vrf"},
@@ -186,14 +186,14 @@ func (m *MetricExporter) initializeRouteMetrics(flags map[string]*ParsedFlag) {
 		m.enabledMetrics["routes"] = true
 		m.metrics["installed_ospf_route"] = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "frr_installed_ospf_route",
+				Name: "frr_mad_installed_ospf_route",
 				Help: "Routing protocol metric for installed ospf routes",
 			},
 			[]string{"prefix", "protocol", "vrf"},
 		)
 		m.metrics["installed_ospf_routes_count"] = prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Name: "frr_installed_ospf_routes_count",
+				Name: "frr_mad_installed_ospf_routes_count",
 				Help: "Number of installed ospf routes from RIB",
 			},
 		)

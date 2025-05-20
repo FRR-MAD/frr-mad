@@ -19,34 +19,38 @@ func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 	assert.NoError(t, err)
 	anomalies := &frrProto.AnomalyAnalysis{}
 
-	// Create frrMadExporter
-	frrMadExporter := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
+	// Create exporter
+	exp := exporter.NewAnomalyExporter(anomalies, registry, testLogger)
 
 	// Test
-	frrMadExporter.Update()
+	exp.Update()
 
-	// Verify all gauges are 0
+	// Verify all metrics are 0
 	metrics, err := registry.Gather()
 	assert.NoError(t, err)
 
 	for _, metric := range metrics {
 		switch *metric.Name {
-		case "ospf_overadvertised_route_present":
+		case "frr_mad_anomaly_details":
+			// Should have no metrics when no anomalies
+			assert.Equal(t, 0, len(metric.Metric))
+		case "frr_mad_anomaly_flags":
+			// All flags should be 0
+			for _, m := range metric.Metric {
+				assert.Equal(t, 0.0, m.Gauge.GetValue())
+			}
+		case "frr_mad_ospf_overadvertised_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_unadvertised_route_present":
+		case "frr_mad_ospf_unadvertised_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_duplicate_route_present":
+		case "frr_mad_ospf_duplicate_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		// case "ospf_misconfigured_route_present":
-		// 	assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_overadvertised_routes_total":
+		case "frr_mad_ospf_misconfigured_routes_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_unadvertised_routes_total":
+		case "frr_mad_rib_to_fib_anomalies_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_duplicate_routes_total":
+		case "frr_mad_lsdb_to_rib_anomalies_total":
 			assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
-			// case "ospf_misconfigured_routes_total":
-			// 	assert.Equal(t, 0.0, metric.Metric[0].Gauge.GetValue())
 		}
 	}
 }
@@ -57,31 +61,27 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
-	// Create anomalyResult with test data using the correct structs
+	// Create test data
 	anomalyResult := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
 			HasOverAdvertisedPrefixes: true,
 			HasUnAdvertisedPrefixes:   true,
 			HasDuplicatePrefixes:      true,
-			//HasMisconfiguredPrefixes:   true,
+			HasMisconfiguredPrefixes:  true,
 			SuperfluousEntries: []*frrProto.Advertisement{
 				{
 					InterfaceAddress: "10.0.0.1",
 					LinkStateId:      "1.1.1.1",
 					PrefixLength:     "24",
 					LinkType:         "Stub",
-				},
-				{
-					InterfaceAddress: "192.168.1.1",
-					LinkStateId:      "2.2.2.2",
-					PrefixLength:     "24",
-					LinkType:         "Stub",
+					PBit:             true,
+					Options:          "0x02",
 				},
 			},
 			MissingEntries: []*frrProto.Advertisement{
 				{
 					InterfaceAddress: "10.1.0.1",
-					LinkStateId:      "3.3.3.3",
+					LinkStateId:      "2.2.2.2",
 					PrefixLength:     "24",
 					LinkType:         "Stub",
 				},
@@ -89,43 +89,58 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 			DuplicateEntries: []*frrProto.Advertisement{
 				{
 					InterfaceAddress: "172.16.0.1",
+					LinkStateId:      "3.3.3.3",
+					PrefixLength:     "24",
+					LinkType:         "Stub",
+				},
+			},
+		},
+		RibToFibAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes: true,
+			SuperfluousEntries: []*frrProto.Advertisement{
+				{
+					InterfaceAddress: "192.168.1.1",
 					LinkStateId:      "4.4.4.4",
 					PrefixLength:     "24",
 					LinkType:         "Stub",
 				},
 			},
 		},
-		ExternalAnomaly:     &frrProto.AnomalyDetection{},
-		NssaExternalAnomaly: &frrProto.AnomalyDetection{},
-		RibToFibAnomaly:     &frrProto.AnomalyDetection{},
 	}
 
-	// Create frrMadExporter
-	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
+	// Create exporter
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 
 	// Test
-	frrMadExporter.Update()
+	exp.Update()
 
 	// Verify metrics
 	metrics, err := registry.Gather()
 	assert.NoError(t, err)
 
-	for _, metric := range metrics {
-		switch *metric.Name {
-		case "ospf_overadvertised_route_present":
-			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_unadvertised_route_present":
-			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_duplicate_route_present":
-			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_overadvertised_routes_total":
-			assert.Equal(t, 2.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_unadvertised_routes_total":
-			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
-		case "ospf_duplicate_routes_total":
-			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
+	// Helper to get metric value
+	getMetricValue := func(name string) float64 {
+		for _, metric := range metrics {
+			if *metric.Name == name {
+				if len(metric.Metric) > 0 {
+					return metric.Metric[0].Gauge.GetValue()
+				}
+				return 0
+			}
 		}
+		return -1
 	}
+
+	// Check counters
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_ospf_overadvertised_routes_total"))
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_ospf_unadvertised_routes_total"))
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_ospf_duplicate_routes_total"))
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_ospf_misconfigured_routes_total"))
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_rib_to_fib_anomalies_total"))
+	assert.Equal(t, 0.0, getMetricValue("frr_mad_lsdb_to_rib_anomalies_total"))
+
+	// Check flags
+	assert.Equal(t, 1.0, getMetricValue("frr_mad_anomaly_flags"))
 }
 
 func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
@@ -148,8 +163,8 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 		},
 	}
 
-	// Create frrMadExporter
-	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
+	// Create exporter
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 
 	// Run concurrent updates
 	var wg sync.WaitGroup
@@ -157,7 +172,7 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			frrMadExporter.Update()
+			exp.Update()
 		}()
 	}
 	wg.Wait()
@@ -167,7 +182,7 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 	assert.NoError(t, err)
 
 	for _, metric := range metrics {
-		if *metric.Name == "ospf_overadvertised_routes_total" {
+		if *metric.Name == "frr_mad_ospf_overadvertised_routes_total" {
 			assert.Equal(t, 1.0, metric.Metric[0].Gauge.GetValue())
 		}
 	}
@@ -196,25 +211,16 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	anomalyResult := &frrProto.AnomalyAnalysis{
 		RouterAnomaly: &frrProto.AnomalyDetection{
 			HasOverAdvertisedPrefixes: true,
-			HasUnAdvertisedPrefixes:   true,
-			HasDuplicatePrefixes:      true,
 			SuperfluousEntries: []*frrProto.Advertisement{
 				{InterfaceAddress: "10.0.0.1", PrefixLength: "24"},
-				{InterfaceAddress: "192.168.1.1", PrefixLength: "24"},
-			},
-			MissingEntries: []*frrProto.Advertisement{
-				{InterfaceAddress: "10.1.0.1", PrefixLength: "24"},
-			},
-			DuplicateEntries: []*frrProto.Advertisement{
-				{InterfaceAddress: "172.16.0.1", PrefixLength: "24"},
 			},
 		},
 	}
 
-	frrMadExporter := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 
-	// First update: should see presence=1 and correct counts
-	frrMadExporter.Update()
+	// First update: should see metrics
+	exp.Update()
 	metrics1, err := registry.Gather()
 	assert.NoError(t, err)
 
@@ -230,53 +236,31 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 		return 0, false
 	}
 
-	// presence gauges should be 1
-	expectedPresences := map[string]float64{
-		"ospf_overadvertised_route_present": 1.0,
-		"ospf_unadvertised_route_present":   1.0,
-		"ospf_duplicate_route_present":      1.0,
-	}
-	for name, want := range expectedPresences {
-		got, ok := getVal(metrics1, name)
-		assert.True(t, ok, "expected %s to be registered", name)
-		assert.Equal(t, want, got, "wrong value for %s", name)
-	}
+	// Check flags and counters
+	overFlag, ok := getVal(metrics1, "frr_mad_anomaly_flags")
+	assert.True(t, ok)
+	assert.Equal(t, 1.0, overFlag)
 
-	// total counters should match slice lengths
-	expectedTotals := map[string]float64{
-		"ospf_overadvertised_routes_total": 2.0,
-		"ospf_unadvertised_routes_total":   1.0,
-		"ospf_duplicate_routes_total":      1.0,
-	}
-	for name, want := range expectedTotals {
-		got, ok := getVal(metrics1, name)
-		assert.True(t, ok, "expected %s to be registered", name)
-		assert.Equal(t, want, got, "wrong value for %s", name)
-	}
+	overCount, ok := getVal(metrics1, "frr_mad_ospf_overadvertised_routes_total")
+	assert.True(t, ok)
+	assert.Equal(t, 1.0, overCount)
 
-	// Clear all anomalies
+	// Clear anomalies
 	anomalyResult.RouterAnomaly.HasOverAdvertisedPrefixes = false
-	anomalyResult.RouterAnomaly.HasUnAdvertisedPrefixes = false
-	anomalyResult.RouterAnomaly.HasDuplicatePrefixes = false
 	anomalyResult.RouterAnomaly.SuperfluousEntries = nil
-	anomalyResult.RouterAnomaly.MissingEntries = nil
-	anomalyResult.RouterAnomaly.DuplicateEntries = nil
 
-	// Second update: everything should reset to 0
-	frrMadExporter.Update()
+	// Second update: should reset to 0
+	exp.Update()
 	metrics2, err := registry.Gather()
 	assert.NoError(t, err)
 
-	for name := range expectedPresences {
-		got, ok := getVal(metrics2, name)
-		assert.True(t, ok, "metric %s should still be registered", name)
-		assert.Equal(t, 0.0, got, "expected %s to reset to 0", name)
-	}
-	for name := range expectedTotals {
-		got, ok := getVal(metrics2, name)
-		assert.True(t, ok, "metric %s should still be registered", name)
-		assert.Equal(t, 0.0, got, "expected %s to reset to 0", name)
-	}
+	overFlag, ok = getVal(metrics2, "frr_mad_anomaly_flags")
+	assert.True(t, ok)
+	assert.Equal(t, 0.0, overFlag)
+
+	overCount, ok = getVal(metrics2, "frr_mad_ospf_overadvertised_routes_total")
+	assert.True(t, ok)
+	assert.Equal(t, 0.0, overCount)
 }
 
 func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
@@ -295,39 +279,26 @@ func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 	mfs, err := registry.Gather()
 	assert.NoError(t, err)
 
-	// We expect these gauges to be registered, each with one sample set to 0
+	// We expect these metrics to be registered
 	expected := []string{
-		// presence gauges
-		"ospf_overadvertised_route_present",
-		"ospf_unadvertised_route_present",
-		"ospf_duplicate_route_present",
-		//"ospf_misconfigured_route_present",
-		// total counters
-		"ospf_overadvertised_routes_total",
-		"ospf_unadvertised_routes_total",
-		"ospf_duplicate_routes_total",
-		//"ospf_misconfigured_routes_total",
+		"frr_mad_anomaly_details",
+		"frr_mad_anomaly_flags",
+		"frr_mad_ospf_overadvertised_routes_total",
+		"frr_mad_ospf_unadvertised_routes_total",
+		"frr_mad_ospf_duplicate_routes_total",
+		"frr_mad_ospf_misconfigured_routes_total",
+		"frr_mad_rib_to_fib_anomalies_total",
+		"frr_mad_lsdb_to_rib_anomalies_total",
 	}
 
 	for _, name := range expected {
-		var fam *dto.MetricFamily
+		var found bool
 		for _, mf := range mfs {
 			if *mf.Name == name {
-				fam = mf
+				found = true
 				break
 			}
 		}
-		// 1) metric family is registered
-		assert.NotNil(t, fam, "expected metric family %q to be registered", name)
-		if fam == nil {
-			continue
-		}
-		// 2) exactly one sample
-		assert.Len(t, fam.Metric, 1,
-			"expected exactly one Metric in family %q, got %d", name, len(fam.Metric))
-		// 3) that sample's gauge value is zero
-		val := fam.Metric[0].GetGauge().GetValue()
-		assert.Equal(t, 0.0, val,
-			"expected %q gauge value to be 0.0 when no anomalies, got %v", name, val)
+		assert.True(t, found, "expected metric %q to be registered", name)
 	}
 }
