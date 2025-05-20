@@ -202,8 +202,10 @@ func H1BadTitleStyle() lipgloss.Style {
 
 func FilterTextStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
-		Padding(0, 0, 0, 1).
-		Background(lipgloss.Color(LightBlue))
+		//Padding(0, 0, 0, 1).
+		Width(WidthBasis).
+		Align(lipgloss.Right)
+	//Background(lipgloss.Color(LightBlue))
 }
 
 var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(NavyBlue)).Background(lipgloss.Color(NormalBeige)).Bold(true)

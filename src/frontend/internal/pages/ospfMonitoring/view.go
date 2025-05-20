@@ -363,7 +363,7 @@ func (m *Model) renderLsdbMonitorTab() string {
 		filterHeader = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
 
-	// filterHeader = styles.FilterTextStyle().Render(filterHeader)
+	filterHeader = styles.FilterTextStyle().Render(filterHeader)
 
 	// Set viewport sizes and assign content to viewport
 	m.viewport.Width = styles.WidthBasis
@@ -570,23 +570,23 @@ func (m *Model) renderRouterMonitorTab() string {
 		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
-	renderedRouterBlocks := lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...)
+	// renderedRouterBlocks := lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...)
 
 	var filterHeader string
 	if m.filterActive {
-		prompt := "Filter: "
-		filterHeader = lipgloss.JoinHorizontal(lipgloss.Left,
-			prompt,
-			m.filterInput.View(),
-		)
+		filterHeader = "Filter: " + m.filterInput.View()
+	} else {
+		filterHeader = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
 
+	filterHeader = styles.FilterTextStyle().Render(filterHeader)
+
 	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterHeaderHeight
 
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, filterHeader, renderedRouterBlocks))
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
 
-	return m.viewport.View()
+	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterHeader)
 }
 
 func (m *Model) renderNetworkMonitorTab() string {
