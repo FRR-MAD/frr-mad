@@ -59,6 +59,27 @@ func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus
 	)
 	registry.MustRegister(a.anomalyFlags)
 
+	// Initialize flag metrics for all sources and flag types to ensure they exist
+	for _, source := range []string{"RouterAnomaly", "ExternalAnomaly", "NssaExternalAnomaly", "RibToFib", "LsdbToRib"} {
+		for _, flag := range []string{"overadvertised", "unadvertised", "duplicate", "misconfigured"} {
+			a.anomalyFlags.WithLabelValues(source, flag).Set(0)
+		}
+	}
+
+	// Create a default detail metric to ensure it exists even when no anomalies are present
+	defaultLabels := prometheus.Labels{
+		"anomaly_type":      "none",
+		"source":            "none",
+		"interface_address": "none",
+		"link_state_id":     "none",
+		"prefix_length":     "none",
+		"link_type":         "none",
+		"p_bit":             "false",
+		"options":           "none",
+	}
+	a.anomalyDetails.With(defaultLabels).Set(0)
+	a.knownLabelSets["default"] = defaultLabels
+
 	counterTypes := []struct {
 		name string
 		help string
@@ -87,6 +108,7 @@ func (a *AnomalyExporter) Update() {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
+	// Reset all existing metrics to zero
 	for _, labels := range a.knownLabelSets {
 		a.anomalyDetails.With(labels).Set(0)
 	}
