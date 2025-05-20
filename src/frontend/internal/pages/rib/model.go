@@ -25,14 +25,17 @@ type Model struct {
 	windowSize        *common.WindowSize
 	viewport          viewport.Model
 	viewportRightHalf viewport.Model
+	textFilter        *common.Filter
 	logger            *logger.Logger
 }
 
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
-	vprh := viewport.New(styles.ViewPortWidthHalf, styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+	vp := viewport.New(styles.ViewPortWidthCompletePage,
+		styles.ViewPortHeightCompletePage-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.ViewPortWidthHalf,
+		styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:             "RIB",

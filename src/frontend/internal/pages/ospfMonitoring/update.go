@@ -10,7 +10,7 @@ import (
 	"sort"
 )
 
-// Update handles incoming messages and updates the dashboard state.
+// Update handles incoming messages and updates the OSPF Monitor state.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var toastCmd tea.Cmd
 	m.toast, toastCmd = m.toast.Update(msg)
@@ -57,17 +57,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+r":
 			m.runningConfig = []string{"Reloading..."}
 			return m, common.FetchRunningConfig(m.logger)
-		case ":":
-			if !m.filterActive {
-				m.filterActive = true
-				m.filterInput.Focus()
-			} else {
-				m.filterActive = false
-				m.filterQuery = ""
-				m.filterInput.SetValue("")
-				m.filterInput.Blur()
-			}
-			return m, nil
 		case "enter":
 			if m.showExportOverlay {
 				if len(m.exportOptions) == 0 {
@@ -126,22 +115,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.showExportOverlay = false
 				return m, nil
 			}
-			if m.filterActive {
-				m.filterActive = false
-				m.filterQuery = ""
-				m.filterInput.SetValue("")
-				m.filterInput.Blur()
-				return m, nil
-			}
 		}
 	case common.RunningConfigMsg:
 		m.runningConfig = common.ShowRunningConfig(string(msg))
-	}
-
-	if m.filterActive {
-		m.filterInput, _ = m.filterInput.Update(msg)
-		m.filterQuery = m.filterInput.Value()
-		return m, nil
 	}
 
 	return m, nil

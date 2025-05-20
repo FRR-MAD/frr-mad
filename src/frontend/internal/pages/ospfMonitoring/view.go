@@ -17,9 +17,10 @@ import (
 
 var currentSubTabLocal = -1
 
-func (m *Model) OSPFView(currentSubTab int, readOnlyMode bool) string {
+func (m *Model) OSPFView(currentSubTab int, readOnlyMode bool, textFilter *common.Filter) string {
 	currentSubTabLocal = currentSubTab
 	m.readOnlyMode = readOnlyMode
+	m.textFilter = textFilter
 	return m.View()
 }
 
@@ -170,11 +171,11 @@ func (m *Model) renderLsdbMonitorTab() string {
 		common.SortTableByIPColumn(nssaExternalLinkStateTableData)
 
 		// apply filters if active
-		routerLinkStateTableData = common.FilterRows(routerLinkStateTableData, m.filterQuery)
-		networkLinkStateTableData = common.FilterRows(networkLinkStateTableData, m.filterQuery)
-		summaryLinkStateTableData = common.FilterRows(summaryLinkStateTableData, m.filterQuery)
-		asbrSummaryLinkStateTableData = common.FilterRows(asbrSummaryLinkStateTableData, m.filterQuery)
-		nssaExternalLinkStateTableData = common.FilterRows(nssaExternalLinkStateTableData, m.filterQuery)
+		routerLinkStateTableData = common.FilterRows(routerLinkStateTableData, m.textFilter.Query)
+		networkLinkStateTableData = common.FilterRows(networkLinkStateTableData, m.textFilter.Query)
+		summaryLinkStateTableData = common.FilterRows(summaryLinkStateTableData, m.textFilter.Query)
+		asbrSummaryLinkStateTableData = common.FilterRows(asbrSummaryLinkStateTableData, m.textFilter.Query)
+		nssaExternalLinkStateTableData = common.FilterRows(nssaExternalLinkStateTableData, m.textFilter.Query)
 
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
@@ -323,7 +324,7 @@ func (m *Model) renderLsdbMonitorTab() string {
 	common.SortTableByIPColumn(asExternalLinkStateTableData)
 
 	// apply filters if active
-	asExternalLinkStateTableData = common.FilterRows(asExternalLinkStateTableData, m.filterQuery)
+	asExternalLinkStateTableData = common.FilterRows(asExternalLinkStateTableData, m.textFilter.Query)
 
 	// Create Table for External Link States and Fill with extracted asExternalLinkStateTableData
 	rowsExternal := len(asExternalLinkStateTableData)
@@ -357,12 +358,11 @@ func (m *Model) renderLsdbMonitorTab() string {
 	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
 
 	var filterBox string
-	if m.filterActive {
-		filterBox = "Filter: " + m.filterInput.View()
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
 	} else {
 		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
-
 	filterBox = styles.FilterTextStyle().Render(filterBox)
 
 	// Set viewport sizes and assign content to viewport
@@ -447,9 +447,9 @@ func (m *Model) renderRouterMonitorTab() string {
 		common.SortTableByIPColumn(point2pointTableData)
 
 		// apply filters if active
-		transitTableData = common.FilterRows(transitTableData, m.filterQuery)
-		stubTableData = common.FilterRows(stubTableData, m.filterQuery)
-		point2pointTableData = common.FilterRows(point2pointTableData, m.filterQuery)
+		transitTableData = common.FilterRows(transitTableData, m.textFilter.Query)
+		stubTableData = common.FilterRows(stubTableData, m.textFilter.Query)
+		point2pointTableData = common.FilterRows(point2pointTableData, m.textFilter.Query)
 
 		rowsTransit := len(transitTableData)
 		transitTable := components.NewOspfMonitorTable(
@@ -573,8 +573,8 @@ func (m *Model) renderRouterMonitorTab() string {
 	// renderedRouterBlocks := lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...)
 
 	var filterBox string
-	if m.filterActive {
-		filterBox = "Filter: " + m.filterInput.View()
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
 	} else {
 		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
@@ -634,7 +634,7 @@ func (m *Model) renderNetworkMonitorTab() string {
 		common.SortTableByIPColumn(networkTableData)
 
 		// apply filters if active
-		networkTableData = common.FilterRows(networkTableData, m.filterQuery)
+		networkTableData = common.FilterRows(networkTableData, m.textFilter.Query)
 
 		rowsNetwork := len(networkTableData)
 		networkTable := components.NewOspfMonitorMultilineTable(
@@ -673,8 +673,8 @@ func (m *Model) renderNetworkMonitorTab() string {
 	}
 
 	var filterBox string
-	if m.filterActive {
-		filterBox = "Filter: " + m.filterInput.View()
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
 	} else {
 		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
@@ -728,7 +728,7 @@ func (m *Model) renderExternalMonitorTab() string {
 	common.SortTableByIPColumn(externalTableData)
 
 	// apply filters if active
-	externalTableData = common.FilterRows(externalTableData, m.filterQuery)
+	externalTableData = common.FilterRows(externalTableData, m.textFilter.Query)
 
 	rowsExternal := len(externalTableData)
 	externalTable := components.NewOspfMonitorTable([]string{
@@ -785,7 +785,7 @@ func (m *Model) renderExternalMonitorTab() string {
 			common.SortTableByIPColumn(nssaExternalTableData)
 
 			// apply filters if active
-			nssaExternalTableData = common.FilterRows(nssaExternalTableData, m.filterQuery)
+			nssaExternalTableData = common.FilterRows(nssaExternalTableData, m.textFilter.Query)
 
 			// create table for NSSA Exernal Link States with extracted data (nssaExternalTableData)
 			rowsNssaExternal := len(nssaExternalTableData)
@@ -836,8 +836,8 @@ func (m *Model) renderExternalMonitorTab() string {
 	}
 
 	var filterBox string
-	if m.filterActive {
-		filterBox = "Filter: " + m.filterInput.View()
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
 	} else {
 		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
@@ -889,7 +889,7 @@ func (m *Model) renderNeighborMonitorTab() string {
 	common.SortTableByIPColumn(ospfNeighborTableData)
 
 	// apply filters if active
-	ospfNeighborTableData = common.FilterRows(ospfNeighborTableData, m.filterQuery)
+	ospfNeighborTableData = common.FilterRows(ospfNeighborTableData, m.textFilter.Query)
 
 	// Create Table for NSSA External Link States and Fill with extracted nssaExternalLinkStateTableData
 	rowsOspfNeighbors := len(ospfNeighborTableData)
@@ -924,8 +924,8 @@ func (m *Model) renderNeighborMonitorTab() string {
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
 
 	var filterBox string
-	if m.filterActive {
-		filterBox = "Filter: " + m.filterInput.View()
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
 	} else {
 		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
 	}
