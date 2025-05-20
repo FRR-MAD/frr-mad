@@ -1,18 +1,11 @@
 package analyzer_test
 
 import (
-	"testing"
-
 	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 )
 
-type AnalyzerConfig struct {
-	Foo string `mapstructure:"foo"`
-}
-
-// is that even needed? Yes.
 func initAnalyzer() *analyzer.Analyzer {
 
 	config, metrics, logger := getMockData()
@@ -1080,10 +1073,6 @@ func getRXXXFRRData() *frrProto.FullFRRData {
 	}
 
 	return metrics
-}
-
-func FoobarTesting(t *testing.T) {
-
 }
 
 func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
@@ -2656,13 +2645,6 @@ func getR201FRRdata() *frrProto.FullFRRData {
 		OspfRouterData:         ospfRouterData,
 		OspfExternalData:       ospfExternalData,
 		OspfNeighbors:          ospfNeighbors,
-		GeneralOspfInformation: &frrProto.GeneralOspfInformation{
-			Areas: map[string]*frrProto.GeneralInfoOspfArea{
-				"0.0.0.0": {
-					Backbone: true,
-				},
-			},
-		},
 	}
 
 	return metrics

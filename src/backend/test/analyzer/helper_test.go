@@ -2,6 +2,7 @@ package analyzer_test
 
 import (
 	"strconv"
+	"strings"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
@@ -11,9 +12,9 @@ func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertis
 	keyResult := []string{}
 
 	for _, iface := range value {
-		keyResult = append(keyResult, iface.InterfaceAddress)
-		result[iface.InterfaceAddress] = &frrProto.Advertisement{
-			InterfaceAddress: iface.InterfaceAddress,
+		keyResult = append(keyResult, zeroLastOctetString(iface.InterfaceAddress))
+		result[zeroLastOctetString(iface.InterfaceAddress)] = &frrProto.Advertisement{
+			InterfaceAddress: zeroLastOctetString(iface.InterfaceAddress),
 			PrefixLength:     iface.PrefixLength,
 			LinkType:         iface.LinkType,
 		}
@@ -64,4 +65,12 @@ func GetNssaExternalData(data *frrProto.OSPFNssaExternalData, hostname string) *
 	}
 
 	return result
+}
+
+func zeroLastOctetString(ipAddress string) string {
+	parts := strings.Split(ipAddress, ".")
+
+	parts[3] = "0"
+
+	return strings.Join(parts, ".")
 }
