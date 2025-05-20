@@ -2,6 +2,12 @@ name: frr01
 
 topology:
   nodes:
+    mon:
+     kind: linux
+     image: registry.gitlab.ost.ch:45023/ins-stud/sa-ba/ba-fs25-frr-monitoring-analytics/frr-deployment/frr854-moni:latest
+     ports:
+       - "3000:3000"   # Grafana UI
+       - "9090:9090"   # Prometheus
     r101:
       kind: linux
       image: frr-854-dev

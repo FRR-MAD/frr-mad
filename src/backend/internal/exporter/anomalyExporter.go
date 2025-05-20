@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"fmt"
 	"sync"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
@@ -9,52 +10,49 @@ import (
 )
 
 type AnomalyExporter struct {
-	anomalies     *frrProto.AnomalyAnalysis
-	activeAlerts  map[string]bool
-	gauges        map[string]prometheus.Gauge
-	alertCounters map[string]prometheus.Gauge
-	logger        *logger.Logger
-	mutex         sync.Mutex
+	anomalies          *frrProto.AnomalyAnalysis
+	activeAlerts       map[string]bool
+	ospfAnomalyDetails *prometheus.GaugeVec
+	alertCounters      map[string]prometheus.Gauge
+	logger             *logger.Logger
+	mutex              sync.Mutex
+	knownLabelSets     map[string]prometheus.Labels
 }
 
 func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus.Registerer, logger *logger.Logger) *AnomalyExporter {
 	a := &AnomalyExporter{
-		anomalies:     anomalies,
-		activeAlerts:  make(map[string]bool),
-		gauges:        make(map[string]prometheus.Gauge),
-		alertCounters: make(map[string]prometheus.Gauge),
-		logger:        logger,
+		anomalies:      anomalies,
+		activeAlerts:   make(map[string]bool),
+		alertCounters:  make(map[string]prometheus.Gauge),
+		logger:         logger,
+		knownLabelSets: make(map[string]prometheus.Labels),
 	}
 
-	// Initialize anomaly presence gauges
-	anomalyTypes := []struct {
-		name string
-		help string
-	}{
-		{"ospf_overadvertised_route_present", "1: overadvertised routes exist, 0: otherwise"},
-		{"ospf_unadvertised_route_present", "1: unadvertised routes exist, 0: otherwise"},
-		{"ospf_duplicate_route_present", "1: duplicate routes exist, 0: otherwise"},
-		{"ospf_misconfigured_route_present", "1: misconfigured routes exist, 0: otherwise"},
-	}
+	a.ospfAnomalyDetails = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "ospf_anomaly_details",
+			Help: "Detailed information about OSPF anomalies (1=present, 0=absent)",
+		},
+		[]string{
+			"anomaly_type",
+			"source",
+			"interface_address",
+			"link_state_id",
+			"prefix_length",
+			"link_type",
+		},
+	)
+	registry.MustRegister(a.ospfAnomalyDetails)
 
-	for _, at := range anomalyTypes {
-		g := prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: at.name,
-			Help: at.help,
-		})
-		registry.MustRegister(g)
-		a.gauges[at.name] = g
-	}
-
-	// Initialize anomaly counters
 	counterTypes := []struct {
 		name string
 		help string
 	}{
-		{"ospf_overadvertised_routes_total", "Total overadvertised routes detected"},
-		{"ospf_unadvertised_routes_total", "Total unadvertised routes detected"},
-		{"ospf_duplicate_routes_total", "Total duplicate routes detected"},
-		{"ospf_misconfigured_routes_total", "Total misconfigured routes detected"},
+		{"ospf_overadvertised_routes_total", "Total overadvertised routes detected across all sources"},
+		{"ospf_unadvertised_routes_total", "Total unadvertised routes detected across all sources"},
+		{"ospf_duplicate_routes_total", "Total duplicate routes detected across all sources"},
+		{"rib_to_fib_anomalies_total", "Total RIB to FIB anomalies detected"},
+		{"lsdb_to_rib_anomalies_total", "Total LSDB to RIB anomalies detected"},
 	}
 
 	for _, ct := range counterTypes {
@@ -73,47 +71,90 @@ func (a *AnomalyExporter) Update() {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
+	for _, labels := range a.knownLabelSets {
+		a.ospfAnomalyDetails.With(labels).Set(0)
+	}
+	a.knownLabelSets = make(map[string]prometheus.Labels)
+
+	for _, counter := range a.alertCounters {
+		counter.Set(0)
+	}
+
 	if a.anomalies == nil {
 		return
 	}
 
-	// Process overadvertised routes
-	overCount :=
-		len(a.anomalies.ExternalAnomaly.GetSuperfluousEntries()) +
-			len(a.anomalies.RouterAnomaly.GetSuperfluousEntries()) +
-			len(a.anomalies.NssaExternalAnomaly.GetSuperfluousEntries())
-	a.gauges["ospf_overadvertised_route_present"].Set(boolToFloat(overCount > 0))
-	a.alertCounters["ospf_overadvertised_routes_total"].Set(float64(overCount))
+	var (
+		totalOver  int
+		totalUnder int
+		totalDup   int
+	)
 
-	// Process unadvertised routes
-	underCount :=
-		len(a.anomalies.RouterAnomaly.GetMissingEntries()) +
-			len(a.anomalies.ExternalAnomaly.GetMissingEntries()) +
-			len(a.anomalies.NssaExternalAnomaly.GetMissingEntries())
-	a.gauges["ospf_unadvertised_route_present"].Set(boolToFloat(underCount > 0))
-	a.alertCounters["ospf_unadvertised_routes_total"].Set(float64(underCount))
+	processSource := func(source string, over, under, dup []*frrProto.Advertisement) {
+		totalOver += len(over)
+		totalUnder += len(under)
+		totalDup += len(dup)
 
-	// Process duplicate routes
-	dupCount :=
-		len(a.anomalies.RouterAnomaly.GetDuplicateEntries()) +
-			len(a.anomalies.ExternalAnomaly.GetDuplicateEntries()) +
-			len(a.anomalies.NssaExternalAnomaly.GetDuplicateEntries())
-	a.gauges["ospf_duplicate_route_present"].Set(boolToFloat(dupCount > 0))
-	a.alertCounters["ospf_duplicate_routes_total"].Set(float64(dupCount))
+		for _, ad := range over {
+			a.setAnomalyDetail("overadvertised", source, ad)
+		}
+		for _, ad := range under {
+			a.setAnomalyDetail("unadvertised", source, ad)
+		}
+		for _, ad := range dup {
+			a.setAnomalyDetail("duplicate", source, ad)
+		}
+	}
 
-	// TODO: not implemented yet
-	// Process misconfigured routes
-	// misCount:=
-	// len(a.anomalies.RouterAnomaly.()) +
-	// len(a.anomalies.ExternalAnomaly.()) +
-	// len(a.anomalies.NssaExternalAnomaly.())
-	// a.gauges["ospf_misconfigured_route_present"].Set(boolToFloat(misCount > 0))
-	// a.alertCounters["ospf_misconfigured_routes_total"].Set(float64(misCount))
+	fmt.Println(a.anomalies.RouterAnomaly)
+
+	processSource("ExternalAnomaly",
+		a.anomalies.ExternalAnomaly.GetSuperfluousEntries(),
+		a.anomalies.ExternalAnomaly.GetMissingEntries(),
+		a.anomalies.ExternalAnomaly.GetDuplicateEntries())
+
+	processSource("RouterAnomaly",
+		a.anomalies.RouterAnomaly.GetSuperfluousEntries(),
+		a.anomalies.RouterAnomaly.GetMissingEntries(),
+		a.anomalies.RouterAnomaly.GetDuplicateEntries())
+
+	processSource("NssaExternalAnomaly",
+		a.anomalies.NssaExternalAnomaly.GetSuperfluousEntries(),
+		a.anomalies.NssaExternalAnomaly.GetMissingEntries(),
+		a.anomalies.NssaExternalAnomaly.GetDuplicateEntries())
+
+	a.alertCounters["ospf_overadvertised_routes_total"].Set(float64(totalOver))
+	a.alertCounters["ospf_unadvertised_routes_total"].Set(float64(totalUnder))
+	a.alertCounters["ospf_duplicate_routes_total"].Set(float64(totalDup))
+
+	// RIB to FIB anomalies
+	if ribToFib := a.anomalies.RibToFibAnomaly; ribToFib != nil {
+		a.alertCounters["rib_to_fib_anomalies_total"].Set(
+			float64(len(ribToFib.GetSuperfluousEntries()) + len(ribToFib.GetMissingEntries())),
+		)
+	}
+
+	// LSDB to RIB anomalies
+	if lsdbToRib := a.anomalies.LsdbToRibAnomaly; lsdbToRib != nil {
+		a.alertCounters["lsdb_to_rib_anomalies_total"].Set(
+			float64(len(lsdbToRib.GetSuperfluousEntries()) + len(lsdbToRib.GetMissingEntries())),
+		)
+	}
 }
 
-func boolToFloat(b bool) float64 {
-	if b {
-		return 1
+func (a *AnomalyExporter) setAnomalyDetail(anomalyType, source string, ad *frrProto.Advertisement) {
+	labels := prometheus.Labels{
+		"anomaly_type":      anomalyType,
+		"source":            source,
+		"interface_address": ad.GetInterfaceAddress(),
+		"link_state_id":     ad.GetLinkStateId(),
+		"prefix_length":     ad.GetPrefixLength(),
+		"link_type":         ad.GetLinkType(),
 	}
-	return 0
+
+	key := anomalyType + source + ad.GetInterfaceAddress() + ad.GetLinkStateId() + ad.GetPrefixLength() + ad.GetLinkType()
+
+	a.knownLabelSets[key] = labels
+
+	a.ospfAnomalyDetails.With(labels).Set(1)
 }
