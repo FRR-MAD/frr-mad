@@ -21,7 +21,7 @@ const (
 	MarginX4                  = 8
 
 	TabRowHeight           = 4
-	FilterHeaderHeight     = 1
+	FilterBoxHeight        = 1
 	FooterHeight           = 1
 	AdditionalFooterHeight = 2
 )
