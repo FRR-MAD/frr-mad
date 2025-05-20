@@ -169,6 +169,13 @@ func (m *Model) renderLsdbMonitorTab() string {
 		common.SortTableByIPColumn(asbrSummaryLinkStateTableData)
 		common.SortTableByIPColumn(nssaExternalLinkStateTableData)
 
+		// apply filters if active
+		routerLinkStateTableData = common.FilterRows(routerLinkStateTableData, m.filterQuery)
+		networkLinkStateTableData = common.FilterRows(networkLinkStateTableData, m.filterQuery)
+		summaryLinkStateTableData = common.FilterRows(summaryLinkStateTableData, m.filterQuery)
+		asbrSummaryLinkStateTableData = common.FilterRows(asbrSummaryLinkStateTableData, m.filterQuery)
+		nssaExternalLinkStateTableData = common.FilterRows(nssaExternalLinkStateTableData, m.filterQuery)
+
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
 		routerLinkStateTable := components.NewOspfMonitorTable(
@@ -312,6 +319,12 @@ func (m *Model) renderLsdbMonitorTab() string {
 		amountOfExternalLS = strconv.Itoa(int(lsdb.AsExternalCount))
 	}
 
+	// Order all Table Data
+	common.SortTableByIPColumn(asExternalLinkStateTableData)
+
+	// apply filters if active
+	asExternalLinkStateTableData = common.FilterRows(asExternalLinkStateTableData, m.filterQuery)
+
 	// Create Table for External Link States and Fill with extracted asExternalLinkStateTableData
 	rowsExternal := len(asExternalLinkStateTableData)
 	asExternalLinkStateTable := components.NewOspfMonitorTable(
@@ -343,13 +356,22 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
 
+	var filterHeader string
+	if m.filterActive {
+		filterHeader = "Filter: " + m.filterInput.View()
+	} else {
+		filterHeader = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+	}
+
+	// filterHeader = styles.FilterTextStyle().Render(filterHeader)
+
 	// Set viewport sizes and assign content to viewport
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterHeaderHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
 
-	return m.viewport.View()
+	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterHeader)
 }
 
 func (m *Model) renderRouterMonitorTab() string {
@@ -423,6 +445,11 @@ func (m *Model) renderRouterMonitorTab() string {
 		common.SortTableByIPColumn(transitTableData)
 		common.SortTableByIPColumn(stubTableData)
 		common.SortTableByIPColumn(point2pointTableData)
+
+		// apply filters if active
+		transitTableData = common.FilterRows(transitTableData, m.filterQuery)
+		stubTableData = common.FilterRows(stubTableData, m.filterQuery)
+		point2pointTableData = common.FilterRows(point2pointTableData, m.filterQuery)
 
 		rowsTransit := len(transitTableData)
 		transitTable := components.NewOspfMonitorTable(
@@ -543,10 +570,21 @@ func (m *Model) renderRouterMonitorTab() string {
 		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
+	renderedRouterBlocks := lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...)
+
+	var filterHeader string
+	if m.filterActive {
+		prompt := "Filter: "
+		filterHeader = lipgloss.JoinHorizontal(lipgloss.Left,
+			prompt,
+			m.filterInput.View(),
+		)
+	}
+
 	m.viewport.Width = styles.ViewPortWidthCompletePage
 	m.viewport.Height = styles.ViewPortHeightCompletePage
 
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
+	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, filterHeader, renderedRouterBlocks))
 
 	return m.viewport.View()
 }

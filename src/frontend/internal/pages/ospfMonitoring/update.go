@@ -4,9 +4,9 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
-	tea "github.com/charmbracelet/bubbletea"
 	"sort"
 )
 
@@ -57,6 +57,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "r":
 			m.runningConfig = []string{"Reloading..."}
 			return m, common.FetchRunningConfig(m.logger)
+		case ":":
+			m.filterActive = true
+			m.filterInput.Focus()
+			return m, nil
 		case "enter":
 			if m.showExportOverlay {
 				if len(m.exportOptions) == 0 {
@@ -115,9 +119,22 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.showExportOverlay = false
 				return m, nil
 			}
+			if m.filterActive {
+				m.filterActive = false
+				m.filterQuery = ""
+				m.filterInput.Blur()
+				return m, nil
+			}
 		}
 	case common.RunningConfigMsg:
 		m.runningConfig = common.ShowRunningConfig(string(msg))
 	}
+
+	if m.filterActive {
+		m.filterInput, _ = m.filterInput.Update(msg)
+		m.filterQuery = m.filterInput.Value()
+		return m, nil
+	}
+
 	return m, nil
 }

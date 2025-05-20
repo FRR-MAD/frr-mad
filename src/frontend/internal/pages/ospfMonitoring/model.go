@@ -1,6 +1,7 @@
 package ospfMonitoring
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -24,6 +25,9 @@ type Model struct {
 	runningConfig     []string
 	expandedMode      bool // TODO: not used
 	showExportOverlay bool
+	filterQuery       string
+	filterActive      bool
+	filterInput       textinput.Model
 	windowSize        *common.WindowSize
 	viewport          viewport.Model
 	viewportRightHalf viewport.Model
@@ -34,8 +38,16 @@ type Model struct {
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
-	vprh := viewport.New(styles.ViewPortWidthHalf, styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+	vp := viewport.New(styles.ViewPortWidthCompletePage,
+		styles.ViewPortHeightCompletePage-styles.FilterHeaderHeight)
+	vprh := viewport.New(styles.ViewPortWidthHalf,
+		styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+
+	// Create the text input for the filter
+	ti := textinput.New()
+	ti.Placeholder = "type to filter..."
+	ti.CharLimit = 64
+	ti.Width = 20
 
 	return &Model{
 		title: "OSPF Monitoring",
@@ -51,6 +63,9 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		runningConfig:     []string{"Fetching running config..."},
 		expandedMode:      false,
 		showExportOverlay: false,
+		filterActive:      false,
+		filterQuery:       "",
+		filterInput:       ti,
 		windowSize:        windowSize,
 		viewport:          vp,
 		viewportRightHalf: vprh,
