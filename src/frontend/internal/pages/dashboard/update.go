@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/frr-mad/frr-tui/internal/common"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/frr-mad/frr-tui/internal/common"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -20,8 +20,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "r":
-			m.ospfAnomalies = append(m.ospfAnomalies, "Reloading...")
 		case "up":
 			if m.showAnomalyOverlay {
 				m.viewport.LineUp(10)
@@ -107,11 +105,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				)
 			}
 			return m, nil
-		case "a":
+		case "ctrl+a":
 			if !m.showExportOverlay {
 				m.showAnomalyOverlay = !m.showAnomalyOverlay
 			}
-		case "e":
+		case "ctrl+e":
 			if !m.showAnomalyOverlay {
 				if m.showExportOverlay {
 					m.toast = toast.New()
@@ -138,8 +136,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-	case common.OSPFMsg:
-		m.ospfAnomalies = common.DetectOSPFAnomalies(string(msg))
 	case common.ReloadMessage:
 		m.currentTime = time.Time(msg)
 		return m, reloadView()

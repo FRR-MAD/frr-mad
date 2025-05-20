@@ -23,7 +23,6 @@ type Model struct {
 	exportOptions      []common.ExportOption
 	exportData         map[string]string
 	exportDirectory    string
-	ospfAnomalies      []string // to be deleted
 	hasAnomalyDetected bool
 	showAnomalyOverlay bool
 	showExportOverlay  bool
@@ -46,14 +45,13 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	return &Model{
 		title:              "Dashboard",
-		subTabs:            []string{"OSPF", "BGP"},
-		footer:             []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll", "[a] anomaly details"},
+		subTabs:            []string{"OSPF"},
+		footer:             []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options", "[ctrl+a] anomaly details"},
 		readOnlyMode:       true,
 		cursor:             0,
 		exportOptions:      []common.ExportOption{},
 		exportData:         make(map[string]string),
 		exportDirectory:    "/tmp/frr-mad/exports",
-		ospfAnomalies:      []string{"Fetching OSPF data..."},
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
 		showExportOverlay:  false,

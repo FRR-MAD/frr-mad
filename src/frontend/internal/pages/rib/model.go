@@ -37,7 +37,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	return &Model{
 		title:             "RIB",
 		subTabs:           []string{"RIB", "FIB", "RIB-OSPF", "RIB-BGP", "RIB-Connected", "RIB-Static"},
-		footer:            []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll"},
+		footer:            []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options"},
 		readOnlyMode:      true,
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},

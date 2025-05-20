@@ -73,7 +73,7 @@ func RenderExportOptions(
 		"[Tab Shift+Tab] move selection down/up one option | " +
 		"[↑ ↓ home end] scroll preview | " +
 		"[enter] export current selection | " +
-		"[e] quit export options")
+		"[ctrl+e] quit export options")
 
 	// final horizontal layout
 	return lipgloss.JoinVertical(lipgloss.Left,

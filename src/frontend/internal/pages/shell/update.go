@@ -86,14 +86,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "ctrl+w":
 			m.ClearInput()
-		//case "w":
-		//	err := common.CopyToClipboard(m.backendResponse)
-		//	if err != nil {
-		//		// m.statusMsg = "Clipboard error: " + err.Error()
-		//	} else {
-		//		// m.statusMsg = "Copied response to clipboard!"
-		//	}
-		//	m.showRawOutput = !m.showRawOutput
 
 		default:
 			if currentSubTabLocal == 0 {

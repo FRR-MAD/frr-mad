@@ -54,12 +54,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = (m.cursor - 1 + len(m.exportOptions)) % len(m.exportOptions)
 				m.viewportRightHalf.GotoTop()
 			}
-		case "r":
+		case "ctrl+r":
 			m.runningConfig = []string{"Reloading..."}
 			return m, common.FetchRunningConfig(m.logger)
 		case ":":
-			m.filterActive = true
-			m.filterInput.Focus()
+			if !m.filterActive {
+				m.filterActive = true
+				m.filterInput.Focus()
+			} else {
+				m.filterActive = false
+				m.filterQuery = ""
+				m.filterInput.SetValue("")
+				m.filterInput.Blur()
+			}
 			return m, nil
 		case "enter":
 			if m.showExportOverlay {
@@ -99,7 +106,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, common.FetchRunningConfig(m.logger)
 
 			}
-		case "e":
+		case "ctrl+e":
 			if m.showExportOverlay {
 				m.toast = toast.New()
 			} else {
@@ -122,6 +129,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.filterActive {
 				m.filterActive = false
 				m.filterQuery = ""
+				m.filterInput.SetValue("")
 				m.filterInput.Blur()
 				return m, nil
 			}
