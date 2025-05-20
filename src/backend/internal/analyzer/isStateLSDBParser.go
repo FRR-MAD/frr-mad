@@ -45,12 +45,12 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 			for routerName, routerLink := range lsaEntry.RouterLinks {
 				var ipAddress, prefixLength string
 				isStub := false
-				if strings.EqualFold(routerLink.LinkType, "Stub Network") {
+				if strings.Contains(strings.ToLower(routerLink.LinkType), "stub network") {
 					routerLink.LinkType = "stub network"
 					ipAddress = routerLink.NetworkAddress
 					isStub = true
 					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-				} else if strings.EqualFold(routerLink.LinkType, "a Transit Network") {
+				} else if strings.Contains(strings.ToLower(routerLink.LinkType), "transit network") {
 					routerLink.LinkType = "transit network"
 					ipAddress = routerLink.RouterInterfaceAddress
 				} else {
