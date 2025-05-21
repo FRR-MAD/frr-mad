@@ -29,7 +29,7 @@ func (m *Model) View() string {
 	var bodyFooter string
 	var content string
 
-	var statusBar bool
+	statusBar := true
 
 	if m.showExportOverlay {
 		content = components.RenderExportOptions(
@@ -42,25 +42,19 @@ func (m *Model) View() string {
 		switch currentSubTabLocal {
 		case 0:
 			body = m.renderLsdbMonitorTab()
-			statusBar = true
 		case 1:
 			body = m.renderRouterMonitorTab()
-			statusBar = true
 		case 2:
 			body = m.renderNetworkMonitorTab()
-			statusBar = true
 		case 3:
 			body = m.renderExternalMonitorTab()
-			statusBar = true
 		case 4:
 			body = m.renderNeighborMonitorTab()
-			statusBar = true
 		case 5:
 			body = m.renderRunningConfigTab()
 			statusBar = false
 		default:
 			body = m.renderLsdbMonitorTab()
-			statusBar = true
 		}
 
 		if statusBar {
@@ -72,8 +66,11 @@ func (m *Model) View() string {
 			}
 			filterBox = styles.FilterTextStyle().Render(filterBox)
 
-			styles.SetStatusSeverity(m.statusSeverity)
-			statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+			statusMessage := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
+			if m.statusMessage != "" {
+				styles.SetStatusSeverity(m.statusSeverity)
+				statusMessage = styles.StatusTextStyle().Render(m.statusMessage)
+			}
 
 			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusMessage, filterBox)
 
@@ -691,6 +688,9 @@ func (m *Model) renderNetworkMonitorTab() string {
 }
 
 func (m *Model) renderExternalMonitorTab() string {
+	m.statusSeverity = styles.SeverityInfo
+	m.statusMessage = ""
+
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
 

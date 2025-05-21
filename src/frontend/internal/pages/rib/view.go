@@ -25,9 +25,13 @@ func (m *Model) RibView(currentSubTab int, readOnlyMode bool, textFilter *common
 
 func (m *Model) View() string {
 	var body string
+	var bodyFooter string
+	var content string
+
+	statusBar := true
 
 	if m.showExportOverlay {
-		body = components.RenderExportOptions(
+		content = components.RenderExportOptions(
 			m.exportOptions,
 			m.exportData,
 			&m.cursor,
@@ -50,11 +54,33 @@ func (m *Model) View() string {
 		default:
 			body = m.renderRibTab()
 		}
+
+		if statusBar {
+			var filterBox string
+			if m.textFilter.Active {
+				filterBox = "Filter: " + m.textFilter.Input.View()
+			} else {
+				filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+			}
+			filterBox = styles.FilterTextStyle().Render(filterBox)
+
+			statusMessage := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
+			if m.statusMessage != "" {
+				styles.SetStatusSeverity(m.statusSeverity)
+				statusMessage = styles.StatusTextStyle().Render(m.statusMessage)
+			}
+
+			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusMessage, filterBox)
+
+			content = lipgloss.JoinVertical(lipgloss.Left, body, bodyFooter)
+		} else {
+			content = body
+		}
 	}
 
 	toastView := m.toast.View()
 	if toastView == "" {
-		return body
+		return content
 	}
 
 	totalW := styles.WidthBasis
@@ -62,10 +88,13 @@ func (m *Model) View() string {
 	x := 0
 	y := 0
 
-	return toast.Overlay(body, toastView, x, y, totalW, totalH)
+	return toast.Overlay(content, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderRibTab() string {
+	m.statusSeverity = styles.SeverityError
+	m.statusMessage = "You opened RIB Tab"
+
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
@@ -154,14 +183,6 @@ func (m *Model) renderRibTab() string {
 	// -3 (table Header) -2 (box border bottom style)
 	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
 	// Set only the body into the viewport
 	m.viewport.SetContent(
 		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
@@ -171,10 +192,13 @@ func (m *Model) renderRibTab() string {
 
 	// Render complete view
 	completeRIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return lipgloss.JoinVertical(lipgloss.Left, completeRIBTab, filterBox)
+	return completeRIBTab
 }
 
 func (m *Model) renderFibTab() string {
+	m.statusSeverity = styles.SeverityInfo
+	m.statusMessage = "You opened FIB Tab"
+
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
@@ -271,14 +295,6 @@ func (m *Model) renderFibTab() string {
 	// -3 (table Header) -2 (box border bottom style)
 	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
 	// Set only the body into the viewport
 	m.viewport.SetContent(
 		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
@@ -286,12 +302,15 @@ func (m *Model) renderFibTab() string {
 
 	boxBottomBorder := styles.H1OneSmallBoxBottomBorderStyle().Render("")
 
-	// Render complete view
 	completeFIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return lipgloss.JoinVertical(lipgloss.Left, completeFIBTab, filterBox)
+
+	return completeFIBTab
 }
 
 func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
+	m.statusSeverity = styles.SeverityWarning
+	m.statusMessage = "You opened a Partial RIB Tab"
+
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
@@ -394,14 +413,6 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	// -3 (table Header) -2 (box border bottom style)
 	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
 	// Set only the body into the viewport
 	m.viewport.SetContent(
 		styles.H2OneContentBoxCenterStyle().Render(bodyContent),
@@ -411,5 +422,5 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 
 	// Render complete view
 	completePartialRIBRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return lipgloss.JoinVertical(lipgloss.Left, completePartialRIBRoutesTab, filterBox)
+	return completePartialRIBRoutesTab
 }

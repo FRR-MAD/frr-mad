@@ -26,6 +26,8 @@ type Model struct {
 	viewport          viewport.Model
 	viewportRightHalf viewport.Model
 	textFilter        *common.Filter
+	statusMessage     string
+	statusSeverity    styles.StatusSeverity
 	logger            *logger.Logger
 }
 
@@ -50,6 +52,8 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		windowSize:        windowSize,
 		viewport:          vp,
 		viewportRightHalf: vprh,
+		statusMessage:     "",
+		statusSeverity:    styles.SeverityInfo,
 		logger:            appLogger,
 	}
 }
