@@ -537,25 +537,6 @@ func (m *Model) renderRouterMonitorTab() string {
 
 		var verticalTables string
 		var horizontalTables string
-		//if len(transitTableData) != 0 {
-		//	if len(stubTableData) != 0 {
-		//		if len(point2pointTableData) != 0 {
-		//			if len(transitTableBox) < len(stubTableBox) {
-		//				verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox, fmt.Sprintf("t: %q", stubTableData))
-		//				horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, verticalTables, stubTableBox)
-		//			} else {
-		//				verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox, fmt.Sprintf("t2: %q", stubTableData))
-		//				horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
-		//			}
-		//		} else {
-		//			horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, stubTableBox)
-		//		}
-		//	} else {
-		//		horizontalTables = transitTableBox
-		//	}
-		//} else {
-		//	areaHeader = styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s has no OSPF interface", areaID))
-		//}
 
 		if len(transitTableBox) < len(stubTableBox) {
 			verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox)
