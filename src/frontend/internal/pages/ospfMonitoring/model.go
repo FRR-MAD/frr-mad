@@ -1,13 +1,13 @@
 package ospfMonitoring
 
 import (
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Model defines the state for the dashboard page.
@@ -15,6 +15,7 @@ type Model struct {
 	title             string
 	subTabs           []string
 	footer            []string
+	readOnlyMode      bool
 	toast             toast.Model
 	cursor            int
 	exportOptions     []common.ExportOption
@@ -23,6 +24,7 @@ type Model struct {
 	runningConfig     []string
 	expandedMode      bool // TODO: not used
 	showExportOverlay bool
+	textFilter        *common.Filter
 	windowSize        *common.WindowSize
 	viewport          viewport.Model
 	viewportRightHalf viewport.Model
@@ -33,15 +35,18 @@ type Model struct {
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
-	vprh := viewport.New(styles.ViewPortWidthHalf, styles.ViewPortHeightCompletePage-styles.HeightH1)
+	vp := viewport.New(styles.ViewPortWidthCompletePage,
+		styles.ViewPortHeightCompletePage-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.ViewPortWidthHalf,
+		styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title: "OSPF Monitoring",
 		// 'Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
 		subTabs:           []string{"LSDB", "Router LSAs", "Network LSAs", "External LSAs", "Neighbors", "Running Config"},
-		footer:            []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll", "[e] export OSPF data"},
+		footer:            []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options", "[ctrl+r] refresh"},
+		readOnlyMode:      true,
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),

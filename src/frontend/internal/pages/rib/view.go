@@ -7,17 +7,19 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/components"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var currentSubTabLocal = -1
 
-func (m *Model) RibView(currentSubTab int) string {
+func (m *Model) RibView(currentSubTab int, readOnlyMode bool, textFilter *common.Filter) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
+	m.textFilter = textFilter
 	return m.View()
 }
 
@@ -117,6 +119,9 @@ func (m *Model) renderRibTab() string {
 		}
 	}
 
+	// apply filters if active
+	ribTableData = common.FilterRows(ribTableData, m.textFilter.Query)
+
 	rowsRIB := len(ribTableData)
 	ribTable := components.NewRibMonitorTable(rowsRIB)
 	for _, r := range ribTableData {
@@ -147,7 +152,15 @@ func (m *Model) renderRibTab() string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+
+	var filterBox string
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
+	} else {
+		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+	}
+	filterBox = styles.FilterTextStyle().Render(filterBox)
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -158,7 +171,7 @@ func (m *Model) renderRibTab() string {
 
 	// Render complete view
 	completeRIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return completeRIBTab
+	return lipgloss.JoinVertical(lipgloss.Left, completeRIBTab, filterBox)
 }
 
 func (m *Model) renderFibTab() string {
@@ -223,6 +236,9 @@ func (m *Model) renderFibTab() string {
 		}
 	}
 
+	// apply filters if active
+	fibTableData = common.FilterRows(fibTableData, m.textFilter.Query)
+
 	rowsFIB := len(fibTableData)
 	fibTable := components.NewRibMonitorTable(rowsFIB)
 	for _, r := range fibTableData {
@@ -253,7 +269,15 @@ func (m *Model) renderFibTab() string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+
+	var filterBox string
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
+	} else {
+		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+	}
+	filterBox = styles.FilterTextStyle().Render(filterBox)
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -264,7 +288,7 @@ func (m *Model) renderFibTab() string {
 
 	// Render complete view
 	completeFIBTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return completeFIBTab
+	return lipgloss.JoinVertical(lipgloss.Left, completeFIBTab, filterBox)
 }
 
 func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
@@ -335,6 +359,9 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 		}
 	}
 
+	// apply filters if active
+	partialRIBRoutesTableData = common.FilterRows(partialRIBRoutesTableData, m.textFilter.Query)
+
 	rowsPartialRIBRoutesRIB := len(partialRIBRoutesTableData)
 	partialRIBRoutesTable := components.NewRibMonitorTable(rowsPartialRIBRoutesRIB)
 	for _, r := range partialRIBRoutesTableData {
@@ -365,7 +392,15 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2
+	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+
+	var filterBox string
+	if m.textFilter.Active {
+		filterBox = "Filter: " + m.textFilter.Input.View()
+	} else {
+		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+	}
+	filterBox = styles.FilterTextStyle().Render(filterBox)
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -376,5 +411,5 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 
 	// Render complete view
 	completePartialRIBRoutesTab := lipgloss.JoinVertical(lipgloss.Left, headers, m.viewport.View(), boxBottomBorder)
-	return completePartialRIBRoutesTab
+	return lipgloss.JoinVertical(lipgloss.Left, completePartialRIBRoutesTab, filterBox)
 }

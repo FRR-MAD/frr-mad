@@ -1,12 +1,12 @@
 package rib
 
 import (
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
-	"github.com/charmbracelet/bubbles/viewport"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -15,6 +15,7 @@ type Model struct {
 	title             string
 	subTabs           []string
 	footer            []string
+	readOnlyMode      bool
 	toast             toast.Model
 	cursor            int
 	exportOptions     []common.ExportOption
@@ -24,19 +25,23 @@ type Model struct {
 	windowSize        *common.WindowSize
 	viewport          viewport.Model
 	viewportRightHalf viewport.Model
+	textFilter        *common.Filter
 	logger            *logger.Logger
 }
 
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
-	vprh := viewport.New(styles.ViewPortWidthHalf, styles.ViewPortHeightCompletePage-styles.HeightH1)
+	vp := viewport.New(styles.ViewPortWidthCompletePage,
+		styles.ViewPortHeightCompletePage-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.ViewPortWidthHalf,
+		styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:             "RIB",
 		subTabs:           []string{"RIB", "FIB", "RIB-OSPF", "RIB-BGP", "RIB-Connected", "RIB-Static"},
-		footer:            []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll"},
+		footer:            []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options"},
+		readOnlyMode:      true,
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),

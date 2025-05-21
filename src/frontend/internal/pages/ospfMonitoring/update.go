@@ -4,13 +4,13 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
-	tea "github.com/charmbracelet/bubbletea"
 	"sort"
 )
 
-// Update handles incoming messages and updates the dashboard state.
+// Update handles incoming messages and updates the OSPF Monitor state.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var toastCmd tea.Cmd
 	m.toast, toastCmd = m.toast.Update(msg)
@@ -54,7 +54,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = (m.cursor - 1 + len(m.exportOptions)) % len(m.exportOptions)
 				m.viewportRightHalf.GotoTop()
 			}
-		case "r":
+		case "ctrl+r":
 			m.runningConfig = []string{"Reloading..."}
 			return m, common.FetchRunningConfig(m.logger)
 		case "enter":
@@ -95,7 +95,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, common.FetchRunningConfig(m.logger)
 
 			}
-		case "e":
+		case "ctrl+e":
 			if m.showExportOverlay {
 				m.toast = toast.New()
 			} else {
@@ -119,5 +119,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case common.RunningConfigMsg:
 		m.runningConfig = common.ShowRunningConfig(string(msg))
 	}
+
 	return m, nil
 }

@@ -8,8 +8,9 @@ import (
 
 var currentSubTabLocal = -1
 
-func (m *Model) ShellView(currentSubTab int) string {
+func (m *Model) ShellView(currentSubTab int, readOnlyMode bool) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
 	return m.View()
 }
 
@@ -25,6 +26,9 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderShellTab0() string {
+	if m.readOnlyMode {
+		return "You are in read only mode. Press [ctrl+w] to deactivate it."
+	}
 
 	// Update the viewport dimensions.
 	m.viewport.Width = styles.ViewPortWidthCompletePage
@@ -49,6 +53,12 @@ func (m *Model) renderShellTab0() string {
 }
 
 func (m *Model) renderShellTab1() string {
+	if m.readOnlyMode {
+		return "You are in read only mode. Press [ctrl+w] to deactivate it."
+	}
+
+	m.activeShell = "vtysh"
+
 	// Update the viewport dimensions.
 	m.viewport.Width = styles.ViewPortWidthCompletePage
 	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 1

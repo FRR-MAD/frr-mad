@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	frrProto "github.com/frr-mad/frr-tui/pkg"
 )
@@ -103,4 +104,18 @@ func WriteExportToFile(data string, filename string, directory string) error {
 		return err
 	}
 	return nil
+}
+
+func FilterRows(rows [][]string, q string) [][]string {
+	if q == "" {
+		return rows
+	}
+	var out [][]string
+	for _, r := range rows {
+		joined := strings.ToLower(strings.Join(r, " "))
+		if strings.Contains(joined, strings.ToLower(q)) {
+			out = append(out, r)
+		}
+	}
+	return out
 }
