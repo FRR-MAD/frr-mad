@@ -3,11 +3,11 @@ package components
 import (
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize *common.WindowSize, logger *logger.Logger) string {
@@ -16,9 +16,9 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	for i, tab := range tabs {
 		if i == activeTab {
 			if activeSubTab != -1 {
-				renderedTabs = append(renderedTabs, styles.ActiveTabBoxLockedStyle.Render(tab.Title))
+				renderedTabs = append(renderedTabs, styles.ActiveTabBoxLockedStyle().Render(tab.Title))
 			} else {
-				renderedTabs = append(renderedTabs, styles.ActiveTabBoxStyle.Render(tab.Title))
+				renderedTabs = append(renderedTabs, styles.ActiveTabBoxStyle().Render(tab.Title))
 			}
 			for j, subTab := range tab.SubTabs {
 				if j == activeSubTab {
@@ -28,7 +28,7 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 				}
 			}
 		} else {
-			renderedTabs = append(renderedTabs, styles.InactiveTabBoxStyle.Render(tab.Title))
+			renderedTabs = append(renderedTabs, styles.InactiveTabBoxStyle().Render(tab.Title))
 		}
 	}
 
@@ -57,7 +57,7 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 	remainingWidth := max(0, windowSize.Width-tabsWidth-4)
 	leftPadding := max(0, remainingWidth-routerNameWidth-routerNameStringWidth)
 	gapContent := strings.Repeat(" ", leftPadding) + routerNameString + routerName
-	gap := styles.TabGap.Render(gapContent)
+	gap := styles.TabGap().Render(gapContent)
 	renderedTabs = append(renderedTabs, gap)
 
 	// Build the gap at the right of the last sub tab based on previous calculation

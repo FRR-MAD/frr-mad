@@ -1,11 +1,11 @@
 package shell
 
 import (
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Model defines the state for the shell page.
@@ -13,6 +13,7 @@ type Model struct {
 	title               string
 	subTabs             []string
 	footer              []string
+	readOnlyMode        bool
 	windowSize          *common.WindowSize
 	activeShell         string
 	bashInput           string
@@ -29,23 +30,14 @@ type Model struct {
 
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
-	//boxWidthForOne := windowSize.Width - 10
-	//if boxWidthForOne < 20 {
-	//	boxWidthForOne = 20
-	//}
-	//// For example: subtract tab row, footer, and input area heights.
-	//outputHeight := windowSize.Height - 6 - 1 - 3 - 2
-	//
-	//// Create the viewport with the desired dimensions.
-	//vp := viewport.New(boxWidthForOne, outputHeight)
-
 	// Create the viewport with the desired dimensions.
 	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage-styles.HeightH1-2)
 
 	return &Model{
 		title:               "Shell",
 		subTabs:             []string{"bash", "vtysh", "Backend Test"},
-		footer:              []string{"[enter]: execute command", "[↑ ↓ home end] scroll", "[backspace]: delete last character"},
+		footer:              []string{"[↑ ↓ home end] scroll", "[enter] execute command"},
+		readOnlyMode:        true,
 		windowSize:          windowSize,
 		activeShell:         "",
 		backendServiceInput: "",

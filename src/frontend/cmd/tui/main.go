@@ -16,6 +16,7 @@ import (
 	"github.com/frr-mad/frr-tui/internal/ui/components"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -26,9 +27,6 @@ const (
 	ViewDashboard AppState = iota
 	ViewOSPF
 	ViewRIB
-	// code for Presentation slides
-	//ViewOSPF2
-	//ViewOSPF3
 	ViewShell
 	// add here new Views
 	totalViews
@@ -40,6 +38,7 @@ type AppModel struct {
 	currentView   AppState
 	tabs          []common.Tab
 	currentSubTab int
+	readOnlyMode  bool
 	windowSize    *common.WindowSize
 	dashboard     *dashboard.Model
 	ospf          *ospfMonitoring.Model
@@ -47,6 +46,7 @@ type AppModel struct {
 	shell         *shell.Model
 	footer        *components.Footer
 	footerOptions []common.FooterOption
+	textFilter    *common.Filter
 	logger        *logger.Logger
 }
 
@@ -70,10 +70,16 @@ func initModel(config *configs.Config) *AppModel {
 	shellLogger := createLogger("shell_frontend", fmt.Sprintf("%v/shell_frontend.log", config.Default.LogPath))
 	shellLogger.SetDebugLevel(debugLevel)
 
+	ti := textinput.New()
+	ti.Placeholder = "type to filter..."
+	ti.CharLimit = 32
+	ti.Width = 20
+
 	return &AppModel{
 		currentView:   ViewDashboard,
 		tabs:          []common.Tab{},
 		currentSubTab: -1,
+		readOnlyMode:  true,
 		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize, dashboardLogger),
 		ospf:          ospfMonitoring.New(windowSize, ospfLogger),
@@ -81,6 +87,7 @@ func initModel(config *configs.Config) *AppModel {
 		shell:         shell.New(windowSize, shellLogger),
 		footer:        components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
 		logger:        appLogger,
+		textFilter:    &common.Filter{Active: false, Query: "", Input: ti},
 	}
 }
 
@@ -95,59 +102,26 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "1":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewDashboard
-			} else {
-				m.currentSubTab = 0
-			}
-		case "2":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewOSPF
-			} else if subTabsLength >= 2 {
-				m.currentSubTab = 1
-			}
-		case "3":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewRIB
-			} else if subTabsLength >= 3 {
-				m.currentSubTab = 2
-			}
-		case "4":
-			if m.currentSubTab == -1 {
-				m.currentView = ViewShell
-			} else if subTabsLength >= 4 {
-				m.currentSubTab = 3
-			}
-		case "9":
-			if m.currentSubTab == -1 {
-				break
-			} else {
-				m.currentSubTab = subTabsLength - 1
-			}
-		// code for Presentation slides
-		//case "4":
-		//	if m.currentSubTab == -1 {
-		//		m.currentView = ViewOSPF2
-		//	}
-		//case "5":
-		//	if m.currentSubTab == -1 {
-		//		m.currentView = ViewOSPF3
-		//	}
 		case "right":
-			if m.currentSubTab == -1 {
-				m.currentView = (m.currentView + 1) % totalViews
-				m.currentSubTab = -1
-			} else {
-				m.currentSubTab = (m.currentSubTab + 1) % subTabsLength
+			if !m.textFilter.Active {
+				if m.currentSubTab == -1 {
+					m.currentView = (m.currentView + 1) % totalViews
+					m.currentSubTab = -1
+				} else {
+					m.currentSubTab = (m.currentSubTab + 1) % subTabsLength
+				}
 			}
 		case "left":
-			if m.currentSubTab == -1 {
-				m.currentView = (m.currentView + totalViews - 1) % totalViews
-				m.currentSubTab = -1
-			} else {
-				m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
+			if !m.textFilter.Active {
+				if m.currentSubTab == -1 {
+					m.currentView = (m.currentView + totalViews - 1) % totalViews
+					m.currentSubTab = -1
+				} else {
+					m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
+				}
 			}
+		case "up", "down", "home", "end":
+			return m.delegateToActiveView(msg)
 		case "enter":
 			if m.currentSubTab == -1 {
 				m.currentSubTab = 0
@@ -156,11 +130,31 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				currentPageOptions := m.getCurrentFooterOptions()
 				m.footer.AppendMultiple(currentPageOptions)
 			}
+		case ":":
+			if !m.textFilter.Active {
+				m.textFilter.Active = true
+				m.textFilter.Input.Focus()
+			} else {
+				m.textFilter.Active = false
+				m.textFilter.Query = ""
+				m.textFilter.Input.SetValue("")
+				m.textFilter.Input.Blur()
+			}
+			return m, nil
+		case "ctrl+w":
+			m.readOnlyMode = !m.readOnlyMode
+			styles.ChangeReadWriteMode(m.readOnlyMode)
 		case "esc":
-			m.currentSubTab = -1
-			m.footer.SetMainMenuOptions()
+			if m.textFilter.Active {
+				m.textFilter.Active = false
+				m.textFilter.Query = ""
+				m.textFilter.Input.Blur()
+				return m, nil
+			} else {
+				m.currentSubTab = -1
+				m.footer.SetMainMenuOptions()
+			}
 		case "ctrl+c":
-
 			return m, tea.Batch(
 				tea.ClearScreen,
 				tea.Quit,
@@ -183,6 +177,12 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		})
 	}
 
+	if m.textFilter.Active {
+		m.textFilter.Input, _ = m.textFilter.Input.Update(msg)
+		m.textFilter.Query = m.textFilter.Input.Value()
+		return m, nil
+	}
+
 	// Delegate Update to active module
 	var cmd tea.Cmd
 	switch m.currentView {
@@ -198,15 +198,6 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.rib.Update(msg)
 		m.rib = updatedModel.(*rib.Model)
 		return m, cmd
-	// code for Presentation slides
-	//case ViewOSPF2:
-	//	updatedModel, cmd := m.ospf.Update(msg)
-	//	m.ospf = updatedModel.(*ospfMonitoring.Model)
-	//	return m, cmd
-	//case ViewOSPF3:
-	//	updatedModel, cmd := m.ospf.Update(msg)
-	//	m.ospf = updatedModel.(*ospfMonitoring.Model)
-	//	return m, cmd
 	case ViewShell:
 		updatedModel, cmd := m.shell.Update(msg)
 		m.shell = updatedModel.(*shell.Model)
@@ -222,23 +213,16 @@ func (m *AppModel) View() string {
 	var content string
 	switch m.currentView {
 	case ViewDashboard:
-		content = m.dashboard.DashboardView(m.currentSubTab)
+		content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode)
 		subTabsLength = m.dashboard.GetSubTabsLength()
 	case ViewOSPF:
-		content = m.ospf.OSPFView(m.currentSubTab)
+		content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)
 		subTabsLength = m.ospf.GetSubTabsLength()
 	case ViewRIB:
-		content = m.rib.RibView(m.currentSubTab)
+		content = m.rib.RibView(m.currentSubTab, m.readOnlyMode, m.textFilter)
 		subTabsLength = m.rib.GetSubTabsLength()
-	// code for Presentation slides
-	//case ViewOSPF2:
-	//	content = m.ospf.OSPFView(m.currentSubTab)
-	//	subTabsLength = m.ospf.GetSubTabsLength()
-	//case ViewOSPF3:
-	//	content = m.ospf.OSPFView(m.currentSubTab)
-	//	subTabsLength = m.ospf.GetSubTabsLength()
 	case ViewShell:
-		content = m.shell.ShellView(m.currentSubTab)
+		content = m.shell.ShellView(m.currentSubTab, m.readOnlyMode)
 		subTabsLength = m.shell.GetSubTabsLength()
 	default:
 		return "Unknown view"
@@ -254,9 +238,34 @@ func (m *AppModel) View() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
-		styles.ContentBoxStyle.Width(contentWidth).Height(contentHeight).Render(content),
+		styles.ContentBoxStyle().Width(contentWidth).Height(contentHeight).Render(content),
 		styles.FooterBoxStyle.Width(contentWidth).Render(footer),
 	)
+}
+
+func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
+	var cmd tea.Cmd
+	switch m.currentView {
+	case ViewDashboard:
+		updatedModel, cmd := m.dashboard.Update(msg)
+		m.dashboard = updatedModel.(*dashboard.Model)
+		return m, cmd
+	case ViewOSPF:
+		updatedModel, cmd := m.ospf.Update(msg)
+		m.ospf = updatedModel.(*ospfMonitoring.Model)
+		return m, cmd
+	case ViewRIB:
+		updatedModel, cmd := m.rib.Update(msg)
+		m.rib = updatedModel.(*rib.Model)
+		return m, cmd
+	case ViewShell:
+		updatedModel, cmd := m.shell.Update(msg)
+		m.shell = updatedModel.(*shell.Model)
+		return m, cmd
+	default:
+		panic("unhandled default case")
+	}
+	return m, cmd
 }
 
 func main() {
@@ -268,7 +277,7 @@ func main() {
 
 	maybeUpdateTERM()
 	p := tea.NewProgram(initModel(config), tea.WithAltScreen())
-	// TODO: find a way to fix the TUI that you cant scroll away
+	// TODO: find a way to fix the TUI that you cant scroll away (in apple terminal)
 	// TODO: the problem with mouseMotion is, you cannot highlight text anymore with the mouse
 	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
 	if _, err := p.Run(); err != nil {
@@ -279,11 +288,11 @@ func main() {
 
 // Create a new logger instance
 func createLogger(name, filePath string) *logger.Logger {
-	logger, err := logger.NewLogger(name, filePath)
+	tuiLogger, err := logger.NewLogger(name, filePath)
 	if err != nil {
 		log.Fatalf("Failed to create logger %s: %v", name, err)
 	}
-	return logger
+	return tuiLogger
 }
 
 // Convert debug level string to int

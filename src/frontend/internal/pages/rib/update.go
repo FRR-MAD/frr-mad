@@ -4,9 +4,9 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
-	tea "github.com/charmbracelet/bubbletea"
 	"sort"
 )
 
@@ -91,7 +91,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, common.FetchRunningConfig(m.logger)
 
 			}
-		case "e":
+		case "ctrl+e":
 			if m.showExportOverlay {
 				m.toast = toast.New()
 			} else {
