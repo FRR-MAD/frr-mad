@@ -64,13 +64,14 @@ func (m *Model) View() string {
 			}
 			filterBox = styles.FilterTextStyle().Render(filterBox)
 
-			statusMessage := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
+			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
-				statusMessage = styles.StatusTextStyle().Render(m.statusMessage)
+				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 			}
 
-			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusMessage, filterBox)
+			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusBox, filterBox)
 
 			content = lipgloss.JoinVertical(lipgloss.Left, body, bodyFooter)
 		} else {

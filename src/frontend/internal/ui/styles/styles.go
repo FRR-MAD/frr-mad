@@ -250,6 +250,7 @@ func H1BadTitleStyle() lipgloss.Style {
 
 func FilterTextStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
+		Margin(0, 2).
 		//Padding(0, 0, 0, 1).
 		Width(WidthTwoH1Box).
 		Align(lipgloss.Right)
@@ -258,10 +259,11 @@ func FilterTextStyle() lipgloss.Style {
 
 func StatusTextStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
-		Padding(0, 0, 0, 1).
+		//Margin(0, 2).
+		Padding(0, 1).
 		Foreground(lipgloss.Color(StatusColor)).
 		Background(lipgloss.Color(StatusBackground)).
-		Width(WidthTwoH1Box).
+		MaxWidth(WidthTwoH1Box).
 		Align(lipgloss.Left)
 }
 
