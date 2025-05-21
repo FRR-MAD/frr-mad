@@ -32,10 +32,10 @@ type Model struct {
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage,
-		styles.ViewPortHeightCompletePage-styles.FilterBoxHeight)
-	vprh := viewport.New(styles.ViewPortWidthHalf,
-		styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+	vp := viewport.New(styles.WidthViewPortCompletePage,
+		styles.HeightViewPortCompletePage-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.WidthViewPortHalf,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:             "RIB",

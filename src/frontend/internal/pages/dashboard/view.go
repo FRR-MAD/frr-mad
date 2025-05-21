@@ -69,11 +69,11 @@ func (m *Model) View() string {
 
 func (m *Model) renderOSPFDashboard() string {
 	// Update the viewportLeft
-	m.viewportLeft.Width = styles.ViewPortWidthThreeFourth
-	m.viewportLeft.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+	m.viewportLeft.Width = styles.WidthViewPortThreeFourth
+	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1
 
-	m.viewportRight.Width = styles.ViewPortWidthOneFourth
-	m.viewportRight.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+	m.viewportRight.Width = styles.WidthViewPortOneFourth
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -660,8 +660,8 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 }
 
 func (m *Model) renderAnomalyDetails() string {
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage
 
 	// ===== IMPORTANT: If a line break happens automatically in the TUI,                ===== //
 	// =====            lipgloss renders an extra line which breaks the viewport Height. ===== //

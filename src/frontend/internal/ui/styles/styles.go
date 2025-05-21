@@ -7,7 +7,7 @@ import (
 )
 
 // ======================================== //
-// Window size calculations and constants   //
+// Window Size - calculations and constants   //
 // ======================================== //
 
 const (
@@ -49,14 +49,16 @@ var (
 	WidthTwoH2ThreeFourth    int
 	WidthTwoH2ThreeFourthBox int
 
-	ViewPortWidthCompletePage int
-	ViewPortWidthHalf         int
-	ViewPortWidthThreeFourth  int
-	ViewPortWidthOneFourth    int
+	WidthViewPortCompletePage int
+	WidthViewPortHalf         int
+	WidthViewPortThreeFourth  int
+	WidthViewPortOneFourth    int
 
 	HeightBasis int
 
-	ViewPortHeightCompletePage int
+	HeightViewPortCompletePage int
+
+	HeightH1EmptyContentPadding int
 
 	HeightH1 int
 	HeightH2 int
@@ -85,14 +87,15 @@ func SetWindowSizes(window common.WindowSize) {
 	WidthTwoH2ThreeFourth = WidthBasis - 2*MarginX2 - 2*BoxBorder - WidthTwoH2OneFourth
 	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
 
-	ViewPortWidthCompletePage = WidthBasis + 2
-	ViewPortWidthHalf = WidthTwoH1 + 2
-	ViewPortWidthThreeFourth = WidthTwoH1ThreeFourth + 2
-	ViewPortWidthOneFourth = WidthTwoH1OneFourth + 2
+	WidthViewPortCompletePage = WidthBasis + 2
+	WidthViewPortHalf = WidthTwoH1 + 2
+	WidthViewPortThreeFourth = WidthTwoH1ThreeFourth + 2
+	WidthViewPortOneFourth = WidthTwoH1OneFourth + 2
 
 	HeightBasis = window.Height - TabRowHeight - FooterHeight - BorderContentBox
 
-	ViewPortHeightCompletePage = HeightBasis
+	HeightViewPortCompletePage = HeightBasis
+	HeightH1EmptyContentPadding = HeightBasis - HeightH1 - FilterBoxHeight
 
 	HeightH1 = 4
 	HeightH2 = 2
@@ -101,14 +104,6 @@ func SetWindowSizes(window common.WindowSize) {
 // ======================================== //
 // Colors                                   //
 // ======================================== //
-
-func ChangeReadWriteMode(readOnlyMode bool) {
-	if readOnlyMode {
-		TuiColor = readModeBlue
-	} else {
-		TuiColor = writeModeCoral
-	}
-}
 
 var readModeBlue = "#5f87ff"   // Usage: Read Only Mode --> Active Menu Tab, Content Border
 var writeModeCoral = "#FF3B30" // Usage: Read/Write Mode --> Active Menu Tab, Content Border
@@ -119,14 +114,67 @@ var BadRed = "#d70000"         // Usage: Box border when content bad
 var LightBlue = "#5f87af"      // Usage: Text color to highlight every second row in a table
 var NavyBlue = "#00005f"       // Usage: Text color if on NormalBeige background
 var Black = "#000000"
+var White = "#ffffff"
 
 var TuiColor = readModeBlue
 
-//var readModeBlue = "111" // Usage: Active Tab, Content Border
-//var Grey = "238"          // Usage: inactive components, options
-//var NormalBeige = "187"   // Usage: Box Border when content good
-//var BadRed = "#160"        // Usage: Box Border when content bad
-//var LightBlue = "237"
+var InfoStatusColor = White
+var InfoStatusBackground = Grey
+var WarningStatusColor = NormalBeige
+var WarningStatusBackground = Black
+var ErrorStatusColor = BadRed
+var ErrorStatusBackground = Black
+
+var StatusColor = InfoStatusColor
+var StatusBackground = InfoStatusBackground
+
+func ChangeReadWriteMode(readOnlyMode bool) {
+	if readOnlyMode {
+		TuiColor = readModeBlue
+	} else {
+		TuiColor = writeModeCoral
+	}
+}
+
+// StatusSeverity is a simple enum for Info / Warning / Error.
+type StatusSeverity int
+
+const (
+	SeverityInfo StatusSeverity = iota
+	SeverityWarning
+	SeverityError
+)
+
+// String implements fmt.Stringer so you can print the name if needed.
+func (s StatusSeverity) String() string {
+	switch s {
+	case SeverityInfo:
+		return "INFO"
+	case SeverityWarning:
+		return "WARNING"
+	case SeverityError:
+		return "ERROR"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func SetStatusSeverity(s StatusSeverity) {
+	switch s {
+	case SeverityInfo:
+		StatusColor = InfoStatusColor
+		StatusBackground = InfoStatusBackground
+	case SeverityWarning:
+		StatusColor = WarningStatusColor
+		StatusBackground = WarningStatusBackground
+	case SeverityError:
+		StatusColor = ErrorStatusColor
+		StatusBackground = ErrorStatusBackground
+	default:
+		StatusColor = InfoStatusColor
+		StatusBackground = InfoStatusBackground
+	}
+}
 
 // ======================================== //
 // Text Styling                             //
@@ -203,9 +251,18 @@ func H1BadTitleStyle() lipgloss.Style {
 func FilterTextStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		//Padding(0, 0, 0, 1).
-		Width(WidthBasis).
+		Width(WidthTwoH1Box).
 		Align(lipgloss.Right)
 	//Background(lipgloss.Color(LightBlue))
+}
+
+func StatusTextStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Padding(0, 0, 0, 1).
+		Foreground(lipgloss.Color(StatusColor)).
+		Background(lipgloss.Color(StatusBackground)).
+		Width(WidthTwoH1Box).
+		Align(lipgloss.Left)
 }
 
 var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(NavyBlue)).Background(lipgloss.Color(NormalBeige)).Bold(true)

@@ -152,7 +152,7 @@ func (m *Model) renderRibTab() string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
 
 	var filterBox string
 	if m.textFilter.Active {
@@ -269,7 +269,7 @@ func (m *Model) renderFibTab() string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
 
 	var filterBox string
 	if m.textFilter.Active {
@@ -392,7 +392,7 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
 
 	var filterBox string
 	if m.textFilter.Active {

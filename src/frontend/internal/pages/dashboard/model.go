@@ -38,10 +38,10 @@ type Model struct {
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewports with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
-	vpl := viewport.New(styles.ViewPortWidthThreeFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
-	vpr := viewport.New(styles.ViewPortWidthOneFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
-	vprh := viewport.New(styles.ViewPortWidthHalf, styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+	vp := viewport.New(styles.WidthViewPortCompletePage, styles.HeightViewPortCompletePage)
+	vpl := viewport.New(styles.WidthViewPortThreeFourth, styles.HeightViewPortCompletePage-styles.HeightH1)
+	vpr := viewport.New(styles.WidthViewPortOneFourth, styles.HeightViewPortCompletePage-styles.HeightH1)
+	vprh := viewport.New(styles.WidthViewPortHalf, styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:              "Dashboard",
