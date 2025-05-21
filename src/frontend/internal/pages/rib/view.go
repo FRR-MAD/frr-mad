@@ -67,6 +67,9 @@ func (m *Model) View() string {
 			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
+				if len(m.statusMessage) > 50 {
+					m.statusMessage = m.statusMessage[:47] + "..."
+				}
 				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 			}
@@ -94,7 +97,7 @@ func (m *Model) View() string {
 
 func (m *Model) renderRibTab() string {
 	m.statusSeverity = styles.SeverityError
-	m.statusMessage = "You opened RIB Tab"
+	m.statusMessage = "You opened RIB Tab And this is 100% a message that is way to long and should be cut that the system dont burn down."
 
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
