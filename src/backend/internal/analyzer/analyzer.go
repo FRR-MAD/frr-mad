@@ -69,8 +69,8 @@ func (a *Analyzer) AnomalyAnalysis() {
 	proto.Merge(a.AnalyserStateParserResults.ShouldRouterLsdb, shouldRouterLSDB)
 	proto.Merge(a.AnalyserStateParserResults.ShouldExternalLsdb, shouldExternalLSDB)
 	proto.Merge(a.AnalyserStateParserResults.ShouldNssaExternalLsdb, shouldNssaExternalLSDB)
-	proto.Merge(a.AnalyserStateParserResults.P2PMap, &p2pMap)
-	proto.Merge(a.P2pMap, &p2pMap)
+	proto.Merge(a.AnalyserStateParserResults.P2PMap, p2pMap)
+	proto.Merge(a.P2pMap, p2pMap)
 }
 
 func maskToPrefixLength(mask string) string {

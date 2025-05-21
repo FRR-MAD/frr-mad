@@ -10,23 +10,24 @@ import (
 	"github.com/frr-mad/frr-mad/src/logger"
 )
 
-func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, frrProto.PeerInterfaceMap) {
-	intraAreaLsa := frrProto.IntraAreaLsa{
+func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, peerNeighbor map[string]string) (*frrProto.IntraAreaLsa, *frrProto.PeerInterfaceMap) {
+	result := frrProto.IntraAreaLsa{
 		RouterId: config.RouterId,
+		Hostname: hostname,
 		Areas:    []*frrProto.AreaAnalyzer{},
 	}
 
-	// TODO: change to pointer
-	p2pMap := frrProto.PeerInterfaceMap{
+	// TODO
+	p2pMap := &frrProto.PeerInterfaceMap{
 		PeerInterfaceToAddress: map[string]string{},
 	}
 
 	for areaName, routerArea := range config.RouterStates {
 		for lsaName, lsaEntry := range routerArea.LsaEntries {
 			var currentArea *frrProto.AreaAnalyzer
-			for i := range intraAreaLsa.Areas {
-				if intraAreaLsa.Areas[i].AreaName == areaName {
-					currentArea = intraAreaLsa.Areas[i]
+			for i := range result.Areas {
+				if result.Areas[i].AreaName == areaName {
+					currentArea = result.Areas[i]
 					break
 				}
 			}
@@ -37,19 +38,19 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 					LsaType:  lsaEntry.LsaType,
 					Links:    []*frrProto.Advertisement{},
 				}
-				intraAreaLsa.Areas = append(intraAreaLsa.Areas, &newArea)
-				currentArea = intraAreaLsa.Areas[len(intraAreaLsa.Areas)-1]
+				result.Areas = append(result.Areas, &newArea)
+				currentArea = result.Areas[len(result.Areas)-1]
 			}
 
 			for routerName, routerLink := range lsaEntry.RouterLinks {
 				var ipAddress, prefixLength string
 				isStub := false
-				if strings.EqualFold(routerLink.LinkType, "Stub Network") {
+				if strings.Contains(strings.ToLower(routerLink.LinkType), "stub network") {
 					routerLink.LinkType = "stub network"
 					ipAddress = routerLink.NetworkAddress
 					isStub = true
 					prefixLength = maskToPrefixLength(routerLink.NetworkMask)
-				} else if strings.EqualFold(routerLink.LinkType, "a Transit Network") {
+				} else if strings.Contains(strings.ToLower(routerLink.LinkType), "transit network") {
 					routerLink.LinkType = "transit network"
 					ipAddress = routerLink.RouterInterfaceAddress
 				} else {
@@ -87,9 +88,7 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 		}
 	}
 
-	intraAreaLsa.Hostname = hostname
-
-	return &intraAreaLsa, p2pMap
+	return &result, p2pMap
 }
 
 func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string) *frrProto.IntraAreaLsa {
@@ -343,14 +342,14 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 
 }
 
-func GetFIB(rib *frrProto.RoutingInformationBase) map[string]frrProto.RibPrefixes {
+func GetFIB(rib *frrProto.RoutingInformationBase) map[string]*frrProto.RibPrefixes {
 
-	OspfFibMap := map[string]frrProto.RibPrefixes{}
+	OspfFibMap := map[string]*frrProto.RibPrefixes{}
 	for prefix, routes := range rib.Routes {
 		for _, routeEntry := range routes.Routes {
 			for _, route := range routeEntry.Nexthops {
 				if route.Fib {
-					OspfFibMap[prefix] = frrProto.RibPrefixes{
+					OspfFibMap[prefix] = &frrProto.RibPrefixes{
 						Prefix:         routeEntry.Prefix,
 						PrefixLength:   strconv.FormatInt(int64(routeEntry.PrefixLen), 10),
 						NextHopAddress: route.Ip,
