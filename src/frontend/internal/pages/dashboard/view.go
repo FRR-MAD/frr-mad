@@ -594,15 +594,18 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	if a.HasOverAdvertisedPrefixes {
 		for _, superfluousEntry := range a.SuperfluousEntries {
 			var firstCol string
+			var cidr string
 			if strings.Contains(lsaTypeHeader, "Router") {
 				firstCol = superfluousEntry.InterfaceAddress
+				cidr = ""
 			} else {
 				firstCol = superfluousEntry.LinkStateId
+				cidr = "/" + superfluousEntry.PrefixLength
 			}
 
 			tableData = append(tableData, []string{
 				firstCol,
-				"/" + superfluousEntry.PrefixLength,
+				cidr,
 				superfluousEntry.LinkType,
 				"Overadvertised Route",
 			})
@@ -612,15 +615,18 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	if a.HasUnAdvertisedPrefixes {
 		for _, missingEntry := range a.MissingEntries {
 			var firstCol string
+			var cidr string
 			if strings.Contains(lsaTypeHeader, "Router") {
 				firstCol = missingEntry.InterfaceAddress
+				cidr = ""
 			} else {
 				firstCol = missingEntry.LinkStateId
+				cidr = "/" + missingEntry.PrefixLength
 			}
 
 			tableData = append(tableData, []string{
 				firstCol,
-				"/" + missingEntry.PrefixLength,
+				cidr,
 				missingEntry.LinkType,
 				"Unadvertised Route",
 			})
