@@ -55,11 +55,26 @@ go-sync: go-tidy
 	cd src && go work vendor
 
 # Development environment
-hmr-docker:
+hmr/docker:
 	docker build -t frr-854-dev -f dockerfile/frr-dev.dockerfile .
 	docker build -t frr-854 -f dockerfile/frr.dockerfile .
 
-# More HMR targets here...
+
+hmr/run:
+	cd containerlab && chmod +x scripts/
+	-cd containerlab && sh scripts/custom-bridges.sh
+	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
+	cd containerlab && sh scripts/pc-interfaces.sh
+	cd containerlab && sh scripts/remove-default-route.sh
+
+hmr/stop: 
+	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
+
+hmr/restart: hmr/stop hmr/run
+
+hmr/clean: hmr/stop
+	docker container list -a -q | xargs -i{} docker container rm {}
+	docker network prune -f
 
 # Clean everything
 clean:
