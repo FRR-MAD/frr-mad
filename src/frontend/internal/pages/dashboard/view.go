@@ -234,9 +234,6 @@ func (m *Model) getOSPFGeneralInfoBox() string {
 }
 
 func (m *Model) getOspfDashboardLsdbSelf() string {
-	m.statusSeverity = styles.SeverityInfo
-	m.statusMessage = "Loded LSDB, now show Self Originating entries"
-
 	var lsdbSelfBlocks []string
 
 	lsdb, err := backend.GetLSDB(m.logger)

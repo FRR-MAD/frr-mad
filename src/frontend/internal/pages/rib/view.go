@@ -96,9 +96,6 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderRibTab() string {
-	m.statusSeverity = styles.SeverityError
-	m.statusMessage = "You opened RIB Tab And this is 100% a message that is way to long and should be cut that the system dont burn down."
-
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
@@ -200,9 +197,6 @@ func (m *Model) renderRibTab() string {
 }
 
 func (m *Model) renderFibTab() string {
-	m.statusSeverity = styles.SeverityInfo
-	m.statusMessage = "You opened FIB Tab"
-
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")
@@ -312,9 +306,6 @@ func (m *Model) renderFibTab() string {
 }
 
 func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
-	m.statusSeverity = styles.SeverityWarning
-	m.statusMessage = "You opened a Partial RIB Tab"
-
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetRIB")

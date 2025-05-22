@@ -98,9 +98,6 @@ func (m *Model) View() string {
 }
 
 func (m *Model) renderLsdbMonitorTab() string {
-	m.statusSeverity = styles.SeverityWarning
-	m.statusMessage = "You opened LSDB Tab"
-
 	var lsdbBlocks []string
 
 	lsdb, err := backend.GetLSDB(m.logger)
@@ -401,9 +398,6 @@ func (m *Model) renderLsdbMonitorTab() string {
 }
 
 func (m *Model) renderRouterMonitorTab() string {
-	m.statusSeverity = styles.SeverityInfo
-	m.statusMessage = "You opened Router LSAs Tab"
-
 	ospfNeighbors, err := backend.GetOspfNeighborInterfaces(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
@@ -589,9 +583,6 @@ func (m *Model) renderRouterMonitorTab() string {
 }
 
 func (m *Model) renderNetworkMonitorTab() string {
-	m.statusSeverity = styles.SeverityError
-	m.statusMessage = "You opened Network LSAs Tab"
-
 	networkLSASelf, err := backend.GetOspfNetworkDataSelf(m.logger)
 	if err != nil {
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
@@ -684,9 +675,6 @@ func (m *Model) renderNetworkMonitorTab() string {
 }
 
 func (m *Model) renderExternalMonitorTab() string {
-	m.statusSeverity = styles.SeverityInfo
-	m.statusMessage = ""
-
 	var externalLsaBlock []string
 	var nssaExternalLsaBlock []string
 
