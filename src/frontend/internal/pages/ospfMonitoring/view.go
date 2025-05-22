@@ -66,7 +66,7 @@ func (m *Model) View() string {
 			}
 			filterBox = styles.FilterTextStyle().Render(filterBox)
 
-			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
+			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
 				if len(m.statusMessage) > 50 {
@@ -390,14 +390,6 @@ func (m *Model) renderLsdbMonitorTab() string {
 	)
 
 	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
-
-	//var filterBox string
-	//if m.textFilter.Active {
-	//	filterBox = "Filter: " + m.textFilter.Input.View()
-	//} else {
-	//	filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	//}
-	//filterBox = styles.FilterTextStyle().Render(filterBox)
 
 	// Set viewport sizes and assign content to viewport
 	m.viewport.Width = styles.WidthBasis

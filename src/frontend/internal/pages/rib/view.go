@@ -64,7 +64,7 @@ func (m *Model) View() string {
 			}
 			filterBox = styles.FilterTextStyle().Render(filterBox)
 
-			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Render(m.statusMessage)
+			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
 				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {

@@ -26,12 +26,15 @@ type Model struct {
 	hasAnomalyDetected bool
 	showAnomalyOverlay bool
 	showExportOverlay  bool
+	textFilter         *common.Filter
 	windowSize         *common.WindowSize
 	viewport           viewport.Model
 	viewportLeft       viewport.Model
 	viewportRight      viewport.Model
 	viewportRightHalf  viewport.Model
 	currentTime        time.Time
+	statusMessage      string
+	statusSeverity     styles.StatusSeverity
 	logger             *logger.Logger
 }
 
@@ -39,9 +42,12 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 
 	// Create the viewports with the desired dimensions.
 	vp := viewport.New(styles.WidthViewPortCompletePage, styles.HeightViewPortCompletePage)
-	vpl := viewport.New(styles.WidthViewPortThreeFourth, styles.HeightViewPortCompletePage-styles.HeightH1)
-	vpr := viewport.New(styles.WidthViewPortOneFourth, styles.HeightViewPortCompletePage-styles.HeightH1)
-	vprh := viewport.New(styles.WidthViewPortHalf, styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+	vpl := viewport.New(styles.WidthViewPortThreeFourth,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
+	vpr := viewport.New(styles.WidthViewPortOneFourth,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.WidthViewPortHalf,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:              "Dashboard",
@@ -55,12 +61,15 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
 		showExportOverlay:  false,
-		windowSize:         windowSize,
-		viewport:           vp,
-		viewportLeft:       vpl,
-		viewportRight:      vpr,
-		viewportRightHalf:  vprh,
-		logger:             appLogger,
+
+		windowSize:        windowSize,
+		viewport:          vp,
+		viewportLeft:      vpl,
+		viewportRight:     vpr,
+		viewportRightHalf: vprh,
+		statusMessage:     "",
+		statusSeverity:    styles.SeverityInfo,
+		logger:            appLogger,
 	}
 }
 
