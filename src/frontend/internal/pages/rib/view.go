@@ -36,6 +36,8 @@ func (m *Model) View() string {
 			m.exportData,
 			&m.cursor,
 			&m.viewportRightHalf,
+			m.statusMessage,
+			m.statusSeverity,
 		)
 	} else {
 		switch currentSubTabLocal {

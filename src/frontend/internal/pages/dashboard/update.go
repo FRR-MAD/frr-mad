@@ -123,6 +123,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !m.showAnomalyOverlay {
 				if m.showExportOverlay {
 					m.toast = toast.New()
+					m.statusSeverity = styles.SeverityInfo
+					m.statusMessage = ""
 				} else {
 					err := m.fetchLatestData()
 					if err != nil {
