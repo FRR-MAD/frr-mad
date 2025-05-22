@@ -213,7 +213,7 @@ func (m *AppModel) View() string {
 	var content string
 	switch m.currentView {
 	case ViewDashboard:
-		content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode)
+		content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode, m.textFilter)
 		subTabsLength = m.dashboard.GetSubTabsLength()
 	case ViewOSPF:
 		content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)

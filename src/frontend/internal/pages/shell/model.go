@@ -31,7 +31,7 @@ type Model struct {
 // New creates and returns a new dashboard Model.
 func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage-styles.HeightH1-2)
+	vp := viewport.New(styles.WidthViewPortCompletePage, styles.HeightViewPortCompletePage-styles.HeightH1-2)
 
 	return &Model{
 		title:               "Shell",
