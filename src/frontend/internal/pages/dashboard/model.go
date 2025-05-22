@@ -38,14 +38,14 @@ type Model struct {
 	logger             *logger.Logger
 }
 
-func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath string) *Model {
 
 	// Create the viewports with the desired dimensions.
 	vp := viewport.New(styles.WidthViewPortCompletePage, styles.HeightViewPortCompletePage)
 	vpl := viewport.New(styles.WidthViewPortThreeFourth,
-		styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
+	styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
 	vpr := viewport.New(styles.WidthViewPortOneFourth,
-		styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
+	styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
 	vprh := viewport.New(styles.WidthViewPortHalf,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
@@ -57,7 +57,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		cursor:             0,
 		exportOptions:      []common.ExportOption{},
 		exportData:         make(map[string]string),
-		exportDirectory:    "/tmp/frr-mad/exports",
+		exportDirectory:    exportPath,
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
 		showExportOverlay:  false,

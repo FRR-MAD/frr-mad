@@ -81,7 +81,7 @@ func initModel(config *configs.Config) *AppModel {
 		currentSubTab: -1,
 		readOnlyMode:  true,
 		windowSize:    windowSize,
-		dashboard:     dashboard.New(windowSize, dashboardLogger),
+		dashboard:     dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
 		ospf:          ospfMonitoring.New(windowSize, ospfLogger),
 		rib:           rib.New(windowSize, ribLogger),
 		shell:         shell.New(windowSize, shellLogger),
@@ -268,24 +268,6 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 	return m, cmd
 }
 
-func main() {
-	// Load configuration
-	config, err := configs.LoadConfig()
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
-
-	maybeUpdateTERM()
-	p := tea.NewProgram(initModel(config), tea.WithAltScreen())
-	// TODO: find a way to fix the TUI that you cant scroll away (in apple terminal)
-	// TODO: the problem with mouseMotion is, you cannot highlight text anymore with the mouse
-	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error running program: %v\n", err)
-		os.Exit(1)
-	}
-}
-
 // Create a new logger instance
 func createLogger(name, filePath string) *logger.Logger {
 	tuiLogger, err := logger.NewLogger(name, filePath)
@@ -306,3 +288,22 @@ func getDebugLevel(level string) int {
 		return 0
 	}
 }
+
+func main() {
+	// Load configuration
+	config, err := configs.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	maybeUpdateTERM()
+	p := tea.NewProgram(initModel(config), tea.WithAltScreen())
+	// TODO: find a way to fix the TUI that you cant scroll away (in apple terminal)
+	// TODO: the problem with mouseMotion is, you cannot highlight text anymore with the mouse
+	// p := tea.NewProgram(initModel(), tea.WithMouseCellMotion()) // start program with msg.MouseMsg options
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running program: %v\n", err)
+		os.Exit(1)
+	}
+}
+
