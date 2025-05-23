@@ -21,7 +21,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const applicationVersion = "0.9.2"
+var (
+	DaemonVersion = "unknown"
+	TUIVersion    = "unknown"
+	GitCommit     = "unknown"
+	BuildDate     = "unknown"
+	RepoURL       = "https://github.com/frr-mad/frr-mad"
+)
 
 type Service struct {
 	Name   string
@@ -53,6 +59,7 @@ type LoggerService struct {
 	Application *logger.Logger
 }
 
+// TODO: create status command
 func main() {
 	var configFile string
 	var rootCmd = &cobra.Command{
@@ -108,23 +115,6 @@ func main() {
 		},
 	}
 
-	var testingCmd = &cobra.Command{
-		Use:    "testing",
-		Short:  "Run tests on the application",
-		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
-			createdConfiguration(configFile)
-		},
-	}
-
-	var accessCmd = &cobra.Command{
-		Use:    "access",
-		Short:  "Access application data",
-		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
-		},
-	}
-
 	var debugCmd = &cobra.Command{
 		Use:    "debug",
 		Short:  "Run the application in debug mode",
@@ -140,20 +130,22 @@ func main() {
 		Use:   "version",
 		Short: "show version number and exit",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(applicationVersion)
+			fmt.Printf("Mad Analyzer Daemon Version: %s\n", DaemonVersion)
+			fmt.Printf("Mad TUI Version: %s\n", TUIVersion)
+			fmt.Printf("Commit: %s\n", GitCommit)
+			fmt.Printf("Build Date: %s\n", BuildDate)
+			fmt.Printf("Repository: %s\n", RepoURL)
+			fmt.Printf("Config Location: %s\n", configs.ConfigLocation)
 		},
 	}
 
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
-	testingCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)
 	rootCmd.AddCommand(restartCmd)
 	rootCmd.AddCommand(reloadCmd)
-	rootCmd.AddCommand(testingCmd)
-	rootCmd.AddCommand(accessCmd)
 	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(versionCmd)
 

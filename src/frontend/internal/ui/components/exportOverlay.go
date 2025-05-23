@@ -2,10 +2,10 @@ package components
 
 import (
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/common"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/frr-mad/frr-tui/internal/common"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"sort"
 )
 
@@ -14,10 +14,12 @@ func RenderExportOptions(
 	exportData map[string]string,
 	cursor *int,
 	vp *viewport.Model,
+	statusMessage string,
+	statusSeverity styles.StatusSeverity,
 ) string {
 	// adjust viewport dimensions if needed
-	vp.Width = styles.ViewPortWidthHalf
-	vp.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+	vp.Width = styles.WidthViewPortHalf
+	vp.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.AdditionalFooterHeight - styles.FilterBoxHeight
 
 	// copy & sort options by label
 	opts := make([]common.ExportOption, len(exportOptions))
@@ -44,14 +46,6 @@ func RenderExportOptions(
 		}
 		s += fmt.Sprintf("%s%s\n", prefix, label)
 	}
-	s += styles.FooterBoxStyle.Render("\n\n[Tab Shift+Tab] move selection down/up one option")
-	s += styles.FooterBoxStyle.Render("\n[↑ ↓ home end] scroll preview\n")
-	s += styles.FooterBoxStyle.Render("\n[e] quit export options | [enter] export current selection")
-
-	//i := styles.FooterBoxStyle.Render("[Tab Shift+Tab] move selection down/up one option")
-	//i += styles.FooterBoxStyle.Render("\n[↑ ↓ home end] scroll preview\n")
-	//i2 := styles.FooterBoxStyle.Render("[enter] export current selection")
-	//i2 += styles.FooterBoxStyle.Render("\n[e] quit export options")
 
 	menu := styles.H1TwoContentBoxCenterStyle().Render(s)
 
@@ -71,10 +65,30 @@ func RenderExportOptions(
 		styles.H1TwoContentBoxesStyle().Render(vp.View()),
 	)
 
-	// final horizontal layout
-	return lipgloss.JoinHorizontal(
+	horizontalContent := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		styles.VerticallyCenter(menu, styles.HeightBasis),
+		styles.VerticallyCenter(menu, styles.HeightBasis-styles.AdditionalFooterHeight),
 		exportPreview,
+	)
+
+	statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
+	if statusMessage != "" {
+		styles.SetStatusSeverity(statusSeverity)
+		if len(statusMessage) > 50 {
+			statusMessage = statusMessage[:47] + "..."
+		}
+		renderedStatusMessage := styles.StatusTextStyle().Render(statusMessage)
+		statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(renderedStatusMessage)
+	}
+
+	keyboardOptions := styles.FooterBoxStyle.Render("\n" +
+		"[Tab Shift+Tab] move selection down/up one option | " +
+		"[enter] export current selection to file and clipboard | " +
+		"[ctrl+e] quit export options")
+
+	return lipgloss.JoinVertical(lipgloss.Left,
+		horizontalContent,
+		statusBox,
+		keyboardOptions,
 	)
 }

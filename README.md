@@ -9,7 +9,7 @@ This Project is split into two parts:
 - **frr-analyzer**: The analysis system that consits of aggregation, analysis and information exporting. It spawns a socket, which the frr-tui unit uses to fetch all necessary data. The exporter collects routing data and exports them via the well-defined Prometheus Node Exporter uri. 
 - **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
 
-Currently the backend application features. By simply executing the application, all available options are present.
+The backend application features a handy help output. By simply executing the application, all available options are present.
 ```sh
 r101:/app# frr-analyzer
 A CLI tool for managing the FRR-MAD application.
