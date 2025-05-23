@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"net"
@@ -32,6 +33,12 @@ type WindowSize struct {
 type Tab struct {
 	Title   string
 	SubTabs []string
+}
+
+type Filter struct {
+	Query  string
+	Active bool
+	Input  textinput.Model
 }
 
 type FooterOption struct {

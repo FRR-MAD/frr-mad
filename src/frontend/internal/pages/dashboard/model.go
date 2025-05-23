@@ -4,11 +4,11 @@ import (
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/charmbracelet/bubbles/viewport"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -17,50 +17,59 @@ type Model struct {
 	title              string
 	subTabs            []string
 	footer             []string
+	readOnlyMode       bool
 	toast              toast.Model
 	cursor             int
 	exportOptions      []common.ExportOption
 	exportData         map[string]string
 	exportDirectory    string
-	ospfAnomalies      []string // to be deleted
 	hasAnomalyDetected bool
 	showAnomalyOverlay bool
 	showExportOverlay  bool
+	textFilter         *common.Filter
 	windowSize         *common.WindowSize
 	viewport           viewport.Model
 	viewportLeft       viewport.Model
 	viewportRight      viewport.Model
 	viewportRightHalf  viewport.Model
 	currentTime        time.Time
+	statusMessage      string
+	statusSeverity     styles.StatusSeverity
 	logger             *logger.Logger
 }
 
-func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath string) *Model {
 
 	// Create the viewports with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage, styles.ViewPortHeightCompletePage)
-	vpl := viewport.New(styles.ViewPortWidthThreeFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
-	vpr := viewport.New(styles.ViewPortWidthOneFourth, styles.ViewPortHeightCompletePage-styles.HeightH1)
-	vprh := viewport.New(styles.ViewPortWidthHalf, styles.ViewPortHeightCompletePage-styles.HeightH1)
+	vp := viewport.New(styles.WidthViewPortCompletePage, styles.HeightViewPortCompletePage)
+	vpl := viewport.New(styles.WidthViewPortThreeFourth,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
+	vpr := viewport.New(styles.WidthViewPortOneFourth,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.WidthViewPortHalf,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:              "Dashboard",
-		subTabs:            []string{"OSPF", "BGP"},
-		footer:             []string{"[e] export options", "[r] refresh", "[↑ ↓ home end] scroll", "[a] anomaly details"},
+		subTabs:            []string{"OSPF"},
+		footer:             []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options", "[ctrl+a] anomaly details"},
+		readOnlyMode:       true,
 		cursor:             0,
 		exportOptions:      []common.ExportOption{},
 		exportData:         make(map[string]string),
-		exportDirectory:    "/tmp/frr-mad/exports",
-		ospfAnomalies:      []string{"Fetching OSPF data..."},
+		exportDirectory:    exportPath,
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
 		showExportOverlay:  false,
-		windowSize:         windowSize,
-		viewport:           vp,
-		viewportLeft:       vpl,
-		viewportRight:      vpr,
-		viewportRightHalf:  vprh,
-		logger:             appLogger,
+
+		windowSize:        windowSize,
+		viewport:          vp,
+		viewportLeft:      vpl,
+		viewportRight:     vpr,
+		viewportRightHalf: vprh,
+		statusMessage:     "",
+		statusSeverity:    styles.SeverityInfo,
+		logger:            appLogger,
 	}
 }
 

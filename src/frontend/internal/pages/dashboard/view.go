@@ -13,11 +13,11 @@ import (
 
 	"strconv"
 
+	"github.com/charmbracelet/lipgloss"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/components"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	frrProto "github.com/frr-mad/frr-tui/pkg"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var (
@@ -25,37 +25,72 @@ var (
 )
 
 // DashboardView is the updated View function. This allows to call View with an argument.
-func (m *Model) DashboardView(currentSubTab int) string {
+func (m *Model) DashboardView(currentSubTab int, readOnlyMode bool, textFilter *common.Filter) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
+	m.textFilter = textFilter
 	return m.View()
 }
 
 func (m *Model) View() string {
 	var body string
-	switch currentSubTabLocal {
-	case 0:
-		if m.showAnomalyOverlay {
-			body = m.renderAnomalyDetails()
-		} else if m.showExportOverlay {
-			body = components.RenderExportOptions(
-				m.exportOptions,
-				m.exportData,
-				&m.cursor,
-				&m.viewportRightHalf,
-			)
-		} else {
+	var bodyFooter string
+	var content string
+
+	statusBar := true
+
+	if m.showAnomalyOverlay {
+		content = m.renderAnomalyDetails()
+	} else if m.showExportOverlay {
+		content = components.RenderExportOptions(
+			m.exportOptions,
+			m.exportData,
+			&m.cursor,
+			&m.viewportRightHalf,
+			m.statusMessage,
+			m.statusSeverity,
+		)
+	} else {
+		switch currentSubTabLocal {
+		case 0:
 			m.detectAnomaly()
 			body = m.renderOSPFDashboard()
+		case 1:
+			body = "TBD"
+		default:
+			body = m.renderOSPFDashboard()
 		}
-	case 1:
-		body = "TBD"
-	default:
-		body = m.renderOSPFDashboard()
+
+		if statusBar {
+			var filterBox string
+			if m.textFilter.Active {
+				filterBox = "Filter: " + m.textFilter.Input.View()
+			} else {
+				filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+			}
+			filterBox = styles.FilterTextStyle().Render(filterBox)
+
+			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
+			if m.statusMessage != "" {
+				styles.SetStatusSeverity(m.statusSeverity)
+				if len(m.statusMessage) > 50 {
+					m.statusMessage = m.statusMessage[:47] + "..."
+				}
+				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
+			}
+
+			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusBox, filterBox)
+
+			content = lipgloss.JoinVertical(lipgloss.Left, body, bodyFooter)
+		} else {
+			content = body
+		}
 	}
 
 	toastView := m.toast.View()
 	if toastView == "" {
-		return body
+		return content
 	}
 
 	totalW := styles.WidthBasis
@@ -63,16 +98,15 @@ func (m *Model) View() string {
 	x := 0
 	y := 0
 
-	return toast.Overlay(body, toastView, x, y, totalW, totalH)
+	return toast.Overlay(content, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderOSPFDashboard() string {
-	// Update the viewportLeft
-	m.viewportLeft.Width = styles.ViewPortWidthThreeFourth
-	m.viewportLeft.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+	m.viewportLeft.Width = styles.WidthViewPortThreeFourth
+	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
 
-	m.viewportRight.Width = styles.ViewPortWidthOneFourth
-	m.viewportRight.Height = styles.ViewPortHeightCompletePage - styles.HeightH1
+	m.viewportRight.Width = styles.WidthViewPortOneFourth
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -282,21 +316,18 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 		}
 
 		// Order all Table Data
-		sort.Slice(routerLinkStateTableData, func(i, j int) bool {
-			return routerLinkStateTableData[i][0] < routerLinkStateTableData[j][0]
-		})
-		sort.Slice(networkLinkStateTableData, func(i, j int) bool {
-			return networkLinkStateTableData[i][0] < networkLinkStateTableData[j][0]
-		})
-		sort.Slice(summaryLinkStateTableData, func(i, j int) bool {
-			return summaryLinkStateTableData[i][0] < summaryLinkStateTableData[j][0]
-		})
-		sort.Slice(asbrSummaryLinkStateTableData, func(i, j int) bool {
-			return asbrSummaryLinkStateTableData[i][0] < asbrSummaryLinkStateTableData[j][0]
-		})
-		sort.Slice(nssaExternalLinkStateTableData, func(i, j int) bool {
-			return nssaExternalLinkStateTableData[i][0] < nssaExternalLinkStateTableData[j][0]
-		})
+		common.SortTableByIPColumn(routerLinkStateTableData)
+		common.SortTableByIPColumn(networkLinkStateTableData)
+		common.SortTableByIPColumn(summaryLinkStateTableData)
+		common.SortTableByIPColumn(asbrSummaryLinkStateTableData)
+		common.SortTableByIPColumn(nssaExternalLinkStateTableData)
+
+		// apply filters if active
+		routerLinkStateTableData = common.FilterRows(routerLinkStateTableData, m.textFilter.Query)
+		networkLinkStateTableData = common.FilterRows(networkLinkStateTableData, m.textFilter.Query)
+		summaryLinkStateTableData = common.FilterRows(summaryLinkStateTableData, m.textFilter.Query)
+		asbrSummaryLinkStateTableData = common.FilterRows(asbrSummaryLinkStateTableData, m.textFilter.Query)
+		nssaExternalLinkStateTableData = common.FilterRows(nssaExternalLinkStateTableData, m.textFilter.Query)
 
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
@@ -433,7 +464,7 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 			activeOptionalLSATypes,
 		)
 
-		lsdbSelfBlocks = append(lsdbSelfBlocks, completeAreaLSDBSelf+"\n\n")
+		lsdbSelfBlocks = append(lsdbSelfBlocks, completeAreaLSDBSelf)
 	}
 
 	// ===== External LSA =====
@@ -448,6 +479,12 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 			})
 		}
 	}
+
+	// Order all Table Data
+	common.SortTableByIPColumn(asExternalLinkStateTableData)
+
+	// apply filters if active
+	asExternalLinkStateTableData = common.FilterRows(asExternalLinkStateTableData, m.textFilter.Query)
 
 	// Create Table for External Link States and Fill with extracted asExternalLinkStateTableData
 	rowsExternal := len(asExternalLinkStateTableData)
@@ -659,8 +696,8 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 }
 
 func (m *Model) renderAnomalyDetails() string {
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage
 
 	// ===== IMPORTANT: If a line break happens automatically in the TUI,                ===== //
 	// =====            lipgloss renders an extra line which breaks the viewport Height. ===== //

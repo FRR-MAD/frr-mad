@@ -1,0 +1,26 @@
+name: Block Feature Branches to Main
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check_branch_restriction:
+    name: Enforce Branch Restrictions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check source branch
+        run: |
+          # Get the source branch name
+          SOURCE_BRANCH="${GITHUB_HEAD_REF}"
+          echo "Source branch: $SOURCE_BRANCH"
+          
+          # Check if it's a feature or fix branch trying to merge directly to main
+          if [[ "$SOURCE_BRANCH" == feature/* || "$SOURCE_BRANCH" == fix/* ]]; then
+            echo "::error::Direct merges from feature or fix branches to main are not allowed. Please create a pull request to staging first."
+            exit 1
+          else
+            echo "Branch check passed. This is not a feature or fix branch merging directly to main."
+          fi

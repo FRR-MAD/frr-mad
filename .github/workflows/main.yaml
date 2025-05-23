@@ -1,0 +1,160 @@
+name: Feature Branch to Staging Workflow
+
+on:
+#  push:
+#    branches:
+#      - 'feature/**'
+#      - 'fix/**'
+  pull_request:
+    branches:
+      - 'staging'
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    name: Setup build environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Protocol Buffers
+        run: |
+          PROTOC_VERSION=31.0
+          PROTOC_ZIP=protoc-$PROTOC_VERSION-linux-x86_64.zip
+          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/$PROTOC_ZIP
+          sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
+          sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
+          rm -f $PROTOC_ZIP
+          # Verify installation
+          protoc --version
+
+      - name: Install Go protobuf plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          # Add the Go bin directory to PATH to ensure the plugins are found
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.2'
+
+      - name: Install dependencies
+        run: |
+          make protobuf
+          make go-sync
+  
+      - name: Test
+        run: make test
+
+      - name: copy example configuration
+        run: |
+          mkdir -p artifacts
+          cp local/docker-config.yaml artifacts/dev-config.yaml
+
+      - name: build application
+        run: |
+          make dev
+          mv build/* artifacts/
+
+
+      - name: upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-binaries
+          path: artifacts/
+          retention-days: 1
+
+  version:
+    name: Version Check
+    needs: test
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Download Build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: go-binaries
+          path: artifacts/
+# Check tui version maybe?
+      - name: Test Artifacts
+        run: |
+          chmod +x artifacts/*
+          ./artifacts/frr-mad-analyzer version > version_output.txt
+
+          DAEMON_VERSION=$(grep "Mad Analyzer Daemon Version:" version_output.txt | cut -d':' -f2 | tr -d ' ') 
+          if [ "$DAEMON_VERSION" = "unknown" ]; then
+            echo "::error::Version check failed! Daemon version is 'unknown'"
+            exit 1
+          elif [ -z "$DAEMON_VERSION" ]; then
+            echo "::error::Version check failed! Could not parse version information"
+            exit 1
+          else
+            echo "Version check passed. Daemon version: $DAEMON_VERSION"
+          fi
+
+          # Set staging versions in env
+          echo "DAEMON_VERSION=$DAEMON_VERSION" >> $GITHUB_ENV
+
+          echo "Branch daemon version: $DAEMON_VERSION"
+
+      - name: Get Staging Version
+        id: versions
+        run: |
+          if [ -f ".STAGING_VERSION" ]; then
+            echo "Found .STAGING_VERSION file"
+            STAGING_DAEMON_VERSION=$(grep "daemon=" .STAGING_VERSION | cut -d'=' -f2 | tr -d ' ')
+            STAGING_TUI_VERSION=$(grep "tui=" .STAGING_VERSION | cut -d'=' -f2 | tr -d ' ')
+          else
+            echo "WARNING: .STAGING_VERSION file not found, using defaults"
+            STAGING_DAEMON_VERSION="unknown"
+            STAGING_TUI_VERSION="unknown"
+          fi
+
+          # Set staging versions in env
+          echo "STAGING_DAEMON_VERSION=$STAGING_DAEMON_VERSION" >> $GITHUB_ENV
+          echo "STAGING_TUI_VERSION=$STAGING_TUI_VERSION" >> $GITHUB_ENV
+
+          echo "Staging daemon version: $STAGING_DAEMON_VERSION"
+          echo "Staging TUI version: $STAGING_TUI_VERSION"
+
+      - name: Test branch to staging version
+        run: |
+          if [ "$STAGING_DAEMON_VERSION" = "unknown" ]; then
+            echo "Staging version is unknown, skipping version comparison"
+            exit 0
+          else 
+            IFS='.' read -ra CURRENT_VERSION <<< "$DAEMON_VERSION"
+            IFS='.' read -ra STAGING_VERSION <<< "$STAGING_DAEMON_VERSION"
+
+            if [ ${#CURRENT_VERSION[@]} -ne 3 ] || [ ${#STAGING_VERSION[@]} -ne 3 ]; then
+              echo "::error::Version format error: Both versions must be in x.y.z format"
+              echo "Current: $DAEMON_VERSION, Staging: $STAGING_DAEMON_VERSION"
+              exit 1
+            fi
+
+            if [ ${CURRENT_VERSION[0]} -lt ${STAGING_VERSION[0]} ]; then
+              echo "::error::Version check failed: Current major version (${CURRENT_VERSION[0]}) is less than staging (${STAGING_VERSION[0]})"
+              exit 1
+            fi
+
+            if [ ${CURRENT_VERSION[0]} -eq ${STAGING_VERSION[0]} ] && [ ${CURRENT_VERSION[1]} -lt ${STAGING_VERSION[1]} ]; then
+              echo "::error::Version check failed: Current minor version (${CURRENT_VERSION[1]}) is less than staging (${STAGING_VERSION[1]}) with equal major version"
+              exit 1
+            fi
+
+            if [ ${CURRENT_VERSION[0]} -eq ${STAGING_VERSION[0]} ] && [ ${CURRENT_VERSION[1]} -eq ${STAGING_VERSION[1]} ] && [ ${CURRENT_VERSION[2]} -lt ${STAGING_VERSION[2]} ]; then
+              echo "::error::Version check failed: Current patch version (${CURRENT_VERSION[2]}) is less than staging (${STAGING_VERSION[2]}) with equal major and minor versions"
+              exit 1
+            fi
+
+            if [ "$DAEMON_VERSION" = "$STAGING_DAEMON_VERSION" ]; then
+              echo "::error::Version check failed: Current version ($DAEMON_VERSION) is exactly the same as staging version"
+              exit 1
+            fi
+
+            echo "Version check passed: Current version ($DAEMON_VERSION) is newer than staging version ($STAGING_DAEMON_VERSION)"
+
+          fi
+

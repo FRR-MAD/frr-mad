@@ -28,9 +28,6 @@ func (m *AppModel) setTitles() {
 		m.dashboard,
 		m.ospf,
 		m.rib,
-		// code for Presentation slides
-		//m.ospf2,
-		//m.ospf3,
 		m.shell,
 	}
 	for _, page := range pages {

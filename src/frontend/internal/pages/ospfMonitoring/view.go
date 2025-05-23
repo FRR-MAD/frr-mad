@@ -17,20 +17,28 @@ import (
 
 var currentSubTabLocal = -1
 
-func (m *Model) OSPFView(currentSubTab int) string {
+func (m *Model) OSPFView(currentSubTab int, readOnlyMode bool, textFilter *common.Filter) string {
 	currentSubTabLocal = currentSubTab
+	m.readOnlyMode = readOnlyMode
+	m.textFilter = textFilter
 	return m.View()
 }
 
 func (m *Model) View() string {
 	var body string
+	var bodyFooter string
+	var content string
+
+	statusBar := true
 
 	if m.showExportOverlay {
-		body = components.RenderExportOptions(
+		content = components.RenderExportOptions(
 			m.exportOptions,
 			m.exportData,
 			&m.cursor,
 			&m.viewportRightHalf,
+			m.statusMessage,
+			m.statusSeverity,
 		)
 	} else {
 		switch currentSubTabLocal {
@@ -46,14 +54,41 @@ func (m *Model) View() string {
 			body = m.renderNeighborMonitorTab()
 		case 5:
 			body = m.renderRunningConfigTab()
+			statusBar = false
 		default:
 			body = m.renderLsdbMonitorTab()
+		}
+
+		if statusBar {
+			var filterBox string
+			if m.textFilter.Active {
+				filterBox = "Filter: " + m.textFilter.Input.View()
+			} else {
+				filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+			}
+			filterBox = styles.FilterTextStyle().Render(filterBox)
+
+			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
+			if m.statusMessage != "" {
+				styles.SetStatusSeverity(m.statusSeverity)
+				if len(m.statusMessage) > 50 {
+					m.statusMessage = m.statusMessage[:47] + "..."
+				}
+				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
+			}
+
+			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusBox, filterBox)
+
+			content = lipgloss.JoinVertical(lipgloss.Left, body, bodyFooter)
+		} else {
+			content = body
 		}
 	}
 
 	toastView := m.toast.View()
 	if toastView == "" {
-		return body
+		return content
 	}
 
 	totalW := styles.WidthBasis
@@ -61,7 +96,7 @@ func (m *Model) View() string {
 	x := 0
 	y := 0
 
-	return toast.Overlay(body, toastView, x, y, totalW, totalH)
+	return toast.Overlay(content, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderLsdbMonitorTab() string {
@@ -168,6 +203,13 @@ func (m *Model) renderLsdbMonitorTab() string {
 		common.SortTableByIPColumn(asbrSummaryLinkStateTableData)
 		common.SortTableByIPColumn(nssaExternalLinkStateTableData)
 
+		// apply filters if active
+		routerLinkStateTableData = common.FilterRows(routerLinkStateTableData, m.textFilter.Query)
+		networkLinkStateTableData = common.FilterRows(networkLinkStateTableData, m.textFilter.Query)
+		summaryLinkStateTableData = common.FilterRows(summaryLinkStateTableData, m.textFilter.Query)
+		asbrSummaryLinkStateTableData = common.FilterRows(asbrSummaryLinkStateTableData, m.textFilter.Query)
+		nssaExternalLinkStateTableData = common.FilterRows(nssaExternalLinkStateTableData, m.textFilter.Query)
+
 		// Create Table for Router Link States and Fill with extracted routerLinkStateTableData
 		rowsRouter := len(routerLinkStateTableData)
 		routerLinkStateTable := components.NewOspfMonitorTable(
@@ -268,8 +310,13 @@ func (m *Model) renderLsdbMonitorTab() string {
 			styles.H2OneBoxBottomBorderStyle().Render(""),
 		)
 
-		horizontalRouterAndNetworkLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, routerTableBox, networkTableBox)
-		horizontalSummaryAndAsbrSummaryLinkStates := lipgloss.JoinHorizontal(lipgloss.Top, summaryTableBox, asbrSummaryTableBox)
+		verticalRouterAndSummaryLinkStates := lipgloss.JoinVertical(lipgloss.Left, routerTableBox, summaryTableBox)
+		verticalNetworkAndAsbrSummaryLinkStates := lipgloss.JoinVertical(lipgloss.Left, networkTableBox, asbrSummaryTableBox)
+
+		type1to4Total := lipgloss.JoinHorizontal(lipgloss.Left,
+			verticalRouterAndSummaryLinkStates,
+			verticalNetworkAndAsbrSummaryLinkStates,
+		)
 
 		var optionalLSAType7 []string
 		if nssaExternalLinkStateTableData != nil {
@@ -282,12 +329,11 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 		completeAreaLSDB := lipgloss.JoinVertical(lipgloss.Left,
 			areaHeader,
-			horizontalRouterAndNetworkLinkStates,
-			horizontalSummaryAndAsbrSummaryLinkStates,
+			type1to4Total,
 			activeOptionalLSATypes,
 		)
 
-		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB+"\n")
+		lsdbBlocks = append(lsdbBlocks, completeAreaLSDB)
 	}
 
 	// ===== External LSA =====
@@ -306,6 +352,12 @@ func (m *Model) renderLsdbMonitorTab() string {
 	} else {
 		amountOfExternalLS = strconv.Itoa(int(lsdb.AsExternalCount))
 	}
+
+	// Order all Table Data
+	common.SortTableByIPColumn(asExternalLinkStateTableData)
+
+	// apply filters if active
+	asExternalLinkStateTableData = common.FilterRows(asExternalLinkStateTableData, m.textFilter.Query)
 
 	// Create Table for External Link States and Fill with extracted asExternalLinkStateTableData
 	rowsExternal := len(asExternalLinkStateTableData)
@@ -340,7 +392,7 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	// Set viewport sizes and assign content to viewport
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
 
@@ -419,6 +471,11 @@ func (m *Model) renderRouterMonitorTab() string {
 		common.SortTableByIPColumn(stubTableData)
 		common.SortTableByIPColumn(point2pointTableData)
 
+		// apply filters if active
+		transitTableData = common.FilterRows(transitTableData, m.textFilter.Query)
+		stubTableData = common.FilterRows(stubTableData, m.textFilter.Query)
+		point2pointTableData = common.FilterRows(point2pointTableData, m.textFilter.Query)
+
 		rowsTransit := len(transitTableData)
 		transitTable := components.NewOspfMonitorTable(
 			[]string{
@@ -461,38 +518,66 @@ func (m *Model) renderRouterMonitorTab() string {
 
 		areaHeader := styles.H1TitleStyleForOne().Render(fmt.Sprintf("Area %s", areaID))
 
-		transitTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render("Transit Networks"),
-			styles.H2TwoContentBoxesCenterStyle().Render(transitTable.String()),
-			styles.H2TwoBoxBottomBorderStyle().Render(""),
-		)
-		stubTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render("Stub Networks"),
-			styles.H2TwoContentBoxesCenterStyle().Render(stubTable.String()),
-			styles.H2TwoBoxBottomBorderStyle().Render(""),
-		)
-		point2pointTableBox := lipgloss.JoinVertical(lipgloss.Left,
-			styles.H2TitleStyleForTwo().Render("Point-to-Point Networks"),
-			styles.H2TwoContentBoxesCenterStyle().Render(point2pointTable.String()),
-			styles.H2TwoBoxBottomBorderStyle().Render(""),
-		)
-
-		var verticalTables string
-		if len(transitTableBox) < len(stubTableBox) {
-			verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox)
+		var transitTableBox string
+		if len(transitTableData) != 0 {
+			transitTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("Transit Networks"),
+				styles.H2TwoContentBoxesCenterStyle().Render(transitTable.String()),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
 		} else {
-			verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox)
+			transitTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("NoTransit Networks"),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
 		}
 
-		horizontalTables := lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
+		var stubTableBox string
+		if len(stubTableData) != 0 {
+			stubTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("Stub Networks"),
+				styles.H2TwoContentBoxesCenterStyle().Render(stubTable.String()),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		} else {
+			stubTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("No Stub Networks"),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		}
+
+		var point2pointTableBox string
+		if len(point2pointTableData) != 0 {
+			point2pointTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("Point-to-Point Networks"),
+				styles.H2TwoContentBoxesCenterStyle().Render(point2pointTable.String()),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		} else {
+			point2pointTableBox = lipgloss.JoinVertical(lipgloss.Left,
+				styles.H2TitleStyleForTwo().Render("No Point-to-Point Networks"),
+				styles.H2TwoBoxBottomBorderStyle().Render(""),
+			)
+		}
+
+		var verticalTables string
+		var horizontalTables string
+
+		if len(transitTableBox) < len(stubTableBox) {
+			verticalTables = lipgloss.JoinVertical(lipgloss.Left, transitTableBox, point2pointTableBox)
+			horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, verticalTables, stubTableBox)
+		} else {
+			verticalTables = lipgloss.JoinVertical(lipgloss.Left, stubTableBox, point2pointTableBox)
+			horizontalTables = lipgloss.JoinHorizontal(lipgloss.Top, transitTableBox, verticalTables)
+		}
 
 		completeAreaRouterLSAs := lipgloss.JoinVertical(lipgloss.Left, areaHeader, horizontalTables)
 
 		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
 
@@ -543,6 +628,9 @@ func (m *Model) renderNetworkMonitorTab() string {
 		// Order all Table Data
 		common.SortTableByIPColumn(networkTableData)
 
+		// apply filters if active
+		networkTableData = common.FilterRows(networkTableData, m.textFilter.Query)
+
 		rowsNetwork := len(networkTableData)
 		networkTable := components.NewOspfMonitorMultilineTable(
 			[]string{
@@ -576,11 +664,12 @@ func (m *Model) renderNetworkMonitorTab() string {
 
 	if networkLSABlocks == nil {
 		return lipgloss.JoinHorizontal(lipgloss.Left,
-			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"))
+			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"),
+			lipgloss.NewStyle().Height(styles.HeightH1EmptyContentPadding).Render(""))
 	}
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
 
@@ -625,6 +714,9 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	// Order all Table Data
 	common.SortTableByIPColumn(externalTableData)
+
+	// apply filters if active
+	externalTableData = common.FilterRows(externalTableData, m.textFilter.Query)
 
 	rowsExternal := len(externalTableData)
 	externalTable := components.NewOspfMonitorTable([]string{
@@ -680,6 +772,9 @@ func (m *Model) renderExternalMonitorTab() string {
 			// Order all Table Data
 			common.SortTableByIPColumn(nssaExternalTableData)
 
+			// apply filters if active
+			nssaExternalTableData = common.FilterRows(nssaExternalTableData, m.textFilter.Query)
+
 			// create table for NSSA Exernal Link States with extracted data (nssaExternalTableData)
 			rowsNssaExternal := len(nssaExternalTableData)
 			nssaExternalTable := components.NewOspfMonitorTable(
@@ -711,8 +806,8 @@ func (m *Model) renderExternalMonitorTab() string {
 		}
 	}
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	var allLsaBlocks []string
 	if hasNssaExternalLSAs == false {
@@ -720,6 +815,7 @@ func (m *Model) renderExternalMonitorTab() string {
 			allLsaBlocks = allLsaBlocks[:0]
 			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
 				styles.H1TitleStyleForOne().Render(routerName+" does not originate External LSAs (Type 5 or 7)"),
+				lipgloss.NewStyle().Height(styles.HeightH1EmptyContentPadding).Render(""),
 			))
 		} else {
 			allLsaBlocks = externalLsaBlock
@@ -770,6 +866,12 @@ func (m *Model) renderNeighborMonitorTab() string {
 
 	}
 
+	// Order all Table Data
+	common.SortTableByIPColumn(ospfNeighborTableData)
+
+	// apply filters if active
+	ospfNeighborTableData = common.FilterRows(ospfNeighborTableData, m.textFilter.Query)
+
 	// Create Table for NSSA External Link States and Fill with extracted nssaExternalLinkStateTableData
 	rowsOspfNeighbors := len(ospfNeighborTableData)
 	ospfNeighborTable := components.NewOspfMonitorTable(
@@ -797,8 +899,8 @@ func (m *Model) renderNeighborMonitorTab() string {
 		styles.H2OneBoxBottomBorderStyle().Render(""),
 	)
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
 
@@ -829,8 +931,8 @@ func (m *Model) renderRunningConfigTab() string {
 
 	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage
 	m.viewport.SetContent(completeContent)
 
 	return m.viewport.View()
