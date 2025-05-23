@@ -31,12 +31,15 @@ backend-prod:
 	$(MAKE) -C src/backend prod
 
 # Testing targets
-test: test-frontend test-backend
+test: test/clearcache test/frontend test/backend
 
-test-frontend:
+test/clearcache:
+	go clean -testcache
+
+test/frontend:
 	$(MAKE) -C src/frontend test
 
-test-backend:
+test/backend:
 	$(MAKE) -C src/backend test
 
 # Protobuf generation
