@@ -35,19 +35,20 @@ const (
 var subTabsLength int
 
 type AppModel struct {
-	currentView   AppState
-	tabs          []common.Tab
-	currentSubTab int
-	readOnlyMode  bool
-	windowSize    *common.WindowSize
-	dashboard     *dashboard.Model
-	ospf          *ospfMonitoring.Model
-	rib           *rib.Model
-	shell         *shell.Model
-	footer        *components.Footer
-	footerOptions []common.FooterOption
-	textFilter    *common.Filter
-	logger        *logger.Logger
+	currentView    AppState
+	tabs           []common.Tab
+	currentSubTab  int
+	readOnlyMode   bool
+	windowSize     *common.WindowSize
+	dashboard      *dashboard.Model
+	ospf           *ospfMonitoring.Model
+	rib            *rib.Model
+	shell          *shell.Model
+	showSystemInfo bool
+	footer         *components.Footer
+	footerOptions  []common.FooterOption
+	textFilter     *common.Filter
+	logger         *logger.Logger
 }
 
 func initModel(config *configs.Config) *AppModel {
@@ -76,18 +77,19 @@ func initModel(config *configs.Config) *AppModel {
 	ti.Width = 20
 
 	return &AppModel{
-		currentView:   ViewDashboard,
-		tabs:          []common.Tab{},
-		currentSubTab: -1,
-		readOnlyMode:  true,
-		windowSize:    windowSize,
-		dashboard:     dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
-		ospf:          ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
-		rib:           rib.New(windowSize, ribLogger, config.Default.ExportPath),
-		shell:         shell.New(windowSize, shellLogger),
-		footer:        components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
-		logger:        appLogger,
-		textFilter:    &common.Filter{Active: false, Query: "", Input: ti},
+		currentView:    ViewDashboard,
+		tabs:           []common.Tab{},
+		currentSubTab:  -1,
+		readOnlyMode:   true,
+		windowSize:     windowSize,
+		dashboard:      dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
+		ospf:           ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
+		rib:            rib.New(windowSize, ribLogger, config.Default.ExportPath),
+		shell:          shell.New(windowSize, shellLogger),
+		showSystemInfo: false,
+		footer:         components.NewFooter("[ctrl+c] exit FRR-MAD", "[i] system info", "[enter] enter sub tabs"),
+		logger:         appLogger,
+		textFilter:     &common.Filter{Active: false, Query: "", Input: ti},
 	}
 }
 
@@ -144,12 +146,18 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+w":
 			m.readOnlyMode = !m.readOnlyMode
 			styles.ChangeReadWriteMode(m.readOnlyMode)
+		case "i":
+			if m.currentView != ViewShell && !m.textFilter.Active {
+				m.showSystemInfo = !m.showSystemInfo
+			}
 		case "esc":
 			if m.textFilter.Active {
 				m.textFilter.Active = false
 				m.textFilter.Query = ""
 				m.textFilter.Input.Blur()
 				return m, nil
+			} else if m.showSystemInfo {
+				m.showSystemInfo = false
 			} else {
 				m.currentSubTab = -1
 				m.footer.SetMainMenuOptions()
@@ -211,21 +219,26 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *AppModel) View() string {
 
 	var content string
-	switch m.currentView {
-	case ViewDashboard:
-		content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode, m.textFilter)
-		subTabsLength = m.dashboard.GetSubTabsLength()
-	case ViewOSPF:
-		content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)
-		subTabsLength = m.ospf.GetSubTabsLength()
-	case ViewRIB:
-		content = m.rib.RibView(m.currentSubTab, m.readOnlyMode, m.textFilter)
-		subTabsLength = m.rib.GetSubTabsLength()
-	case ViewShell:
-		content = m.shell.ShellView(m.currentSubTab, m.readOnlyMode)
-		subTabsLength = m.shell.GetSubTabsLength()
-	default:
-		return "Unknown view"
+
+	if m.showSystemInfo {
+		content = components.GetSystemInfoOverlay()
+	} else {
+		switch m.currentView {
+		case ViewDashboard:
+			content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode, m.textFilter)
+			subTabsLength = m.dashboard.GetSubTabsLength()
+		case ViewOSPF:
+			content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)
+			subTabsLength = m.ospf.GetSubTabsLength()
+		case ViewRIB:
+			content = m.rib.RibView(m.currentSubTab, m.readOnlyMode, m.textFilter)
+			subTabsLength = m.rib.GetSubTabsLength()
+		case ViewShell:
+			content = m.shell.ShellView(m.currentSubTab, m.readOnlyMode)
+			subTabsLength = m.shell.GetSubTabsLength()
+		default:
+			return "Unknown view"
+		}
 	}
 
 	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)

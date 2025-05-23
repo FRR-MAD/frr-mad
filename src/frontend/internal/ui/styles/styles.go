@@ -105,8 +105,8 @@ func SetWindowSizes(window common.WindowSize) {
 // Colors                                   //
 // ======================================== //
 
-var readModeBlue = "#5f87ff"   // Usage: Read Only Mode --> Active Menu Tab, Content Border
-var writeModeCoral = "#FF3B30" // Usage: Read/Write Mode --> Active Menu Tab, Content Border
+var ReadModeBlue = "#5f87ff"   // Usage: Read Only Mode --> Active Menu Tab, Content Border
+var WriteModeCoral = "#FF3B30" // Usage: Read/Write Mode --> Active Menu Tab, Content Border
 var Grey = "#444444"           // Usage: inactive components, options, H2 Title
 var NormalBeige = "#d7d7af"    // Usage: H1 Title
 var GoodGreen = "#5f875f"      // Usage: Box border when content good
@@ -116,7 +116,7 @@ var NavyBlue = "#00005f"       // Usage: Text color if on NormalBeige background
 var Black = "#000000"
 var White = "#ffffff"
 
-var TuiColor = readModeBlue
+var TuiColor = ReadModeBlue
 
 var InfoStatusColor = White
 var InfoStatusBackground = Grey
@@ -130,9 +130,9 @@ var StatusBackground = InfoStatusBackground
 
 func ChangeReadWriteMode(readOnlyMode bool) {
 	if readOnlyMode {
-		TuiColor = readModeBlue
+		TuiColor = ReadModeBlue
 	} else {
-		TuiColor = writeModeCoral
+		TuiColor = WriteModeCoral
 	}
 }
 
@@ -251,10 +251,8 @@ func H1BadTitleStyle() lipgloss.Style {
 func FilterTextStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Margin(0, 2).
-		//Padding(0, 0, 0, 1).
 		Width(WidthTwoH1Box).
 		Align(lipgloss.Right)
-	//Background(lipgloss.Color(LightBlue))
 }
 
 func StatusTextStyle() lipgloss.Style {

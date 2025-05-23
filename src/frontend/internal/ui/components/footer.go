@@ -33,8 +33,8 @@ func (f *Footer) AppendMultiple(lines []string) {
 
 // Clean removes all entries from the footer except for the first one.
 func (f *Footer) Clean() {
-	if len(f.content) > 1 {
-		f.content = f.content[:1]
+	if len(f.content) > 2 {
+		f.content = f.content[:2]
 	}
 }
 
