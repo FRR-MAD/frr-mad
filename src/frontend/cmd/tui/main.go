@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/viewport"
 	"log"
 	"os"
 
@@ -35,24 +36,29 @@ const (
 var subTabsLength int
 
 type AppModel struct {
-	currentView    AppState
-	tabs           []common.Tab
-	currentSubTab  int
-	readOnlyMode   bool
-	windowSize     *common.WindowSize
-	dashboard      *dashboard.Model
-	ospf           *ospfMonitoring.Model
-	rib            *rib.Model
-	shell          *shell.Model
-	showSystemInfo bool
-	footer         *components.Footer
-	footerOptions  []common.FooterOption
-	textFilter     *common.Filter
-	logger         *logger.Logger
+	currentView       AppState
+	tabs              []common.Tab
+	currentSubTab     int
+	readOnlyMode      bool
+	windowSize        *common.WindowSize
+	viewport          viewport.Model
+	dashboard         *dashboard.Model
+	ospf              *ospfMonitoring.Model
+	rib               *rib.Model
+	shell             *shell.Model
+	showSystemInfo    bool
+	preventSubTabExit bool
+	footer            *components.Footer
+	footerOptions     []common.FooterOption
+	textFilter        *common.Filter
+	logger            *logger.Logger
 }
 
 func initModel(config *configs.Config) *AppModel {
-	windowSize := &common.WindowSize{Width: 80, Height: 24}
+	windowSize := &common.WindowSize{Width: 157, Height: 38}
+
+	vp := viewport.New(styles.WidthViewPortCompletePage,
+		styles.HeightViewPortCompletePage-styles.FilterBoxHeight)
 
 	debugLevel := getDebugLevel(config.Default.DebugLevel)
 	appLogger := createLogger("frr_mad_frontend", fmt.Sprintf("%v/frr_mad_frontend.log", config.Default.LogPath))
@@ -77,19 +83,21 @@ func initModel(config *configs.Config) *AppModel {
 	ti.Width = 20
 
 	return &AppModel{
-		currentView:    ViewDashboard,
-		tabs:           []common.Tab{},
-		currentSubTab:  -1,
-		readOnlyMode:   true,
-		windowSize:     windowSize,
-		dashboard:      dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
-		ospf:           ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
-		rib:            rib.New(windowSize, ribLogger, config.Default.ExportPath),
-		shell:          shell.New(windowSize, shellLogger),
-		showSystemInfo: false,
-		footer:         components.NewFooter("[ctrl+c] exit FRR-MAD", "[i] system info", "[enter] enter sub tabs"),
-		logger:         appLogger,
-		textFilter:     &common.Filter{Active: false, Query: "", Input: ti},
+		currentView:       ViewDashboard,
+		tabs:              []common.Tab{},
+		currentSubTab:     -1,
+		readOnlyMode:      true,
+		windowSize:        windowSize,
+		viewport:          vp,
+		dashboard:         dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
+		ospf:              ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
+		rib:               rib.New(windowSize, ribLogger, config.Default.ExportPath),
+		shell:             shell.New(windowSize, shellLogger),
+		showSystemInfo:    false,
+		preventSubTabExit: false,
+		footer:            components.NewFooter("[ctrl+c] exit FRR-MAD", "[i] system info", "[enter] enter sub tabs"),
+		logger:            appLogger,
+		textFilter:        &common.Filter{Active: false, Query: "", Input: ti},
 	}
 }
 
@@ -160,6 +168,8 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+w":
 			m.readOnlyMode = !m.readOnlyMode
 			styles.ChangeReadWriteMode(m.readOnlyMode)
+		case "ctrl+e", "ctrl+a":
+			m.preventSubTabExit = !m.preventSubTabExit
 		case "i":
 			if m.currentView != ViewShell && !m.textFilter.Active {
 				m.showSystemInfo = !m.showSystemInfo
@@ -172,6 +182,8 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			} else if m.showSystemInfo {
 				m.showSystemInfo = false
+			} else if m.preventSubTabExit {
+				m.preventSubTabExit = false
 			} else {
 				m.currentSubTab = -1
 				m.footer.SetMainMenuOptions()
@@ -232,10 +244,20 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *AppModel) View() string {
 
-	var content string
+	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)
+	contentWidth := m.windowSize.Width - 4
+	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.BorderContentBox - styles.FooterHeight
 
+	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize, m.logger)
+	footer := m.footer.Get()
+
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = styles.HeightViewPortCompletePage
+
+	var content string
 	if m.showSystemInfo {
-		content = components.GetSystemInfoOverlay()
+		systemInfo := components.GetSystemInfoOverlay()
+		m.viewport.SetContent(systemInfo)
 	} else {
 		switch m.currentView {
 		case ViewDashboard:
@@ -255,19 +277,21 @@ func (m *AppModel) View() string {
 		}
 	}
 
-	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)
-	contentWidth := m.windowSize.Width - 4
-	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.BorderContentBox - styles.FooterHeight
+	var tuiContent string
+	if m.showSystemInfo {
+		tuiContent = m.viewport.View()
+	} else {
+		tuiContent = content
+	}
 
-	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize, m.logger)
-	footer := m.footer.Get()
-
-	return lipgloss.JoinVertical(
+	tui := lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
-		styles.ContentBoxStyle().Width(contentWidth).Height(contentHeight).Render(content),
+		styles.ContentBoxStyle().Width(contentWidth).Height(contentHeight).Render(tuiContent),
 		styles.FooterBoxStyle.Width(contentWidth).Render(footer),
 	)
+
+	return tui
 }
 
 func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {

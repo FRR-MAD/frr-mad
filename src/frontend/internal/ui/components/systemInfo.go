@@ -81,10 +81,64 @@ func GetSystemInfoOverlay() string {
 		"\n",
 	)
 
-	firstCol := lipgloss.NewStyle().Width(styles.WidthBasis / 3).
-		Render(lipgloss.JoinVertical(lipgloss.Left, anomalyDetectionLegend))
-	secondCol := lipgloss.NewStyle().Width(styles.WidthBasis / 3).
-		Render(lipgloss.JoinVertical(lipgloss.Left, frrMADTUILegend, messageLegend))
+	keyboardOptionsTitle := styles.TextTitleStyle.Render("Keyboard Options")
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, firstCol, secondCol)
+	generalOptionsTitle := lipgloss.NewStyle().Bold(true).Render("General")
+	generalOptions := []string{
+		"Ctrl+C     | Quit FRR-MAD (always active)",
+		"i          | Toggle system info (only when no input field is focused)",
+		"Enter      | Enter sub-tabs",
+		"Esc        | Exit sub-tab",
+		"↑/↓        | Scroll 10 lines",
+		"End/Home   | Scroll full page",
+	}
+
+	filterOptionsTitle := lipgloss.NewStyle().Bold(true).Render("\nFilter Content")
+	filterOptions := []string{
+		":          | Toggle table filter (works on pages with a filter at the bottom right)",
+		"Esc        | Disable filter (retains last query)",
+		"Enter      | Apply filter after re-enabling",
+	}
+
+	exportOptionsTitle := lipgloss.NewStyle().Bold(true).Render("\nExport Data")
+	exportOptions := []string{
+		"Ctrl+E     | Toggle export options page",
+		"Esc        | Close export options page",
+		"Tab        | Move selection down",
+		"Shift+Tab  | Move selection up",
+		"Enter      | Export selected option to the given path",
+		"           | (If OSC52 is supported in local terminal, also copies to clipboard)",
+	}
+
+	anomalyInfoTitle := lipgloss.NewStyle().Bold(true).Render("\nAnomaly Details")
+	anomalyOptions := []string{
+		"Ctrl+A     | Toggle anomaly details page (only on dashboard)",
+		"Esc        | Close anomaly details page",
+	}
+
+	renderedGeneralOptions := lipgloss.JoinVertical(lipgloss.Left, generalOptions...)
+	renderedExportOptions := lipgloss.JoinVertical(lipgloss.Left, exportOptions...)
+	renderedFilterOptions := lipgloss.JoinVertical(lipgloss.Left, filterOptions...)
+	renderedAnomalyOptions := lipgloss.JoinVertical(lipgloss.Left, anomalyOptions...)
+
+	keyboardOptions := lipgloss.JoinVertical(lipgloss.Left,
+		keyboardOptionsTitle,
+		generalOptionsTitle,
+		renderedGeneralOptions,
+		filterOptionsTitle,
+		renderedFilterOptions,
+		exportOptionsTitle,
+		renderedExportOptions,
+		anomalyInfoTitle,
+		renderedAnomalyOptions,
+	)
+
+	firstCol := lipgloss.NewStyle().Width(37).
+		Render(lipgloss.JoinVertical(lipgloss.Left, anomalyDetectionLegend))
+	secondCol := lipgloss.NewStyle().Width(27).
+		Render(lipgloss.JoinVertical(lipgloss.Left, frrMADTUILegend, messageLegend))
+	thirdCol := lipgloss.NewStyle().Width(styles.WidthBasis - 64).
+		Render(lipgloss.JoinVertical(lipgloss.Left, keyboardOptions))
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, firstCol, secondCol, thirdCol)
 }
