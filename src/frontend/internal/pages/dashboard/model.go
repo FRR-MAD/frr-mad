@@ -38,7 +38,7 @@ type Model struct {
 	logger             *logger.Logger
 }
 
-func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath string) *Model {
 
 	// Create the viewports with the desired dimensions.
 	vp := viewport.New(styles.WidthViewPortCompletePage, styles.HeightViewPortCompletePage)
@@ -57,7 +57,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		cursor:             0,
 		exportOptions:      []common.ExportOption{},
 		exportData:         make(map[string]string),
-		exportDirectory:    "/tmp/frr-mad/exports",
+		exportDirectory:    exportPath,
 		hasAnomalyDetected: false,
 		showAnomalyOverlay: false,
 		showExportOverlay:  false,

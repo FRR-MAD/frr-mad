@@ -34,7 +34,7 @@ type Model struct {
 }
 
 // New creates and returns a new dashboard Model.
-func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath string) *Model {
 
 	// Create the viewport with the desired dimensions.
 	vp := viewport.New(styles.WidthViewPortCompletePage,
@@ -52,7 +52,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),
-		exportDirectory:   "/tmp/frr-mad/exports",
+		exportDirectory:   exportPath,
 		runningConfig:     []string{"Fetching running config..."},
 		expandedMode:      false,
 		showExportOverlay: false,

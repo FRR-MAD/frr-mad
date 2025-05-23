@@ -6,6 +6,7 @@ import (
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 )
@@ -75,6 +76,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					)
 				}
 
+				err := common.CopyOSC52(data)
+				if err != nil {
+					m.statusSeverity = styles.SeverityWarning
+					m.statusMessage = "Could not Copy Clipboard: use a terminal with osc52 enabled"
+				} else {
+					m.statusSeverity = styles.SeverityInfo
+					m.statusMessage = "successfully copied to clipboard"
+				}
+
 				if err := common.WriteExportToFile(data, opt.Filename, m.exportDirectory); err != nil {
 					return m, tea.Batch(
 						toastCmd,
@@ -94,6 +104,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+e":
 			if m.showExportOverlay {
 				m.toast = toast.New()
+				m.statusSeverity = styles.SeverityInfo
+				m.statusMessage = ""
 			} else {
 				err := m.fetchLatestData()
 				if err != nil {
@@ -106,6 +118,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.showExportOverlay = !m.showExportOverlay
 		case "esc":
+			m.statusSeverity = styles.SeverityInfo
+			m.statusMessage = ""
 			if m.showExportOverlay {
 				m.toast = toast.New()
 				m.showExportOverlay = false

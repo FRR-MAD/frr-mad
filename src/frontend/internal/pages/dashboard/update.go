@@ -4,6 +4,7 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
@@ -91,6 +92,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					)
 				}
 
+				err := common.CopyOSC52(data)
+				if err != nil {
+					m.statusSeverity = styles.SeverityWarning
+					m.statusMessage = "Could not Copy Clipboard: use a terminal with osc52 enabled"
+				} else {
+					m.statusSeverity = styles.SeverityInfo
+					m.statusMessage = "successfully copied to clipboard"
+				}
+
 				if err := common.WriteExportToFile(data, opt.Filename, m.exportDirectory); err != nil {
 					return m, tea.Batch(
 						toastCmd,
@@ -113,6 +123,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !m.showAnomalyOverlay {
 				if m.showExportOverlay {
 					m.toast = toast.New()
+					m.statusSeverity = styles.SeverityInfo
+					m.statusMessage = ""
 				} else {
 					err := m.fetchLatestData()
 					if err != nil {
@@ -126,6 +138,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.showExportOverlay = !m.showExportOverlay
 			}
 		case "esc":
+			m.statusSeverity = styles.SeverityInfo
+			m.statusMessage = ""
 			if m.showAnomalyOverlay {
 				m.showAnomalyOverlay = false
 				return m, nil

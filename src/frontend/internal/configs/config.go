@@ -14,6 +14,7 @@ var ConfigLocation = "/etc/frr-mad/main.yaml"
 type DefaultConfig struct {
 	TempFiles  string `mapstructure:"tempfiles"`
 	LogPath    string `mapstructure:"logpath"`
+	ExportPath string `mapstructure:"exportpath"`
 	DebugLevel string `mapstructure:"debuglevel"`
 }
 
@@ -157,6 +158,7 @@ func SaveConfig(config *Config) error {
 	v.Set("default.tempfiles", config.Default.TempFiles)
 	v.Set("default.logpath", config.Default.LogPath)
 	v.Set("default.debuglevel", config.Default.DebugLevel)
+	v.Set("default.exportpath", config.Default.ExportPath)
 
 	// Socket section
 	v.Set("socket.unixsocketlocation", config.Socket.UnixSocketLocation)
