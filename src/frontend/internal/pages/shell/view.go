@@ -31,8 +31,8 @@ func (m *Model) renderShellTab0() string {
 	}
 
 	// Update the viewport dimensions.
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 1
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 1
 
 	// Update the viewport content with the latest bashOutput.
 	m.viewport.SetContent(m.bashOutput)
@@ -60,8 +60,8 @@ func (m *Model) renderShellTab1() string {
 	m.activeShell = "vtysh"
 
 	// Update the viewport dimensions.
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - 1
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 1
 
 	// Update the viewport content with the latest vtyshOutput.
 	m.viewport.SetContent(m.vtyshOutput)
@@ -112,8 +112,8 @@ func (m *Model) renderBackendTestTab() string {
 	)
 
 	// Update the viewport dimensions.
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - 7
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - 7
 
 	// Update the viewport content with the latest backendResponse.
 	m.viewport.SetContent(m.backendResponse)

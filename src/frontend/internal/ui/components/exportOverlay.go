@@ -14,10 +14,12 @@ func RenderExportOptions(
 	exportData map[string]string,
 	cursor *int,
 	vp *viewport.Model,
+	statusMessage string,
+	statusSeverity styles.StatusSeverity,
 ) string {
 	// adjust viewport dimensions if needed
-	vp.Width = styles.ViewPortWidthHalf
-	vp.Height = styles.ViewPortHeightCompletePage - styles.HeightH1 - styles.AdditionalFooterHeight
+	vp.Width = styles.WidthViewPortHalf
+	vp.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.AdditionalFooterHeight - styles.FilterBoxHeight
 
 	// copy & sort options by label
 	opts := make([]common.ExportOption, len(exportOptions))
@@ -69,15 +71,24 @@ func RenderExportOptions(
 		exportPreview,
 	)
 
+	statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
+	if statusMessage != "" {
+		styles.SetStatusSeverity(statusSeverity)
+		if len(statusMessage) > 50 {
+			statusMessage = statusMessage[:47] + "..."
+		}
+		renderedStatusMessage := styles.StatusTextStyle().Render(statusMessage)
+		statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(renderedStatusMessage)
+	}
+
 	keyboardOptions := styles.FooterBoxStyle.Render("\n" +
 		"[Tab Shift+Tab] move selection down/up one option | " +
-		"[↑ ↓ home end] scroll preview | " +
-		"[enter] export current selection | " +
+		"[enter] export current selection to file and clipboard | " +
 		"[ctrl+e] quit export options")
 
-	// final horizontal layout
 	return lipgloss.JoinVertical(lipgloss.Left,
 		horizontalContent,
+		statusBox,
 		keyboardOptions,
 	)
 }

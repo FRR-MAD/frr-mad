@@ -46,9 +46,7 @@ func (a *Analyzer) AnomalyAnalysis() {
 	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(a.metrics.OspfNssaExternalAll, hostname)
 
 	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(a.metrics.OspfRouterData, hostname, peerNeighborMap)
-
 	isExternalLSDB := GetRuntimeExternalDataSelf(a.metrics.OspfExternalData, staticRouteMap, hostname)
-
 	isNssaExternalLSDB := GetNssaExternalData(a.metrics.OspfNssaExternalData, staticRouteMap, a.metrics.StaticFrrConfiguration.Hostname, a.Logger)
 
 	a.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)

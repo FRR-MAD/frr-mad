@@ -26,13 +26,19 @@ func (m *Model) OSPFView(currentSubTab int, readOnlyMode bool, textFilter *commo
 
 func (m *Model) View() string {
 	var body string
+	var bodyFooter string
+	var content string
+
+	statusBar := true
 
 	if m.showExportOverlay {
-		body = components.RenderExportOptions(
+		content = components.RenderExportOptions(
 			m.exportOptions,
 			m.exportData,
 			&m.cursor,
 			&m.viewportRightHalf,
+			m.statusMessage,
+			m.statusSeverity,
 		)
 	} else {
 		switch currentSubTabLocal {
@@ -48,14 +54,41 @@ func (m *Model) View() string {
 			body = m.renderNeighborMonitorTab()
 		case 5:
 			body = m.renderRunningConfigTab()
+			statusBar = false
 		default:
 			body = m.renderLsdbMonitorTab()
+		}
+
+		if statusBar {
+			var filterBox string
+			if m.textFilter.Active {
+				filterBox = "Filter: " + m.textFilter.Input.View()
+			} else {
+				filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
+			}
+			filterBox = styles.FilterTextStyle().Render(filterBox)
+
+			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
+			if m.statusMessage != "" {
+				styles.SetStatusSeverity(m.statusSeverity)
+				if len(m.statusMessage) > 50 {
+					m.statusMessage = m.statusMessage[:47] + "..."
+				}
+				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
+			}
+
+			bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusBox, filterBox)
+
+			content = lipgloss.JoinVertical(lipgloss.Left, body, bodyFooter)
+		} else {
+			content = body
 		}
 	}
 
 	toastView := m.toast.View()
 	if toastView == "" {
-		return body
+		return content
 	}
 
 	totalW := styles.WidthBasis
@@ -63,7 +96,7 @@ func (m *Model) View() string {
 	x := 0
 	y := 0
 
-	return toast.Overlay(body, toastView, x, y, totalW, totalH)
+	return toast.Overlay(content, toastView, x, y, totalW, totalH)
 }
 
 func (m *Model) renderLsdbMonitorTab() string {
@@ -357,21 +390,13 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	lsdbBlocks = append(lsdbBlocks, completeExternalLSDB+"\n\n")
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
 	// Set viewport sizes and assign content to viewport
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
 
-	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterBox)
+	return m.viewport.View()
 }
 
 func (m *Model) renderRouterMonitorTab() string {
@@ -551,23 +576,12 @@ func (m *Model) renderRouterMonitorTab() string {
 		routerLSABlocks = append(routerLSABlocks, completeAreaRouterLSAs+"\n\n")
 	}
 
-	// renderedRouterBlocks := lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...)
-
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterBoxHeight
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
 
-	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterBox)
+	return m.viewport.View()
 }
 
 func (m *Model) renderNetworkMonitorTab() string {
@@ -650,23 +664,16 @@ func (m *Model) renderNetworkMonitorTab() string {
 
 	if networkLSABlocks == nil {
 		return lipgloss.JoinHorizontal(lipgloss.Left,
-			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"))
+			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"),
+			lipgloss.NewStyle().Height(styles.HeightH1EmptyContentPadding).Render(""))
 	}
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterBoxHeight
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
 
-	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterBox)
+	return m.viewport.View()
 }
 
 func (m *Model) renderExternalMonitorTab() string {
@@ -799,8 +806,8 @@ func (m *Model) renderExternalMonitorTab() string {
 		}
 	}
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterBoxHeight
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	var allLsaBlocks []string
 	if hasNssaExternalLSAs == false {
@@ -808,6 +815,7 @@ func (m *Model) renderExternalMonitorTab() string {
 			allLsaBlocks = allLsaBlocks[:0]
 			allLsaBlocks = append(allLsaBlocks, lipgloss.JoinVertical(lipgloss.Left,
 				styles.H1TitleStyleForOne().Render(routerName+" does not originate External LSAs (Type 5 or 7)"),
+				lipgloss.NewStyle().Height(styles.HeightH1EmptyContentPadding).Render(""),
 			))
 		} else {
 			allLsaBlocks = externalLsaBlock
@@ -816,17 +824,9 @@ func (m *Model) renderExternalMonitorTab() string {
 		allLsaBlocks = append(externalLsaBlock, nssaExternalLsaBlock...)
 	}
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, allLsaBlocks...))
 
-	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterBox)
+	return m.viewport.View()
 }
 
 func (m *Model) renderNeighborMonitorTab() string {
@@ -899,20 +899,12 @@ func (m *Model) renderNeighborMonitorTab() string {
 		styles.H2OneBoxBottomBorderStyle().Render(""),
 	)
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage - styles.FilterBoxHeight
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
 
-	var filterBox string
-	if m.textFilter.Active {
-		filterBox = "Filter: " + m.textFilter.Input.View()
-	} else {
-		filterBox = "Filter: " + styles.FooterBoxStyle.Render("press [:] to activate filter")
-	}
-	filterBox = styles.FilterTextStyle().Render(filterBox)
-
-	return lipgloss.JoinVertical(lipgloss.Left, m.viewport.View(), filterBox)
+	return m.viewport.View()
 }
 
 func (m *Model) renderRunningConfigTab() string {
@@ -939,8 +931,8 @@ func (m *Model) renderRunningConfigTab() string {
 
 	completeContent := lipgloss.JoinHorizontal(lipgloss.Top, completeRunningConfig, completeStaticConfig)
 
-	m.viewport.Width = styles.ViewPortWidthCompletePage
-	m.viewport.Height = styles.ViewPortHeightCompletePage
+	m.viewport.Width = styles.WidthViewPortCompletePage
+	m.viewport.Height = styles.HeightViewPortCompletePage
 	m.viewport.SetContent(completeContent)
 
 	return m.viewport.View()

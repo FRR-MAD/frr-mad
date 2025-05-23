@@ -21,7 +21,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const applicationVersion = "0.9.3"
+var (
+	DaemonVersion = "unknown"
+	TUIVersion    = "unknown"
+	GitCommit     = "unknown"
+	BuildDate     = "unknown"
+	RepoURL       = "https://github.com/frr-mad/frr-mad"
+)
 
 type Service struct {
 	Name   string
@@ -53,6 +59,7 @@ type LoggerService struct {
 	Application *logger.Logger
 }
 
+// TODO: create status command
 func main() {
 	var configFile string
 	var rootCmd = &cobra.Command{
@@ -123,7 +130,12 @@ func main() {
 		Use:   "version",
 		Short: "show version number and exit",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(applicationVersion)
+			fmt.Printf("Mad Analyzer Daemon Version: %s\n", DaemonVersion)
+			fmt.Printf("Mad TUI Version: %s\n", TUIVersion)
+			fmt.Printf("Commit: %s\n", GitCommit)
+			fmt.Printf("Build Date: %s\n", BuildDate)
+			fmt.Printf("Repository: %s\n", RepoURL)
+			fmt.Printf("Config Location: %s\n", configs.ConfigLocation)
 		},
 	}
 

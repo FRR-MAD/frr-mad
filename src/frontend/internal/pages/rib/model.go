@@ -26,16 +26,18 @@ type Model struct {
 	viewport          viewport.Model
 	viewportRightHalf viewport.Model
 	textFilter        *common.Filter
+	statusMessage     string
+	statusSeverity    styles.StatusSeverity
 	logger            *logger.Logger
 }
 
-func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
+func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath string) *Model {
 
 	// Create the viewport with the desired dimensions.
-	vp := viewport.New(styles.ViewPortWidthCompletePage,
-		styles.ViewPortHeightCompletePage-styles.FilterBoxHeight)
-	vprh := viewport.New(styles.ViewPortWidthHalf,
-		styles.ViewPortHeightCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
+	vp := viewport.New(styles.WidthViewPortCompletePage,
+		styles.HeightViewPortCompletePage-styles.FilterBoxHeight)
+	vprh := viewport.New(styles.WidthViewPortHalf,
+		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
 		title:             "RIB",
@@ -45,11 +47,13 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		cursor:            0,
 		exportOptions:     []common.ExportOption{},
 		exportData:        make(map[string]string),
-		exportDirectory:   "/tmp/frr-mad/exports",
+		exportDirectory:   exportPath,
 		showExportOverlay: false,
 		windowSize:        windowSize,
 		viewport:          vp,
 		viewportRightHalf: vprh,
+		statusMessage:     "",
+		statusSeverity:    styles.SeverityInfo,
 		logger:            appLogger,
 	}
 }
