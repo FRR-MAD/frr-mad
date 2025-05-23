@@ -83,8 +83,7 @@ func RenderExportOptions(
 
 	keyboardOptions := styles.FooterBoxStyle.Render("\n" +
 		"[Tab Shift+Tab] move selection down/up one option | " +
-		"[↑ ↓ home end] scroll preview | " +
-		"[enter] export current selection | " +
+		"[enter] export current selection to file and clipboard | " +
 		"[ctrl+e] quit export options")
 
 	return lipgloss.JoinVertical(lipgloss.Left,

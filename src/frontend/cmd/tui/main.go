@@ -82,8 +82,8 @@ func initModel(config *configs.Config) *AppModel {
 		readOnlyMode:  true,
 		windowSize:    windowSize,
 		dashboard:     dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
-		ospf:          ospfMonitoring.New(windowSize, ospfLogger),
-		rib:           rib.New(windowSize, ribLogger),
+		ospf:          ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
+		rib:           rib.New(windowSize, ribLogger, config.Default.ExportPath),
 		shell:         shell.New(windowSize, shellLogger),
 		footer:        components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
 		logger:        appLogger,
@@ -306,4 +306,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-
