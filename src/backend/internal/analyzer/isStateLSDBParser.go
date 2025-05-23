@@ -65,7 +65,8 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 
 				adv := frrProto.Advertisement{}
 				adv.InterfaceAddress = ipAddress
-				if routerLink.LinkType == "another Router (point-to-point)" {
+				if strings.Contains(strings.ToLower(routerLink.LinkType), "point-to-point") {
+					//routerLink.LinkType == "another Router (point-to-point)" {
 					adv.LinkType = "point-to-point"
 					if strings.HasPrefix(ipAddress, "0") {
 						if _, exists := peerNeighbor[routerLink.NeighborRouterId]; exists {
