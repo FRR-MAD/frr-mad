@@ -109,6 +109,13 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.currentSubTab == -1 {
 					m.currentView = (m.currentView + 1) % totalViews
 					m.currentSubTab = -1
+					if m.currentView == ViewShell {
+						m.footer.CleanInfo()
+						m.footer.Append("[enter] enter sub tabs")
+					} else {
+						m.footer.CleanInfo()
+						m.footer.SetMainMenuOptions()
+					}
 				} else {
 					m.currentSubTab = (m.currentSubTab + 1) % subTabsLength
 				}
@@ -118,6 +125,13 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.currentSubTab == -1 {
 					m.currentView = (m.currentView + totalViews - 1) % totalViews
 					m.currentSubTab = -1
+					if m.currentView == ViewShell {
+						m.footer.CleanInfo()
+						m.footer.Append("[enter] enter sub tabs")
+					} else {
+						m.footer.CleanInfo()
+						m.footer.SetMainMenuOptions()
+					}
 				} else {
 					m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
 				}

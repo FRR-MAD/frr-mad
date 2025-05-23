@@ -31,10 +31,17 @@ func (f *Footer) AppendMultiple(lines []string) {
 	}
 }
 
-// Clean removes all entries from the footer except for the first one.
+// Clean removes all entries that are related with the View.
 func (f *Footer) Clean() {
 	if len(f.content) > 2 {
 		f.content = f.content[:2]
+	}
+}
+
+// CleanInfo also cleans the system info entry.
+func (f *Footer) CleanInfo() {
+	if len(f.content) > 1 {
+		f.content = f.content[:1]
 	}
 }
 
