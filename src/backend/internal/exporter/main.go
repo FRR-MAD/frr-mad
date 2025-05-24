@@ -40,8 +40,6 @@ func NewExporter(
 
 	registry := prometheus.NewRegistry()
 
-	flags := parseFlagsFromConfig(config)
-
 	mux := http.NewServeMux()
 
 	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
@@ -66,7 +64,7 @@ func NewExporter(
 	e := &Exporter{
 		interval:        pollInterval,
 		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
-		metricExporter:  NewMetricExporter(frrData, registry, logger, flags),
+		metricExporter:  NewMetricExporter(frrData, registry, logger, config),
 		stopChan:        make(chan struct{}),
 		logger:          logger,
 		server: &http.Server{
@@ -148,19 +146,4 @@ func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) e
 	}
 
 	return nil
-}
-
-func parseFlagsFromConfig(config configs.ExporterConfig) map[string]bool {
-	return map[string]bool{
-		"OSPFRouterData":       config.OSPFRouterData,
-		"OSPFNetworkData":      config.OSPFNetworkData,
-		"OSPFSummaryData":      config.OSPFSummaryData,
-		"OSPFAsbrSummaryData":  config.OSPFAsbrSummaryData,
-		"OSPFExternalData":     config.OSPFExternalData,
-		"OSPFNssaExternalData": config.OSPFNssaExternalData,
-		"OSPFDatabase":         config.OSPFDatabase,
-		"OSPFNeighbors":        config.OSPFNeighbors,
-		"InterfaceList":        config.InterfaceList,
-		"RouteList":            config.RouteList,
-	}
 }

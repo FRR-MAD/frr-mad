@@ -6,6 +6,7 @@ import (
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 
+	"github.com/frr-mad/frr-mad/src/backend/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -19,17 +20,17 @@ func TestMetricExporter_WithData(t *testing.T) {
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
-	flags := map[string]bool{
-		"OSPFRouterData":       true,
-		"OSPFNetworkData":      true,
-		"OSPFSummaryData":      true,
-		"OSPFAsbrSummaryData":  true,
-		"OSPFExternalData":     true,
-		"OSPFNssaExternalData": true,
-		"OSPFDatabase":         true,
-		"OSPFNeighbors":        true,
-		"InterfaceList":        true,
-		"RouteList":            true,
+	flags := configs.ExporterConfig{
+		OSPFRouterData:       true,
+		OSPFNetworkData:      true,
+		OSPFSummaryData:      true,
+		OSPFAsbrSummaryData:  true,
+		OSPFExternalData:     true,
+		OSPFNssaExternalData: true,
+		OSPFDatabase:         true,
+		OSPFNeighbors:        true,
+		InterfaceList:        true,
+		RouteList:            true,
 	}
 
 	// Create test data
@@ -264,11 +265,11 @@ func TestMetricExporter_WithData(t *testing.T) {
 		"neighbor_id": "8.8.8.8",
 		"interface":   "eth0",
 	}))
-	assert.Equal(t, 60.0, getMetricValue("frr_mad_ospf_neighbor_uptime_seconds", map[string]string{
+	assert.Equal(t, 60.0, getMetricValue("frr_mad_ospf_neighbor_uptime", map[string]string{
 		"neighbor_id": "7.7.7.7",
 		"interface":   "eth0",
 	}))
-	assert.Equal(t, 30.0, getMetricValue("frr_mad_ospf_neighbor_uptime_seconds", map[string]string{
+	assert.Equal(t, 30.0, getMetricValue("frr_mad_ospf_neighbor_uptime", map[string]string{
 		"neighbor_id": "8.8.8.8",
 		"interface":   "eth0",
 	}))
@@ -319,17 +320,17 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Only router, network, external & duplicates are enabled:
-	flags := map[string]bool{
-		"OSPFRouterData":       true,
-		"OSPFNetworkData":      true,
-		"OSPFSummaryData":      false,
-		"OSPFAsbrSummaryData":  false,
-		"OSPFExternalData":     true,
-		"OSPFNssaExternalData": false,
-		"OSPFDatabase":         false,
-		"OSPFNeighbors":        false,
-		"InterfaceList":        false,
-		"RouteList":            true,
+	flags := configs.ExporterConfig{
+		OSPFRouterData:       true,
+		OSPFNetworkData:      true,
+		OSPFSummaryData:      false,
+		OSPFAsbrSummaryData:  false,
+		OSPFExternalData:     true,
+		OSPFNssaExternalData: false,
+		OSPFDatabase:         false,
+		OSPFNeighbors:        false,
+		InterfaceList:        false,
+		RouteList:            true,
 	}
 
 	// ── Build a COMPLETE FullFRRData payload ─────────────────────────────────────
@@ -488,7 +489,7 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 		"frr_mad_ospf_nssa_external_metric",
 		"frr_mad_ospf_database_lsa_count",
 		"frr_mad_ospf_neighbor_state",
-		"frr_mad_ospf_neighbor_uptime_seconds",
+		"frr_mad_ospf_neighbor_uptime",
 		"frr_mad_interface_operational_status",
 		"frr_mad_interface_admin_status",
 	}
@@ -505,17 +506,17 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
-	flags := map[string]bool{
-		"OSPFRouterData":       false,
-		"OSPFNetworkData":      false,
-		"OSPFSummaryData":      false,
-		"OSPFAsbrSummaryData":  false,
-		"OSPFExternalData":     false,
-		"OSPFNssaExternalData": false,
-		"OSPFDatabase":         false,
-		"OSPFNeighbors":        false,
-		"InterfaceList":        false,
-		"RouteList":            false,
+	flags := configs.ExporterConfig{
+		OSPFRouterData:       false,
+		OSPFNetworkData:      false,
+		OSPFSummaryData:      false,
+		OSPFAsbrSummaryData:  false,
+		OSPFExternalData:     false,
+		OSPFNssaExternalData: false,
+		OSPFDatabase:         false,
+		OSPFNeighbors:        false,
+		InterfaceList:        false,
+		RouteList:            false,
 	}
 
 	// Create test data
@@ -550,7 +551,7 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 		"frr_mad_ospf_nssa_external_metric",
 		"frr_mad_ospf_database_lsa_count",
 		"frr_mad_ospf_neighbor_state",
-		"frr_mad_ospf_neighbor_uptime_seconds",
+		"frr_mad_ospf_neighbor_uptime",
 		"frr_mad_interface_operational_status",
 		"frr_mad_interface_admin_status",
 		"frr_mad_installed_ospf_route",
@@ -574,17 +575,17 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 	assert.NoError(t, err)
 
 	// enable _all_ metrics so flags don't filter us out
-	flags := map[string]bool{
-		"OSPFRouterData":       true,
-		"OSPFNetworkData":      true,
-		"OSPFSummaryData":      true,
-		"OSPFAsbrSummaryData":  true,
-		"OSPFExternalData":     true,
-		"OSPFNssaExternalData": true,
-		"OSPFDatabase":         true,
-		"OSPFNeighbors":        true,
-		"InterfaceList":        true,
-		"RouteList":            true,
+	flags := configs.ExporterConfig{
+		OSPFRouterData:       true,
+		OSPFNetworkData:      true,
+		OSPFSummaryData:      true,
+		OSPFAsbrSummaryData:  true,
+		OSPFExternalData:     true,
+		OSPFNssaExternalData: true,
+		OSPFDatabase:         true,
+		OSPFNeighbors:        true,
+		InterfaceList:        true,
+		RouteList:            true,
 	}
 
 	tests := []struct {
@@ -835,10 +836,10 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// We'll focus on the three requested data types
-	flags := map[string]bool{
-		"OSPFRouterData":  true,
-		"OSPFNetworkData": true,
-		"OSPFSummaryData": true,
+	flags := configs.ExporterConfig{
+		OSPFRouterData:  true,
+		OSPFNetworkData: true,
+		OSPFSummaryData: true,
 	}
 
 	// Helper function to find metric value
