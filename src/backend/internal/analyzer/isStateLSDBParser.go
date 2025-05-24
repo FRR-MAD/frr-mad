@@ -109,7 +109,7 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 	logger.WithAttrs(map[string]interface{}{
 		"duration":     time.Since(start).String(),
 		"areas_parsed": len(result.Areas),
-		"total_links":  countTotalLinks(result),
+		"total_links":  countTotalLinks(&result),
 	}).Debug("Completed router LSDB parsing")
 
 	return &result, p2pMap

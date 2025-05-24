@@ -316,7 +316,7 @@ func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
 	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
 	appLogger.SetDebugLevel(debugLevel)
 
-	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", applicationVersion))
+	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", TUIVersion))
 	appLogger.WithAttrs(map[string]interface{}{
 		"config_path":              confgPath,
 		"debug_level":              config.basis.DebugLevel,
