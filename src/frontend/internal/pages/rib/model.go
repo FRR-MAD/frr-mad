@@ -9,6 +9,7 @@ import (
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"google.golang.org/protobuf/proto"
 )
 
 type Model struct {
@@ -79,28 +80,38 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 
 // fetchLatestData fetches all data from the backend that are possible to export from the rib exporter
 func (m *Model) fetchLatestData() error {
-	rib, err := backend.GetRIB(m.logger)
-	if err != nil {
-		return err
+	items := []struct {
+		key, label, filename string
+		fetch                func() (proto.Message, error)
+	}{
+		{
+			key:      "GetRIB",
+			label:    "routing information base",
+			filename: "rib.json",
+			fetch:    func() (proto.Message, error) { return backend.GetRIB(m.logger) },
+		},
+		{
+			key:      "GetRibFibSummary",
+			label:    "summary data for rib and fib",
+			filename: "rib_fib_summary.json",
+			fetch:    func() (proto.Message, error) { return backend.GetRibFibSummary(m.logger) },
+		},
 	}
-	m.exportData["GetRIB"] = common.PrettyPrintJSON(rib)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "routing information base",
-		MapKey:   "GetRIB",
-		Filename: "rib.json",
-	})
 
-	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
-	if err != nil {
-		return err
+	var err error
+	for _, it := range items {
+		m.exportOptions, err = common.ExportProto(
+			m.exportData,
+			m.exportOptions,
+			it.key,
+			it.label,
+			it.filename,
+			it.fetch,
+		)
+		if err != nil {
+			return err
+		}
 	}
-	m.exportData["GetRibFibSummary"] = common.PrettyPrintJSON(ribFibSummary)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "summary data for rib and fib",
-		MapKey:   "GetRibFibSummary",
-		Filename: "rib_fib_summary.json",
-	})
-
 	return nil
 }
 

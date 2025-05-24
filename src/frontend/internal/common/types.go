@@ -62,6 +62,11 @@ func AddExportOption(opts []ExportOption, opt ExportOption) []ExportOption {
 	return append(opts, opt)
 }
 
+type TimedPayload struct {
+	ReceivedAt string      `json:"received_at"`
+	Data       interface{} `json:"data"`
+}
+
 // ================================ //
 // TYPES                            //
 // ================================ //

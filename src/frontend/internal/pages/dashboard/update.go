@@ -129,6 +129,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					err := m.fetchLatestData()
 					if err != nil {
 						m.logger.Error("Error while fetching all backend data for dashboard")
+						m.statusSeverity = styles.SeverityError
+						m.statusMessage = "Please re-open export options: Error while fetching data"
 						return m, tea.Batch(
 							toastCmd,
 							toast.Show(fmt.Sprintf("Fetching data failed:\n%v", err)),

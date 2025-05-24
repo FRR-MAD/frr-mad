@@ -9,6 +9,7 @@ import (
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	"google.golang.org/protobuf/proto"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -115,75 +116,62 @@ func (m *Model) detectAnomaly() {
 
 // fetchLatestData fetches all data from the backend that are possible to export from the dashboard exporter
 func (m *Model) fetchLatestData() error {
-	ospfRouterAnomalies, err := backend.GetRouterAnomalies(m.logger)
-	if err != nil {
-		return err
-	}
-	m.exportData["GetRouterAnomalies"] = common.PrettyPrintJSON(ospfRouterAnomalies)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "anomalies - router (LSA type 1)",
-		MapKey:   "GetRouterAnomalies",
-		Filename: "type1_router_anomalies.json",
-	})
+	var err error
 
-	ospfExternalAnomalies, err := backend.GetExternalAnomalies(m.logger)
-	if err != nil {
-		return err
+	items := []struct {
+		key, label, filename string
+		fetch                func() (proto.Message, error)
+		withTimestamp        bool
+	}{
+		{
+			key:      "GetRouterAnomalies",
+			label:    "anomalies – router (LSA type 1)",
+			filename: "type1_router_anomalies.json",
+			fetch:    func() (proto.Message, error) { return backend.GetRouterAnomalies(m.logger) },
+		},
+		{
+			key:      "GetExternalAnomalies",
+			label:    "anomalies – external (LSA type 5)",
+			filename: "type5_external_anomalies.json",
+			fetch:    func() (proto.Message, error) { return backend.GetExternalAnomalies(m.logger) },
+		},
+		{
+			key:      "GetNSSAExternalAnomalies",
+			label:    "anomalies – nssa external (LSA type 7)",
+			filename: "type7_nssa_anomalies.json",
+			fetch:    func() (proto.Message, error) { return backend.GetNSSAExternalAnomalies(m.logger) },
+		},
+		{
+			key:      "GetOSPF",
+			label:    "summary of the current OSPF router",
+			filename: "general_ospf_information.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOSPF(m.logger) },
+		},
+		{
+			key:      "GetLSDB",
+			label:    "complete Link-State Database",
+			filename: "link-state_database.json",
+			fetch:    func() (proto.Message, error) { return backend.GetLSDB(m.logger) },
+		},
+		{
+			key:      "GetParsedShouldStates",
+			label:    "predicted should state of lsdb",
+			filename: "should_state_lsdb.json",
+			fetch:    func() (proto.Message, error) { return backend.GetParsedShouldStates(m.logger) },
+		},
 	}
-	m.exportData["GetExternalAnomalies"] = common.PrettyPrintJSON(ospfExternalAnomalies)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "anomalies - external (LSA type 5)",
-		MapKey:   "GetExternalAnomalies",
-		Filename: "type5_external_anomalies.json",
-	})
 
-	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(m.logger)
-	if err != nil {
-		return err
+	for _, it := range items {
+		m.exportOptions, err = common.ExportProto(
+			m.exportData,
+			m.exportOptions,
+			it.key, it.label, it.filename,
+			it.fetch,
+		)
+		if err != nil {
+			return err
+		}
 	}
-	m.exportData["GetNSSAExternalAnomalies"] = common.PrettyPrintJSON(ospfNSSAExternalAnomalies)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "anomalies - nssa external (LSA type 7)",
-		MapKey:   "GetNSSAExternalAnomalies",
-		Filename: "type7_nssa_anomalies.json",
-	})
-
-	ospfInformation, err := backend.GetOSPF(m.logger)
-	if err != nil {
-		return err
-	}
-	m.exportData["GetOSPF"] = common.PrettyPrintJSON(ospfInformation)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "summary of the current OSPF router",
-		MapKey:   "GetOSPF",
-		Filename: "general_ospf_information.json",
-	})
-
-	lsdb, err := backend.GetLSDB(m.logger)
-	if err != nil {
-		return err
-	}
-	m.exportData["GetLSDB"] = common.PrettyPrintJSON(lsdb)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "complete Link-State Database",
-		MapKey:   "GetLSDB",
-		Filename: "link-state_database.json",
-	})
-
-	parsedShouldStates, err := backend.GetParsedShouldStates(m.logger)
-	if err != nil {
-		return err
-	}
-	//routerShould := parsedShouldStates.ShouldRouterLsdb
-	//externalShould := parsedShouldStates.ShouldExternalLsdb
-	//nssaExternalShould := parsedShouldStates.ShouldNssaExternalLsdb
-
-	m.exportData["GetParsedShouldStates"] = common.PrettyPrintJSON(parsedShouldStates)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "predicted should state of lsdb",
-		MapKey:   "GetParsedShouldStates",
-		Filename: "should_state_lsdb.json",
-	})
 
 	return nil
 }
