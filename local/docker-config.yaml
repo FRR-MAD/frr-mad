@@ -23,7 +23,7 @@ aggregator:
 
 exporter:
   Port: 9091
-  OSPFRouterData: false
+  OSPFRouterData: true
   OSPFNetworkData: true
   OSPFSummaryData: false
   OSPFAsbrSummaryData: false
@@ -32,4 +32,4 @@ exporter:
   OSPFDatabase: false
   OSPFNeighbors: false
   InterfaceList: false
-  RouteList: true
+  RouteList: false

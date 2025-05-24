@@ -37,17 +37,17 @@ type AggregatorConfig struct {
 }
 
 type ExporterConfig struct {
-	Port                 int    `mapstructure:"Port"`
-	OSPFRouterData       string `mapstructure:"OSPFRouterData"`
-	OSPFNetworkData      string `mapstructure:"OSPFNetworkData"`
-	OSPFSummaryData      string `mapstructure:"OSPFSummaryData"`
-	OSPFAsbrSummaryData  string `mapstructure:"OSPFAsbrSummaryData"`
-	OSPFExternalData     string `mapstructure:"OSPFExternalData"`
-	OSPFNssaExternalData string `mapstructure:"OSPFNssaExternalData"`
-	OSPFDatabase         string `mapstructure:"OSPFDatabase"`
-	OSPFNeighbors        string `mapstructure:"OSPFNeighbors"`
-	InterfaceList        string `mapstructure:"InterfaceList"`
-	RouteList            string `mapstructure:"RouteList"`
+	Port                 int  `mapstructure:"Port"`
+	OSPFRouterData       bool `mapstructure:"OSPFRouterData"`
+	OSPFNetworkData      bool `mapstructure:"OSPFNetworkData"`
+	OSPFSummaryData      bool `mapstructure:"OSPFSummaryData"`
+	OSPFAsbrSummaryData  bool `mapstructure:"OSPFAsbrSummaryData"`
+	OSPFExternalData     bool `mapstructure:"OSPFExternalData"`
+	OSPFNssaExternalData bool `mapstructure:"OSPFNssaExternalData"`
+	OSPFDatabase         bool `mapstructure:"OSPFDatabase"`
+	OSPFNeighbors        bool `mapstructure:"OSPFNeighbors"`
+	InterfaceList        bool `mapstructure:"InterfaceList"`
+	RouteList            bool `mapstructure:"RouteList"`
 }
 
 type Config struct {

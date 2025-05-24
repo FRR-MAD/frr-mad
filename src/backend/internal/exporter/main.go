@@ -3,7 +3,6 @@ package exporter
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/frr-mad/frr-mad/src/backend/configs"
@@ -28,7 +27,6 @@ func NewExporter(
 	pollInterval time.Duration,
 	frrData *frrProto.FullFRRData,
 	anomalies *frrProto.AnomalyAnalysis,
-	flags map[string]bool,
 ) *Exporter {
 	port := 9091
 
@@ -42,10 +40,7 @@ func NewExporter(
 
 	registry := prometheus.NewRegistry()
 
-	finalFlags := mergeConfigAndFlags(config, flags)
-
-	fmt.Println(config.OSPFNeighbors)
-	fmt.Println(finalFlags)
+	flags := parseFlagsFromConfig(config)
 
 	mux := http.NewServeMux()
 
@@ -71,7 +66,7 @@ func NewExporter(
 	e := &Exporter{
 		interval:        pollInterval,
 		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
-		metricExporter:  NewMetricExporter(frrData, registry, logger, finalFlags),
+		metricExporter:  NewMetricExporter(frrData, registry, logger, flags),
 		stopChan:        make(chan struct{}),
 		logger:          logger,
 		server: &http.Server{
@@ -155,53 +150,17 @@ func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) e
 	return nil
 }
 
-func mergeConfigAndFlags(config configs.ExporterConfig, flags map[string]bool) map[string]bool {
-	merged := map[string]bool{
-		"OSPFRouterData":       false,
-		"OSPFNetworkData":      false,
-		"OSPFSummaryData":      false,
-		"OSPFAsbrSummaryData":  false,
-		"OSPFExternalData":     false,
-		"OSPFNssaExternalData": false,
-		"OSPFDatabase":         false,
-		"OSPFNeighbors":        false,
-		"InterfaceList":        false,
-		"RouteList":            false,
+func parseFlagsFromConfig(config configs.ExporterConfig) map[string]bool {
+	return map[string]bool{
+		"OSPFRouterData":       config.OSPFRouterData,
+		"OSPFNetworkData":      config.OSPFNetworkData,
+		"OSPFSummaryData":      config.OSPFSummaryData,
+		"OSPFAsbrSummaryData":  config.OSPFAsbrSummaryData,
+		"OSPFExternalData":     config.OSPFExternalData,
+		"OSPFNssaExternalData": config.OSPFNssaExternalData,
+		"OSPFDatabase":         config.OSPFDatabase,
+		"OSPFNeighbors":        config.OSPFNeighbors,
+		"InterfaceList":        config.InterfaceList,
+		"RouteList":            config.RouteList,
 	}
-
-	getConfigBool := func(value interface{}) bool {
-		switch v := value.(type) {
-		case int:
-			return v == 1
-		case int64:
-			return v == 1
-		case float64:
-			return v == 1
-		case string:
-			return v == "1" || strings.EqualFold(v, "true")
-		case bool:
-			return v
-		default:
-			return false
-		}
-	}
-
-	merged["OSPFRouterData"] = getConfigBool(config.OSPFRouterData)
-	merged["OSPFNetworkData"] = getConfigBool(config.OSPFNetworkData)
-	merged["OSPFSummaryData"] = getConfigBool(config.OSPFSummaryData)
-	merged["OSPFAsbrSummaryData"] = getConfigBool(config.OSPFAsbrSummaryData)
-	merged["OSPFExternalData"] = getConfigBool(config.OSPFExternalData)
-	merged["OSPFNssaExternalData"] = getConfigBool(config.OSPFNssaExternalData)
-	merged["OSPFDatabase"] = getConfigBool(config.OSPFDatabase)
-	merged["OSPFNeighbors"] = getConfigBool(config.OSPFNeighbors)
-	merged["InterfaceList"] = getConfigBool(config.InterfaceList)
-	merged["RouteList"] = getConfigBool(config.RouteList)
-
-	for metric, flagValue := range flags {
-		if _, exists := merged[metric]; exists {
-			merged[metric] = merged[metric] || flagValue
-		}
-	}
-
-	return merged
 }
