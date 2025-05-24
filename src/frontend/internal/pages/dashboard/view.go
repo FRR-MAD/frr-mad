@@ -704,7 +704,7 @@ func (m *Model) renderAnomalyDetails() string {
 	// ===== Solution:  Use newline '\n' after maximum 149 characters                    ===== //
 	// =====            to ensure minimum supported width of FRR-MAD-TUI (157)           ===== //
 
-	anomalyProcessTitle := styles.TextTitleStyle.Padding(0, 0, 0, 0).Render("Anomaly Detection Process")
+	anomalyProcessTitle := styles.TextTitleStyle.Render("Anomaly Detection Process")
 	anomalyProcessText1 := "The frr-mad-analyzer predicts a 'should-state' for the router based on its static FRR configuration. This includes:\n"
 	anomalyPossibilities := []string{
 		"Interface addresses that should be announced in Type 1 Router LSAs",
@@ -716,7 +716,7 @@ func (m *Model) renderAnomalyDetails() string {
 	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state.\n" +
 		"If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
 
-	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("OSPF Anomaly Types")
+	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 2, 0, 0).Render("OSPF Anomaly Types")
 	anomalyTypes := [][]string{
 		{"Unadvertised", "A prefix that is expected to be announced (advertised) to other devices in the network but is missing."},
 		{"Overadvertised", "A prefix that is being announced (advertised) to other devices in the network but should not be."},

@@ -57,21 +57,21 @@ func GetSystemInfoOverlay() string {
 		Background(lipgloss.Color(styles.InfoStatusBackground)).
 		Padding(0, 1).
 		Margin(0, 0, 1, 0).
-		Render("Info Status Message")
+		Render("Info Message")
 
 	WarningMessage := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(styles.WarningStatusColor)).
 		Background(lipgloss.Color(styles.WarningStatusBackground)).
 		Padding(0, 1).
 		Margin(0, 0, 1, 0).
-		Render("Warning Status Message")
+		Render("Warning Message")
 
 	ErrorMessage := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(styles.ErrorStatusColor)).
 		Background(lipgloss.Color(styles.ErrorStatusBackground)).
 		Padding(0, 1).
 		Margin(0, 0, 1, 0).
-		Render("Error Status Message")
+		Render("Error Message")
 
 	messageLegend := lipgloss.JoinVertical(lipgloss.Left,
 		messageLegendTitle,
@@ -86,11 +86,12 @@ func GetSystemInfoOverlay() string {
 	generalOptionsTitle := lipgloss.NewStyle().Bold(true).Render("General")
 	generalOptions := []string{
 		"Ctrl+C     | Quit FRR-MAD (always active)",
+		"Ctrl+W     | Toggle FRR-MAD-TUI mode",
 		"i          | Toggle system info (only when no input field is focused)",
 		"Enter      | Enter sub-tabs",
 		"Esc        | Exit sub-tab",
-		"↑/↓        | Scroll 10 lines",
-		"End/Home   | Scroll full page",
+		"↑ ↓        | Scroll 10 lines",
+		"End Home   | Scroll full page",
 	}
 
 	filterOptionsTitle := lipgloss.NewStyle().Bold(true).Render("\nFilter Content")
@@ -133,11 +134,11 @@ func GetSystemInfoOverlay() string {
 		renderedAnomalyOptions,
 	)
 
-	firstCol := lipgloss.NewStyle().Width(37).
+	firstCol := lipgloss.NewStyle().Width(38).Margin(0, 2, 0, 0).
 		Render(lipgloss.JoinVertical(lipgloss.Left, anomalyDetectionLegend))
-	secondCol := lipgloss.NewStyle().Width(27).
+	secondCol := lipgloss.NewStyle().Width(23).Margin(0, 2, 0, 0).
 		Render(lipgloss.JoinVertical(lipgloss.Left, frrMADTUILegend, messageLegend))
-	thirdCol := lipgloss.NewStyle().Width(styles.WidthBasis - 64).
+	thirdCol := lipgloss.NewStyle().Width(styles.WidthBasis - 65).
 		Render(lipgloss.JoinVertical(lipgloss.Left, keyboardOptions))
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, firstCol, secondCol, thirdCol)

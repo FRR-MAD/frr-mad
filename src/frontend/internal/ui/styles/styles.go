@@ -182,6 +182,7 @@ func SetStatusSeverity(s StatusSeverity) {
 
 var TextTitleStyle = lipgloss.NewStyle().
 	Bold(true).
+	Padding(0, 2, 0, 0).
 	Border(lipgloss.NormalBorder()).
 	BorderTop(false).
 	BorderLeft(false).

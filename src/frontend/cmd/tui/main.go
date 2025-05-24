@@ -144,8 +144,30 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
 				}
 			}
-		case "up", "down", "home", "end":
-			return m.delegateToActiveView(msg)
+		case "up":
+			if m.showSystemInfo {
+				m.viewport.LineUp(10)
+			} else {
+				return m.delegateToActiveView(msg)
+			}
+		case "down":
+			if m.showSystemInfo {
+				m.viewport.LineDown(10)
+			} else {
+				return m.delegateToActiveView(msg)
+			}
+		case "home":
+			if m.showSystemInfo {
+				m.viewport.GotoTop()
+			} else {
+				return m.delegateToActiveView(msg)
+			}
+		case "end":
+			if m.showSystemInfo {
+				m.viewport.GotoBottom()
+			} else {
+				return m.delegateToActiveView(msg)
+			}
 		case "enter":
 			if m.currentSubTab == -1 {
 				m.currentSubTab = 0
