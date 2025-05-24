@@ -253,6 +253,8 @@ topology:
 
     sw101:
       kind: bridge
+    sw102:
+      kind: bridge
     sw111:
       kind: bridge
 
@@ -350,10 +352,9 @@ topology:
 
   links:
     - endpoints: ["r101:eth1", "r201:eth1"]
-    - endpoints: ["r101:eth2", "sw101:eth1"]
-    - endpoints: ["r102:eth1", "sw101:eth2"]
-    - endpoints: ["pc102:eth1", "sw101:eth3"]
-    - endpoints: ["r101:eth3", "r103:eth1"]
+    - endpoints: ["r101:eth2", "sw102:eth1"]
+    - endpoints: ["r101:eth3", "sw101:eth5"]
+    - endpoints: ["pc102:eth1", "sw101:eth7"]
     - endpoints: ["r101:eth4", "pc101:eth1"]
     - endpoints: ["r101:eth5", "r191:eth1"]
     - endpoints: ["r101:eth6", "cr104:eth1"]
@@ -362,15 +363,20 @@ topology:
     - endpoints: ["r101:eth9", "cr107:eth1"]
     - endpoints: ["r101:eth10", "cr108:eth1"]
     - endpoints: ["r101:eth11", "cr109:eth1"]
+    - endpoints: ["r102:eth1", "sw102:eth2"]
     - endpoints: ["r102:eth2", "r103:eth2"]
     - endpoints: ["r102:eth3", "r111:eth1"]
     - endpoints: ["r102:eth4", "r193:eth1"]
+    - endpoints: ["r103:eth1", "sw101:eth6"]
+    - endpoints: ["r103:eth3", "r121:eth1"]
     - endpoints: ["cr104:eth2", "cpc104:eth1"]
     - endpoints: ["cr105:eth2", "cpc105:eth1"]
     - endpoints: ["cr106:eth2", "cpc106:eth1"]
     - endpoints: ["cr107:eth2", "cpc107:eth1"]
     - endpoints: ["cr108:eth2", "cpc108:eth1"]
     - endpoints: ["cr109:eth2", "cpc109:eth1"]
+    - endpoints: ["r1010:eth1", "sw102:eth3"]
+    - endpoints: ["r1010:eth2", "pc103:eth1"]
     - endpoints: ["r111:eth2", "pc111:eth1"]
     # even though it’s a different switch, you must use other interfaces than on sw101.
     - endpoints: ["r111:eth3", "sw111:eth11"]
@@ -378,7 +384,6 @@ topology:
     - endpoints: ["pc112:eth1", "sw111:eth13"]
     - endpoints: ["r112:eth2", "r301:eth1"]
     - endpoints: ["r112:eth3", "r192:eth1"]
-    - endpoints: ["r103:eth3", "r121:eth1"]
     - endpoints: ["r121:eth3", "pc121:eth1"]
     - endpoints: ["r121:eth2", "r122:eth1"]
     - endpoints: ["r122:eth2", "r131:eth1"]
