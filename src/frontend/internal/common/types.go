@@ -115,3 +115,15 @@ func (pl *SortedPrefixList) Less(i, j int) bool {
 }
 
 type ReloadMessage time.Time
+
+// ================================ //
+// tea Messages                     //
+// ================================ //
+
+type QuitTuiFailedMsg string
+
+func QuitTuiFailedCmd(reason string) tea.Cmd {
+	return func() tea.Msg {
+		return QuitTuiFailedMsg(reason)
+	}
+}

@@ -153,6 +153,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case common.ReloadMessage:
 		m.currentTime = time.Time(msg)
 		return m, reloadView()
+
+	case common.QuitTuiFailedMsg:
+		m.statusSeverity = styles.SeverityError
+		m.statusMessage = "Config has changed"
 	}
 
 	return m, nil

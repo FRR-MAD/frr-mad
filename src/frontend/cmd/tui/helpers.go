@@ -1,13 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/frr-mad/frr-tui/internal/common"
 	"os"
 )
-
-//func intPtr(i int) *int {
-//	return &i
-//}
 
 // maybeUpdateTERM updates the environment variable 'TERM' to 'xterm-256color'
 // if necessary before program start.
@@ -20,6 +17,16 @@ func maybeUpdateTERM() {
 			return
 		}
 	}
+}
+
+// setStartupConfig stores the running-config to check consistency before quitting FRR-MAD-TUI
+func (m *AppModel) setStartupConfig() (string, error) {
+	startupConfig, err := common.GetRunningConfig(m.logger)
+	if err != nil {
+		m.logger.Error(fmt.Sprintf("Cannot start TUI without fetching startup config. Error: %v", err))
+		return "", err
+	}
+	return startupConfig, nil
 }
 
 // setTitles fetches all texts of all pages to fill the TabRow, SubTabRow and Footer

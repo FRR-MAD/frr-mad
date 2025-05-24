@@ -36,6 +36,7 @@ const (
 var subTabsLength int
 
 type AppModel struct {
+	startupConfig     string
 	currentView       AppState
 	tabs              []common.Tab
 	currentSubTab     int
@@ -83,6 +84,7 @@ func initModel(config *configs.Config) *AppModel {
 	ti.Width = 20
 
 	return &AppModel{
+		startupConfig:     "",
 		currentView:       ViewDashboard,
 		tabs:              []common.Tab{},
 		currentSubTab:     -1,
@@ -95,7 +97,7 @@ func initModel(config *configs.Config) *AppModel {
 		shell:             shell.New(windowSize, shellLogger),
 		showSystemInfo:    false,
 		preventSubTabExit: false,
-		footer:            components.NewFooter("[ctrl+c] exit FRR-MAD", "[i] system info", "[enter] enter sub tabs"),
+		footer:            components.NewFooter("[ctrl+c] exit FRR-MAD", "[i] info", "[enter] enter sub tabs"),
 		logger:            appLogger,
 		textFilter:        &common.Filter{Active: false, Query: "", Input: ti},
 	}
@@ -103,6 +105,17 @@ func initModel(config *configs.Config) *AppModel {
 
 func (m *AppModel) Init() tea.Cmd {
 	m.setTitles()
+	// TODO: not needed, already checked in main
+	startupConfig, err := m.setStartupConfig()
+	if err != nil {
+		return tea.Batch(
+			tea.ClearScreen,
+			tea.Quit,
+		)
+	} else {
+		m.startupConfig = startupConfig
+	}
+
 	return tea.Batch(
 		m.dashboard.Init(),
 	)
@@ -211,10 +224,18 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.footer.SetMainMenuOptions()
 			}
 		case "ctrl+c":
-			return m, tea.Batch(
-				tea.ClearScreen,
-				tea.Quit,
-			)
+			currentConfig, err := common.GetRunningConfig(m.logger)
+			if err != nil {
+				m.logger.Error(fmt.Sprintf("Error fetching OSPF Running-Config: %v", err))
+			}
+			if m.startupConfig == currentConfig {
+				return m, tea.Batch(
+					tea.ClearScreen,
+					tea.Quit,
+				)
+			} else {
+				return m, common.QuitTuiFailedCmd(fmt.Sprint("Config has changed"))
+			}
 		}
 	//case tea.MouseEvent:
 	//	return m, nil
@@ -363,6 +384,16 @@ func getDebugLevel(level string) int {
 }
 
 func main() {
+	startupConfig, err := common.GetRunningConfigWithoutLog()
+	if err != nil || startupConfig == "" {
+		fmt.Fprintf(os.Stderr, "Error loading FRR config: %v\n", err)
+		os.Exit(1)
+	} else {
+		startFrrMadTui()
+	}
+}
+
+func startFrrMadTui() {
 	// Load configuration
 	config, err := configs.LoadConfig()
 	if err != nil {
