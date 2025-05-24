@@ -33,6 +33,14 @@ const (
 	totalViews
 )
 
+var (
+	DaemonVersion = "unknown"
+	TUIVersion    = "unknown"
+	GitCommit     = "unknown"
+	BuildDate     = "unknown"
+	RepoURL       = "https://github.com/frr-mad/frr-mad"
+)
+
 var subTabsLength int
 
 type AppModel struct {
@@ -114,6 +122,8 @@ func (m *AppModel) Init() tea.Cmd {
 	} else {
 		m.startupConfig = startupConfig
 	}
+
+	common.SetAppVersionInfo(DaemonVersion, TUIVersion, GitCommit, BuildDate, RepoURL)
 
 	return tea.Batch(
 		m.dashboard.Init(),

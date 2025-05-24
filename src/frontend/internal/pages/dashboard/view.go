@@ -133,7 +133,8 @@ func (m *Model) renderOSPFDashboard() string {
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
-	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox())
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
+		getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -236,6 +237,22 @@ func (m *Model) getOSPFGeneralInfoBox() string {
 	)
 
 	return ospfInformationBox
+}
+
+func (m *Model) getSystemInfo() string {
+
+	appInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
+		"Daemon Version: " + common.DaemonVersion + "\n" +
+			"FRR-MAD TUI Version: " + common.TUIVersion + "\n" +
+			"Latest Git Commit : " + common.GitCommit + "\n" +
+			"Build Date: " + common.BuildDate + "\n")
+
+	appInfoBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("FRR-MAD Application"),
+		appInfo,
+	)
+
+	return appInfoBox
 }
 
 func (m *Model) getOspfDashboardLsdbSelf() string {
