@@ -69,10 +69,13 @@ func (m *Model) View() string {
 			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
+				var cutToSizeMessage string
 				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
-					m.statusMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+				} else {
+					cutToSizeMessage = m.statusMessage
 				}
-				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 			}
 

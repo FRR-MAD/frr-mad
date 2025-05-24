@@ -74,10 +74,13 @@ func RenderExportOptions(
 	statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 	if statusMessage != "" {
 		styles.SetStatusSeverity(statusSeverity)
-		if len(statusMessage) > 50 {
-			statusMessage = statusMessage[:47] + "..."
+		var cutToSizeMessage string
+		if len(statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
+			cutToSizeMessage = statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+		} else {
+			cutToSizeMessage = statusMessage
 		}
-		renderedStatusMessage := styles.StatusTextStyle().Render(statusMessage)
+		renderedStatusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 		statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(renderedStatusMessage)
 	}
 

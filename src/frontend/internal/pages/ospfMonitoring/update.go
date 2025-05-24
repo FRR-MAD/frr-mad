@@ -135,7 +135,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case common.QuitTuiFailedMsg:
 		m.statusSeverity = styles.SeverityError
-		m.statusMessage = "Config has changed"
+		m.statusMessage = string(msg)
+		return m, nil
 	}
 
 	return m, nil

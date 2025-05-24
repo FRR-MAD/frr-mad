@@ -125,7 +125,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "right":
-			if !m.textFilter.Active {
+			if !m.textFilter.Active && !m.preventSubTabExit {
 				if m.currentSubTab == -1 {
 					m.currentView = (m.currentView + 1) % totalViews
 					m.currentSubTab = -1
@@ -141,7 +141,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "left":
-			if !m.textFilter.Active {
+			if !m.textFilter.Active && !m.preventSubTabExit {
 				if m.currentSubTab == -1 {
 					m.currentView = (m.currentView + totalViews - 1) % totalViews
 					m.currentSubTab = -1
@@ -233,7 +233,9 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					tea.Quit,
 				)
 			} else {
-				return m, common.QuitTuiFailedCmd(fmt.Sprint("Config has changed"))
+				return m, common.QuitTuiFailedCmd(
+					"Config changed: running FRR config must match the config at TUI startup.",
+				)
 			}
 		}
 	//case tea.MouseEvent:
