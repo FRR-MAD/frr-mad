@@ -7,6 +7,7 @@ import (
 	"time"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
+	"google.golang.org/protobuf/proto"
 )
 
 func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfiguration) (bool, *frrProto.IntraAreaLsa) {
@@ -19,6 +20,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 	start := time.Now()
 
 	isNssa := false
+	backboneArea := getOspfArea(a.metrics.GeneralOspfInformation)
 
 	result := &frrProto.IntraAreaLsa{
 		Hostname: config.Hostname,
@@ -27,6 +29,26 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 	}
 
 	areaMap := make(map[string]*frrProto.AreaAnalyzer)
+	areaTmpMap := make(map[string][]*frrProto.Advertisement)
+
+	virtualMap := make(map[string]bool)
+	for _, iface := range config.Interfaces {
+		if iface.Area == "" {
+			continue
+		}
+		_, exists := areaTmpMap[iface.Area]
+		if !exists {
+			areaTmpMap[iface.Area] = []*frrProto.Advertisement{}
+		}
+		virtualMap[iface.Area] = false
+
+	}
+
+	for _, area := range config.OspfConfig.Area {
+		if strings.Contains(strings.ToLower(area.Type), "virtual-link") {
+			virtualMap[area.Name] = true
+		}
+	}
 
 	for _, iface := range config.Interfaces {
 		peerInterface := false
@@ -39,17 +61,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 			continue
 		}
 
-		a, exists := areaMap[iface.Area]
-		if !exists {
-			newArea := frrProto.AreaAnalyzer{
-				AreaName: iface.Area,
-				LsaType:  "router-LSA",
-				AreaType: "normal",
-				Links:    []*frrProto.Advertisement{},
-			}
-			areaMap[iface.Area] = &newArea
-			a = &newArea
-		}
+		targetArea := iface.Area
 
 		for _, interfaceIpPrefix := range iface.InterfaceIpPrefixes {
 			if interfaceIpPrefix.IpPrefix == nil {
@@ -66,11 +78,20 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
 			} else if peerInterface {
 				adv.LinkType = "point-to-point"
-			} else {
+			} else if virtualMap[iface.Area] {
 				adv.LinkType = "transit network"
+				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
+				areaTmpMap[targetArea] = append(areaTmpMap[targetArea], advTransit)
+				targetArea = backboneArea
+				adv.LinkType = "virtual link"
+
+			} else {
+				adv.LinkType = "unknown"
+				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
+				adv.LinkStateId = interfaceIpPrefix.IpPrefix.IpAddress
 			}
 
-			a.Links = append(a.Links, &adv)
+			areaTmpMap[targetArea] = append(areaTmpMap[targetArea], &adv)
 		}
 	}
 
@@ -79,43 +100,14 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		"areas_found":          len(areaMap),
 	}).Debug("Processed interface configurations")
 
-	if config.OspfConfig != nil {
-		for _, ospfArea := range config.OspfConfig.Area {
-			if ospfArea.Type == "" {
-				continue
-			}
-
-			if config.OspfConfig.VirtualLinkNeighbor != "" {
-				a, exists := areaMap[ospfArea.Name]
-				if !exists {
-					newArea := frrProto.AreaAnalyzer{
-						AreaName: ospfArea.Name,
-						LsaType:  "router-LSA",
-						AreaType: "normal",
-						Links:    []*frrProto.Advertisement{},
-					}
-					areaMap[ospfArea.Name] = &newArea
-					a = &newArea
-				}
-
-				adv := frrProto.Advertisement{
-					LinkStateId: config.OspfConfig.VirtualLinkNeighbor,
-					LinkType:    "virtual link",
-				}
-
-				a.Links = append(a.Links, &adv)
-			}
-
-			switch ospfArea.Type {
-			case "nssa":
-				areaMap[ospfArea.Name].AreaType = "nssa"
-				isNssa = true
-			case "stub":
-				areaMap[ospfArea.Name].AreaType = "stub"
-			case "transit (virtual-link)":
-				areaMap[ospfArea.Name].AreaType = "transit"
-			default:
-				areaMap[ospfArea.Name].AreaType = "normal"
+	for area, _ := range areaTmpMap {
+		_, exists := areaMap[area]
+		if !exists {
+			areaMap[area] = &frrProto.AreaAnalyzer{
+				AreaName: area,
+				LsaType:  "router-LSA",
+				AreaType: "normal",
+				Links:    areaTmpMap[area],
 			}
 		}
 
@@ -125,9 +117,15 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		}).Debug("Processed OSPF area configurations")
 	}
 
-	for _, a := range areaMap {
-		if len(a.Links) > 0 {
-			result.Areas = append(result.Areas, a)
+	for _, area := range areaMap {
+		if len(area.Links) > 0 {
+			result.Areas = append(result.Areas, area)
+		}
+	}
+
+	for _, area := range config.OspfConfig.Area {
+		if area.Type == "nssa" {
+			isNssa = true
 		}
 	}
 
@@ -149,7 +147,6 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 	}
 
 	// TODO: proto.merge for should state
-
 	a.Logger.WithAttrs(map[string]interface{}{
 		"duration":    time.Since(start).String(),
 		"router_type": result.RouterType,
@@ -322,4 +319,14 @@ func zeroLastOctetString(ipAddress string) string {
 	parts[3] = "0"
 
 	return strings.Join(parts, ".")
+}
+
+func getOspfArea(config *frrProto.GeneralOspfInformation) string {
+	for key, area := range config.Areas {
+		if area.Backbone {
+			return key
+		}
+	}
+
+	return ""
 }

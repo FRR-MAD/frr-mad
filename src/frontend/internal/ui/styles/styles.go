@@ -1,13 +1,13 @@
 package styles
 
 import (
-	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/frr-mad/frr-tui/internal/common"
 )
 
 // ======================================== //
-// Window size calculations and constants   //
+// Window Size - calculations and constants   //
 // ======================================== //
 
 const (
@@ -20,8 +20,10 @@ const (
 	MarginX3                  = 6
 	MarginX4                  = 8
 
-	TabRowHeight = 4
-	FooterHeight = 1
+	TabRowHeight           = 4
+	FilterBoxHeight        = 1
+	FooterHeight           = 1
+	AdditionalFooterHeight = 2
 )
 
 var (
@@ -47,14 +49,16 @@ var (
 	WidthTwoH2ThreeFourth    int
 	WidthTwoH2ThreeFourthBox int
 
-	ViewPortWidthCompletePage int
-	ViewPortWidthHalf         int
-	ViewPortWidthThreeFourth  int
-	ViewPortWidthOneFourth    int
+	WidthViewPortCompletePage int
+	WidthViewPortHalf         int
+	WidthViewPortThreeFourth  int
+	WidthViewPortOneFourth    int
 
 	HeightBasis int
 
-	ViewPortHeightCompletePage int
+	HeightViewPortCompletePage int
+
+	HeightH1EmptyContentPadding int
 
 	HeightH1 int
 	HeightH2 int
@@ -83,14 +87,15 @@ func SetWindowSizes(window common.WindowSize) {
 	WidthTwoH2ThreeFourth = WidthBasis - 2*MarginX2 - 2*BoxBorder - WidthTwoH2OneFourth
 	WidthTwoH2ThreeFourthBox = WidthBasis - 2*MarginX4 - WidthTwoH2OneFourthBox
 
-	ViewPortWidthCompletePage = WidthBasis + 2
-	ViewPortWidthHalf = WidthTwoH1 + 2
-	ViewPortWidthThreeFourth = WidthTwoH1ThreeFourth + 2
-	ViewPortWidthOneFourth = WidthTwoH1OneFourth + 2
+	WidthViewPortCompletePage = WidthBasis + 2
+	WidthViewPortHalf = WidthTwoH1 + 2
+	WidthViewPortThreeFourth = WidthTwoH1ThreeFourth + 2
+	WidthViewPortOneFourth = WidthTwoH1OneFourth + 2
 
 	HeightBasis = window.Height - TabRowHeight - FooterHeight - BorderContentBox
 
-	ViewPortHeightCompletePage = HeightBasis
+	HeightViewPortCompletePage = HeightBasis
+	HeightH1EmptyContentPadding = HeightBasis - HeightH1 - FilterBoxHeight
 
 	HeightH1 = 4
 	HeightH2 = 2
@@ -100,20 +105,76 @@ func SetWindowSizes(window common.WindowSize) {
 // Colors                                   //
 // ======================================== //
 
-var MainBlue = "#5f87ff"    // Usage: Active Menu Tab, Content Border
-var Grey = "#444444"        // Usage: inactive components, options, H2 Title
-var NormalBeige = "#d7d7af" // Usage: H1 Title
-var GoodGreen = "#5f875f"   // Usage: Box border when content good
-var BadRed = "#d70000"      // Usage: Box border when content bad
-var LightBlue = "#5f87af"   // Usage: Text color to highlight every second row in a table
-var NavyBlue = "#00005f"    // Usage: Text color if on NormalBeige background
+var readModeBlue = "#5f87ff"   // Usage: Read Only Mode --> Active Menu Tab, Content Border
+var writeModeCoral = "#FF3B30" // Usage: Read/Write Mode --> Active Menu Tab, Content Border
+var Grey = "#444444"           // Usage: inactive components, options, H2 Title
+var NormalBeige = "#d7d7af"    // Usage: H1 Title
+var GoodGreen = "#5f875f"      // Usage: Box border when content good
+var BadRed = "#d70000"         // Usage: Box border when content bad
+var LightBlue = "#5f87af"      // Usage: Text color to highlight every second row in a table
+var NavyBlue = "#00005f"       // Usage: Text color if on NormalBeige background
 var Black = "#000000"
+var White = "#ffffff"
 
-//var MainBlue = "111" // Usage: Active Tab, Content Border
-//var Grey = "238"          // Usage: inactive components, options
-//var NormalBeige = "187"   // Usage: Box Border when content good
-//var BadRed = "#160"        // Usage: Box Border when content bad
-//var LightBlue = "237"
+var TuiColor = readModeBlue
+
+var InfoStatusColor = White
+var InfoStatusBackground = Grey
+var WarningStatusColor = NormalBeige
+var WarningStatusBackground = Black
+var ErrorStatusColor = BadRed
+var ErrorStatusBackground = Black
+
+var StatusColor = InfoStatusColor
+var StatusBackground = InfoStatusBackground
+
+func ChangeReadWriteMode(readOnlyMode bool) {
+	if readOnlyMode {
+		TuiColor = readModeBlue
+	} else {
+		TuiColor = writeModeCoral
+	}
+}
+
+// StatusSeverity is a simple enum for Info / Warning / Error.
+type StatusSeverity int
+
+const (
+	SeverityInfo StatusSeverity = iota
+	SeverityWarning
+	SeverityError
+)
+
+// String implements fmt.Stringer so you can print the name if needed.
+func (s StatusSeverity) String() string {
+	switch s {
+	case SeverityInfo:
+		return "INFO"
+	case SeverityWarning:
+		return "WARNING"
+	case SeverityError:
+		return "ERROR"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func SetStatusSeverity(s StatusSeverity) {
+	switch s {
+	case SeverityInfo:
+		StatusColor = InfoStatusColor
+		StatusBackground = InfoStatusBackground
+	case SeverityWarning:
+		StatusColor = WarningStatusColor
+		StatusBackground = WarningStatusBackground
+	case SeverityError:
+		StatusColor = ErrorStatusColor
+		StatusBackground = ErrorStatusBackground
+	default:
+		StatusColor = InfoStatusColor
+		StatusBackground = InfoStatusBackground
+	}
+}
 
 // ======================================== //
 // Text Styling                             //
@@ -187,16 +248,37 @@ func H1BadTitleStyle() lipgloss.Style {
 		BorderForeground(lipgloss.Color(BadRed))
 }
 
+func FilterTextStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Margin(0, 2).
+		//Padding(0, 0, 0, 1).
+		Width(WidthTwoH1Box).
+		Align(lipgloss.Right)
+	//Background(lipgloss.Color(LightBlue))
+}
+
+func StatusTextStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		//Margin(0, 2).
+		Padding(0, 1).
+		Foreground(lipgloss.Color(StatusColor)).
+		Background(lipgloss.Color(StatusBackground)).
+		MaxWidth(WidthTwoH1Box).
+		Align(lipgloss.Left)
+}
+
 var SelectedOptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(NavyBlue)).Background(lipgloss.Color(NormalBeige)).Bold(true)
 
 // ----------------------------
 // Box Styling
 // ----------------------------
 
-var ContentBoxStyle = lipgloss.NewStyle().
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color(MainBlue)).
-	Padding(0, 2)
+func ContentBoxStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(TuiColor)).
+		Padding(0, 2)
+}
 
 var GeneralBoxStyle = lipgloss.NewStyle().
 	Border(lipgloss.RoundedBorder()).
@@ -377,30 +459,38 @@ var OSPFMonitoringTableTitleBorder = lipgloss.Border{
 // Tab Styling
 // ----------------------------
 
-var ActiveTabBoxStyle = lipgloss.NewStyle().
-	Border(ActiveTabBorder).
-	BorderForeground(lipgloss.Color(MainBlue)).
-	Padding(0, 4).
-	Bold(true).
-	Underline(true)
+func ActiveTabBoxStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(ActiveTabBorder).
+		BorderForeground(lipgloss.Color(TuiColor)).
+		Padding(0, 4).
+		Bold(true).
+		Underline(true)
+}
 
-var ActiveTabBoxLockedStyle = ActiveTabBoxStyle.
-	Bold(false).
-	Underline(false)
+func ActiveTabBoxLockedStyle() lipgloss.Style {
+	return ActiveTabBoxStyle().
+		Bold(false).
+		Underline(false)
+}
 
-var InactiveTabBoxStyle = lipgloss.NewStyle().
-	Border(InactiveTabBorder).
-	BorderForeground(lipgloss.Color(Grey)).
-	BorderBottomForeground(lipgloss.Color(MainBlue)).
-	Padding(0, 4).
-	Bold(false)
+func InactiveTabBoxStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(InactiveTabBorder).
+		BorderForeground(lipgloss.Color(Grey)).
+		BorderBottomForeground(lipgloss.Color(TuiColor)).
+		Padding(0, 4).
+		Bold(false)
+}
 
-var TabGap = lipgloss.NewStyle().
-	Border(InactiveTabBorder).
-	BorderForeground(lipgloss.Color(MainBlue)).
-	BorderTop(false).
-	BorderLeft(false).
-	BorderRight(false)
+func TabGap() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(InactiveTabBorder).
+		BorderForeground(lipgloss.Color(TuiColor)).
+		BorderTop(false).
+		BorderLeft(false).
+		BorderRight(false)
+}
 
 var ActiveSubTabBoxStyle = lipgloss.NewStyle().
 	Padding(0, 4, 0, 0).

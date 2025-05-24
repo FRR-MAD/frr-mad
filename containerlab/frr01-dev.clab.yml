@@ -2,6 +2,16 @@ name: frr01
 
 topology:
   nodes:
+#    mon:
+#       kind: linux
+#       image: moni.local
+#       #binds:
+#       #  - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+#       #  - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+#       #  - ./monitoring/grafana/provisioning/dashboards:/var/lib/grafana/provisioning/dashboards
+#       ports:
+#         - "3000:3000"   # Grafana UI
+#         - "9090:9090"   # Prometheus
     r101:
       kind: linux
       image: frr-854-dev
@@ -12,6 +22,7 @@ topology:
         - ../src:/app/src
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
+
     r102:
       kind: linux
       image: frr-854-dev
@@ -30,7 +41,6 @@ topology:
         - ../src:/app/src
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
-        #- r103/tmp/:/tmp/tcpdump/
     cr104:
       kind: linux
       image: frr-854-dev
@@ -154,7 +164,6 @@ topology:
         - ../src:/app/src
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
-
     r193:
       kind: linux
       image: frr-854-dev
@@ -164,7 +173,6 @@ topology:
         - ../src:/app/src
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
-
     r301:
       kind: linux
       image: frr-854-dev
@@ -241,11 +249,10 @@ topology:
     pc101:
       kind: linux
       image: praqma/network-multitool:latest
-    
+
     pc102:
       kind: linux
       image: praqma/network-multitool:latest
-
 
     cpc104:
       kind: linux
@@ -274,11 +281,10 @@ topology:
     pc111:
       kind: linux
       image: praqma/network-multitool:latest
-    
+
     pc112:
       kind: linux
       image: praqma/network-multitool:latest
-
 
     pc121:
       kind: linux

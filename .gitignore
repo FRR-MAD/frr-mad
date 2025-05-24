@@ -35,6 +35,7 @@ src/go.work.sum
 # folders
 binaries
 proto-binary
+build
 
 # misc
 /makefile.yannick

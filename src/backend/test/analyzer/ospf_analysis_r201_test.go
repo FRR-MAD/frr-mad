@@ -117,6 +117,13 @@ func TestRouterLsaHappy3(t *testing.T) {
 		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.DuplicateEntries), 0)
 	})
 
+	t.Run("TestCheckUnknown", func(t *testing.T) {
+		_, shouldRouterState := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+		isUnknown := getUnknown(shouldRouterState)
+
+		assert.True(t, isUnknown)
+	})
+
 }
 
 func TestRouterLsaUnhappy3(t *testing.T) {
