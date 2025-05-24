@@ -21,7 +21,7 @@ const (
 	MarginX4                  = 8
 
 	TabRowHeight           = 4
-	FilterBoxHeight        = 1
+	BodyFooterHeight       = 1
 	FooterHeight           = 1
 	AdditionalFooterHeight = 2
 )
@@ -95,7 +95,7 @@ func SetWindowSizes(window common.WindowSize) {
 	HeightBasis = window.Height - TabRowHeight - FooterHeight - BorderContentBox
 
 	HeightViewPortCompletePage = HeightBasis
-	HeightH1EmptyContentPadding = HeightBasis - HeightH1 - FilterBoxHeight
+	HeightH1EmptyContentPadding = HeightBasis - HeightH1 - BodyFooterHeight
 
 	HeightH1 = 4
 	HeightH2 = 2
@@ -190,7 +190,7 @@ var TextTitleStyle = lipgloss.NewStyle().
 	BorderBottom(true)
 
 var TextOutputStyle = lipgloss.NewStyle().
-	Padding(1, 2)
+	Padding(1, 2, 0, 2)
 
 func H1TitleStyle() lipgloss.Style {
 	return lipgloss.NewStyle().

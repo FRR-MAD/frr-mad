@@ -38,7 +38,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 
 	// Create the viewport with the desired dimensions.
 	vp := viewport.New(styles.WidthViewPortCompletePage,
-		styles.HeightViewPortCompletePage-styles.FilterBoxHeight)
+		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 	vprh := viewport.New(styles.WidthViewPortHalf,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 

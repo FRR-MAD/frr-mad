@@ -19,7 +19,7 @@ func RenderExportOptions(
 ) string {
 	// adjust viewport dimensions if needed
 	vp.Width = styles.WidthViewPortHalf
-	vp.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.AdditionalFooterHeight - styles.FilterBoxHeight
+	vp.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.AdditionalFooterHeight - styles.BodyFooterHeight
 
 	// copy & sort options by label
 	opts := make([]common.ExportOption, len(exportOptions))

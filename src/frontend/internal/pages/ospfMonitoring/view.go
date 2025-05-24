@@ -392,7 +392,7 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	// Set viewport sizes and assign content to viewport
 	m.viewport.Width = styles.WidthBasis
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, lsdbBlocks...))
 
@@ -577,7 +577,7 @@ func (m *Model) renderRouterMonitorTab() string {
 	}
 
 	m.viewport.Width = styles.WidthViewPortCompletePage
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, routerLSABlocks...))
 
@@ -669,7 +669,7 @@ func (m *Model) renderNetworkMonitorTab() string {
 	}
 
 	m.viewport.Width = styles.WidthViewPortCompletePage
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
 
@@ -807,7 +807,7 @@ func (m *Model) renderExternalMonitorTab() string {
 	}
 
 	m.viewport.Width = styles.WidthViewPortCompletePage
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	var allLsaBlocks []string
 	if hasNssaExternalLSAs == false {
@@ -900,7 +900,7 @@ func (m *Model) renderNeighborMonitorTab() string {
 	)
 
 	m.viewport.Width = styles.WidthViewPortCompletePage
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, ospfNeghborHeader, ospfNeighborTableBox))
 

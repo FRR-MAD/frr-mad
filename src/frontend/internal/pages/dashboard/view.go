@@ -103,10 +103,10 @@ func (m *Model) View() string {
 
 func (m *Model) renderOSPFDashboard() string {
 	m.viewportLeft.Width = styles.WidthViewPortThreeFourth
-	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
+	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	m.viewportRight.Width = styles.WidthViewPortOneFourth
-	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	var statusHeader string
 	if m.hasAnomalyDetected {

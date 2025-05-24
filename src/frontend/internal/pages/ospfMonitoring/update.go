@@ -132,6 +132,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case common.RunningConfigMsg:
 		m.runningConfig = common.ShowRunningConfig(string(msg))
+
+	case common.QuitTuiFailedMsg:
+		m.statusSeverity = styles.SeverityError
+		m.statusMessage = "Config has changed"
 	}
 
 	return m, nil

@@ -4,6 +4,7 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -107,6 +108,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		default:
 			panic("unhandled default case")
 		}
+
+	case common.QuitTuiFailedMsg:
+		m.statusSeverity = styles.SeverityError
+		m.statusMessage = "Config has changed"
 	}
 
 	return m, nil

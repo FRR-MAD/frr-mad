@@ -59,7 +59,7 @@ func initModel(config *configs.Config) *AppModel {
 	windowSize := &common.WindowSize{Width: 157, Height: 38}
 
 	vp := viewport.New(styles.WidthViewPortCompletePage,
-		styles.HeightViewPortCompletePage-styles.FilterBoxHeight)
+		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 
 	debugLevel := getDebugLevel(config.Default.DebugLevel)
 	appLogger := createLogger("frr_mad_frontend", fmt.Sprintf("%v/frr_mad_frontend.log", config.Default.LogPath))
@@ -105,7 +105,6 @@ func initModel(config *configs.Config) *AppModel {
 
 func (m *AppModel) Init() tea.Cmd {
 	m.setTitles()
-	// TODO: not needed, already checked in main
 	startupConfig, err := m.setStartupConfig()
 	if err != nil {
 		return tea.Batch(
