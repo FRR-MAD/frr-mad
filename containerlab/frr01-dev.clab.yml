@@ -100,6 +100,16 @@ topology:
         - ../local:/app/local
         - ../protobufSource:/app/protobufSource
 
+    r1010:
+      kind: linux
+      image: frr-854-dev
+      binds:
+        - r1010/daemons:/etc/frr/daemons
+        - r1010/frr.conf:/etc/frr/frr.conf
+        - ../src:/app/src
+        - ../local:/app/local
+        - ../protobufSource:/app/protobufSource
+
     r111:
       kind: linux
       image: frr-854-dev
@@ -251,6 +261,10 @@ topology:
       image: praqma/network-multitool:latest
 
     pc102:
+      kind: linux
+      image: praqma/network-multitool:latest
+
+    pc103:
       kind: linux
       image: praqma/network-multitool:latest
 
