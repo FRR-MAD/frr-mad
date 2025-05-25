@@ -129,6 +129,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					err := m.fetchLatestData()
 					if err != nil {
 						m.logger.Error("Error while fetching all backend data for dashboard")
+						m.statusSeverity = styles.SeverityError
+						m.statusMessage = "Please re-open export options: Error while fetching data"
 						return m, tea.Batch(
 							toastCmd,
 							toast.Show(fmt.Sprintf("Fetching data failed:\n%v", err)),
@@ -153,6 +155,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case common.ReloadMessage:
 		m.currentTime = time.Time(msg)
 		return m, reloadView()
+
+	case common.QuitTuiFailedMsg:
+		m.statusSeverity = styles.SeverityError
+		m.statusMessage = string(msg)
+		return m, nil
 	}
 
 	return m, nil

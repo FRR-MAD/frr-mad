@@ -62,6 +62,11 @@ func AddExportOption(opts []ExportOption, opt ExportOption) []ExportOption {
 	return append(opts, opt)
 }
 
+type TimedPayload struct {
+	ReceivedAt string      `json:"received_at"`
+	Data       interface{} `json:"data"`
+}
+
 // ================================ //
 // TYPES                            //
 // ================================ //
@@ -115,3 +120,15 @@ func (pl *SortedPrefixList) Less(i, j int) bool {
 }
 
 type ReloadMessage time.Time
+
+// ================================ //
+// tea Messages                     //
+// ================================ //
+
+type QuitTuiFailedMsg string
+
+func QuitTuiFailedCmd(reason string) tea.Cmd {
+	return func() tea.Msg {
+		return QuitTuiFailedMsg(reason)
+	}
+}

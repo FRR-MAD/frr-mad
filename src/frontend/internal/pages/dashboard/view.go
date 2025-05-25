@@ -73,10 +73,13 @@ func (m *Model) View() string {
 			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
-				if len(m.statusMessage) > 50 {
-					m.statusMessage = m.statusMessage[:47] + "..."
+				var cutToSizeMessage string
+				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
+					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+				} else {
+					cutToSizeMessage = m.statusMessage
 				}
-				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 			}
 
@@ -103,10 +106,10 @@ func (m *Model) View() string {
 
 func (m *Model) renderOSPFDashboard() string {
 	m.viewportLeft.Width = styles.WidthViewPortThreeFourth
-	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
+	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	m.viewportRight.Width = styles.WidthViewPortOneFourth
-	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -130,7 +133,8 @@ func (m *Model) renderOSPFDashboard() string {
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
-	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox())
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
+		getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -233,6 +237,22 @@ func (m *Model) getOSPFGeneralInfoBox() string {
 	)
 
 	return ospfInformationBox
+}
+
+func (m *Model) getSystemInfo() string {
+
+	appInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
+		"Daemon Version: " + common.DaemonVersion + "\n" +
+			"FRR-MAD TUI Version: " + common.TUIVersion + "\n" +
+			"Latest Git Commit : " + common.GitCommit + "\n" +
+			"Build Date: " + common.BuildDate + "\n")
+
+	appInfoBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("FRR-MAD Application"),
+		appInfo,
+	)
+
+	return appInfoBox
 }
 
 func (m *Model) getOspfDashboardLsdbSelf() string {
@@ -704,7 +724,7 @@ func (m *Model) renderAnomalyDetails() string {
 	// ===== Solution:  Use newline '\n' after maximum 149 characters                    ===== //
 	// =====            to ensure minimum supported width of FRR-MAD-TUI (157)           ===== //
 
-	anomalyProcessTitle := styles.TextTitleStyle.Padding(0, 0, 0, 0).Render("Anomaly Detection Process")
+	anomalyProcessTitle := styles.TextTitleStyle.Render("Anomaly Detection Process")
 	anomalyProcessText1 := "The frr-mad-analyzer predicts a 'should-state' for the router based on its static FRR configuration. This includes:\n"
 	anomalyPossibilities := []string{
 		"Interface addresses that should be announced in Type 1 Router LSAs",
@@ -716,7 +736,7 @@ func (m *Model) renderAnomalyDetails() string {
 	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state.\n" +
 		"If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
 
-	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("OSPF Anomaly Types")
+	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 2, 0, 0).Render("OSPF Anomaly Types")
 	anomalyTypes := [][]string{
 		{"Unadvertised", "A prefix that is expected to be announced (advertised) to other devices in the network but is missing."},
 		{"Overadvertised", "A prefix that is being announced (advertised) to other devices in the network but should not be."},

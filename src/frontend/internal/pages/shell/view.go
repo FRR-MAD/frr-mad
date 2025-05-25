@@ -15,19 +15,51 @@ func (m *Model) ShellView(currentSubTab int, readOnlyMode bool) string {
 }
 
 func (m *Model) View() string {
-	if currentSubTabLocal == 0 {
-		return m.renderShellTab0()
-	} else if currentSubTabLocal == 1 {
-		return m.renderShellTab1()
-	} else if currentSubTabLocal == 2 {
-		return m.renderBackendTestTab()
+	var content string
+	var body string
+	var bodyFooter string
+
+	statusBar := true
+
+	switch currentSubTabLocal {
+	case 0:
+		body = m.renderBashShellTab()
+	case 1:
+		body = m.renderVtyshShellTab()
+	case 2:
+		body = m.renderBackendTestTab()
+	default:
+		body = m.renderBashShellTab()
 	}
-	return m.renderShellTab0()
+
+	if statusBar {
+		statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
+		if m.statusMessage != "" {
+			styles.SetStatusSeverity(m.statusSeverity)
+			var cutToSizeMessage string
+			if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
+				cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+			} else {
+				cutToSizeMessage = m.statusMessage
+			}
+			statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
+			statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
+		}
+
+		bodyFooter = lipgloss.JoinHorizontal(lipgloss.Top, statusBox)
+
+		content = lipgloss.JoinVertical(lipgloss.Left, body, bodyFooter)
+	} else {
+		content = body
+	}
+
+	return content
 }
 
-func (m *Model) renderShellTab0() string {
+func (m *Model) renderBashShellTab() string {
 	if m.readOnlyMode {
-		return "You are in read only mode. Press [ctrl+w] to deactivate it."
+		return lipgloss.NewStyle().Height(styles.HeightBasis - styles.BodyFooterHeight).
+			Render("You are in read only mode. Press [ctrl+w] to deactivate it.")
 	}
 
 	// Update the viewport dimensions.
@@ -52,9 +84,10 @@ func (m *Model) renderShellTab0() string {
 		styles.TextOutputStyle.Render(m.viewport.View()))
 }
 
-func (m *Model) renderShellTab1() string {
+func (m *Model) renderVtyshShellTab() string {
 	if m.readOnlyMode {
-		return "You are in read only mode. Press [ctrl+w] to deactivate it."
+		return lipgloss.NewStyle().Height(styles.HeightBasis - styles.BodyFooterHeight).
+			Render("You are in read only mode. Press [ctrl+w] to deactivate it.")
 	}
 
 	m.activeShell = "vtysh"
