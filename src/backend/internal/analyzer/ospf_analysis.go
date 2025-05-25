@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -61,11 +60,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 		return nil, nil
 	}
 
-	pretty1, _ := json.MarshalIndent(isState, "", "  ")
-	pretty2, _ := json.MarshalIndent(shouldState, "", "  ")
-	fmt.Println(string(pretty1))
-	fmt.Println(string(pretty2))
-
 	result := &frrProto.AnomalyDetection{
 		SuperfluousEntries: []*frrProto.Advertisement{},
 		MissingEntries:     []*frrProto.Advertisement{},
@@ -82,8 +76,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 			_, isTransit := isStateMap[shouldLink.LinkStateId]
 			_, isStub := isStateMap[shouldLink.InterfaceAddress]
 			if !isTransit && !isStub {
-				fmt.Println(shouldLink.LinkStateId)
-				fmt.Println(shouldLink.InterfaceAddress)
 				isMissing = true
 			}
 		} else {
