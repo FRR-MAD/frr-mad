@@ -98,9 +98,27 @@ test_no_ping "clab-frr01-pc102" "192.168.4.100" "PC102-CPC104"
 test_ping "clab-frr01-pc102" "192.168.5.100" "PC102-CPC105"
 
 # ========================== #
+# Test pings from PC103      #
+# ========================== #
+test_ping "clab-frr01-pc103" "10.0.0.100" "PC103-PC101"
+test_ping "clab-frr01-pc103" "10.0.2.100" "PC103-PC102"
+test_ping "clab-frr01-pc103" "10.1.0.100" "PC103-PC111"
+test_ping "clab-frr01-pc103" "10.1.1.100" "PC103-PC112"
+test_ping "clab-frr01-pc103" "10.2.0.100" "PC103-PC121"
+test_ping "clab-frr01-pc103" "10.3.0.100" "PC103-PC131"
+test_ping "clab-frr01-pc103" "192.168.1.100" "PC103-PC191"
+test_ping "clab-frr01-pc103" "10.20.0.100" "PC103-PC201"
+test_ping "clab-frr01-pc103" "10.30.0.100" "PC103-PC301"
+test_ping "clab-frr01-pc103" "192.168.4.4" "PC103-CR104"
+test_ping "clab-frr01-pc103" "192.168.5.5" "PC103-CR105"
+test_no_ping "clab-frr01-pc103" "192.168.4.100" "PC103-CPC104"
+test_ping "clab-frr01-pc103" "192.168.5.100" "PC103-CPC105"
+
+# ========================== #
 # Test pings from PC111      #
 # ========================== #
 test_ping "clab-frr01-pc111" "10.0.0.100" "PC111-PC101"
+test_ping "clab-frr01-pc111" "10.0.3.100" "PC111-PC103"
 test_ping "clab-frr01-pc111" "10.1.1.100" "PC111-PC112"
 test_ping "clab-frr01-pc111" "10.2.0.100" "PC111-PC121"
 test_ping "clab-frr01-pc111" "10.3.0.100" "PC111-PC131"
@@ -142,6 +160,7 @@ test_ping "clab-frr01-pc121" "10.1.0.100" "PC121-PC111"
 # test_ping "clab-frr01-pc121" "10.2.0.100" "PC121-PC121"
 test_ping "clab-frr01-pc121" "10.3.0.100" "PC121-PC131"
 test_ping "clab-frr01-pc121" "192.168.1.100" "PC121-PC191"
+test_ping "clab-frr01-pc121" "192.168.11.100" "PC121-PC193"
 test_ping "clab-frr01-pc121" "10.20.0.100" "PC121-PC201"
 test_ping "clab-frr01-pc121" "10.20.3.100" "PC121-PC203"
 test_ping "clab-frr01-pc121" "10.20.4.100" "PC121-PC204"
@@ -155,6 +174,7 @@ test_ping "clab-frr01-pc121" "192.168.5.100" "PC121-CPC105"
 # Test pings from PC131      #
 # ========================== #
 test_ping "clab-frr01-pc131" "10.0.0.100" "PC131-PC101"
+test_ping "clab-frr01-pc131" "10.0.3.100" "PC131-PC103"
 test_ping "clab-frr01-pc131" "10.1.0.100" "PC131-PC111"
 test_ping "clab-frr01-pc131" "10.2.0.100" "PC131-PC121"
 # test_ping "clab-frr01-pc131" "10.3.0.100" "PC131-PC131"
@@ -171,6 +191,7 @@ test_ping "clab-frr01-pc131" "192.168.5.100" "PC131-CPC105"
 # ========================== #
 test_ping "clab-frr01-pc191" "10.0.0.100" "PC191-PC101"
 test_ping "clab-frr01-pc191" "10.0.2.100" "PC191-PC102"
+test_ping "clab-frr01-pc191" "10.0.3.100" "PC191-PC103"
 test_ping "clab-frr01-pc191" "10.1.0.100" "PC191-PC111"
 test_ping "clab-frr01-pc191" "10.2.0.100" "PC191-PC121"
 test_ping "clab-frr01-pc191" "10.3.0.100" "PC191-PC131"
@@ -196,12 +217,29 @@ test_ping "clab-frr01-pc192" "10.3.0.100" "PC192-PC131"
 # Because no static route exists (both directions)
 test_no_ping "clab-frr01-pc192" "192.168.1.100" "PC192-PC191"
 test_no_ping "clab-frr01-pc192" "10.20.0.100" "PC192-PC201"
-# Because static is redistributed into bgp
+# Because static is not redistributed into bgp
 test_no_ping "clab-frr01-pc192" "192.168.32.100" "PC192-PC392"
 test_no_ping "clab-frr01-pc192" "192.168.33.100" "PC192-PC393"
 test_no_ping "clab-frr01-pc192" "192.168.34.100" "PC192-PC394"
 # Because static is redistributed into bgp
 test_ping "clab-frr01-pc192" "10.30.0.100" "PC192-PC301"
+
+# ========================== #
+# Test pings from PC193      #
+# ========================== #
+test_ping "clab-frr01-pc193" "10.0.0.100" "PC193-PC101"
+test_ping "clab-frr01-pc193" "10.1.0.100" "PC193-PC111"
+test_ping "clab-frr01-pc193" "10.1.1.100" "PC193-PC112"
+test_ping "clab-frr01-pc193" "10.2.0.100" "PC193-PC121"
+test_ping "clab-frr01-pc193" "10.3.0.100" "PC193-PC131"
+test_ping "clab-frr01-pc193" "192.168.1.100" "PC193-PC191"
+test_ping "clab-frr01-pc193" "10.20.0.100" "PC193-PC201"
+# Because static is not redistributed into bgp
+test_no_ping "clab-frr01-pc193" "192.168.32.100" "PC193-PC392"
+test_no_ping "clab-frr01-pc193" "192.168.33.100" "PC193-PC393"
+test_no_ping "clab-frr01-pc193" "192.168.34.100" "PC193-PC394"
+# Because static is redistributed into bgp
+test_ping "clab-frr01-pc193" "10.30.0.100" "PC193-PC301"
 
 # ========================== #
 # Test pings from PC201      #

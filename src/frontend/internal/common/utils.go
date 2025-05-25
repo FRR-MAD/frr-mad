@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	frrProto "github.com/frr-mad/frr-tui/pkg"
 )
@@ -78,10 +80,56 @@ func PrettyPrintJSON(msg proto.Message) string {
 	return string(out)
 }
 
+// ExportProto upserts an export option and always wraps the proto payload
+// in a timestamped envelope.
+func ExportProto(
+	exportData map[string]string,
+	exportOptions []ExportOption,
+	key, label, filename string,
+	fetch func() (proto.Message, error),
+) ([]ExportOption, error) {
+	msg, err := fetch()
+	if err != nil {
+		return exportOptions, err
+	}
+
+	// 1) marshal the proto with protojson
+	dataJSON, err := protojson.MarshalOptions{
+		Indent:          "  ",
+		EmitUnpopulated: true,
+	}.Marshal(msg)
+	if err != nil {
+		return exportOptions, err
+	}
+
+	// 2) wrap in a timestamp + RawMessage
+	wrapper := struct {
+		ReceivedAt string          `json:"received_at"`
+		Data       json.RawMessage `json:"data"`
+	}{
+		ReceivedAt: time.Now().UTC().Format(time.RFC3339),
+		Data:       json.RawMessage(dataJSON),
+	}
+
+	// 3) pretty-print the wrapper
+	b, err := json.MarshalIndent(wrapper, "", "  ")
+	if err != nil {
+		return exportOptions, err
+	}
+	exportData[key] = string(b)
+
+	// 4) upsert the option
+	exportOptions = AddExportOption(exportOptions, ExportOption{
+		Label:    label,
+		MapKey:   key,
+		Filename: filename,
+	})
+	return exportOptions, nil
+}
+
 // WriteExportToFile writes `data` into a file named `filename` under /tmp/frr-mad/exports.
 // Ensures the filename ends with .json; truncates existing files.
 func WriteExportToFile(data string, filename string, directory string) error {
-	// TODO: add path to config file
 	exportDir := directory
 	if err := os.MkdirAll(exportDir, 0755); err != nil {
 		return err
