@@ -69,10 +69,13 @@ func (m *Model) View() string {
 			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
+				var cutToSizeMessage string
 				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
-					m.statusMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+				} else {
+					cutToSizeMessage = m.statusMessage
 				}
-				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 			}
 
@@ -184,7 +187,7 @@ func (m *Model) renderRibTab() string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.BodyFooterHeight
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -293,7 +296,7 @@ func (m *Model) renderFibTab() string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.BodyFooterHeight
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
@@ -408,7 +411,7 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	// Configure viewport
 	m.viewport.Width = styles.WidthBasis
 	// -3 (table Header) -2 (box border bottom style)
-	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.FilterBoxHeight
+	m.viewport.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - 3 - 2 - styles.BodyFooterHeight
 
 	// Set only the body into the viewport
 	m.viewport.SetContent(
