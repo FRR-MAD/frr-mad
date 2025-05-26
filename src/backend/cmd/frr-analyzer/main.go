@@ -79,7 +79,7 @@ func main() {
 
 				app.Logger.Application.WithAttrs(map[string]interface{}{
 					"child_pid":   command.Process.Pid,
-					"config_file": confPath,
+					"config_file": configFile,
 				}).Info("FRR-MAD daemon started")
 				os.Exit(0)
 			} else {
@@ -347,7 +347,7 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 
 	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", TUIVersion))
 	appLogger.WithAttrs(map[string]interface{}{
-		"config_path":              confgPath,
+		"config_path":              overwriteConfigPath,
 		"debug_level":              config.basis.DebugLevel,
 		"poll_interval in seconds": config.aggregator.PollInterval,
 	}).Info("Configuration loaded")
