@@ -30,7 +30,7 @@ func getMockData() (map[string]interface{}, *frrProto.FullFRRData, *logger.Logge
 			},
 		},
 	}
-	logger, _ := logger.NewLogger("testing", "/tmp/testing.log")
+	logger, _ := logger.NewApplicationLogger("testing", "/tmp/testing.log")
 
 	return config, metrics, logger
 

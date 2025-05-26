@@ -29,41 +29,43 @@ var (
 	registryMu sync.Mutex
 )
 
-// NewLogger creates or retrieves a logger instance
-func NewLogger(name, filePath string) (*Logger, error) {
+// NewApplicationLogger creates the main application logger
+func NewApplicationLogger(appName, filePath string) (*Logger, error) {
 	registryMu.Lock()
 	defer registryMu.Unlock()
 
-	// Return existing logger if it exists
-	if logger, exists := registry[name]; exists {
-		return logger, nil
-	}
-
-	// Create the log file
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
 
-	// Create a JSON handler that writes to the file
 	opts := &slog.HandlerOptions{
-		Level: slog.LevelInfo, // Default level
+		Level: slog.LevelInfo,
 	}
 	handler := slog.NewJSONHandler(file, opts)
 
-	// Create the logger with the name as an attribute
-	slogger := slog.New(handler).With("logger", name)
+	slogger := slog.New(handler).With("application", appName)
 
 	logger := &Logger{
-		name:     name,
+		name:     appName,
 		logger:   slogger,
 		file:     file,
 		filePath: filePath,
 		level:    LevelNormal,
 	}
 
-	registry[name] = logger
+	registry[appName] = logger
 	return logger, nil
+}
+
+func (l *Logger) WithComponent(component string) *Logger {
+	return &Logger{
+		name:     l.name,
+		logger:   l.logger.With("component", component),
+		file:     l.file,
+		filePath: l.filePath,
+		level:    l.level,
+	}
 }
 
 // GetInstance retrieves an existing logger by name

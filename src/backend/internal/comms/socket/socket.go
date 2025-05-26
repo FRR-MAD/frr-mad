@@ -47,7 +47,6 @@ func (s *Socket) Start() error {
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: s.socketPath, Net: "unix"})
 	if err != nil {
 		return fmt.Errorf("error listening on socket: %w", err)
-		//s.logger.Error(fmt.Sprintf("Error listening on socket: %w", err))
 	}
 
 	s.listener = l

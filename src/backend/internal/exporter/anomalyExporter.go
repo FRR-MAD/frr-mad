@@ -20,7 +20,9 @@ type AnomalyExporter struct {
 }
 
 func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus.Registerer, logger *logger.Logger) *AnomalyExporter {
-	logger.Debug("Initializing anomaly exporter")
+	if logger != nil {
+		logger.Debug("Initializing anomaly exporter")
+	}
 
 	a := &AnomalyExporter{
 		anomalies:      anomalies,
@@ -131,7 +133,9 @@ func (a *AnomalyExporter) Update() {
 	}
 
 	if a.anomalies == nil {
-		a.logger.Debug("Skipping anomaly update - no anomaly data available")
+		if a.logger != nil {
+			a.logger.Debug("Skipping anomaly update - no anomaly data available")
+		}
 		return
 	}
 
@@ -195,8 +199,19 @@ func (a *AnomalyExporter) processOspfSources() {
 
 	processSource := func(source string, detection *frrProto.AnomalyDetection) {
 		if detection == nil {
+			a.logger.WithAttrs(map[string]interface{}{
+				"source": source,
+			}).Debug("Skipping nil detection for source")
 			return
 		}
+
+		a.logger.WithAttrs(map[string]interface{}{
+			"source":             source,
+			"has_overadvertised": detection.GetHasOverAdvertisedPrefixes(),
+			"has_unadvertised":   detection.GetHasUnAdvertisedPrefixes(),
+			"has_duplicate":      detection.GetHasDuplicatePrefixes(),
+			"has_misconfigured":  detection.GetHasMisconfiguredPrefixes(),
+		}).Debug("Processing OSPF source anomalies")
 
 		a.anomalyFlags.WithLabelValues(source, "overadvertised").Set(boolToFloat(detection.GetHasOverAdvertisedPrefixes()))
 		a.anomalyFlags.WithLabelValues(source, "unadvertised").Set(boolToFloat(detection.GetHasUnAdvertisedPrefixes()))
@@ -206,6 +221,13 @@ func (a *AnomalyExporter) processOspfSources() {
 		over := detection.GetSuperfluousEntries()
 		under := detection.GetMissingEntries()
 		dup := detection.GetDuplicateEntries()
+
+		a.logger.WithAttrs(map[string]interface{}{
+			"source":               source,
+			"overadvertised_count": len(over),
+			"unadvertised_count":   len(under),
+			"duplicate_count":      len(dup),
+		}).Debug("Counted anomalies for source")
 
 		totalOver += len(over)
 		totalUnder += len(under)
@@ -226,9 +248,17 @@ func (a *AnomalyExporter) processOspfSources() {
 		}
 	}
 
+	a.logger.Debug("Starting processing of OSPF sources")
 	processSource("RouterAnomaly", a.anomalies.RouterAnomaly)
 	processSource("ExternalAnomaly", a.anomalies.ExternalAnomaly)
 	processSource("NssaExternalAnomaly", a.anomalies.NssaExternalAnomaly)
+
+	a.logger.WithAttrs(map[string]interface{}{
+		"total_overadvertised": totalOver,
+		"total_unadvertised":   totalUnder,
+		"total_duplicate":      totalDup,
+		"total_misconfigured":  totalMisconfig,
+	}).Debug("Finished processing OSPF sources")
 
 	a.alertCounters["frr_mad_ospf_overadvertised_routes_total"].Set(float64(totalOver))
 	a.alertCounters["frr_mad_ospf_unadvertised_routes_total"].Set(float64(totalUnder))
@@ -237,6 +267,14 @@ func (a *AnomalyExporter) processOspfSources() {
 }
 
 func (a *AnomalyExporter) setAnomalyDetail(anomalyType, source string, ad *frrProto.Advertisement) {
+	if ad == nil {
+		a.logger.WithAttrs(map[string]interface{}{
+			"anomaly_type": anomalyType,
+			"source":       source,
+		}).Warning("Attempted to set anomaly detail with nil advertisement")
+		return
+	}
+
 	labels := prometheus.Labels{
 		"anomaly_type":      anomalyType,
 		"source":            source,
@@ -251,6 +289,15 @@ func (a *AnomalyExporter) setAnomalyDetail(anomalyType, source string, ad *frrPr
 	key := anomalyType + ":" + source + ":" + ad.GetInterfaceAddress() + ":" + ad.GetLinkStateId()
 	a.knownLabelSets[key] = labels
 	a.anomalyDetails.With(labels).Set(1)
+
+	a.logger.WithAttrs(map[string]interface{}{
+		"key":            key,
+		"anomaly_type":   anomalyType,
+		"source":         source,
+		"link_state_id":  ad.GetLinkStateId(),
+		"prefix_length":  ad.GetPrefixLength(),
+		"interface_addr": ad.GetInterfaceAddress(),
+	}).Debug("Set anomaly detail metric")
 }
 
 func boolToFloat(b bool) float64 {

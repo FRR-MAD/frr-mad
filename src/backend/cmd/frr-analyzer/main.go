@@ -203,32 +203,31 @@ func (a *FrrMadApp) startApp(cmd *cobra.Command) {
 	services = append(services, "exporter")
 
 	for _, service := range services {
-		a.Logger.Application.Info(fmt.Sprintf("Starting %s service", service))
+		serviceLogger := a.Logger.Application.WithComponent(service)
+		serviceLogger.Info("Starting service")
+
 		switch service {
 		case "analyzer":
 			if a.Aggregator == nil {
-				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", a.Config.basis.LogPath))
-				aggregatorLogger.SetDebugLevel(a.DebugLevel)
-				a.Aggregator = startAggregator(a.Config.aggregator, aggregatorLogger, a.PollInterval)
+				aggLogger := serviceLogger.WithComponent("aggregator")
+				a.Aggregator = startAggregator(a.Config.aggregator, aggLogger, a.PollInterval)
 			}
 
-			analyzerLogger := createLogger("analyzer", fmt.Sprintf("%v/analyzer.log", a.Config.basis.LogPath))
-			analyzerLogger.SetDebugLevel(a.DebugLevel)
+			analyzerLogger := serviceLogger.WithComponent("analyzer")
 			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.PollInterval, a.Aggregator)
 
 		case "exporter":
 			if a.Exporter == nil {
-				exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", a.Config.basis.LogPath))
-				exporterLogger.SetDebugLevel(a.DebugLevel)
+				expLogger := serviceLogger.WithComponent("exporter")
 				getFlagConfigsFromCmd(cmd, &a.Config.exporter)
-				a.Exporter = startExporter(a.Config.exporter, exporterLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
+				a.Exporter = startExporter(a.Config.exporter, expLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
 			}
 		}
 	}
 
 	// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
 	if a.Aggregator != nil && a.Analyzer != nil && a.Exporter != nil {
-		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Analyzer.Logger, a.Analyzer.AnalyserStateParserResults)
+		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Logger.Application, a.Analyzer.AnalyserStateParserResults)
 
 		go func() {
 			a.Logger.Application.WithAttrs(map[string]interface{}{
@@ -342,7 +341,11 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
 	pid, _ := readPidFile(pidFile)
 
-	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
+	appLogger, err := logger.NewApplicationLogger("frr-mad",
+		fmt.Sprintf("%v/application.log", config.basis.LogPath))
+	if err != nil {
+		log.Fatalf("Failed to create application logger: %v", err)
+	}
 	appLogger.SetDebugLevel(debugLevel)
 
 	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", TUIVersion))
@@ -395,14 +398,6 @@ func isProcessRunning(pid int) bool {
 
 	err = process.Signal(syscall.Signal(0))
 	return err == nil
-}
-
-func createLogger(name, filePath string) *logger.Logger {
-	logger, err := logger.NewLogger(name, filePath)
-	if err != nil {
-		log.Fatalf("Failed to create logger %s: %v", name, err)
-	}
-	return logger
 }
 
 func getDebugLevel(level string) int {

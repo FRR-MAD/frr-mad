@@ -14,7 +14,7 @@ import (
 
 func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 	anomalies := &frrProto.AnomalyAnalysis{}
 
@@ -48,7 +48,7 @@ func TestAnomalyExporter_NoAnomalies(t *testing.T) {
 
 func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	anomalyResult := &frrProto.AnomalyAnalysis{
@@ -100,7 +100,7 @@ func TestAnomalyExporter_WithAnomalies(t *testing.T) {
 
 func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	anomalyResult := &frrProto.AnomalyAnalysis{
@@ -131,7 +131,7 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 
 func TestAnomalyExporter_NilAnomalies_DoesNothing(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, _ := logger.NewLogger("test", "")
+	testLogger, _ := logger.NewApplicationLogger("test", "")
 	var anomalyResult *frrProto.AnomalyAnalysis
 
 	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
@@ -164,7 +164,7 @@ func TestAnomalyExporter_NilAnomalies_DoesNothing(t *testing.T) {
 
 func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/exporter_toggle.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/exporter_toggle.log")
 	assert.NoError(t, err)
 
 	anomalyResult := &frrProto.AnomalyAnalysis{
@@ -201,7 +201,7 @@ func TestAnomalyExporter_ToggleAnomalies(t *testing.T) {
 
 func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/exporter_no_anom_exist.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/exporter_no_anom_exist.log")
 	assert.NoError(t, err)
 
 	anomalyResult := &frrProto.AnomalyAnalysis{}
@@ -248,7 +248,7 @@ func TestAnomalyExporter_NoAnomalies_Existence(t *testing.T) {
 
 func TestAnomalyExporter_MixedAnomalies(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	anomalyResult := &frrProto.AnomalyAnalysis{
