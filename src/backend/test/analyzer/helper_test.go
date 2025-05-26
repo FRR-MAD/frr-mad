@@ -23,22 +23,6 @@ func getIfaceMap(value []*frrProto.Advertisement) (map[string]*frrProto.Advertis
 	return result, keyResult
 }
 
-func uniqueNonEmptyElementsOf(s []string) []string {
-	unique := make(map[string]bool, len(s))
-	us := make([]string, len(unique))
-	for _, elem := range s {
-		if len(elem) != 0 {
-			if !unique[elem] {
-				us = append(us, elem)
-				unique[elem] = true
-			}
-		}
-	}
-
-	return us
-
-}
-
 func GetNssaExternalData(data *frrProto.OSPFNssaExternalData, hostname string) *frrProto.InterAreaLsa {
 	result := &frrProto.InterAreaLsa{
 		Hostname: hostname,
