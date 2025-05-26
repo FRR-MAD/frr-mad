@@ -32,13 +32,12 @@ Use "frr-analyzer [command] --help" for more information about a command.
 
 ### Starting the Application
 
-The daemon is fairly easy to start. Always provide a configuration file. Two options are available to provide the configuration file. 
-- **FRR_MAD_CONFFILE Env**: An environment variable needs to be exported. In its current implementation the frr-mad-tui requires the fullpath to the configuration file to be exported. The frr-mad-analyzer service works with and without. 
-- **--configFile Option**: When starting the daemon a custom configuration file can be provided.
+The daemon is fairly easy to start. Always provide a configuration file. The get the frr-mad-tui running, an environment variables needs to be set or default configuration path needs to be used.
+- **FRR_MAD_CONFFILE Env**: Export **FRR_MAD_CONFFILE** with the absolut path to the configuration file. frr-mad-tui will select the file in the provided environment variable, otherwise it will default to /etc/frr-mad/main.yaml. The frr-mad-analyzer service works regardless of what the environment variable is.
+  - This could be set with /etc/environment or /etc/profile, pick your poison.
+- **--configFile Option**: When starting the daemon a custom configuration file can be provided. The path can be absolut or relative. 
 
-To run the tui the environment variable is **mandatory**. This makes the configFile option with the analyzer daemon obsolete. If only the daemon is required, either the environment variable or the configFile option is necessary.
-
-If neither is provided the applications with both default to **/etc/frr-mad/main.yaml**.
+To run the tui the environment variable is **mandatory**. If neither is provided the applications with both default to **/etc/frr-mad/main.yaml**.
 
 #### Daemon
 ```sh
