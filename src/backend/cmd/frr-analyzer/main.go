@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -72,9 +71,8 @@ func main() {
 		Use:   "start",
 		Short: "Start the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, app := loadMadApplication(configFile)
+			app := loadMadApplication(configFile)
 			if os.Getenv("FRR_MAD_DAEMON") != "1" {
-				createdConfiguration(confPath)
 				command := exec.Command(os.Args[0], os.Args[1:]...)
 				command.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
 				command.Start()
@@ -94,7 +92,7 @@ func main() {
 		Use:   "stop",
 		Short: "Stop the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			_, app := loadMadApplication(configFile)
+			app := loadMadApplication(configFile)
 			app.stopApp()
 		},
 	}
@@ -123,9 +121,17 @@ func main() {
 		Short:  "Run the application in debug mode",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, app := loadMadApplication(configFile)
-			createdConfiguration(confPath)
+			app := loadMadApplication(configFile)
 			app.startApp(cmd)
+		},
+	}
+	var testCmd = &cobra.Command{
+		Use:    "test",
+		Short:  "testing",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(os.LookupEnv("FRR_MAD_CONFFILE"))
+			fmt.Println(configs.ConfigLocation)
 		},
 	}
 
@@ -172,6 +178,7 @@ func main() {
 	rootCmd.AddCommand(reloadCmd)
 	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(testCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
@@ -315,8 +322,8 @@ func (a *FrrMadApp) stopApp() {
 	}
 }
 
-func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
-	confgPath, configRaw, err := configs.LoadConfig(overwriteConfigPath)
+func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
+	configRaw, err := configs.LoadConfig(overwriteConfigPath)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -358,7 +365,7 @@ func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
 		PidFile:      pidFile,
 	}
 
-	return confgPath, app
+	return app
 }
 
 func readPidFile(pidFile string) (int, error) {
@@ -411,20 +418,20 @@ func getDebugLevel(level string) int {
 	}
 }
 
-func createdConfiguration(configPath string) error {
-	appDir := "/tmp"
+// func createdConfiguration(configPath string) error {
+// 	appDir := "/tmp"
 
-	sourcePath := filepath.Join(configPath)
-	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
+// 	sourcePath := filepath.Join(configPath)
+// 	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
 
-	content, _ := os.ReadFile(sourcePath)
-	err := os.WriteFile(destinationPath, content, 0444)
-	if err != nil {
-		return err
-	}
+// 	content, _ := os.ReadFile(sourcePath)
+// 	err := os.WriteFile(destinationPath, content, 0444)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func getFlagConfigsFromCmd(cmd *cobra.Command, exporterConfig *configs.ExporterConfig) {
 	if cmd.Flags().Changed("ospf-router") {
