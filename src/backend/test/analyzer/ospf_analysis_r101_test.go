@@ -155,7 +155,7 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 	accessList := analyzer.GetAccessList(frrMetrics.StaticFrrConfiguration)
 	isRouterLSDB := getExpectedShouldRouterLSDBr101MissingEntries()
 	shouldRouterLSDB := getExpectedIsRouterLSDBr101Happy()
-	ana.RouterAnomalyAnalysisLSDB(accessList, &shouldRouterLSDB, isRouterLSDB)
+	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 	expectedMissingEntrires := []*frrProto.Advertisement{
 		{
 			InterfaceAddress: "10.0.2.0",
@@ -170,12 +170,13 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 	t.Run("TestUnadvertised", func(t *testing.T) {
 		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes)
 		assert.Equal(t, 2, len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
+
 		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
 		missingOne := false
 		if expectedMissingEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress {
-			missingOne = strings.ToLower(expectedMissingEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.MissingEntries[0].LinkType)
+			missingOne = strings.EqualFold(expectedMissingEntrires[0].LinkType, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].LinkType)
 		} else if expectedMissingEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.MissingEntries[1].InterfaceAddress {
-			missingOne = strings.ToLower(expectedMissingEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.MissingEntries[1].LinkType)
+			missingOne = strings.EqualFold(expectedMissingEntrires[0].LinkType, ana.AnalysisResult.RouterAnomaly.MissingEntries[1].LinkType)
 		}
 		assert.True(t, missingOne)
 	})
@@ -203,9 +204,9 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 		assert.Equal(t, len(expectedSuperfluousEntrires), len(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries))
 		missingOne := false
 		if expectedSuperfluousEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress {
-			missingOne = strings.ToLower(expectedSuperfluousEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].LinkType)
+			missingOne = strings.EqualFold(expectedSuperfluousEntrires[0].LinkType, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].LinkType)
 		} else if expectedSuperfluousEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].InterfaceAddress {
-			missingOne = strings.ToLower(expectedSuperfluousEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].LinkType)
+			missingOne = strings.EqualFold(expectedSuperfluousEntrires[0].LinkType, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].LinkType)
 		}
 		assert.True(t, missingOne)
 	})

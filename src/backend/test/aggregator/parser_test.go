@@ -85,14 +85,14 @@ func testInterfaces(
 	configR203 *frrProto.StaticFRRConfiguration,
 ) {
 	// ========== r101 ==========
-	if len(configR101.Interfaces) != 12 {
+	if len(configR101.Interfaces) != 13 {
 		t.Errorf("Expected 12 interfaces, got %d", len(configR101.Interfaces))
 	}
 
 	//r101Eth1
 	r101Eth1 := configR101.Interfaces[0]
 	if r101Eth1.Name != "eth1" {
-		t.Errorf("Expected first interface name to be 'r101Eth1', got '%s'", r101Eth1.Name)
+		t.Errorf("Expected first interface name to be 'eth1', got '%s'", r101Eth1.Name)
 	}
 	if len(r101Eth1.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth1 to have at least one IP address")
@@ -111,7 +111,7 @@ func testInterfaces(
 	// r101Eth2
 	r101Eth2 := configR101.Interfaces[1]
 	if r101Eth2.Name != "eth2" {
-		t.Errorf("Expected second interface name to be 'r101Eth2', got '%s'", r101Eth2.Name)
+		t.Errorf("Expected second interface name to be 'eth2', got '%s'", r101Eth2.Name)
 	}
 	if len(r101Eth2.InterfaceIpPrefixes) != 2 {
 		t.Errorf("Expected r101Eth2 to have 2 IP address, got '%v'", len(r101Eth2.InterfaceIpPrefixes))
@@ -150,7 +150,7 @@ func testInterfaces(
 	// r101Eth3
 	r101Eth3 := configR101.Interfaces[2]
 	if r101Eth3.Name != "eth3" {
-		t.Errorf("Expected r101Eth3 name to be 'r101Eth3', got '%s'", r101Eth3.Name)
+		t.Errorf("Expected r101Eth3 name to be 'eth3', got '%s'", r101Eth3.Name)
 	}
 	if len(r101Eth3.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth3 to have at least one IP address")
@@ -172,7 +172,7 @@ func testInterfaces(
 	// r101Eth4
 	r101Eth4 := configR101.Interfaces[3]
 	if r101Eth4.Name != "eth4" {
-		t.Errorf("Expected r101Eth4 name to be 'r101Eth4', got '%s'", r101Eth4.Name)
+		t.Errorf("Expected r101Eth4 name to be 'eth4', got '%s'", r101Eth4.Name)
 	}
 	if len(r101Eth4.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth4 to have at least one IP address")
@@ -194,7 +194,7 @@ func testInterfaces(
 	// r101Eth11
 	r101Eth11 := configR101.Interfaces[10]
 	if r101Eth11.Name != "eth11" {
-		t.Errorf("Expected r101Eth11 name to be 'r101Eth11', got '%s'", r101Eth11.Name)
+		t.Errorf("Expected r101Eth11 name to be 'eth11', got '%s'", r101Eth11.Name)
 	}
 	if len(r101Eth11.InterfaceIpPrefixes) == 0 {
 		t.Error("Expected r101Eth11 to have at least one IP address")
@@ -213,8 +213,50 @@ func testInterfaces(
 		t.Error("Expected r101Eth11 to be non-passive")
 	}
 
+	// r101Eth12
+	r101Eth12 := configR101.Interfaces[11]
+	if r101Eth12.Name != "eth12" {
+		t.Errorf("Expected r101Eth12 name to be 'eth12', got '%s'", r101Eth12.Name)
+	}
+	if len(r101Eth12.InterfaceIpPrefixes) != 3 {
+		t.Errorf("Expected r101Eth12 to have 3 IP address, got '%v'", len(r101Eth12.InterfaceIpPrefixes))
+	} else {
+		expectedIpPrefixes := map[string]int{"10.222.22.1": 24, "10.222.23.1": 24, "10.222.24.1": 24}
+		seen := make(map[string]bool, len(expectedIpPrefixes))
+		for _, ipPref := range r101Eth12.InterfaceIpPrefixes {
+			addr := ipPref.IpPrefix.IpAddress
+			prefixLen := int(ipPref.IpPrefix.PrefixLength)
+			if wantLen, ok := expectedIpPrefixes[addr]; ok {
+				if prefixLen != wantLen {
+					t.Errorf("for %s: expected /%d, got /%d", addr, wantLen, prefixLen)
+				}
+				seen[addr] = true
+			}
+		}
+		for addr, wantLen := range expectedIpPrefixes {
+			if !seen[addr] {
+				t.Errorf("missing expected IP prefix %s/%d in InterfaceIpPrefixes", addr, wantLen)
+			}
+		}
+	}
+	if r101Eth12.Area != "0.0.0.0" {
+		t.Errorf("Expected r101Eth12 to be in Area '0.0.0.0', got '%s'", r101Eth12.Area)
+	}
+	if !r101Eth12.InterfaceIpPrefixes[0].Passive {
+		t.Errorf("Expected r101Eth12[0] to be passive, but '%s' passive state is '%v'",
+			r101Eth12.InterfaceIpPrefixes[0].IpPrefix.IpAddress, r101Eth12.InterfaceIpPrefixes[0].Passive)
+	}
+	if !r101Eth12.InterfaceIpPrefixes[1].Passive {
+		t.Errorf("Expected r101Eth12[1] to be passive, but '%s' passive state is '%v'",
+			r101Eth12.InterfaceIpPrefixes[1].IpPrefix.IpAddress, r101Eth12.InterfaceIpPrefixes[1].Passive)
+	}
+	if !r101Eth12.InterfaceIpPrefixes[2].Passive {
+		t.Errorf("Expected r101Eth12[2] to be passive, but '%s' passive state is '%v'",
+			r101Eth12.InterfaceIpPrefixes[2].IpPrefix.IpAddress, r101Eth12.InterfaceIpPrefixes[2].Passive)
+	}
+
 	// lo
-	r101Lo := configR101.Interfaces[11]
+	r101Lo := configR101.Interfaces[12]
 	if r101Lo.Name != "lo" {
 		t.Errorf("Expected r101Lo interface name to be 'r101Lo', got '%s'", r101Lo.Name)
 	}

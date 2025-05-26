@@ -85,7 +85,7 @@ func main() {
 				}).Info("FRR-MAD daemon started")
 				os.Exit(0)
 			} else {
-				app.startApp()
+				app.startApp(cmd)
 			}
 		},
 	}
@@ -125,7 +125,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			confPath, app := loadMadApplication(configFile)
 			createdConfiguration(confPath)
-			app.startApp()
+			app.startApp(cmd)
 		},
 	}
 
@@ -144,6 +144,27 @@ func main() {
 
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+	startCmd.Flags().Bool("ospf-router", false, "Enable OSPF router metrics")
+	startCmd.Flags().Bool("ospf-network", false, "Enable OSPF network metrics")
+	startCmd.Flags().Bool("ospf-summary", false, "Enable OSPF summary metrics")
+	startCmd.Flags().Bool("ospf-asbr-summary", false, "Enable OSPF ASBR summary metrics")
+	startCmd.Flags().Bool("ospf-external", false, "Enable OSPF external route metrics")
+	startCmd.Flags().Bool("ospf-nssa-external", false, "Enable OSPF NSSA external route metrics")
+	startCmd.Flags().Bool("ospf-database", false, "Enable OSPF database metrics")
+	startCmd.Flags().Bool("ospf-neighbors", false, "Enable OSPF neighbor metrics")
+	startCmd.Flags().Bool("interface-list", false, "Enable interface list metrics")
+	startCmd.Flags().Bool("route-list", false, "Enable route list metrics")
+
+	debugCmd.Flags().Bool("ospf-router", false, "Enable OSPF router metrics")
+	debugCmd.Flags().Bool("ospf-network", false, "Enable OSPF network metrics")
+	debugCmd.Flags().Bool("ospf-summary", false, "Enable OSPF summary metrics")
+	debugCmd.Flags().Bool("ospf-asbr-summary", false, "Enable OSPF ASBR summary metrics")
+	debugCmd.Flags().Bool("ospf-external", false, "Enable OSPF external route metrics")
+	debugCmd.Flags().Bool("ospf-nssa-external", false, "Enable OSPF NSSA external route metrics")
+	debugCmd.Flags().Bool("ospf-database", false, "Enable OSPF database metrics")
+	debugCmd.Flags().Bool("ospf-neighbors", false, "Enable OSPF neighbor metrics")
+	debugCmd.Flags().Bool("interface-list", false, "Enable interface list metrics")
+	debugCmd.Flags().Bool("route-list", false, "Enable route list metrics")
 
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)
@@ -160,7 +181,7 @@ func main() {
 	}
 }
 
-func (a *FrrMadApp) startApp() {
+func (a *FrrMadApp) startApp(cmd *cobra.Command) {
 	if isProcessRunning(a.Pid) && a.Pid != 0 {
 		fmt.Println("FRR-MAD is already running")
 		a.Logger.Application.Error("FRR-MAD is already running")
@@ -192,6 +213,7 @@ func (a *FrrMadApp) startApp() {
 			if a.Exporter == nil {
 				exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", a.Config.basis.LogPath))
 				exporterLogger.SetDebugLevel(a.DebugLevel)
+				getFlagConfigsFromCmd(cmd, &a.Config.exporter)
 				a.Exporter = startExporter(a.Config.exporter, exporterLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
 			}
 		}
@@ -402,4 +424,37 @@ func createdConfiguration(configPath string) error {
 	}
 
 	return nil
+}
+
+func getFlagConfigsFromCmd(cmd *cobra.Command, exporterConfig *configs.ExporterConfig) {
+	if cmd.Flags().Changed("ospf-router") {
+		exporterConfig.OSPFRouterData, _ = cmd.Flags().GetBool("ospf-router")
+	}
+	if cmd.Flags().Changed("ospf-network") {
+		exporterConfig.OSPFNetworkData, _ = cmd.Flags().GetBool("ospf-network")
+	}
+	if cmd.Flags().Changed("ospf-summary") {
+		exporterConfig.OSPFSummaryData, _ = cmd.Flags().GetBool("ospf-summary")
+	}
+	if cmd.Flags().Changed("ospf-asbr-summary") {
+		exporterConfig.OSPFAsbrSummaryData, _ = cmd.Flags().GetBool("ospf-asbr-summary")
+	}
+	if cmd.Flags().Changed("ospf-external") {
+		exporterConfig.OSPFExternalData, _ = cmd.Flags().GetBool("ospf-external")
+	}
+	if cmd.Flags().Changed("ospf-nssa-external") {
+		exporterConfig.OSPFNssaExternalData, _ = cmd.Flags().GetBool("ospf-nssa-external")
+	}
+	if cmd.Flags().Changed("ospf-database") {
+		exporterConfig.OSPFDatabase, _ = cmd.Flags().GetBool("ospf-database")
+	}
+	if cmd.Flags().Changed("ospf-neighbors") {
+		exporterConfig.OSPFNeighbors, _ = cmd.Flags().GetBool("ospf-neighbors")
+	}
+	if cmd.Flags().Changed("interface-list") {
+		exporterConfig.InterfaceList, _ = cmd.Flags().GetBool("interface-list")
+	}
+	if cmd.Flags().Changed("route-list") {
+		exporterConfig.RouteList, _ = cmd.Flags().GetBool("route-list")
+	}
 }

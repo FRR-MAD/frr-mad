@@ -104,46 +104,9 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
-	isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
-	shouldStateMap := make(map[string]*frrProto.Advertisement)
-
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			isStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				isStateMap[key].PrefixLength = link.PrefixLength
-			}
-		}
-	}
-
-	for _, area := range shouldState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			adv := &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				shouldStateMap[key] = adv
-				shouldStateMap[key].PrefixLength = link.PrefixLength
-			} else if link.LinkType == strings.ToLower("unknown") {
-				adv.LinkStateId = link.LinkStateId
-				shouldStateMap[link.InterfaceAddress] = adv
-				shouldStateMap[link.LinkStateId] = adv
-				shouldStateMap[link.InterfaceAddress].PrefixLength = link.PrefixLength
-				shouldStateMap[link.LinkStateId].PrefixLength = link.PrefixLength
-			} else {
-				shouldStateMap[key] = adv
-			}
-		}
-	}
+	shouldStateMap := getLsdbStateMap(shouldState)
+	isStateMap := getLsdbStateMap(isState)
 
 	for key, shouldLink := range shouldStateMap {
 		isMissing := false
@@ -230,53 +193,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	return isStateMap, shouldStateMap
 }
 
-func getAdvertisementKey(adv *frrProto.Advertisement) string {
-	if adv.LinkType == "transit network" {
-		return normalizeNetworkAddress(adv.InterfaceAddress)
-	} else if strings.Contains(strings.ToLower(adv.LinkType), "virtual link") {
-		return adv.InterfaceAddress + "/32"
-	}
-	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
-}
-
-func getKeyWithFallback(primary, fallback, prefixLength string) string {
-	addr := normalizeNetworkAddress(primary)
-	if addr == "" {
-		addr = normalizeNetworkAddress(fallback)
-	}
-	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
-}
-
-func normalizePrefixLength(prefixLength string) string {
-	if prefixLength == "" {
-		return "32"
-	}
-	i, err := strconv.Atoi(prefixLength)
-	if err != nil {
-		return "32"
-	}
-	return strconv.Itoa(i)
-}
-
-func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
-	for _, acl := range accessLists {
-		for _, entry := range acl.AclEntry {
-			if !entry.IsPermit {
-				if entry.Any {
-					return true
-				} else {
-					networkAddr := normalizeNetworkAddress(adv.InterfaceAddress)
-					if networkAddr == entry.IPAddress {
-						return true
-					}
-				}
-			}
-		}
-	}
-
-	return false
-}
-
 func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
 	a.Logger.Debug("Starting external LSDB analysis")
 	start := time.Now()
@@ -287,59 +203,30 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	}
 
 	result := &frrProto.AnomalyDetection{
-		HasMisconfiguredPrefixes: false,
-		SuperfluousEntries:       []*frrProto.Advertisement{},
-		MissingEntries:           []*frrProto.Advertisement{},
-		DuplicateEntries:         []*frrProto.Advertisement{},
+		SuperfluousEntries: []*frrProto.Advertisement{},
+		MissingEntries:     []*frrProto.Advertisement{},
+		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
-	isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
-	shouldStateMap := make(map[string]*frrProto.Advertisement)
+	lsdbIsStateMap := getLsdbStateMap(isState)
+	lsdbShouldStateMap := getLsdbStateMap(shouldState)
 
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			isStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkStateId:      link.LinkStateId,
-				LinkType:         link.LinkType,
-				PrefixLength:     link.PrefixLength,
-			}
-
-		}
-	}
-
-	for _, area := range shouldState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			shouldStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkStateId:      link.LinkStateId,
-				LinkType:         link.LinkType,
-				PrefixLength:     link.PrefixLength,
-			}
-
-		}
-	}
-
-	for key, shouldLink := range shouldStateMap {
-		if _, exists := isStateMap[key]; !exists {
+	for key, shouldLink := range lsdbShouldStateMap {
+		if _, exists := lsdbIsStateMap[key]; !exists {
 			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
-	for key, isLink := range isStateMap {
-		if _, exists := shouldStateMap[key]; !exists {
+	for key, isLink := range lsdbIsStateMap {
+		if _, exists := lsdbShouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
 	for prefix, counter := range isStateCounter {
 		if counter > 1 {
-			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
+			result.DuplicateEntries = append(result.DuplicateEntries, lsdbIsStateMap[prefix])
 		}
 	}
 
@@ -568,39 +455,6 @@ func filterUnique(lsaList []string) []string {
 	return uniqueNames
 }
 
-func isSublist(lsdbList, fibList []int) bool {
-	if len(fibList) == 0 {
-		return true
-	}
-
-	if len(fibList) > len(lsdbList) {
-		return false
-	}
-
-	if len(lsdbList) == len(fibList) {
-		for i := range lsdbList {
-			if lsdbList[i] != fibList[i] {
-				return false
-			}
-		}
-		return true
-	}
-
-	for i := 0; i <= len(lsdbList)-len(fibList); i++ {
-		found := true
-		for j := 0; j < len(fibList); j++ {
-			if lsdbList[i+j] != fibList[j] {
-				found = false
-				break
-			}
-		}
-		if found {
-			return true
-		}
-	}
-
-	return false
-}
 func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, externalState *frrProto.InterAreaLsa, result *frrProto.AnomalyDetection) {
 	if externalState == nil {
 		return
@@ -628,4 +482,86 @@ func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, ex
 			}
 		}
 	}
+}
+
+func getAdvertisementKey(adv *frrProto.Advertisement) string {
+	if adv.LinkType == "transit network" {
+		return normalizeNetworkAddress(adv.InterfaceAddress)
+	} else if strings.Contains(strings.ToLower(adv.LinkType), "virtual link") {
+		return adv.InterfaceAddress + "/32"
+	}
+	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
+}
+
+func getKeyWithFallback(primary, fallback, prefixLength string) string {
+	addr := normalizeNetworkAddress(primary)
+	if addr == "" {
+		addr = normalizeNetworkAddress(fallback)
+	}
+	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
+}
+
+func normalizePrefixLength(prefixLength string) string {
+	if prefixLength == "" {
+		return "32"
+	}
+	i, err := strconv.Atoi(prefixLength)
+	if err != nil {
+		return "32"
+	}
+	return strconv.Itoa(i)
+}
+
+func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
+	for _, acl := range accessLists {
+		for _, entry := range acl.AclEntry {
+			if !entry.IsPermit {
+				if entry.Any {
+					return true
+				} else {
+					networkAddr := normalizeNetworkAddress(adv.InterfaceAddress)
+					if networkAddr == entry.IPAddress {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func getLsdbStateMap(lsdbState interface{}) map[string]*frrProto.Advertisement {
+
+	result := make(map[string]*frrProto.Advertisement)
+	var areas []*frrProto.AreaAnalyzer
+
+	switch area := lsdbState.(type) {
+	case *frrProto.IntraAreaLsa:
+		areas = area.Areas
+	case *frrProto.InterAreaLsa:
+		areas = area.Areas
+	}
+
+	for _, area := range areas {
+		for i := range area.Links {
+			link := area.Links[i]
+			key := getAdvertisementKey(link)
+			adv := &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkStateId:      link.LinkStateId,
+				LinkType:         link.LinkType,
+				PrefixLength:     link.PrefixLength,
+			}
+			if strings.ToLower(link.LinkType) == "unknown" {
+				result[link.InterfaceAddress] = adv
+				result[link.LinkStateId] = adv
+			} else {
+				result[key] = adv
+			}
+		}
+	}
+
+	return result
+
 }

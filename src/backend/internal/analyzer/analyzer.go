@@ -49,9 +49,7 @@ func (a *Analyzer) AnomalyAnalysis() {
 	receivedNssaExternalLSDB := GetRuntimeNssaExternalData(a.metrics.OspfNssaExternalAll, hostname, a.Logger)
 
 	isRouterLSDB, p2pMap := GetRuntimeRouterDataSelf(a.metrics.OspfRouterData, hostname, peerNeighborMap, a.Logger)
-
 	isExternalLSDB := GetRuntimeExternalDataSelf(a.metrics.OspfExternalData, staticRouteMap, hostname, a.Logger)
-
 	isNssaExternalLSDB := GetNssaExternalData(a.metrics.OspfNssaExternalData, staticRouteMap, a.metrics.StaticFrrConfiguration.Hostname, a.Logger)
 
 	a.Logger.WithAttrs(map[string]interface{}{
@@ -158,11 +156,6 @@ func GetAccessList(config *frrProto.StaticFRRConfiguration) map[string]*frrProto
 	return result
 }
 
-// Helper function to check if one prefix is a subnet of another
-func isSubnetOf(subnet *frrProto.IPPrefix, network *frrProto.IPPrefix) bool {
-	return subnet.IpAddress == network.IpAddress && subnet.PrefixLength >= network.PrefixLength
-}
-
 // TODO: check with accesslist if it is redistributed in ospf
 func GetStaticRouteList(config *frrProto.StaticFRRConfiguration, accessList map[string]*frrProto.AccessListAnalyzer) map[string]*frrProto.StaticList {
 	if len(config.StaticRoutes) == 0 {
@@ -211,9 +204,9 @@ func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]st
 	return result
 }
 
-func (a *Analyzer) UpdateMetrics(p2pMap frrProto.PeerInterfaceMap) {
+func (a *Analyzer) UpdateMetrics(p2pMap *frrProto.PeerInterfaceMap) {
 
-	proto.Merge(a.P2pMap, &p2pMap)
+	proto.Merge(a.P2pMap, p2pMap)
 
 }
 

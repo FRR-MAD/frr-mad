@@ -77,9 +77,14 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				adv.LinkType = "stub network"
 				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
 			} else if peerInterface {
+				adv.LinkType = "stub network"
+				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
+				advTransit.InterfaceAddress = interfaceIpPrefix.PeerIpPrefix.IpAddress
+
+				areaTmpMap[targetArea] = append(areaTmpMap[targetArea], advTransit)
 				adv.LinkType = "point-to-point"
 			} else if virtualMap[iface.Area] {
-				adv.LinkType = "transit network"
+				adv.LinkType = "stub network"
 				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
 				areaTmpMap[targetArea] = append(areaTmpMap[targetArea], advTransit)
 				targetArea = backboneArea
