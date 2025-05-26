@@ -8,12 +8,12 @@ import (
 
 func initAnalyzer() *analyzer.Analyzer {
 
-	config, metrics, logger := getMockData()
+	config, metrics, appLogger, anomalyLogger := getMockData()
 
-	return analyzer.InitAnalyzer(config, metrics, logger)
+	return analyzer.InitAnalyzer(config, metrics, appLogger, anomalyLogger)
 }
 
-func getMockData() (map[string]interface{}, *frrProto.FullFRRData, *logger.Logger) {
+func getMockData() (map[string]interface{}, *frrProto.FullFRRData, *logger.Logger, *logger.Logger) {
 
 	config := map[string]interface{}{
 		"key1": "value1",
@@ -30,9 +30,10 @@ func getMockData() (map[string]interface{}, *frrProto.FullFRRData, *logger.Logge
 			},
 		},
 	}
-	logger, _ := logger.NewApplicationLogger("testing", "/tmp/testing.log")
+	appLogger, _ := logger.NewApplicationLogger("testing", "/tmp/testing.log")
+	anomalyLogger, _ := logger.NewApplicationLogger("testing2", "/tmp/testing2.log")
 
-	return config, metrics, logger
+	return config, metrics, appLogger, anomalyLogger
 
 }
 

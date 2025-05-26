@@ -76,7 +76,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"missing_count":    len(result.MissingEntries),
 			"missing_examples": missingExamples,
 			"analysis":         "LSDB contains prefixes not found in FIB",
@@ -149,7 +149,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 			})
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"type":             "router",
 			"count":            len(result.MissingEntries),
 			"missing_examples": missingExamples,
@@ -169,7 +169,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 			})
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"type":           "router",
 			"count":          len(result.SuperfluousEntries),
 			"extra_examples": extraExamples,
@@ -239,7 +239,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"type":             "external",
 			"count":            len(result.MissingEntries),
 			"missing_prefixes": missingPrefixes,
@@ -257,7 +257,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"type":           "external",
 			"count":          len(result.SuperfluousEntries),
 			"extra_prefixes": extraPrefixes,
@@ -374,7 +374,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 			})
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"type":           "nssa",
 			"count":          len(result.MissingEntries),
 			"missing_routes": missingDetails,
@@ -393,7 +393,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 			})
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]interface{}{
 			"type":         "nssa",
 			"count":        len(result.SuperfluousEntries),
 			"extra_routes": extraDetails,

@@ -56,6 +56,7 @@ type ServiceConfig struct {
 
 type LoggerService struct {
 	Application *logger.Logger
+	Anomaly     *logger.Logger
 }
 
 // TODO: create status command
@@ -214,7 +215,7 @@ func (a *FrrMadApp) startApp(cmd *cobra.Command) {
 			}
 
 			analyzerLogger := serviceLogger.WithComponent("analyzer")
-			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.PollInterval, a.Aggregator)
+			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.Logger.Anomaly, a.PollInterval, a.Aggregator)
 
 		case "exporter":
 			if a.Exporter == nil {
@@ -355,8 +356,16 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 		"poll_interval in seconds": config.aggregator.PollInterval,
 	}).Info("Configuration loaded")
 
+	anomalyLogger, err := logger.NewApplicationLogger("frr-mad-anomaly",
+		fmt.Sprintf("%v/anomalies.log", config.basis.LogPath))
+	if err != nil {
+		log.Fatalf("Failed to create anomaly logger: %v", err)
+	}
+	anomalyLogger.SetDebugLevel(debugLevel)
+
 	logService := &LoggerService{
 		Application: appLogger,
+		Anomaly:     anomalyLogger,
 	}
 
 	app := &FrrMadApp{
