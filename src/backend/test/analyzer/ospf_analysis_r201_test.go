@@ -46,6 +46,16 @@ func TestRouterLsaHappy3(t *testing.T) {
 						InterfaceAddress: "10.20.13.1",
 						LinkType:         "point-to-point",
 					},
+					{
+						InterfaceAddress: "10.20.13.3",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.20.14.4",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
 				},
 			},
 		},
@@ -103,6 +113,11 @@ func TestRouterLsaHappy3(t *testing.T) {
 		for _, entry := range actualTmpList {
 			assert.Equal(t, expectedTmpMap[entry], actualTmpMap[entry])
 		}
+
+		// pretty1, _ := json.MarshalIndent(actualIsRouterLSDB, "", "  ")
+		// pretty2, _ := json.MarshalIndent(expectedIsRouterLSDB, "", "  ")
+		// t.Log(string(pretty1))
+		// t.Log(string(pretty2))
 	})
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
@@ -154,6 +169,16 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 						LinkType:         "point-to-point",
 					},
 					{
+						InterfaceAddress: "10.20.13.3",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.20.14.4",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					{
 						InterfaceAddress: "10.20.15.1",
 						LinkType:         "transit network",
 					},
@@ -189,9 +214,27 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 						LinkType:         "point-to-point",
 					},
 					{
+						InterfaceAddress: "10.20.13.3",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					{
 						InterfaceAddress: "10.20.12.1",
 						LinkType:         "transit network",
 					},
+					// {
+					// 	InterfaceAddress: "10.20.14.1",
+					// 	LinkType:         "point-to-point",
+					// },
+					{
+						InterfaceAddress: "10.20.14.4",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					// {
+					// 	InterfaceAddress: "10.20.15.1",
+					// 	LinkType:         "transit network",
+					// },
 				},
 			},
 		},
@@ -211,12 +254,46 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
 	})
 
-	peerNeighborMap := map[string]string{
-		"65.0.2.3": "10.20.13.1",
-		//	"65.0.2.4": "10.20.14.1",
+	isRouterLSDB = &frrProto.IntraAreaLsa{
+		RouterId: "65.0.2.1",
+		Hostname: "r201",
+		Areas: []*frrProto.AreaAnalyzer{
+			{
+				AreaName: "0.0.0.0",
+				LsaType:  "router-LSA",
+				Links: []*frrProto.Advertisement{
+					{
+						InterfaceAddress: "10.20.13.1",
+						LinkType:         "point-to-point",
+					},
+					{
+						InterfaceAddress: "10.20.13.3",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					{
+						InterfaceAddress: "10.20.12.1",
+						LinkType:         "transit network",
+					},
+					// missing entry
+					// {
+					// 	InterfaceAddress: "10.20.14.1",
+					// 	LinkType:         "point-to-point",
+					// },
+					{
+						InterfaceAddress: "10.20.14.4",
+						PrefixLength:     "32",
+						LinkType:         "stub network",
+					},
+					// overadvertised entry
+					{
+						InterfaceAddress: "10.20.15.1",
+						LinkType:         "transit network",
+					},
+				},
+			},
+		},
 	}
-
-	isRouterLSDB, _ = analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerNeighborMap)
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
 	t.Run("TestAnomalyAnalysisR201WrongPeerAddress", func(t *testing.T) {
@@ -229,9 +306,7 @@ func TestRouterLsaUnhappy3(t *testing.T) {
 		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.MissingEntries), 1)
 		assert.Equal(t, len(ana.AnalysisResult.RouterAnomaly.DuplicateEntries), 0)
 
-		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress, "0.0.2.88")
+		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[0].InterfaceAddress, "10.20.15.1")
 		assert.Equal(t, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress, "10.20.14.1")
-
-		t.Log(ana.AnalysisResult)
 	})
 }
