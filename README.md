@@ -40,7 +40,6 @@ To run the tui the environment variable is **mandatory**. This makes the configF
 
 If neither is provided the applications with both default to **/etc/frr-mad/main.yaml**.
 
-
 #### Daemon
 ```sh
 /path/to/frr-analyzer  start --configFile /path/to/configuration
