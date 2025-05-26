@@ -109,20 +109,19 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	isStateMap := getLsdbStateMap(isState)
 
 	for key, shouldLink := range shouldStateMap {
-		isMissing := false
 		if shouldLink.LinkType == strings.ToLower("unknown") {
+			prefixLength := "/" + shouldLink.PrefixLength
+			_, isTransitWithPrefix := isStateMap[shouldLink.LinkStateId+prefixLength]
 			_, isTransit := isStateMap[shouldLink.LinkStateId]
+			_, isStubWithPrefix := isStateMap[shouldLink.InterfaceAddress+prefixLength]
 			_, isStub := isStateMap[shouldLink.InterfaceAddress]
-			if !isTransit && !isStub {
-				isMissing = true
+			if !(isTransit || isTransitWithPrefix) && !(isStub || isStubWithPrefix) {
+				result.MissingEntries = append(result.MissingEntries, shouldLink)
 			}
 		} else {
 			if _, exists := isStateMap[key]; !exists {
-				isMissing = true
+				result.MissingEntries = append(result.MissingEntries, shouldLink)
 			}
-		}
-		if isMissing {
-			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
@@ -554,6 +553,9 @@ func getLsdbStateMap(lsdbState interface{}) map[string]*frrProto.Advertisement {
 				PrefixLength:     link.PrefixLength,
 			}
 			if strings.ToLower(link.LinkType) == "unknown" {
+				prefixLength := "/" + link.PrefixLength
+				result[link.InterfaceAddress+prefixLength] = adv
+				result[link.LinkStateId+prefixLength] = adv
 				result[link.InterfaceAddress] = adv
 				result[link.LinkStateId] = adv
 			} else {
