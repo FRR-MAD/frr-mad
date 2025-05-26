@@ -58,20 +58,25 @@ type Config struct {
 	Exporter   ExporterConfig   `mapstructure:"exporter"`
 }
 
-func LoadConfig(overwriteConfigPath string) (string, *Config, error) {
+func LoadConfig(overwriteConfigPath string) (*Config, error) {
 	if overwriteConfigPath != "" {
 		ConfigLocation = overwriteConfigPath
 	}
 
+	tmpConf, ok := os.LookupEnv("FRR_MAD_CONFFILE")
+	if ok {
+		ConfigLocation = tmpConf
+	}
+
 	file, err := os.Open(ConfigLocation)
 	if err != nil {
-		return "", nil, fmt.Errorf("error opening file: %w", err)
+		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 	defer file.Close()
 
 	yamlPath := getYAMLPath()
 	result, err := loadYAMLConfig(yamlPath)
-	return ConfigLocation, result, err
+	return result, err
 }
 
 func getYAMLPath() string {
