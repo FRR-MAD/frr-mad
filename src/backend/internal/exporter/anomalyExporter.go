@@ -20,9 +20,7 @@ type AnomalyExporter struct {
 }
 
 func NewAnomalyExporter(anomalies *frrProto.AnomalyAnalysis, registry prometheus.Registerer, logger *logger.Logger) *AnomalyExporter {
-	if logger != nil {
-		logger.Debug("Initializing anomaly exporter")
-	}
+	logger.Debug("Initializing anomaly exporter")
 
 	a := &AnomalyExporter{
 		anomalies:      anomalies,
@@ -133,9 +131,7 @@ func (a *AnomalyExporter) Update() {
 	}
 
 	if a.anomalies == nil {
-		if a.logger != nil {
-			a.logger.Debug("Skipping anomaly update - no anomaly data available")
-		}
+		a.logger.Debug("Skipping anomaly update - no anomaly data available")
 		return
 	}
 

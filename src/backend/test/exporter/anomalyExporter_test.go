@@ -131,7 +131,7 @@ func TestAnomalyExporter_ConcurrentUpdates(t *testing.T) {
 
 func TestAnomalyExporter_NilAnomalies_DoesNothing(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	testLogger, _ := logger.NewApplicationLogger("test", "")
+	testLogger, _ := logger.NewApplicationLogger("test", "/tmp/exporter_toggle.log")
 	var anomalyResult *frrProto.AnomalyAnalysis
 
 	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
