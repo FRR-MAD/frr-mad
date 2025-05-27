@@ -225,7 +225,7 @@ func (m *MetricExporter) Update() {
 	defer m.mutex.Unlock()
 
 	if m.data == nil {
-		m.logger.Debug("Skipping metric update - no data available")
+		m.logger.Warning("Skipping metric update - no data available")
 		return
 	}
 

@@ -94,7 +94,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	start := time.Now()
 
 	if isState == nil || shouldState == nil {
-		a.Logger.Debug("Skipping router analysis - missing input data")
+		a.Logger.Error("Skipping router analysis - missing input data")
 		return nil, nil
 	}
 
@@ -197,7 +197,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	start := time.Now()
 
 	if isState == nil || shouldState == nil {
-		a.Logger.Debug("Skipping external analysis - missing input data")
+		a.Logger.Warning("Skipping external analysis - missing input data")
 		return
 	}
 
@@ -291,7 +291,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 	start := time.Now()
 
 	if isState == nil || shouldState == nil {
-		a.Logger.Debug("Skipping NSSA analysis - missing input data")
+		a.Logger.Warning("Skipping NSSA analysis - missing input data")
 		return
 	}
 

@@ -70,14 +70,16 @@ func initModel(config *configs.Config) *AppModel {
 	vp := viewport.New(styles.WidthViewPortCompletePage,
 		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 
-	debugLevel := getDebugLevel(config.Default.DebugLevel)
+	logLevel := logger.ConvertLogLevelFromConfig(config.Default.DebugLevel)
+
+	fmt.Println(logLevel)
 
 	appLogger, err := logger.NewApplicationLogger("frr-mad-tui",
-		fmt.Sprintf("%v/application.log", config.Default.LogPath))
+		fmt.Sprintf("%v/frr_mad_tui_application.log", config.Default.LogPath))
 	if err != nil {
 		log.Fatalf("Failed to create application logger: %v", err)
 	}
-	appLogger.SetDebugLevel(debugLevel)
+	appLogger.SetDebugLevel(logLevel)
 	appLogger.Info("Starting Frontend Application")
 
 	dashboardLogger := appLogger.WithComponent("dashboard")
@@ -370,18 +372,6 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 		panic("unhandled default case")
 	}
 	return m, cmd
-}
-
-// Convert debug level string to int
-func getDebugLevel(level string) int {
-	switch level {
-	case "debug":
-		return 2
-	case "error":
-		return 1
-	default:
-		return 0
-	}
 }
 
 func main() {

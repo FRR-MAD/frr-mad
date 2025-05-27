@@ -2,7 +2,8 @@ default:
   tempfiles: /tmp/frr-mad
   exportpath: /tmp/frr-mad/exports
   logpath: /var/log/frr-mad
-  debuglevel: none 
+  # default is info
+  debuglevel: none
 
 socket:
   unixsocketlocation: /var/run/frr-mad

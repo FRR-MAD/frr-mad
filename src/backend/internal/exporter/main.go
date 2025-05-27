@@ -111,8 +111,8 @@ func (e *Exporter) Stop() {
 }
 
 func (e *Exporter) runExportLoop() {
-	e.logger.Debug("Starting export loop")
-	defer e.logger.Debug("Export loop stopped")
+	e.logger.Info("Starting export loop")
+	defer e.logger.Info("Export loop stopped")
 
 	ticker := time.NewTicker(e.interval)
 	defer ticker.Stop()

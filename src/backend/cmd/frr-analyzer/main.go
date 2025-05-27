@@ -43,7 +43,6 @@ type FrrMadApp struct {
 	Pid          int
 	PidFile      string
 	PollInterval time.Duration
-	DebugLevel   int
 }
 
 type ServiceConfig struct {
@@ -181,7 +180,7 @@ func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(testCmd)
 
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.CompletionOptions.DisableDefaultCmd = false
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -337,7 +336,7 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 		exporter:   configRaw.Exporter,
 	}
 
-	debugLevel := getDebugLevel(config.basis.DebugLevel)
+	logLevel := logger.ConvertLogLevelFromConfig(config.basis.DebugLevel)
 	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
 	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
 	pid, _ := readPidFile(pidFile)
@@ -347,9 +346,9 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 	if err != nil {
 		log.Fatalf("Failed to create application logger: %v", err)
 	}
-	appLogger.SetDebugLevel(debugLevel)
+	appLogger.SetDebugLevel(logLevel)
 
-	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", TUIVersion))
+	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", DaemonVersion))
 	appLogger.WithAttrs(map[string]interface{}{
 		"config_path":              overwriteConfigPath,
 		"debug_level":              config.basis.DebugLevel,
@@ -361,7 +360,7 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 	if err != nil {
 		log.Fatalf("Failed to create anomaly logger: %v", err)
 	}
-	anomalyLogger.SetDebugLevel(debugLevel)
+	anomalyLogger.SetDebugLevel(logLevel)
 
 	logService := &LoggerService{
 		Application: appLogger,
@@ -373,7 +372,6 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 		Pid:          pid,
 		PollInterval: pollInterval,
 		Config:       config,
-		DebugLevel:   debugLevel,
 		PidFile:      pidFile,
 	}
 
@@ -408,34 +406,6 @@ func isProcessRunning(pid int) bool {
 	err = process.Signal(syscall.Signal(0))
 	return err == nil
 }
-
-func getDebugLevel(level string) int {
-	switch level {
-	case "none":
-		return 99
-	case "debug":
-		return 2
-	case "error":
-		return 1
-	default:
-		return 0
-	}
-}
-
-// func createdConfiguration(configPath string) error {
-// 	appDir := "/tmp"
-
-// 	sourcePath := filepath.Join(configPath)
-// 	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
-
-// 	content, _ := os.ReadFile(sourcePath)
-// 	err := os.WriteFile(destinationPath, content, 0444)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
 
 func getFlagConfigsFromCmd(cmd *cobra.Command, exporterConfig *configs.ExporterConfig) {
 	if cmd.Flags().Changed("ospf-router") {
