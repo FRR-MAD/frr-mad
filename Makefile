@@ -60,27 +60,27 @@ go-sync: go-tidy
 
 # Development environment
 hmr/docker:
-	docker build -t frr-img-dev -f dockerfile/frr$(FRR_VERSION)-dev.dockerfile .
-	docker build -t frr-img -f dockerfile/frr$(FRR_VERSION).dockerfile .
+	cd $(DEV_DIR) && docker build -t frr-img-dev -f dockerfile/frr$(FRR_VERSION)-dev.dockerfile .
+	cd $(DEV_DIR) && docker build -t frr-img -f dockerfile/frr$(FRR_VERSION).dockerfile .
 
 
 hmr/run:
-	mkdir -p containerlab/.shared/binary/
-	cd containerlab && chmod +x scripts/
-	-cd containerlab && sh scripts/custom-bridges.sh
-	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
-	cd containerlab && sh scripts/pc-interfaces.sh
-	cd containerlab && sh scripts/remove-default-route.sh
+	mkdir -p $(CONTAINERLAB)/.shared/binary/
+	cd $(CONTAINERLAB) && chmod +x scripts/
+	-cd $(CONTAINERLAB) && sh scripts/custom-bridges.sh
+	cd $(CONTAINERLAB) && clab deploy --topo frr01-dev.clab.yml --reconfigure
+	cd $(CONTAINERLAB) && sh scripts/pc-interfaces.sh
+	cd $(CONTAINERLAB) && sh scripts/remove-default-route.sh
 
 hmr/stop: 
-	cd containerlab && clab destroy --topo frr01-dev.clab.yml --cleanup
+	cd $(CONTAINERLAB) && clab destroy --topo frr01-dev.clab.yml --cleanup
 
 hmr/restart: hmr/stop hmr/run
 
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
 	docker network prune -f
-	rm -rf containerlab/.shared
+	rm -rf $(CONTAINERLAB)/.shared
 
 # Clean everything
 clean:
