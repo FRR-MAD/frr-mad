@@ -8,7 +8,6 @@ import (
 
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
-	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 
 	"strconv"
@@ -74,10 +73,13 @@ func (m *Model) View() string {
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
 				var cutToSizeMessage string
-				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
+				maxLength := styles.WidthTwoH1Box - styles.MarginX2 - 3
+				if maxLength > 0 && len(m.statusMessage) > maxLength {
 					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
-				} else {
+				} else if maxLength > 0 {
 					cutToSizeMessage = m.statusMessage
+				} else {
+					cutToSizeMessage = "..."
 				}
 				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
@@ -121,6 +123,8 @@ func (m *Model) renderOSPFDashboard() string {
 		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := m.getOspfDashboardAnomalies()
 		m.viewportLeft.SetContent(ospfDashboardAnomalies)
+		m.statusMessage = "Anomalies detected in OSPF routing"
+		m.statusSeverity = 1
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
 			Width(styles.WidthTwoH1ThreeFourth).
@@ -130,11 +134,13 @@ func (m *Model) renderOSPFDashboard() string {
 		statusHeader = dashboardHeader
 		ospfDashboardLsdbSelf := m.getOspfDashboardLsdbSelf()
 		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
+		m.statusMessage = "No OSPF anomalies detected"
+		m.statusSeverity = 0
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
 	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
-		getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
+		m.getSystemResourcesBox(), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -149,17 +155,24 @@ func (m *Model) renderOSPFDashboard() string {
 	return horizontalDashboard
 }
 
-func getSystemResourcesBox(logger *logger.Logger) string {
-	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(logger)
+func (m *Model) getSystemResourcesBox() string {
+	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(m.logger)
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
 		cpuAmountString = "N/A"
 		cpuUsageString = "N/A"
 		memoryString = "N/A"
+		m.statusMessage = "Failed to fetch system resources"
+		m.statusSeverity = 2
 	} else {
 		cpuAmountString = fmt.Sprintf("%v", cpuAmount)
 		cpuUsageString = fmt.Sprintf("%.2f%%", cpuUsage*100)
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
+
+		if cpuUsage > 0.9 || memoryUsage > 0.9 {
+			m.statusMessage = "High system resource usage detected"
+			m.statusSeverity = 1
+		}
 	}
 
 	systemStatistics := lipgloss.JoinVertical(lipgloss.Left,
@@ -176,7 +189,17 @@ func getSystemResourcesBox(logger *logger.Logger) string {
 func (m *Model) getOSPFGeneralInfoBox() string {
 	ospfInformation, err := backend.GetOSPF(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch OSPF general information"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetOSPF")
+	}
+
+	if ospfInformation.AttachedAreaCounter == 0 {
+		m.statusMessage = "No OSPF areas attached"
+		m.statusSeverity = 1
+	} else {
+		m.statusMessage = fmt.Sprintf("Found %d attached OSPF areas", ospfInformation.AttachedAreaCounter)
+		m.statusSeverity = 0
 	}
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
@@ -260,7 +283,17 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 
 	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch LSDB data"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetLSDB")
+	}
+
+	if len(lsdb.Areas) == 0 {
+		m.statusMessage = "No OSPF areas found in LSDB"
+		m.statusSeverity = 1
+	} else {
+		m.statusMessage = fmt.Sprintf("Found %d OSPF areas in LSDB", len(lsdb.Areas))
+		m.statusSeverity = 0
 	}
 
 	// extract and sort the map keys
@@ -548,17 +581,42 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 func (m *Model) getOspfDashboardAnomalies() string {
 	ospfRouterAnomalies, err := backend.GetRouterAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch router anomalies"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
 
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch external anomalies"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
 
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch NSSA external anomalies"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
+	}
+
+	totalAnomalies := 0
+	if common.HasAnyAnomaly(ospfRouterAnomalies) {
+		totalAnomalies += countAnomalies(ospfRouterAnomalies)
+	}
+	if common.HasAnyAnomaly(ospfExternalAnomalies) {
+		totalAnomalies += countAnomalies(ospfExternalAnomalies)
+	}
+	if common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		totalAnomalies += countAnomalies(ospfNSSAExternalAnomalies)
+	}
+
+	if totalAnomalies > 0 {
+		m.statusMessage = fmt.Sprintf("Detected %d OSPF anomalies", totalAnomalies)
+		m.statusSeverity = 1
+	} else {
+		m.statusMessage = "No anomalies detected in OSPF routing"
+		m.statusSeverity = 0
 	}
 
 	var routerAnomalyTable string

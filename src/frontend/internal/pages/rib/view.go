@@ -2,10 +2,11 @@ package rib
 
 import (
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/frr-mad/frr-tui/internal/common"
@@ -70,10 +71,13 @@ func (m *Model) View() string {
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
 				var cutToSizeMessage string
-				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
+				maxLength := styles.WidthTwoH1Box - styles.MarginX2 - 3
+				if maxLength > 0 && len(m.statusMessage) > maxLength {
 					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
-				} else {
+				} else if maxLength > 0 {
 					cutToSizeMessage = m.statusMessage
+				} else {
+					cutToSizeMessage = "..."
 				}
 				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
@@ -103,10 +107,17 @@ func (m *Model) View() string {
 func (m *Model) renderRibTab() string {
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch RIB data"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRIB")
+	} else {
+		m.statusMessage = "RIB data loaded successfully"
+		m.statusSeverity = 0
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch RIB and FIB summary"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
@@ -157,6 +168,14 @@ func (m *Model) renderRibTab() string {
 	// apply filters if active
 	ribTableData = common.FilterRows(ribTableData, m.textFilter.Query)
 
+	if len(ribTableData) == 0 {
+		m.statusMessage = "No routes found matching current filter"
+		m.statusSeverity = 1
+	} else if len(ribTableData) > 1000 {
+		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(ribTableData))
+		m.statusSeverity = 1
+	}
+
 	rowsRIB := len(ribTableData)
 	ribTable := components.NewRibMonitorTable(rowsRIB)
 	for _, r := range ribTableData {
@@ -204,10 +223,17 @@ func (m *Model) renderRibTab() string {
 func (m *Model) renderFibTab() string {
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch FIB data"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRIB")
+	} else {
+		m.statusMessage = "FIB data loaded successfully"
+		m.statusSeverity = 0
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch RIB and FIB summary"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
@@ -266,6 +292,14 @@ func (m *Model) renderFibTab() string {
 	// apply filters if active
 	fibTableData = common.FilterRows(fibTableData, m.textFilter.Query)
 
+	if len(fibTableData) == 0 {
+		m.statusMessage = "No routes found matching current filter"
+		m.statusSeverity = 1
+	} else if len(fibTableData) > 1000 {
+		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(fibTableData))
+		m.statusSeverity = 1
+	}
+
 	rowsFIB := len(fibTableData)
 	fibTable := components.NewRibMonitorTable(rowsFIB)
 	for _, r := range fibTableData {
@@ -313,10 +347,17 @@ func (m *Model) renderFibTab() string {
 func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch RIB data"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRIB")
+	} else {
+		m.statusMessage = "RIB data loaded successfully"
+		m.statusSeverity = 0
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch RIB and FIB summary"
+		m.statusSeverity = 2
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
@@ -380,6 +421,14 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 
 	// apply filters if active
 	partialRIBRoutesTableData = common.FilterRows(partialRIBRoutesTableData, m.textFilter.Query)
+
+	if len(partialRIBRoutesTableData) == 0 {
+		m.statusMessage = "No routes found matching current filter"
+		m.statusSeverity = 1
+	} else if len(partialRIBRoutesTableData) > 1000 {
+		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(partialRIBRoutesTableData))
+		m.statusSeverity = 1
+	}
 
 	rowsPartialRIBRoutesRIB := len(partialRIBRoutesTableData)
 	partialRIBRoutesTable := components.NewRibMonitorTable(rowsPartialRIBRoutesRIB)
