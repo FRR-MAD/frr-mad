@@ -2,10 +2,11 @@ package ospfMonitoring
 
 import (
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
@@ -662,19 +663,20 @@ func (m *Model) renderNetworkMonitorTab() string {
 		if areaData.LsaEntries != nil {
 			networkLSABlocks = append(networkLSABlocks, completeAreaNetworkLSAs+"\n\n")
 		}
-
-	}
-
-	if networkLSABlocks == nil {
-		return lipgloss.JoinHorizontal(lipgloss.Left,
-			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"),
-			lipgloss.NewStyle().Height(styles.HeightH1EmptyContentPadding).Render(""))
 	}
 
 	m.viewport.Width = styles.WidthViewPortCompletePage
 	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
+	if len(networkLSABlocks) == 0 {
+		emptyContent := lipgloss.JoinVertical(lipgloss.Left,
+			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"),
+			lipgloss.NewStyle().Height(styles.HeightViewPortCompletePage-styles.BodyFooterHeight-styles.HeightH1).Render(""),
+		)
+		m.viewport.SetContent(emptyContent)
+	} else {
+		m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
+	}
 
 	return m.viewport.View()
 }
