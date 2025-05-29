@@ -26,13 +26,9 @@ RUN mkdir -p /app/src /app/local /app/protobufSource /app/tmp
 
 COPY ./dockerfile/.air.toml .
 
-
-#VOLUME ["/app"]
-
-COPY dockerfile/files/tempClient /usr/local/bin/tempClient
 COPY dockerfile/files/start_frr_dev /usr/bin/start_frr
 
 RUN chmod +x /usr/bin/start_frr
-RUN chmod +x /usr/local/bin/tempClient
 
 CMD ["/usr/bin/start_frr"]
+#CMD ["tail", "-f", "/dev/null"]

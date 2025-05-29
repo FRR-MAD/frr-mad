@@ -24,6 +24,8 @@ __pycache__/
 clab-frr01
 containerlab/.frr01-dev.clab.yml.bak
 *.bak
+containerlab/.shared/*
+containerlab/.shared
 
 # go files
 vendor
