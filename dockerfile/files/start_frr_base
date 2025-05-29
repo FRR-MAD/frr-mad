@@ -2,4 +2,6 @@
 
 #/usr/bin/frr_exporter --web.listen-address=:9342 &
 
+/usr/bin/run_hmr.sh &
+
 exec /bin/bash /usr/lib/frr/docker-start

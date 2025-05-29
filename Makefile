@@ -65,6 +65,7 @@ hmr/docker:
 
 
 hmr/run:
+	mkdir -p containerlab/.shared/binary/
 	cd containerlab && chmod +x scripts/
 	-cd containerlab && sh scripts/custom-bridges.sh
 	cd containerlab && clab deploy --topo frr01-dev.clab.yml --reconfigure
@@ -79,6 +80,7 @@ hmr/restart: hmr/stop hmr/run
 hmr/clean: hmr/stop
 	docker container list -a -q | xargs -i{} docker container rm {}
 	docker network prune -f
+	rm -rf containerlab/.shared
 
 # Clean everything
 clean:
