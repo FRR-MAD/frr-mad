@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -72,9 +71,8 @@ func main() {
 		Use:   "start",
 		Short: "Start the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, app := loadMadApplication(configFile)
+			app := loadMadApplication(configFile)
 			if os.Getenv("FRR_MAD_DAEMON") != "1" {
-				createdConfiguration(confPath)
 				command := exec.Command(os.Args[0], os.Args[1:]...)
 				command.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
 				command.Start()
@@ -82,7 +80,7 @@ func main() {
 				app.Logger.Application.Info(fmt.Sprintf("FRR-MAD started with PID %d", command.Process.Pid))
 				os.Exit(0)
 			} else {
-				app.startApp()
+				app.startApp(cmd)
 			}
 		},
 	}
@@ -91,7 +89,7 @@ func main() {
 		Use:   "stop",
 		Short: "Stop the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			_, app := loadMadApplication(configFile)
+			app := loadMadApplication(configFile)
 			app.stopApp()
 		},
 	}
@@ -120,9 +118,17 @@ func main() {
 		Short:  "Run the application in debug mode",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, app := loadMadApplication(configFile)
-			createdConfiguration(confPath)
-			app.startApp()
+			app := loadMadApplication(configFile)
+			app.startApp(cmd)
+		},
+	}
+	var testCmd = &cobra.Command{
+		Use:    "test",
+		Short:  "testing",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(os.LookupEnv("FRR_MAD_CONFFILE"))
+			fmt.Println(configs.ConfigLocation)
 		},
 	}
 
@@ -141,6 +147,27 @@ func main() {
 
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+	startCmd.Flags().Bool("ospf-router", false, "Enable OSPF router metrics")
+	startCmd.Flags().Bool("ospf-network", false, "Enable OSPF network metrics")
+	startCmd.Flags().Bool("ospf-summary", false, "Enable OSPF summary metrics")
+	startCmd.Flags().Bool("ospf-asbr-summary", false, "Enable OSPF ASBR summary metrics")
+	startCmd.Flags().Bool("ospf-external", false, "Enable OSPF external route metrics")
+	startCmd.Flags().Bool("ospf-nssa-external", false, "Enable OSPF NSSA external route metrics")
+	startCmd.Flags().Bool("ospf-database", false, "Enable OSPF database metrics")
+	startCmd.Flags().Bool("ospf-neighbors", false, "Enable OSPF neighbor metrics")
+	startCmd.Flags().Bool("interface-list", false, "Enable interface list metrics")
+	startCmd.Flags().Bool("route-list", false, "Enable route list metrics")
+
+	debugCmd.Flags().Bool("ospf-router", false, "Enable OSPF router metrics")
+	debugCmd.Flags().Bool("ospf-network", false, "Enable OSPF network metrics")
+	debugCmd.Flags().Bool("ospf-summary", false, "Enable OSPF summary metrics")
+	debugCmd.Flags().Bool("ospf-asbr-summary", false, "Enable OSPF ASBR summary metrics")
+	debugCmd.Flags().Bool("ospf-external", false, "Enable OSPF external route metrics")
+	debugCmd.Flags().Bool("ospf-nssa-external", false, "Enable OSPF NSSA external route metrics")
+	debugCmd.Flags().Bool("ospf-database", false, "Enable OSPF database metrics")
+	debugCmd.Flags().Bool("ospf-neighbors", false, "Enable OSPF neighbor metrics")
+	debugCmd.Flags().Bool("interface-list", false, "Enable interface list metrics")
+	debugCmd.Flags().Bool("route-list", false, "Enable route list metrics")
 
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)
@@ -148,6 +175,7 @@ func main() {
 	rootCmd.AddCommand(reloadCmd)
 	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(testCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
@@ -157,7 +185,7 @@ func main() {
 	}
 }
 
-func (a *FrrMadApp) startApp() {
+func (a *FrrMadApp) startApp(cmd *cobra.Command) {
 	if isProcessRunning(a.Pid) && a.Pid != 0 {
 		fmt.Println("FRR-MAD is already running")
 		a.Logger.Application.Error("FRR-MAD is already running")
@@ -196,6 +224,7 @@ func (a *FrrMadApp) startApp() {
 			if a.Exporter == nil {
 				exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", a.Config.basis.LogPath))
 				exporterLogger.SetDebugLevel(a.DebugLevel)
+				getFlagConfigsFromCmd(cmd, &a.Config.exporter)
 				a.Exporter = startExporter(a.Config.exporter, exporterLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
 			}
 		}
@@ -272,8 +301,8 @@ func (a *FrrMadApp) stopApp() {
 	}
 }
 
-func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
-	confgPath, configRaw, err := configs.LoadConfig(overwriteConfigPath)
+func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
+	configRaw, err := configs.LoadConfig(overwriteConfigPath)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -310,7 +339,7 @@ func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
 		PidFile:      pidFile,
 	}
 
-	return confgPath, app
+	return app
 }
 
 func readPidFile(pidFile string) (int, error) {
@@ -363,17 +392,50 @@ func getDebugLevel(level string) int {
 	}
 }
 
-func createdConfiguration(configPath string) error {
-	appDir := "/tmp"
+// func createdConfiguration(configPath string) error {
+// 	appDir := "/tmp"
 
-	sourcePath := filepath.Join(configPath)
-	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
+// 	sourcePath := filepath.Join(configPath)
+// 	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
 
-	content, _ := os.ReadFile(sourcePath)
-	err := os.WriteFile(destinationPath, content, 0444)
-	if err != nil {
-		return err
+// 	content, _ := os.ReadFile(sourcePath)
+// 	err := os.WriteFile(destinationPath, content, 0444)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
+func getFlagConfigsFromCmd(cmd *cobra.Command, exporterConfig *configs.ExporterConfig) {
+	if cmd.Flags().Changed("ospf-router") {
+		exporterConfig.OSPFRouterData, _ = cmd.Flags().GetBool("ospf-router")
 	}
-
-	return nil
+	if cmd.Flags().Changed("ospf-network") {
+		exporterConfig.OSPFNetworkData, _ = cmd.Flags().GetBool("ospf-network")
+	}
+	if cmd.Flags().Changed("ospf-summary") {
+		exporterConfig.OSPFSummaryData, _ = cmd.Flags().GetBool("ospf-summary")
+	}
+	if cmd.Flags().Changed("ospf-asbr-summary") {
+		exporterConfig.OSPFAsbrSummaryData, _ = cmd.Flags().GetBool("ospf-asbr-summary")
+	}
+	if cmd.Flags().Changed("ospf-external") {
+		exporterConfig.OSPFExternalData, _ = cmd.Flags().GetBool("ospf-external")
+	}
+	if cmd.Flags().Changed("ospf-nssa-external") {
+		exporterConfig.OSPFNssaExternalData, _ = cmd.Flags().GetBool("ospf-nssa-external")
+	}
+	if cmd.Flags().Changed("ospf-database") {
+		exporterConfig.OSPFDatabase, _ = cmd.Flags().GetBool("ospf-database")
+	}
+	if cmd.Flags().Changed("ospf-neighbors") {
+		exporterConfig.OSPFNeighbors, _ = cmd.Flags().GetBool("ospf-neighbors")
+	}
+	if cmd.Flags().Changed("interface-list") {
+		exporterConfig.InterfaceList, _ = cmd.Flags().GetBool("interface-list")
+	}
+	if cmd.Flags().Changed("route-list") {
+		exporterConfig.RouteList, _ = cmd.Flags().GetBool("route-list")
+	}
 }

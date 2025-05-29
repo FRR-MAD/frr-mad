@@ -3,9 +3,6 @@ package exporter
 import (
 	"fmt"
 	"net/http"
-	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/frr-mad/frr-mad/src/backend/configs"
@@ -22,12 +19,6 @@ type Exporter struct {
 	server          *http.Server
 	stopChan        chan struct{}
 	logger          *logger.Logger
-}
-
-type ParsedFlag struct {
-	Name        string
-	Description string
-	Enabled     bool
 }
 
 func NewExporter(
@@ -48,7 +39,6 @@ func NewExporter(
 	}
 
 	registry := prometheus.NewRegistry()
-	flags := getFlagConfigs(config)
 
 	mux := http.NewServeMux()
 
@@ -74,7 +64,7 @@ func NewExporter(
 	e := &Exporter{
 		interval:        pollInterval,
 		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
-		metricExporter:  NewMetricExporter(frrData, registry, logger, flags),
+		metricExporter:  NewMetricExporter(frrData, registry, logger, config),
 		stopChan:        make(chan struct{}),
 		logger:          logger,
 		server: &http.Server{
@@ -156,88 +146,4 @@ func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) e
 	}
 
 	return nil
-}
-
-// Use reflection to iterate over struct fields
-func getFlagConfigs(config configs.ExporterConfig) map[string]*ParsedFlag {
-	result := make(map[string]*ParsedFlag)
-
-	val := reflect.ValueOf(config)
-	typ := val.Type()
-
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		fieldName := typ.Field(i).Name
-
-		if fieldName == "Port" {
-			continue
-		}
-
-		if field.Kind() == reflect.String && field.String() != "" {
-			result[fieldName] = parseFlagTuple(field.String())
-		}
-	}
-
-	return result
-}
-
-func parseFlagTuple(tuple string) *ParsedFlag {
-	tuple = strings.TrimSpace(tuple)
-	if !strings.HasPrefix(tuple, "(") || !strings.HasSuffix(tuple, ")") {
-		fmt.Errorf("invalid flag tuple format - must be enclosed in parentheses")
-		return nil
-	}
-
-	tuple = tuple[1 : len(tuple)-1]
-
-	parts := splitTupleComponents(tuple)
-	if len(parts) != 3 {
-		fmt.Errorf("flag tuple must have exactly 3 components")
-		return nil
-	}
-
-	name := strings.TrimSpace(parts[0])
-	description := strings.TrimSpace(parts[1])
-	enabledStr := strings.TrimSpace(parts[2])
-
-	if strings.HasPrefix(description, `"`) && strings.HasSuffix(description, `"`) {
-		description = description[1 : len(description)-1]
-	}
-
-	enabled, err := strconv.ParseBool(enabledStr)
-	if err != nil {
-		fmt.Errorf("invalid boolean value in flag tuple: %v", err)
-		return nil
-	}
-
-	return &ParsedFlag{
-		Name:        name,
-		Description: description,
-		Enabled:     enabled,
-	} //, nil
-}
-
-func splitTupleComponents(tuple string) []string {
-	var parts []string
-	var current strings.Builder
-	inQuotes := false
-
-	for _, r := range tuple {
-		switch {
-		case r == ',' && !inQuotes:
-			parts = append(parts, current.String())
-			current.Reset()
-		case r == '"':
-			inQuotes = !inQuotes
-			current.WriteRune(r)
-		default:
-			current.WriteRune(r)
-		}
-	}
-
-	if current.Len() > 0 {
-		parts = append(parts, current.String())
-	}
-
-	return parts
 }

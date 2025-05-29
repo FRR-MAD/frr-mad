@@ -558,7 +558,7 @@ func (m *Model) renderRouterMonitorTab() string {
 			)
 		} else {
 			transitTableBox = lipgloss.JoinVertical(lipgloss.Left,
-				styles.H2TitleStyleForTwo().Render("NoTransit Networks"),
+				styles.H2TitleStyleForTwo().Render("No Transit Networks"),
 				styles.H2TwoBoxBottomBorderStyle().Render(""),
 			)
 		}

@@ -37,17 +37,17 @@ type AggregatorConfig struct {
 }
 
 type ExporterConfig struct {
-	Port                 int    `mapstructure:"Port"`
-	OSPFRouterData       string `mapstructure:"OSPFRouterData"`
-	OSPFNetworkData      string `mapstructure:"OSPFNetworkData"`
-	OSPFSummaryData      string `mapstructure:"OSPFSummaryData"`
-	OSPFAsbrSummaryData  string `mapstructure:"OSPFAsbrSummaryData"`
-	OSPFExternalData     string `mapstructure:"OSPFExternalData"`
-	OSPFNssaExternalData string `mapstructure:"OSPFNssaExternalData"`
-	OSPFDatabase         string `mapstructure:"OSPFDatabase"`
-	OSPFNeighbors        string `mapstructure:"OSPFNeighbors"`
-	InterfaceList        string `mapstructure:"InterfaceList"`
-	RouteList            string `mapstructure:"RouteList"`
+	Port                 int  `mapstructure:"Port"`
+	OSPFRouterData       bool `mapstructure:"OSPFRouterData"`
+	OSPFNetworkData      bool `mapstructure:"OSPFNetworkData"`
+	OSPFSummaryData      bool `mapstructure:"OSPFSummaryData"`
+	OSPFAsbrSummaryData  bool `mapstructure:"OSPFAsbrSummaryData"`
+	OSPFExternalData     bool `mapstructure:"OSPFExternalData"`
+	OSPFNssaExternalData bool `mapstructure:"OSPFNssaExternalData"`
+	OSPFDatabase         bool `mapstructure:"OSPFDatabase"`
+	OSPFNeighbors        bool `mapstructure:"OSPFNeighbors"`
+	InterfaceList        bool `mapstructure:"InterfaceList"`
+	RouteList            bool `mapstructure:"RouteList"`
 }
 
 type Config struct {
@@ -58,20 +58,25 @@ type Config struct {
 	Exporter   ExporterConfig   `mapstructure:"exporter"`
 }
 
-func LoadConfig(overwriteConfigPath string) (string, *Config, error) {
+func LoadConfig(overwriteConfigPath string) (*Config, error) {
 	if overwriteConfigPath != "" {
 		ConfigLocation = overwriteConfigPath
 	}
 
+	tmpConf, ok := os.LookupEnv("FRR_MAD_CONFFILE")
+	if ok {
+		ConfigLocation = tmpConf
+	}
+
 	file, err := os.Open(ConfigLocation)
 	if err != nil {
-		return "", nil, fmt.Errorf("error opening file: %w", err)
+		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 	defer file.Close()
 
 	yamlPath := getYAMLPath()
 	result, err := loadYAMLConfig(yamlPath)
-	return ConfigLocation, result, err
+	return result, err
 }
 
 func getYAMLPath() string {

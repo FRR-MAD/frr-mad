@@ -51,6 +51,11 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
+	tmpConf, ok := os.LookupEnv("FRR_MAD_CONFFILE")
+	if ok {
+		ConfigLocation = tmpConf
+	}
+
 	fmt.Println("Loading configuration file:", ConfigLocation)
 
 	yamlPath := getYAMLPath()

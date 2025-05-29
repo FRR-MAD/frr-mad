@@ -1075,8 +1075,8 @@ func getRXXXFRRData() *frrProto.FullFRRData {
 	return metrics
 }
 
-func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
-	return frrProto.IntraAreaLsa{
+func getExpectedIsRouterLSDBr101Happy() *frrProto.IntraAreaLsa {
+	return &frrProto.IntraAreaLsa{
 		RouterId: "65.0.1.1",
 		Hostname: "r101",
 		Areas: []*frrProto.AreaAnalyzer{
@@ -1084,15 +1084,6 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 				AreaName: "0.0.0.0",
 				LsaType:  "router-LSA",
 				Links: []*frrProto.Advertisement{
-					{
-						InterfaceAddress: "10.0.12.1",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.2.0",
-						PrefixLength:     "24",
-						LinkType:         "Stub Network",
-					},
 					{
 						InterfaceAddress: "10.0.14.1",
 						LinkType:         "transit network",
@@ -1102,20 +1093,28 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 						LinkType:         "transit network",
 					},
 					{
-						InterfaceAddress: "10.0.18.1",
+						InterfaceAddress: "10.0.17.1",
 						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.2.0",
+						PrefixLength:     "24",
+						LinkType:         "stub network",
 					},
 					{
 						InterfaceAddress: "10.0.15.1",
 						LinkType:         "transit network",
 					},
 					{
-						InterfaceAddress: "10.0.0.0",
-						PrefixLength:     "23",
-						LinkType:         "Stub Network",
+						InterfaceAddress: "10.0.18.1",
+						LinkType:         "transit network",
 					},
 					{
-						InterfaceAddress: "10.0.17.1",
+						InterfaceAddress: "10.0.19.1",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.12.1",
 						LinkType:         "transit network",
 					},
 					{
@@ -1123,8 +1122,9 @@ func getExpectedIsRouterLSDBr101Happy() frrProto.IntraAreaLsa {
 						LinkType:         "transit network",
 					},
 					{
-						InterfaceAddress: "10.0.19.1",
-						LinkType:         "transit network",
+						InterfaceAddress: "10.0.0.0",
+						PrefixLength:     "23",
+						LinkType:         "stub network",
 					},
 				},
 			},
@@ -1199,10 +1199,41 @@ func getExpectedShouldRouterLSDBr101MissingEntries() *frrProto.IntraAreaLsa {
 				LsaType:  "router-LSA", //     string
 				AreaType: "normal",     //     string
 				Links: []*frrProto.Advertisement{
-
+					{
+						InterfaceAddress: "10.0.14.1",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.16.1",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.17.1",
+						LinkType:         "transit network",
+					},
+					// {
+					// 	InterfaceAddress: "10.0.2.0",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "stub network",
+					// },
+					{
+						InterfaceAddress: "10.0.15.1",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.18.1",
+						LinkType:         "transit network",
+					},
+					{
+						InterfaceAddress: "10.0.19.1",
+						LinkType:         "transit network",
+					},
+					// {
+					// 	InterfaceAddress: "10.0.12.1",
+					// 	LinkType:         "transit network",
+					// },
 					{
 						InterfaceAddress: "10.0.13.1",
-						PrefixLength:     "24",
 						LinkType:         "transit network",
 					},
 					{
@@ -1210,36 +1241,64 @@ func getExpectedShouldRouterLSDBr101MissingEntries() *frrProto.IntraAreaLsa {
 						PrefixLength:     "23",
 						LinkType:         "stub network",
 					},
-					{
-						InterfaceAddress: "10.0.14.1",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.15.1",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.16.1",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.17.1",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.18.1",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
-					{
-						InterfaceAddress: "10.0.19.1",
-						PrefixLength:     "24",
-						LinkType:         "transit network",
-					},
+					// {
+					// 	InterfaceAddress: "10.0.12.0",
+					// 	LinkStateId:      "10.0.12.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.2.0",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "stub network",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.13.0",
+					// 	LinkStateId:      "10.0.13.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.0.0",
+					// 	PrefixLength:     "23",
+					// 	LinkType:         "stub network",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.14.0",
+					// 	LinkStateId:      "10.0.14.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.15.0",
+					// 	LinkStateId:      "10.0.15.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.16.0",
+					// 	LinkStateId:      "10.0.16.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.17.0",
+					// 	LinkStateId:      "10.0.17.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.18.0",
+					// 	LinkStateId:      "10.0.18.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
+					// {
+					// 	InterfaceAddress: "10.0.19.0",
+					// 	LinkStateId:      "10.0.19.1",
+					// 	PrefixLength:     "24",
+					// 	LinkType:         "unknown",
+					// },
 				},
 			},
 		},
@@ -1997,7 +2056,7 @@ func getR201FRRdata() *frrProto.FullFRRData {
 							PrefixLength: 32,
 						},
 						PeerIpPrefix: &frrProto.IPPrefix{
-							IpAddress:    "10.20.13.2",
+							IpAddress:    "10.20.13.3",
 							PrefixLength: 32,
 						},
 						HasPeer: true,
@@ -2073,14 +2132,26 @@ func getR201FRRdata() *frrProto.FullFRRData {
 							"link1": {
 								LinkType:               "another Router (point-to-point)",
 								NeighborRouterId:       "65.0.2.4",
-								RouterInterfaceAddress: "0.0.2.88",
+								RouterInterfaceAddress: "10.20.14.1",
 								Tos0Metric:             10,
 							},
 							"link2": {
+								LinkType:       "Stub Network",
+								NetworkAddress: "10.20.14.4",
+								NetworkMask:    "255.255.255.255",
+								Tos0Metric:     10,
+							},
+							"link3": {
 								LinkType:               "another Router (point-to-point)",
 								NeighborRouterId:       "65.0.2.3",
-								RouterInterfaceAddress: "0.0.2.126",
+								RouterInterfaceAddress: "10.20.13.1",
 								Tos0Metric:             10,
+							},
+							"link4": {
+								LinkType:       "Stub Network",
+								NetworkAddress: "10.20.13.3",
+								NetworkMask:    "255.255.255.255",
+								Tos0Metric:     10,
 							},
 						},
 					},
