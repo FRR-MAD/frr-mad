@@ -1,5 +1,0 @@
-#!/bin/bash
-
-#/usr/bin/frr_exporter --web.listen-address=:9342 &
-
-exec /bin/bash /usr/lib/frr/docker-start
