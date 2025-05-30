@@ -308,11 +308,11 @@ func (a *FrrMadApp) stopApp() {
 	time.Sleep(500 * time.Millisecond)
 
 	if isProcessRunning(a.Pid) {
-		a.Logger.Application.WithAttrs(map[string]interface{}{
+		a.Logger.Application.WithAttrs(map[string]any{
 			"pid": a.Pid,
 		}).Warning("Process still running after signal")
 	} else {
-		a.Logger.Application.WithAttrs(map[string]interface{}{
+		a.Logger.Application.WithAttrs(map[string]any{
 			"pid": a.Pid,
 		}).Info("Process terminated successfully")
 		if _, err := os.Stat(a.PidFile); !os.IsNotExist(err) {

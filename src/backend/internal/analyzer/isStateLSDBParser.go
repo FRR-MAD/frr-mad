@@ -26,7 +26,7 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 		PeerInterfaceToAddress: map[string]string{},
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"router_id":      config.RouterId,
 		"areas":          len(config.RouterStates),
 		"peer_neighbors": len(peerNeighbor),
@@ -102,12 +102,12 @@ func GetRuntimeRouterDataSelf(config *frrProto.OSPFRouterData, hostname string, 
 	result.Hostname = hostname
 
 	if len(p2pMap.PeerInterfaceToAddress) > 0 {
-		logger.WithAttrs(map[string]interface{}{
+		logger.WithAttrs(map[string]any{
 			"p2p_mappings": len(p2pMap.PeerInterfaceToAddress),
 		}).Debug("Created peer interface mappings")
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
 		"areas_parsed": len(result.Areas),
 		"total_links":  countTotalLinks(&result),
@@ -156,7 +156,7 @@ func GetRuntimeRouterData(config *frrProto.OSPFRouterData, hostname string, logg
 		}
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":    time.Since(start).String(),
 		"lsas_parsed": len(routerLsdb.Links),
 	}).Debug("Completed full router LSDB parsing")
@@ -196,7 +196,7 @@ func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string, lo
 		}
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
 		"network_lsas": len(networkLsdb.Links),
 	}).Debug("Completed network LSDB parsing")
@@ -237,7 +237,7 @@ func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string, lo
 		}
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
 		"summary_lsas": len(summaryLsdb.Links),
 	}).Debug("Completed summary LSDB parsing")
@@ -285,7 +285,7 @@ func GetRuntimeExternalDataSelf(config *frrProto.OSPFExternalData, staticRouteMa
 		externalArea.Links = append(externalArea.Links, &adv)
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":      time.Since(start).String(),
 		"external_lsas": len(externalArea.Links),
 		"static_routes": len(staticRouteMap),
@@ -326,7 +326,7 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string, l
 		externalArea.Links = append(externalArea.Links, &adv)
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":      time.Since(start).String(),
 		"external_lsas": len(externalArea.Links),
 	}).Debug("Completed external LSDB parsing")
@@ -382,7 +382,7 @@ func GetNssaExternalData(config *frrProto.OSPFNssaExternalData, staticRouteMap m
 		result.Areas = append(result.Areas, &nssaAreaObj)
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":   time.Since(start).String(),
 		"nssa_areas": len(result.Areas),
 		"nssa_lsas":  countTotalLinksNSSA(result),
@@ -425,7 +425,7 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 		}
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":  time.Since(start).String(),
 		"nssa_lsas": len(externalArea.Links),
 	}).Debug("Completed NSSA external LSDB parsing")
@@ -462,7 +462,7 @@ func GetFIB(rib *frrProto.RoutingInformationBase, logger *logger.Logger) map[str
 		}
 	}
 
-	logger.WithAttrs(map[string]interface{}{
+	logger.WithAttrs(map[string]any{
 		"duration":          time.Since(start).String(),
 		"ospf_routes":       ospfCount,
 		"total_fib_entries": len(OspfFibMap),

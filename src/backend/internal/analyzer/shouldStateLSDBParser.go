@@ -100,7 +100,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		}
 	}
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"interfaces_processed": len(config.Interfaces),
 		"areas_found":          len(areaMap),
 	}).Debug("Processed interface configurations")
@@ -116,7 +116,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 			}
 		}
 
-		a.Logger.WithAttrs(map[string]interface{}{
+		a.Logger.WithAttrs(map[string]any{
 			"ospf_areas":     len(config.OspfConfig.Area),
 			"has_nssa_areas": isNssa,
 		}).Debug("Processed OSPF area configurations")
@@ -152,7 +152,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 	}
 
 	// TODO: proto.merge for should state
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":    time.Since(start).String(),
 		"router_type": result.RouterType,
 		"total_links": countTotalLinks(result),
@@ -171,7 +171,7 @@ func (a *Analyzer) GetStaticFileExternalData(config *frrProto.StaticFRRConfigura
 	a.Logger.Debug("Parsing static external route configuration")
 	start := time.Now()
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"static_routes": len(config.StaticRoutes),
 		"access_lists":  len(accessList),
 	}).Debug("Starting external route analysis")
@@ -225,7 +225,7 @@ func (a *Analyzer) GetStaticFileExternalData(config *frrProto.StaticFRRConfigura
 		}
 	}
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":        time.Since(start).String(),
 		"external_routes": len(area.Links),
 		"filtered_routes": len(config.StaticRoutes) - len(area.Links),
@@ -259,7 +259,7 @@ func (a *Analyzer) GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfi
 			break
 		}
 	}
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"nssa_area":     nssaAreaID,
 		"static_routes": len(config.StaticRoutes),
 	}).Debug("Starting NSSA external route analysis")
@@ -310,7 +310,7 @@ func (a *Analyzer) GetStaticFileNssaExternalData(config *frrProto.StaticFRRConfi
 		}
 	}
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":    time.Since(start).String(),
 		"nssa_routes": len(area.Links),
 	}).Debug("Completed static NSSA external route parsing")
@@ -326,6 +326,7 @@ func zeroLastOctetString(ipAddress string) string {
 	return strings.Join(parts, ".")
 }
 
+
 func getOspfArea(config *frrProto.GeneralOspfInformation) string {
 	for key, area := range config.Areas {
 		if area.Backbone {
@@ -333,5 +334,6 @@ func getOspfArea(config *frrProto.GeneralOspfInformation) string {
 		}
 	}
 
-	return ""
+	// Return most likely default area...
+	return "0"
 }

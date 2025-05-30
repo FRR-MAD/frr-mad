@@ -52,7 +52,7 @@ func (a *Analyzer) AnomalyAnalysis() {
 	isExternalLSDB := GetRuntimeExternalDataSelf(a.metrics.OspfExternalData, staticRouteMap, hostname, a.Logger)
 	isNssaExternalLSDB := GetNssaExternalData(a.metrics.OspfNssaExternalData, staticRouteMap, a.metrics.StaticFrrConfiguration.Hostname, a.Logger)
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"access_lists":  len(GetAccessList(a.metrics.StaticFrrConfiguration)),
 		"static_routes": len(GetStaticRouteList(a.metrics.StaticFrrConfiguration, nil)),
 	}).Debug("Parsed configuration data")
@@ -223,7 +223,7 @@ func (a *Analyzer) logAnalysisSummary(start time.Time) {
 			len(a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries),
 	}
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":  time.Since(start).String(),
 		"anomalies": counts,
 	}).Info("Completed anomaly analysis")

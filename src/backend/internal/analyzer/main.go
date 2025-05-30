@@ -16,11 +16,11 @@ type Analyzer struct {
 	P2pMap                     *frrProto.PeerInterfaceMap
 	Logger                     *logger.Logger
 	AnomalyLogger              *logger.Logger
-	config                     interface{}
+	config                     any
 }
 
 func InitAnalyzer(
-	config interface{},
+	config any,
 	metrics *frrProto.FullFRRData,
 	logger *logger.Logger,
 	anomalyLogger *logger.Logger,
@@ -60,7 +60,7 @@ func InitAnalyzer(
 }
 
 func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
-	analyzer.Logger.WithAttrs(map[string]interface{}{
+	analyzer.Logger.WithAttrs(map[string]any{
 		"interval": pollInterval.String(),
 	}).Info("Starting analyzer")
 
@@ -71,7 +71,7 @@ func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
 		for range ticker.C {
 			start := time.Now()
 			analyzer.AnomalyAnalysis()
-			analyzer.Logger.WithAttrs(map[string]interface{}{
+			analyzer.Logger.WithAttrs(map[string]any{
 				"duration": time.Since(start).String(),
 			}).Debug("Completed analysis cycle")
 		}

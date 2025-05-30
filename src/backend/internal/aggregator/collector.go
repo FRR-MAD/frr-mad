@@ -79,7 +79,7 @@ func (c *Collector) Collect() error {
 		start := time.Now()
 		result, err := fetchFunc()
 		if err != nil {
-			c.logger.WithAttrs(map[string]interface{}{
+			c.logger.WithAttrs(map[string]any{
 				"component": "aggregator",
 				"operation": name,
 				"error":     err.Error(),
@@ -87,6 +87,7 @@ func (c *Collector) Collect() error {
 
 			if name == "StaticFRRConfig" {
 				log.Panic(err)
+				c.logger.Error(fmt.Sprintf("%v", err))
 			}
 			return
 		}
@@ -100,7 +101,7 @@ func (c *Collector) Collect() error {
 		}
 		proto.Merge(target, result)
 
-		c.logger.WithAttrs(map[string]interface{}{
+		c.logger.WithAttrs(map[string]any{
 			"component": "aggregator",
 			"operation": name,
 			"response":  target,
@@ -192,7 +193,7 @@ func (c *Collector) Collect() error {
 		return frrRouterData, nil
 	})
 
-	c.logger.WithAttrs(map[string]interface{}{
+	c.logger.WithAttrs(map[string]any{
 		"component": "aggregator",
 		"action":    "complete_collection",
 	}).Info("Completed data collection cycle")

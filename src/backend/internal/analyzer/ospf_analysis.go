@@ -14,7 +14,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 	a.Logger.Debug("Starting FIB-LSDB consistency analysis")
 	start := time.Now()
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"fib_entries":   len(fibMap),
 		"network_lsas":  len(getLSDBMapAndList(receivedNetworkLSDB)),
 		"summary_lsas":  len(getLSDBMapAndList(receivedSummaryLSDB)),
@@ -76,13 +76,13 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"missing_count":    len(result.MissingEntries),
 			"missing_examples": missingExamples,
 			"analysis":         "LSDB contains prefixes not found in FIB",
 		}).Warning("Found prefixes in LSDB missing from FIB")
 	}
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":      time.Since(start).String(),
 		"missing_count": len(result.MissingEntries),
 	}).Debug("Completed FIB-LSDB analysis")
@@ -138,18 +138,18 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	if len(result.MissingEntries) > 0 {
-		missingExamples := make([]map[string]interface{}, 0, 3)
+		missingExamples := make([]map[string]any, 0, 3)
 		for i, entry := range result.MissingEntries {
 			if i >= 3 {
 				break
 			}
-			missingExamples = append(missingExamples, map[string]interface{}{
+			missingExamples = append(missingExamples, map[string]any{
 				"address": entry.InterfaceAddress,
 				"type":    entry.LinkType,
 			})
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"type":             "router",
 			"count":            len(result.MissingEntries),
 			"missing_examples": missingExamples,
@@ -158,18 +158,18 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	if len(result.SuperfluousEntries) > 0 {
-		extraExamples := make([]map[string]interface{}, 0, 3)
+		extraExamples := make([]map[string]any, 0, 3)
 		for i, entry := range result.SuperfluousEntries {
 			if i >= 3 {
 				break
 			}
-			extraExamples = append(extraExamples, map[string]interface{}{
+			extraExamples = append(extraExamples, map[string]any{
 				"address": entry.InterfaceAddress,
 				"type":    entry.LinkType,
 			})
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"type":           "router",
 			"count":          len(result.SuperfluousEntries),
 			"extra_examples": extraExamples,
@@ -177,7 +177,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 		}).Warning("Over-advertised router LSAs detected")
 	}
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":       time.Since(start).String(),
 		"areas_analyzed": len(isState.Areas),
 		"missing":        len(result.MissingEntries),
@@ -239,7 +239,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"type":             "external",
 			"count":            len(result.MissingEntries),
 			"missing_prefixes": missingPrefixes,
@@ -257,7 +257,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"type":           "external",
 			"count":          len(result.SuperfluousEntries),
 			"extra_prefixes": extraPrefixes,
@@ -265,7 +265,7 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 		}).Warning("Over-advertised external LSAs detected")
 	}
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":       time.Since(start).String(),
 		"areas_analyzed": len(isState.Areas),
 		"missing":        len(result.MissingEntries),
@@ -363,18 +363,18 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 	}
 
 	if len(result.MissingEntries) > 0 {
-		missingDetails := make([]map[string]interface{}, 0, 3)
+		missingDetails := make([]map[string]any, 0, 3)
 		for i, entry := range result.MissingEntries {
 			if i >= 3 {
 				break
 			}
-			missingDetails = append(missingDetails, map[string]interface{}{
+			missingDetails = append(missingDetails, map[string]any{
 				"prefix": fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength),
 				"p-bit":  entry.PBit,
 			})
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"type":           "nssa",
 			"count":          len(result.MissingEntries),
 			"missing_routes": missingDetails,
@@ -383,17 +383,17 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 	}
 
 	if len(result.SuperfluousEntries) > 0 {
-		extraDetails := make([]map[string]interface{}, 0, 3)
+		extraDetails := make([]map[string]any, 0, 3)
 		for i, entry := range result.SuperfluousEntries {
 			if i >= 3 {
 				break
 			}
-			extraDetails = append(extraDetails, map[string]interface{}{
+			extraDetails = append(extraDetails, map[string]any{
 				"prefix": fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength),
 			})
 		}
 
-		a.AnomalyLogger.WithAttrs(map[string]interface{}{
+		a.AnomalyLogger.WithAttrs(map[string]any{
 			"type":         "nssa",
 			"count":        len(result.SuperfluousEntries),
 			"extra_routes": extraDetails,
@@ -412,7 +412,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 	a.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries = result.DuplicateEntries
 
-	a.Logger.WithAttrs(map[string]interface{}{
+	a.Logger.WithAttrs(map[string]any{
 		"duration":   time.Since(start).String(),
 		"nssa_areas": len(isState.Areas),
 		"missing":    len(result.MissingEntries),
@@ -420,7 +420,7 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 	}).Info("Completed NSSA external analysis")
 }
 
-func getLSDBMapAndList(lsdb interface{}) []string {
+func getLSDBMapAndList(lsdb any) []string {
 	lsdbList := []string{}
 
 	switch db := lsdb.(type) {
@@ -530,7 +530,7 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	return false
 }
 
-func getLsdbStateMap(lsdbState interface{}) map[string]*frrProto.Advertisement {
+func getLsdbStateMap(lsdbState any) map[string]*frrProto.Advertisement {
 
 	result := make(map[string]*frrProto.Advertisement)
 	var areas []*frrProto.AreaAnalyzer
