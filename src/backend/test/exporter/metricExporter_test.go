@@ -17,7 +17,7 @@ import (
 func TestMetricExporter_WithData(t *testing.T) {
 	// Setup
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	flags := configs.ExporterConfig{
@@ -316,7 +316,7 @@ func TestMetricExporter_WithData(t *testing.T) {
 func TestMetricExporter_WithPartialData(t *testing.T) {
 	// ── Setup ────────────────────────────────────────────────────────────────────
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter_partial.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter_partial.log")
 	assert.NoError(t, err)
 
 	// Only router, network, external & duplicates are enabled:
@@ -503,7 +503,7 @@ func TestMetricExporter_WithPartialData(t *testing.T) {
 func TestMetricExporter_DisabledMetrics(t *testing.T) {
 	// Setup
 	registry := prometheus.NewRegistry()
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	flags := configs.ExporterConfig{
@@ -571,7 +571,7 @@ func TestMetricExporter_DisabledMetrics(t *testing.T) {
 
 func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 	// common setup
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter_idempotent.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter_idempotent.log")
 	assert.NoError(t, err)
 
 	// enable _all_ metrics so flags don't filter us out
@@ -832,7 +832,7 @@ func TestMetricExporter_IdempotentUpdates(t *testing.T) {
 
 func TestMetricExporter_OutageSimulation(t *testing.T) {
 	// Setup
-	testLogger, err := logger.NewLogger("test", "/tmp/frrMadExporter.log")
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
 	assert.NoError(t, err)
 
 	// We'll focus on the three requested data types

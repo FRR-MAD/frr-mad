@@ -25,7 +25,7 @@ func TestRouterLsaHappy3(t *testing.T) {
 		"65.0.2.4": "10.20.14.1",
 	}
 
-	actualIsRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
+	actualIsRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap, ana.Logger)
 	expectedIsRouterLSDB := &frrProto.IntraAreaLsa{
 		RouterId: "65.0.2.1",
 		Hostname: "r201",
@@ -62,7 +62,7 @@ func TestRouterLsaHappy3(t *testing.T) {
 	}
 
 	_, shouldRouterLSDB := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
-	isRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap)
+	isRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, actualPeerNeighborMap, ana.Logger)
 
 	t.Run("TestHelperFunctionParsingR201", func(t *testing.T) {
 		assert.Equal(t, len(expectedPeerInterfaceMap), len(actualPeerInterfaceMap))

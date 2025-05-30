@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/charmbracelet/bubbles/viewport"
 	"log"
 	"os"
+
+	"github.com/charmbracelet/bubbles/viewport"
 
 	"github.com/frr-mad/frr-tui/internal/pages/rib"
 
@@ -69,22 +70,22 @@ func initModel(config *configs.Config) *AppModel {
 	vp := viewport.New(styles.WidthViewPortCompletePage,
 		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 
-	debugLevel := getDebugLevel(config.Default.DebugLevel)
-	appLogger := createLogger("frr_mad_frontend", fmt.Sprintf("%v/frr_mad_frontend.log", config.Default.LogPath))
-	appLogger.SetDebugLevel(debugLevel)
+	logLevel := logger.ConvertLogLevelFromConfig(config.Default.DebugLevel)
+
+	fmt.Println(logLevel)
+
+	appLogger, err := logger.NewApplicationLogger("frr-mad-tui",
+		fmt.Sprintf("%v/frr_mad_tui_application.log", config.Default.LogPath))
+	if err != nil {
+		log.Fatalf("Failed to create application logger: %v", err)
+	}
+	appLogger.SetDebugLevel(logLevel)
 	appLogger.Info("Starting Frontend Application")
 
-	dashboardLogger := createLogger("dashboard_frontend", fmt.Sprintf("%v/dashboard_frontend.log", config.Default.LogPath))
-	dashboardLogger.SetDebugLevel(debugLevel)
-
-	ospfLogger := createLogger("ospf_frontend", fmt.Sprintf("%v/ospf_frontend.log", config.Default.LogPath))
-	ospfLogger.SetDebugLevel(debugLevel)
-
-	ribLogger := createLogger("rib_frontend", fmt.Sprintf("%v/rib_frontend.log", config.Default.LogPath))
-	ribLogger.SetDebugLevel(debugLevel)
-
-	shellLogger := createLogger("shell_frontend", fmt.Sprintf("%v/shell_frontend.log", config.Default.LogPath))
-	shellLogger.SetDebugLevel(debugLevel)
+	dashboardLogger := appLogger.WithComponent("dashboard")
+	ospfLogger := appLogger.WithComponent("ospf")
+	ribLogger := appLogger.WithComponent("rib")
+	shellLogger := appLogger.WithComponent("shell")
 
 	ti := textinput.New()
 	ti.Placeholder = "type to filter..."
@@ -371,27 +372,6 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 		panic("unhandled default case")
 	}
 	return m, cmd
-}
-
-// Create a new logger instance
-func createLogger(name, filePath string) *logger.Logger {
-	tuiLogger, err := logger.NewLogger(name, filePath)
-	if err != nil {
-		log.Fatalf("Failed to create logger %s: %v", name, err)
-	}
-	return tuiLogger
-}
-
-// Convert debug level string to int
-func getDebugLevel(level string) int {
-	switch level {
-	case "debug":
-		return 2
-	case "error":
-		return 1
-	default:
-		return 0
-	}
 }
 
 func main() {

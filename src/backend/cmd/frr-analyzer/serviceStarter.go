@@ -16,14 +16,19 @@ import (
 func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, pollInterval time.Duration) *aggregator.Collector {
 	collector := aggregator.InitAggregator(config, logging)
 	aggregator.StartAggregator(collector, pollInterval)
-	logging.Info("Aggregator service started")
+	logging.WithAttrs(map[string]interface{}{
+		"poll_interval": pollInterval.String(),
+		"config":        fmt.Sprintf("%+v", config),
+	}).Info("Aggregator service started successfully")
 	return collector
 }
 
-func startAnalyzer(config interface{}, logging *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
-	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging)
+func startAnalyzer(config interface{}, logging *logger.Logger, anomalyLogger *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
+	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging, anomalyLogger)
 	analyzer.StartAnalyzer(detection, pollInterval)
-	logging.Info("Analyzer service started")
+	logging.WithAttrs(map[string]interface{}{
+		"poll_interval": pollInterval.String(),
+	}).Info("Analyzer service started successfully")
 	return detection
 }
 
@@ -31,7 +36,10 @@ func startExporter(config configs.ExporterConfig, logging *logger.Logger, pollIn
 	metricsExporter := exporter.NewExporter(config, logging, pollInterval, frrData, anomalyResult)
 
 	metricsExporter.Start()
-	logging.Info("Analyzer service started")
+	logging.WithAttrs(map[string]interface{}{
+		"poll_interval": pollInterval.String(),
+		"config":        fmt.Sprintf("%+v", config),
+	}).Info("Exporter service started successfully")
 	return metricsExporter
 }
 

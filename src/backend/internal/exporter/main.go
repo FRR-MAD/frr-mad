@@ -28,6 +28,7 @@ func NewExporter(
 	frrData *frrProto.FullFRRData,
 	anomalies *frrProto.AnomalyAnalysis,
 ) *Exporter {
+	// Default port
 	port := 9091
 
 	if config.Port > 0 {
@@ -37,6 +38,11 @@ func NewExporter(
 			logger.Error(fmt.Sprintf("invalid port in config: %v", err))
 		}
 	}
+
+	logger.WithAttrs(map[string]interface{}{
+		"port":          port,
+		"poll_interval": pollInterval.String(),
+	}).Info("Initializing exporter")
 
 	registry := prometheus.NewRegistry()
 
@@ -79,28 +85,46 @@ func NewExporter(
 func (e *Exporter) Start() {
 	go func() {
 		if err := e.server.ListenAndServe(); err != nil {
-			e.logger.Error(fmt.Sprintf("Metrics server failed: %v", err))
+			e.logger.WithAttrs(map[string]interface{}{
+				"error": err.Error(),
+			}).Error("Metrics server failed")
 		}
 	}()
 
 	//e.runExportLoop()
 	go e.runExportLoop()
-	e.logger.Info(fmt.Sprintf("Exporter started on port %s", e.server.Addr))
+	e.logger.WithAttrs(map[string]interface{}{
+		"address":  e.server.Addr,
+		"interval": e.interval.String(),
+	}).Info("Exporter successfully started")
 }
 
 func (e *Exporter) Stop() {
+	e.logger.Info("Shutting down exporter")
 	close(e.stopChan)
-	_ = e.server.Close()
+	if err := e.server.Close(); err != nil {
+		e.logger.WithAttrs(map[string]interface{}{
+			"error": err.Error(),
+		}).Error("Error while shutting down server")
+	}
+	e.logger.Info("Exporter shutdown complete")
 }
 
 func (e *Exporter) runExportLoop() {
+	e.logger.Info("Starting export loop")
+	defer e.logger.Info("Export loop stopped")
+
 	ticker := time.NewTicker(e.interval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
+			start := time.Now()
 			e.exportData()
+			e.logger.WithAttrs(map[string]interface{}{
+				"duration": time.Since(start).String(),
+			}).Debug("Completed export cycle")
 		case <-e.stopChan:
 			return
 		}
@@ -108,21 +132,35 @@ func (e *Exporter) runExportLoop() {
 }
 
 func (e *Exporter) exportData() {
+	e.logger.Debug("Starting data export")
+
 	err := tryUpdateWithRetry("AnomalyExporter", e.anomalyExporter.Update, e.logger)
 	if err != nil {
-		e.logger.Error(fmt.Sprintf("Final failure: Anomaly Exporter Update function: %v", err))
+		e.logger.WithAttrs(map[string]interface{}{
+			"component": "AnomalyExporter",
+			"error":     err.Error(),
+		}).Error("Failed to update after retry")
 	}
 
 	if e.metricExporter != nil {
 		err := tryUpdateWithRetry("MetricExporter", e.metricExporter.Update, e.logger)
 		if err != nil {
-			e.logger.Error(fmt.Sprintf("Final failure: Metric Exporter Update function: %v", err))
+			e.logger.WithAttrs(map[string]interface{}{
+				"component": "MetricExporter",
+				"error":     err.Error(),
+			}).Error("Failed to update after retry")
 		}
 	}
+
+	e.logger.Debug("Data export completed")
 }
 
 func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) error {
 	const retryDelay = 500 * time.Millisecond
+
+	logger.WithAttrs(map[string]interface{}{
+		"component": name,
+	}).Debug("Attempting update")
 
 	try := func() (err error) {
 		defer func() {
@@ -136,14 +174,29 @@ func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) e
 
 	// First try
 	if err := try(); err != nil {
-		logger.Warning(fmt.Sprintf("%s update failed, retrying in %s: %v", name, retryDelay, err))
+		logger.WithAttrs(map[string]interface{}{
+			"component":   name,
+			"error":       err.Error(),
+			"retry_delay": retryDelay.String(),
+		}).Warning("Update failed, will retry")
+
 		time.Sleep(retryDelay)
 
 		// Retry
 		if retryErr := try(); retryErr != nil {
+			logger.WithAttrs(map[string]interface{}{
+				"component": name,
+				"error":     retryErr.Error(),
+			}).Debug("Retry attempt failed")
 			return retryErr
 		}
+		logger.WithAttrs(map[string]interface{}{
+			"component": name,
+		}).Debug("Retry succeeded")
 	}
 
+	logger.WithAttrs(map[string]interface{}{
+		"component": name,
+	}).Debug("Update completed successfully")
 	return nil
 }
