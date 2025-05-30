@@ -12,7 +12,6 @@ import (
 )
 
 type Collector struct {
-	fetcher     *Fetcher
 	configPath  string
 	socketPath  string
 	logger      *logger.Logger
@@ -26,11 +25,10 @@ func NewFRRCommandExecutor(socketDir string, timeout time.Duration) *frrSocket.F
 	}
 }
 
-func newCollector(metricsURL, configPath, socketPath string, logger *logger.Logger) *Collector {
+func newCollector(configPath, socketPath string, logger *logger.Logger) *Collector {
 	fullFrrData := initFullFrrData()
 
 	return &Collector{
-		fetcher:     NewFetcher(metricsURL),
 		configPath:  configPath,
 		socketPath:  socketPath,
 		logger:      logger,
@@ -69,6 +67,7 @@ func (c *Collector) Collect() error {
 	c.logger.Debug(fmt.Sprintf("Address of collector: %p\n", c))
 
 	if c.FullFrrData == nil {
+		c.logger.Debug("Initializing new FullFrrData structure")
 		c.FullFrrData = initFullFrrData()
 	} else {
 		c.ensureFieldsInitialized()
@@ -77,11 +76,18 @@ func (c *Collector) Collect() error {
 	executor := NewFRRCommandExecutor(c.socketPath, 2*time.Second)
 
 	fetchAndMerge := func(name string, target proto.Message, fetchFunc func() (proto.Message, error)) {
+		start := time.Now()
 		result, err := fetchFunc()
 		if err != nil {
-			c.logger.Error(err.Error())
+			c.logger.WithAttrs(map[string]any{
+				"component": "aggregator",
+				"operation": name,
+				"error":     err.Error(),
+			}).Error("Failed to fetch data")
+
 			if name == "StaticFRRConfig" {
 				log.Panic(err)
+				c.logger.Error(fmt.Sprintf("%v", err))
 			}
 			return
 		}
@@ -95,8 +101,12 @@ func (c *Collector) Collect() error {
 		}
 		proto.Merge(target, result)
 
-		c.logger.Debug(fmt.Sprintf("Response of Fetch%s(): %v\n", name, target))
-		c.logger.Debug(fmt.Sprintf("Response of Fetch%s() Address: %p\n", name, target))
+		c.logger.WithAttrs(map[string]any{
+			"component": "aggregator",
+			"operation": name,
+			"response":  target,
+			"duration":  time.Since(start).String(),
+		}).Debug("Successfully fetched and merged data")
 	}
 
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
@@ -104,75 +114,75 @@ func (c *Collector) Collect() error {
 	})
 
 	fetchAndMerge("GeneralOSPFInformation", c.FullFrrData.GeneralOspfInformation, func() (proto.Message, error) {
-		return FetchGeneralOSPFInformation(executor)
+		return fetchGeneralOSPFInformation(executor)
 	})
 
 	fetchAndMerge("OSPFRouterData", c.FullFrrData.OspfRouterData, func() (proto.Message, error) {
-		return FetchOSPFRouterData(executor)
+		return fetchOSPFRouterData(executor)
 	})
 
 	fetchAndMerge("OSPFRouterDataAll", c.FullFrrData.OspfRouterDataAll, func() (proto.Message, error) {
-		return FetchOSPFRouterDataAll(executor)
+		return fetchOSPFRouterDataAll(executor)
 	})
 
 	fetchAndMerge("OSPFNetworkData", c.FullFrrData.OspfNetworkData, func() (proto.Message, error) {
-		return FetchOSPFNetworkData(executor)
+		return fetchOSPFNetworkData(executor)
 	})
 
 	fetchAndMerge("OSPFNetworkDataAll", c.FullFrrData.OspfNetworkDataAll, func() (proto.Message, error) {
-		return FetchOSPFNetworkDataAll(executor)
+		return fetchOSPFNetworkDataAll(executor)
 	})
 
 	fetchAndMerge("OSPFSummaryData", c.FullFrrData.OspfSummaryData, func() (proto.Message, error) {
-		return FetchOSPFSummaryData(executor)
+		return fetchOSPFSummaryData(executor)
 	})
 
 	fetchAndMerge("OSPFSummaryDataAll", c.FullFrrData.OspfSummaryDataAll, func() (proto.Message, error) {
-		return FetchOSPFSummaryDataAll(executor)
+		return fetchOSPFSummaryDataAll(executor)
 	})
 
 	fetchAndMerge("OSPFAsbrSummaryData", c.FullFrrData.OspfAsbrSummaryData, func() (proto.Message, error) {
-		return FetchOSPFAsbrSummaryData(executor)
+		return fetchOSPFAsbrSummaryData(executor)
 	})
 
 	fetchAndMerge("OSPFExternalData", c.FullFrrData.OspfExternalData, func() (proto.Message, error) {
-		return FetchOSPFExternalData(executor)
+		return fetchOSPFExternalData(executor)
 	})
 
 	fetchAndMerge("OSPFNssaExternalData", c.FullFrrData.OspfNssaExternalData, func() (proto.Message, error) {
-		return FetchOSPFNssaExternalData(executor)
+		return fetchOSPFNssaExternalData(executor)
 	})
 
 	fetchAndMerge("FullOSPFDatabase", c.FullFrrData.OspfDatabase, func() (proto.Message, error) {
-		return FetchFullOSPFDatabase(executor)
+		return fetchFullOSPFDatabase(executor)
 	})
 
 	fetchAndMerge("OSPFExternalAll", c.FullFrrData.OspfExternalAll, func() (proto.Message, error) {
-		return FetchOSPFExternalAll(executor)
+		return fetchOSPFExternalAll(executor)
 	})
 
 	fetchAndMerge("OSPFNssaExternalAll", c.FullFrrData.OspfNssaExternalAll, func() (proto.Message, error) {
-		return FetchOSPFNssaExternalAll(executor)
+		return fetchOSPFNssaExternalAll(executor)
 	})
 
 	fetchAndMerge("OSPFNeighbors", c.FullFrrData.OspfNeighbors, func() (proto.Message, error) {
-		return FetchOSPFNeighbors(executor)
+		return fetchOSPFNeighbors(executor)
 	})
 
 	fetchAndMerge("InterfaceStatus", c.FullFrrData.Interfaces, func() (proto.Message, error) {
-		return FetchInterfaceStatus(executor)
+		return fetchInterfaceStatus(executor)
 	})
 
 	fetchAndMerge("ExpectedRoutes", c.FullFrrData.RoutingInformationBase, func() (proto.Message, error) {
-		return FetchRib(executor)
+		return fetchRib(executor)
 	})
 
 	fetchAndMerge("RibFibSummaryRoutes", c.FullFrrData.RibFibSummaryRoutes, func() (proto.Message, error) {
-		return FetchRibFibSummary(executor)
+		return fetchRibFibSummary(executor)
 	})
 
 	fetchAndMerge("SystemMetrics", c.FullFrrData.SystemMetrics, func() (proto.Message, error) {
-		return c.fetcher.CollectSystemMetrics()
+		return collectSystemMetrics()
 	})
 
 	fetchAndMerge("FrrRouterData", c.FullFrrData.FrrRouterData, func() (proto.Message, error) {
@@ -182,6 +192,11 @@ func (c *Collector) Collect() error {
 		}
 		return frrRouterData, nil
 	})
+
+	c.logger.WithAttrs(map[string]any{
+		"component": "aggregator",
+		"action":    "complete_collection",
+	}).Info("Completed data collection cycle")
 
 	return nil
 }
@@ -262,12 +277,4 @@ func (c *Collector) ensureFieldsInitialized() {
 	if c.FullFrrData.SystemMetrics == nil {
 		c.FullFrrData.SystemMetrics = &frrProto.SystemMetrics{}
 	}
-}
-
-func (c *Collector) GetFetcherForTesting() *Fetcher {
-	return c.fetcher
-}
-
-func (c *Collector) GetConfigPathForTesting() string {
-	return c.configPath
 }

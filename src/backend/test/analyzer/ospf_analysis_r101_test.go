@@ -44,7 +44,7 @@ func TestRouterLsaHappy1(t *testing.T) {
 
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	actualRuntimeRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap, ana.Logger)
 	expectedRuntimeRouterLSDBAreaLength := len(expectedIsRouterLSDB.Areas)
 	actualRuntimeRouterLSDBAreaLength := len(actualRuntimeRouterLSDB.Areas)
 	expectedRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
@@ -183,7 +183,7 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	isRouterLSDB2, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	isRouterLSDB2, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap, ana.Logger)
 	shouldRouterLSDB2 := getExpectedShouldRouterLSDBr101SuperfluousEntriesUnhappy()
 	expectedSuperfluousEntrires := []*frrProto.Advertisement{
 		{
@@ -263,7 +263,7 @@ func TestExternalLsaHappy1(t *testing.T) {
 
 	//- runtimeExternalLSDB
 	expectedIsExternalLSDB := getExternalIsExternalLSDBr101()
-	actualIsExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname)
+	actualIsExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticList, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
 
 	// TODO: maybe add AreaName testing? For that area assignment needs to be done. It doesn't seem too easy and it's not really necessary. Considering that static and connected redistributions happen via LSA Type 5 anyway and if it's connected to an NSSA it will still show a type 5 lsa but in type 7 lsa testing it will correctly show the correct static and connected redistributions.
 	t.Run("TestExternalDataRuntimeShouldAndIs", func(t *testing.T) {
@@ -402,7 +402,7 @@ func TestAnomalyAnalysisHappy1(t *testing.T) {
 	staticRouteMap := analyzer.GetStaticRouteList(frrMetrics.StaticFrrConfiguration, accessList)
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
-	isRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap)
+	isRouterLSDB, _ := analyzer.GetRuntimeRouterDataSelf(frrMetrics.OspfRouterData, frrMetrics.StaticFrrConfiguration.Hostname, peerInterfaceMap, ana.Logger)
 
 	_, shouldRouterLSDB := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB, isRouterLSDB)
@@ -420,7 +420,7 @@ func TestAnomalyAnalysisHappy1(t *testing.T) {
 	//
 
 	predictedExternalLSDB := ana.GetStaticFileExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
 	ana.ExternalAnomalyAnalysisLSDB(predictedExternalLSDB, runtimeExternalLSDB)
 
 	t.Run("TestExternalLSAAnomalyTesting", func(t *testing.T) {
@@ -447,7 +447,7 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 	// Get predicted and runtime NSSA-external LSDBs
 	predictedNssaExternalLSDB := ana.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
 
 	// Run the analysis
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
@@ -474,7 +474,7 @@ func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
 	// Get predicted and runtime NSSA-external LSDBs
 	predictedNssaExternalLSDB := ana.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
 	runtimeNssaExternalLSDB := analyzer.GetNssaExternalData(frrMetrics.OspfNssaExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
-	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname)
+	runtimeExternalLSDB := analyzer.GetRuntimeExternalDataSelf(frrMetrics.OspfExternalData, staticRouteMap, frrMetrics.StaticFrrConfiguration.Hostname, ana.Logger)
 
 	ana.NssaExternalAnomalyAnalysis(accessList, predictedNssaExternalLSDB, runtimeNssaExternalLSDB, runtimeExternalLSDB)
 

@@ -52,7 +52,7 @@ jobs:
       - name: copy example configuration
         run: |
           mkdir -p artifacts
-          cp local/docker-config.yaml artifacts/dev-config.yaml
+          cp .devenvironment/containerlab/frr-mad-conf/main.yaml artifacts/dev-config.yaml
 
       - name: build application
         run: |
