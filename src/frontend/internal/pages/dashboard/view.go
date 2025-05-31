@@ -646,12 +646,12 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	// extract data for tables
 	var tableData [][]string
 
-	// TODO: add all anomily types
+	// TODO: add all anomaly types
 	if a.HasOverAdvertisedPrefixes {
 		for _, superfluousEntry := range a.SuperfluousEntries {
 			var firstCol string
 			var cidr string
-			if strings.Contains(lsaTypeHeader, "Router") {
+			if strings.Contains(lsaTypeHeader, "Router") && superfluousEntry.InterfaceAddress != "" {
 				firstCol = superfluousEntry.InterfaceAddress
 				cidr = ""
 			} else {
