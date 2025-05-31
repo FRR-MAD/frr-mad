@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
@@ -111,8 +112,7 @@ func (m *Model) renderRibTab() string {
 		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRIB")
 	} else {
-		m.statusMessage = "RIB data loaded successfully"
-		m.statusSeverity = styles.SeverityInfo
+		m.setTimedStatus("RIB data loaded successfully", styles.SeverityInfo, 3*time.Second)
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
@@ -227,8 +227,7 @@ func (m *Model) renderFibTab() string {
 		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRIB")
 	} else {
-		m.statusMessage = "FIB data loaded successfully"
-		m.statusSeverity = styles.SeverityInfo
+		m.setTimedStatus("FIB data loaded successfully", styles.SeverityInfo, 3*time.Second)
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
@@ -351,8 +350,7 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRIB")
 	} else {
-		m.statusMessage = "RIB data loaded successfully"
-		m.statusSeverity = styles.SeverityInfo
+		m.setTimedStatus("RIB data loaded successfully", styles.SeverityInfo, 3*time.Second)
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {

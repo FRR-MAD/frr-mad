@@ -1,6 +1,8 @@
 package rib
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
@@ -29,6 +31,8 @@ type Model struct {
 	textFilter        *common.Filter
 	statusMessage     string
 	statusSeverity    styles.StatusSeverity
+	statusTimer       time.Time
+	statusDuration    time.Duration
 	logger            *logger.Logger
 }
 
@@ -76,6 +80,13 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,
 	}
+}
+
+func (m *Model) setTimedStatus(message string, severity styles.StatusSeverity, duration time.Duration) {
+	m.statusMessage = message
+	m.statusSeverity = severity
+	m.statusTimer = time.Now()
+	m.statusDuration = duration
 }
 
 // fetchLatestData fetches all data from the backend that are possible to export from the rib exporter

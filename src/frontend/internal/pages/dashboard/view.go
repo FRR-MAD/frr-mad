@@ -123,8 +123,6 @@ func (m *Model) renderOSPFDashboard() string {
 		statusHeader = anomalyHeader
 		ospfDashboardAnomalies := m.getOspfDashboardAnomalies()
 		m.viewportLeft.SetContent(ospfDashboardAnomalies)
-		m.statusMessage = "Anomalies detected in OSPF routing"
-		m.statusSeverity = styles.SeverityWarning
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
 			Width(styles.WidthTwoH1ThreeFourth).
@@ -134,8 +132,6 @@ func (m *Model) renderOSPFDashboard() string {
 		statusHeader = dashboardHeader
 		ospfDashboardLsdbSelf := m.getOspfDashboardLsdbSelf()
 		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
-		m.statusMessage = "No OSPF anomalies detected"
-		m.statusSeverity = styles.SeverityInfo
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
@@ -192,14 +188,6 @@ func (m *Model) getOSPFGeneralInfoBox() string {
 		m.statusMessage = "Failed to fetch OSPF general information"
 		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOSPF")
-	}
-
-	if ospfInformation.AttachedAreaCounter == 0 {
-		m.statusMessage = "No OSPF areas attached"
-		m.statusSeverity = styles.SeverityWarning
-	} else {
-		m.statusMessage = fmt.Sprintf("Found %d attached OSPF areas", ospfInformation.AttachedAreaCounter)
-		m.statusSeverity = styles.SeverityInfo
 	}
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
@@ -286,14 +274,6 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 		m.statusMessage = "Failed to fetch LSDB data"
 		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetLSDB")
-	}
-
-	if len(lsdb.Areas) == 0 {
-		m.statusMessage = "No OSPF areas found in LSDB"
-		m.statusSeverity = styles.SeverityWarning
-	} else {
-		m.statusMessage = fmt.Sprintf("Found %d OSPF areas in LSDB", len(lsdb.Areas))
-		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// extract and sort the map keys
@@ -609,14 +589,6 @@ func (m *Model) getOspfDashboardAnomalies() string {
 	}
 	if common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
 		totalAnomalies += countAnomalies(ospfNSSAExternalAnomalies)
-	}
-
-	if totalAnomalies > 0 {
-		m.statusMessage = fmt.Sprintf("Detected %d OSPF anomalies", totalAnomalies)
-		m.statusSeverity = styles.SeverityWarning
-	} else {
-		m.statusMessage = "No anomalies detected in OSPF routing"
-		m.statusSeverity = styles.SeverityInfo
 	}
 
 	var routerAnomalyTable string
