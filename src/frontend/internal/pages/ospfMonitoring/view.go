@@ -661,7 +661,6 @@ func (m *Model) renderNetworkMonitorTab() string {
 					strconv.Itoa(int(lsa.LsaAge)),
 				})
 			} else {
-				// TODO: print a pretty anomaly error when lsaID != linkstateID
 				return "Anomaly: LSA Mismatch"
 			}
 		}
