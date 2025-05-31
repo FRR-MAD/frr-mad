@@ -1044,7 +1044,23 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 		return true
 	case strings.HasPrefix(line, "ip ospf area "):
 		currentInterfacePointer.Area = strings.Fields(line)[3]
-		return true
+		if len(parts) > 4 {
+			ospfIpAddresses := make(map[string]bool)
+			for i := 4; i < len(parts); i++ {
+				ospfIpAddresses[parts[i]] = true
+			}
+
+			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				if ospfIpAddresses[interfaceIPPrefix.IpPrefix.IpAddress] {
+					interfaceIPPrefix.Ospf = true
+				}
+			}
+		} else {
+			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
+				interfaceIPPrefix.Ospf = true
+			}
+		}
+   	return true
 	case strings.HasPrefix(line, "ip ospf passive"):
 		if len(parts) == 3 {
 			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
@@ -1107,7 +1123,8 @@ func parseAccessListLine(config *frrProto.StaticFRRConfiguration, line string) b
 	} else if ip, ipnet, err := net.ParseCIDR(target); err == nil && ipnet != nil {
 		prefixLength, _ := ipnet.Mask.Size()
 		item.Destination = &frrProto.AccessListItem_IpPrefix{
-			IpPrefix: &frrProto.IPPrefix{IpAddress: ip.String(),
+			IpPrefix: &frrProto.IPPrefix{
+				IpAddress:    ip.String(),
 				PrefixLength: uint32(prefixLength),
 			},
 		}
@@ -1767,4 +1784,3 @@ func getFloat(m map[string]any, key string) float64 {
 	}
 	return 0
 }
-

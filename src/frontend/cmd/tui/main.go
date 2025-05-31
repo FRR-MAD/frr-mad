@@ -72,8 +72,6 @@ func initModel(config *configs.Config) *AppModel {
 
 	logLevel := logger.ConvertLogLevelFromConfig(config.Default.DebugLevel)
 
-	fmt.Println(logLevel)
-
 	appLogger, err := logger.NewApplicationLogger("frr-mad-tui",
 		fmt.Sprintf("%v/frr_mad_tui_application.log", config.Default.LogPath))
 	if err != nil {

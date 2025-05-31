@@ -183,9 +183,10 @@ message AccessListItem {
 
 message InterfaceIPPrefix {
   IPPrefix ip_prefix = 1;
-  bool passive = 2;
-  bool has_peer = 3; // true/false
-  IPPrefix peer_ip_prefix = 4;
+  bool ospf = 2;
+  bool passive = 3;
+  bool has_peer = 4; // true/false
+  IPPrefix peer_ip_prefix = 5;
 }
 
 message IPPrefix {
@@ -687,6 +688,7 @@ message Advertisement {
   string LinkType = 4;
   bool PBit = 5;
   string Options = 6;
+  bool Ospf = 7;
 }
 
 
