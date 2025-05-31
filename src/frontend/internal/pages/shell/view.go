@@ -44,7 +44,7 @@ func (m *Model) View() string {
 			var cutToSizeMessage string
 			maxLength := styles.WidthTwoH1Box - styles.MarginX2 - 3
 			if maxLength > 0 && len(m.statusMessage) > maxLength {
-				cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
+				cutToSizeMessage = m.statusMessage[:maxLength] + "..."
 			} else if maxLength > 0 {
 				cutToSizeMessage = m.statusMessage
 			} else {
