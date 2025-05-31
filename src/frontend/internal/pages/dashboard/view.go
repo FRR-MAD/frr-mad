@@ -124,7 +124,7 @@ func (m *Model) renderOSPFDashboard() string {
 		ospfDashboardAnomalies := m.getOspfDashboardAnomalies()
 		m.viewportLeft.SetContent(ospfDashboardAnomalies)
 		m.statusMessage = "Anomalies detected in OSPF routing"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		dashboardHeader := styles.H1GoodTitleStyle().
 			Width(styles.WidthTwoH1ThreeFourth).
@@ -135,7 +135,7 @@ func (m *Model) renderOSPFDashboard() string {
 		ospfDashboardLsdbSelf := m.getOspfDashboardLsdbSelf()
 		m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
 		m.statusMessage = "No OSPF anomalies detected"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
@@ -163,7 +163,7 @@ func (m *Model) getSystemResourcesBox() string {
 		cpuUsageString = "N/A"
 		memoryString = "N/A"
 		m.statusMessage = "Failed to fetch system resources"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 	} else {
 		cpuAmountString = fmt.Sprintf("%v", cpuAmount)
 		cpuUsageString = fmt.Sprintf("%.2f%%", cpuUsage*100)
@@ -171,7 +171,7 @@ func (m *Model) getSystemResourcesBox() string {
 
 		if cpuUsage > 0.9 || memoryUsage > 0.9 {
 			m.statusMessage = "High system resource usage detected"
-			m.statusSeverity = 1
+			m.statusSeverity = styles.SeverityWarning
 		}
 	}
 
@@ -190,16 +190,16 @@ func (m *Model) getOSPFGeneralInfoBox() string {
 	ospfInformation, err := backend.GetOSPF(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch OSPF general information"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOSPF")
 	}
 
 	if ospfInformation.AttachedAreaCounter == 0 {
 		m.statusMessage = "No OSPF areas attached"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = fmt.Sprintf("Found %d attached OSPF areas", ospfInformation.AttachedAreaCounter)
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	lastSPFExecution := time.Duration(ospfInformation.SpfLastExecutedMsecs) * time.Millisecond
@@ -284,16 +284,16 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch LSDB data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetLSDB")
 	}
 
 	if len(lsdb.Areas) == 0 {
 		m.statusMessage = "No OSPF areas found in LSDB"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = fmt.Sprintf("Found %d OSPF areas in LSDB", len(lsdb.Areas))
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// extract and sort the map keys
@@ -582,21 +582,21 @@ func (m *Model) getOspfDashboardAnomalies() string {
 	ospfRouterAnomalies, err := backend.GetRouterAnomalies(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch router anomalies"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
 
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch external anomalies"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
 
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch NSSA external anomalies"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
 	}
 
@@ -613,10 +613,10 @@ func (m *Model) getOspfDashboardAnomalies() string {
 
 	if totalAnomalies > 0 {
 		m.statusMessage = fmt.Sprintf("Detected %d OSPF anomalies", totalAnomalies)
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = "No anomalies detected in OSPF routing"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	var routerAnomalyTable string

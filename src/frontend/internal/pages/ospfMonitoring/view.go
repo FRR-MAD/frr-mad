@@ -112,16 +112,16 @@ func (m *Model) renderLsdbMonitorTab() string {
 	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch LSDB data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetLSDB")
 	}
 
 	if len(lsdb.Areas) == 0 {
 		m.statusMessage = "No OSPF areas found in LSDB"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = fmt.Sprintf("Found %d OSPF areas in LSDB", len(lsdb.Areas))
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// extract and sort the map keys
@@ -420,28 +420,28 @@ func (m *Model) renderRouterMonitorTab() string {
 	ospfNeighbors, err := backend.GetOspfNeighborInterfaces(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch OSPF neighbor interfaces"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
 	routerLSASelf, err := backend.GetOspfRouterDataSelf(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch router LSA data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
 	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch P2P Interface data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfP2PInterfaceMapping")
 	}
 
 	if len(routerLSASelf.RouterStates) == 0 {
 		m.statusMessage = "No router LSA data found"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = fmt.Sprintf("Found router LSA data for %d areas", len(routerLSASelf.RouterStates))
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// extract and sort the map keys (areas)
@@ -619,7 +619,7 @@ func (m *Model) renderNetworkMonitorTab() string {
 	networkLSASelf, err := backend.GetOspfNetworkDataSelf(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch network LSA data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
 	routerName, _, err := backend.GetRouterName(m.logger)
@@ -629,10 +629,10 @@ func (m *Model) renderNetworkMonitorTab() string {
 
 	if len(networkLSASelf.NetStates) == 0 {
 		m.statusMessage = "No network LSA data found"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = fmt.Sprintf("Found network LSA data for %d areas", len(networkLSASelf.NetStates))
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// extract and sort the map keys (areas)
@@ -725,13 +725,13 @@ func (m *Model) renderExternalMonitorTab() string {
 	externalLSASelf, err := backend.GetOspfExternalDataSelf(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch external LSA data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfExternalDataSelf")
 	}
 	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch NSSA external LSA data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
 	}
 	routerName, _, err := backend.GetRouterName(m.logger)
@@ -744,7 +744,7 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	if !hasExternal && !hasNssa {
 		m.statusMessage = "No external or NSSA external LSAs found"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		msg := "Found "
 		if hasExternal {
@@ -754,7 +754,7 @@ func (m *Model) renderExternalMonitorTab() string {
 			msg += fmt.Sprintf("%d NSSA external LSAs", len(nssaExternalDataSelf.NssaExternalLinkStates))
 		}
 		m.statusMessage = msg
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// ===== OSPF External LSAs (Type 5) =====
@@ -897,7 +897,7 @@ func (m *Model) renderNeighborMonitorTab() string {
 	ospfNeighbors, err := backend.GetOspfNeighbors(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch OSPF neighbor data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
 
@@ -908,10 +908,10 @@ func (m *Model) renderNeighborMonitorTab() string {
 
 	if len(ospfNeighbors.Neighbors) == 0 {
 		m.statusMessage = "No OSPF neighbors found"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else {
 		m.statusMessage = fmt.Sprintf("Found %d OSPF neighbors", len(ospfNeighbors.Neighbors))
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// extract and sort the map keys

@@ -67,14 +67,14 @@ func (m *Model) View() string {
 func (m *Model) renderBashShellTab() string {
 	if m.readOnlyMode {
 		m.statusMessage = "Read-only mode active"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 		return lipgloss.NewStyle().Height(styles.HeightBasis - styles.BodyFooterHeight).
 			Render("You are in read only mode. Press [ctrl+w] to deactivate it.")
 	}
 
 	if currentSubTabLocal == 0 && m.statusMessage == "Read-only mode active" {
 		m.statusMessage = "Bash shell ready - Type commands"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// Update the viewport dimensions.
@@ -88,7 +88,7 @@ func (m *Model) renderBashShellTab() string {
 		lines := strings.Split(strings.TrimSpace(m.bashOutput), "\n")
 		if len(lines) > 50 {
 			m.statusMessage = fmt.Sprintf("Output contains %d lines - scroll to view all", len(lines))
-			m.statusSeverity = 0
+			m.statusSeverity = styles.SeverityInfo
 		}
 	}
 
@@ -110,7 +110,7 @@ func (m *Model) renderBashShellTab() string {
 func (m *Model) renderVtyshShellTab() string {
 	if m.readOnlyMode {
 		m.statusMessage = "Read-only mode active"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 		return lipgloss.NewStyle().Height(styles.HeightBasis - styles.BodyFooterHeight).
 			Render("You are in read only mode. Press [ctrl+w] to deactivate it.")
 	}
@@ -119,7 +119,7 @@ func (m *Model) renderVtyshShellTab() string {
 
 	if currentSubTabLocal == 1 && m.statusMessage == "Read-only mode active" {
 		m.statusMessage = "VTY shell ready"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// Update the viewport dimensions.
@@ -133,14 +133,14 @@ func (m *Model) renderVtyshShellTab() string {
 		lines := strings.Split(strings.TrimSpace(m.vtyshOutput), "\n")
 		if len(lines) > 50 {
 			m.statusMessage = fmt.Sprintf("VTY output contains %d lines - scroll to view all", len(lines))
-			m.statusSeverity = 0
+			m.statusSeverity = styles.SeverityInfo
 		}
 		if strings.Contains(strings.ToLower(m.vtyshOutput), "unknown command") {
 			m.statusMessage = "Unknown command - Try 'show running-config' or '?'"
-			m.statusSeverity = 1
+			m.statusSeverity = styles.SeverityWarning
 		} else if strings.Contains(strings.ToLower(m.vtyshOutput), "error") {
 			m.statusMessage = "Command returned an error - check syntax"
-			m.statusSeverity = 2
+			m.statusSeverity = styles.SeverityError
 		}
 	}
 
@@ -173,16 +173,16 @@ func (m *Model) renderBackendTestTab() string {
 
 		if strings.TrimSpace(m.backendServiceInput) == "" {
 			m.statusMessage = "Enter service name (e.g., frr, ospf, analysis)"
-			m.statusSeverity = 0
+			m.statusSeverity = styles.SeverityInfo
 		} else {
 			validServices := []string{"frr", "ospf", "analysis", "system", "zebra"}
 			isValid := slices.Contains(validServices, strings.ToLower(m.backendServiceInput))
 			if !isValid {
 				m.statusMessage = fmt.Sprintf("Service '%s' may not be valid", m.backendServiceInput)
-				m.statusSeverity = 1
+				m.statusSeverity = styles.SeverityWarning
 			} else {
 				m.statusMessage = fmt.Sprintf("Service '%s' selected - press TAB for command input", m.backendServiceInput)
-				m.statusSeverity = 0
+				m.statusSeverity = styles.SeverityInfo
 			}
 		}
 	} else {
@@ -198,10 +198,10 @@ func (m *Model) renderBackendTestTab() string {
 
 		if strings.TrimSpace(m.backendCommandInput) == "" {
 			m.statusMessage = "Enter command (e.g., database, generalInfo, summary)"
-			m.statusSeverity = 0
+			m.statusSeverity = styles.SeverityInfo
 		} else if strings.TrimSpace(m.backendServiceInput) != "" {
 			m.statusMessage = fmt.Sprintf("Ready to test: %s/%s - Press ENTER to execute", m.backendServiceInput, m.backendCommandInput)
-			m.statusSeverity = 0
+			m.statusSeverity = styles.SeverityInfo
 		}
 	}
 

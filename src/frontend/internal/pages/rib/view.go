@@ -108,16 +108,16 @@ func (m *Model) renderRibTab() string {
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch RIB data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRIB")
 	} else {
 		m.statusMessage = "RIB data loaded successfully"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch RIB and FIB summary"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
@@ -170,10 +170,10 @@ func (m *Model) renderRibTab() string {
 
 	if len(ribTableData) == 0 {
 		m.statusMessage = "No routes found matching current filter"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else if len(ribTableData) > 1000 {
 		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(ribTableData))
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	}
 
 	rowsRIB := len(ribTableData)
@@ -224,16 +224,16 @@ func (m *Model) renderFibTab() string {
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch FIB data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRIB")
 	} else {
 		m.statusMessage = "FIB data loaded successfully"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch RIB and FIB summary"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
@@ -294,10 +294,10 @@ func (m *Model) renderFibTab() string {
 
 	if len(fibTableData) == 0 {
 		m.statusMessage = "No routes found matching current filter"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else if len(fibTableData) > 1000 {
 		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(fibTableData))
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	}
 
 	rowsFIB := len(fibTableData)
@@ -348,16 +348,16 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 	rib, err := backend.GetRIB(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch RIB data"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRIB")
 	} else {
 		m.statusMessage = "RIB data loaded successfully"
-		m.statusSeverity = 0
+		m.statusSeverity = styles.SeverityInfo
 	}
 	ribFibSummary, err := backend.GetRibFibSummary(m.logger)
 	if err != nil {
 		m.statusMessage = "Failed to fetch RIB and FIB summary"
-		m.statusSeverity = 2
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRibFibSummary")
 	}
 
@@ -424,10 +424,10 @@ func (m *Model) renderRibWithProtocolFilterTab(protocolName string) string {
 
 	if len(partialRIBRoutesTableData) == 0 {
 		m.statusMessage = "No routes found matching current filter"
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	} else if len(partialRIBRoutesTableData) > 1000 {
 		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(partialRIBRoutesTableData))
-		m.statusSeverity = 1
+		m.statusSeverity = styles.SeverityWarning
 	}
 
 	rowsPartialRIBRoutesRIB := len(partialRIBRoutesTableData)
