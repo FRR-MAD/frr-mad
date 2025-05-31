@@ -1329,22 +1329,26 @@ func transformNetworkLSA(lsaData map[string]interface{}) map[string]interface{} 
 		"checksum":          "checksum",
 		"length":            "length",
 		"networkMask":       "network_mask",
-		"attachedRouters":   "attached_routers",
+		"attchedRouters":    "attached_routers",
 	}
 
 	for origKey, newKey := range fieldMapping {
 		if value, exists := lsaData[origKey]; exists {
-			if origKey == "attachedRouters" {
-				routers := value.(map[string]interface{})
-				transformedRouters := make(map[string]interface{})
+			if origKey == "attchedRouters" {
+				if routers, ok := value.(map[string]interface{}); ok {
+					transformedRouters := make(map[string]interface{})
 
-				for routerID, routerData := range routers {
-					transformedRouters[routerID] = map[string]interface{}{
-						"attached_router_id": routerData.(map[string]interface{})["attachedRouterId"],
+					for routerID, routerVal := range routers {
+						if routerData, ok := routerVal.(map[string]interface{}); ok {
+							if attachedID, ok := routerData["attachedRouterId"]; ok {
+								transformedRouters[routerID] = map[string]interface{}{
+									"attached_router_id": attachedID,
+								}
+							}
+						}
 					}
+					transformed[newKey] = transformedRouters
 				}
-
-				transformed[newKey] = transformedRouters
 			} else {
 				transformed[newKey] = value
 			}
