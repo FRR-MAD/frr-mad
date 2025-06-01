@@ -133,7 +133,6 @@ func ParseOSPFRouterLSAAll(jsonData []byte) (*frrProto.OSPFRouterData, error) {
 
 	transformedMap := make(map[string]any)
 	transformedMap["router_id"] = jsonMap["routerId"]
-	type foo map[string]any
 
 	if routerLinkStates, ok := jsonMap["routerLinkStates"].(map[string]any); ok {
 		areaID := ""
@@ -219,7 +218,6 @@ func ParseOSPFNetworkLSAAll(jsonData []byte) (*frrProto.OSPFNetworkData, error) 
 
 	transformedMap := make(map[string]any)
 	transformedMap["router_id"] = jsonMap["routerId"]
-	type foo map[string]any
 
 	if netStates, ok := jsonMap["networkLinkStates"].(map[string]any); ok {
 		transformedStates := make(map[string]any)
@@ -1236,20 +1234,6 @@ func parseRouterOSPFConfig(scanner *bufio.Scanner, config *frrProto.StaticFRRCon
 	}
 }
 
-// TODO: is this needed?
-func addNetworkToArea(config *frrProto.NetworkConfig, network, area string) {
-	for i, a := range config.Areas {
-		if a.Id == area {
-			config.Areas[i].Networks = append(a.Networks, network)
-			return
-		}
-	}
-	config.Areas = append(config.Areas, &frrProto.OSPFArea{
-		Id:       area,
-		Networks: []string{network},
-	})
-}
-
 func (c *Collector) ReadConfig() (string, error) {
 	file, err := os.Open(c.configPath)
 	if err != nil {
@@ -1343,22 +1327,26 @@ func transformNetworkLSA(lsaData map[string]any) map[string]interface{} {
 		"checksum":          "checksum",
 		"length":            "length",
 		"networkMask":       "network_mask",
-		"attachedRouters":   "attached_routers",
+		"attchedRouters":    "attached_routers",
 	}
 
 	for origKey, newKey := range fieldMapping {
 		if value, exists := lsaData[origKey]; exists {
-			if origKey == "attachedRouters" {
-				routers := value.(map[string]any)
-				transformedRouters := make(map[string]any)
+			if origKey == "attchedRouters" {
+				if routers, ok := value.(map[string]interface{}); ok {
+					transformedRouters := make(map[string]interface{})
 
-				for routerID, routerData := range routers {
-					transformedRouters[routerID] = map[string]any{
-						"attached_router_id": routerData.(map[string]any)["attachedRouterId"],
+					for routerID, routerVal := range routers {
+						if routerData, ok := routerVal.(map[string]interface{}); ok {
+							if attachedID, ok := routerData["attachedRouterId"]; ok {
+								transformedRouters[routerID] = map[string]interface{}{
+									"attached_router_id": attachedID,
+								}
+							}
+						}
 					}
+					transformed[newKey] = transformedRouters
 				}
-
-				transformed[newKey] = transformedRouters
 			} else {
 				transformed[newKey] = value
 			}
@@ -1609,153 +1597,6 @@ func transformNeighbor(neighborData map[string]any) map[string]interface{} {
 		if value, exists := neighborData[origKey]; exists {
 			transformed[newKey] = value
 		}
-	}
-
-	return transformed
-}
-
-// TODO: is this needed?
-func transformSingleInterface(ifaceData map[string]any) map[string]interface{} {
-	transformed := make(map[string]any)
-
-	fieldMapping := map[string]string{
-		"administrativeStatus": "administrative_status",
-		"operationalStatus":    "operational_status",
-		"linkDetection":        "link_detection",
-		"linkUps":              "link_ups",
-		"linkDowns":            "link_downs",
-		"lastLinkUp":           "last_link_up",
-		"lastLinkDown":         "last_link_down",
-		"vrfName":              "vrf_name",
-		"mplsEnabled":          "mpls_enabled",
-		"linkDown":             "link_down",
-		"linkDownV6":           "link_down_v6",
-		"mcForwardingV4":       "mc_forwarding_v4",
-		"mcForwardingV6":       "mc_forwarding_v6",
-		"pseudoInterface":      "pseudo_interface",
-		"index":                "index",
-		"metric":               "metric",
-		"mtu":                  "mtu",
-		"speed":                "speed",
-		"flags":                "flags",
-		"type":                 "type",
-		"hardwareAddress":      "hardware_address",
-		"interfaceType":        "interface_type",
-		"interfaceSlaveType":   "interface_slave_type",
-		"lacpBypass":           "lacp_bypass",
-		"protodown":            "protodown",
-		"parentIfindex":        "parent_ifindex",
-	}
-
-	for origKey, newKey := range fieldMapping {
-		if value, exists := ifaceData[origKey]; exists {
-			transformed[newKey] = value
-		}
-	}
-
-	if ipAddrs, ok := ifaceData["ipAddresses"].([]any); ok {
-		transformedIps := make([]any, len(ipAddrs))
-		for i, ip := range ipAddrs {
-			ipMap := ip.(map[string]any)
-			transformedIps[i] = map[string]any{
-				"address":    ipMap["address"],
-				"secondary":  ipMap["secondary"],
-				"unnumbered": ipMap["unnumbered"],
-			}
-		}
-		transformed["ip_addresses"] = transformedIps
-	}
-
-	if evpnMh, ok := ifaceData["evpnMh"].(map[string]any); ok {
-		transformed["evpn_mh"] = transformEvpnMh(evpnMh)
-	}
-
-	return transformed
-}
-
-func transformEvpnMh(evpnData map[string]any) map[string]interface{} {
-	transformed := make(map[string]any)
-
-	fieldMapping := map[string]string{
-		"ethernetSegmentId": "ethernet_segment_id",
-		"esi":               "esi",
-		"dfPreference":      "df_preference",
-		"dfAlgorithm":       "df_algorithm",
-		"dfStatus":          "df_status",
-		"multihomingMode":   "multihoming_mode",
-		"activeMode":        "active_mode",
-		"bypassMode":        "bypass_mode",
-		"localBias":         "local_bias",
-		"fastFailover":      "fast_failover",
-		"upTime":            "up_time",
-		"bgpStatus":         "bgp_status",
-		"protocolStatus":    "protocol_status",
-		"protocolDown":      "protocol_down",
-		"macCount":          "mac_count",
-		"localIfindex":      "local_ifindex",
-		"networkCount":      "network_count",
-		"joinCount":         "join_count",
-		"leaveCount":        "leave_count",
-	}
-
-	for origKey, newKey := range fieldMapping {
-		if value, exists := evpnData[origKey]; exists {
-			transformed[newKey] = value
-		}
-	}
-
-	return transformed
-}
-
-// TODO: is this needed?
-func transformRoute(routeData map[string]any) map[string]interface{} {
-	transformed := make(map[string]any)
-
-	fieldMapping := map[string]string{
-		"prefix":                   "prefix",
-		"prefixLen":                "prefix_len",
-		"protocol":                 "protocol",
-		"vrfId":                    "vrf_id",
-		"vrfName":                  "vrf_name",
-		"selected":                 "selected",
-		"destSelected":             "dest_selected",
-		"distance":                 "distance",
-		"metric":                   "metric",
-		"installed":                "installed",
-		"table":                    "table",
-		"internalStatus":           "internal_status",
-		"internalFlags":            "internal_flags",
-		"internalNextHopNum":       "internal_next_hop_num",
-		"internalNextHopActiveNum": "internal_next_hop_active_num",
-		"nexthopGroupID":           "nexthop_group_id",
-		"installedNexthopGroupID":  "installed_nexthop_group_id",
-		"uptime":                   "uptime",
-	}
-
-	for origKey, newKey := range fieldMapping {
-		if value, exists := routeData[origKey]; exists {
-			transformed[newKey] = value
-		}
-	}
-
-	if nexthops, ok := routeData["nexthops"].([]any); ok {
-		transformedNexthops := make([]any, len(nexthops))
-		for i, nh := range nexthops {
-			nhMap := nh.(map[string]any)
-			transformedNexthops[i] = map[string]any{
-				"flags":              nhMap["flags"],
-				"fib":                nhMap["fib"],
-				"directly_connected": nhMap["directlyConnected"],
-				"duplicate":          nhMap["duplicate"],
-				"ip":                 nhMap["ip"],
-				"afi":                nhMap["afi"],
-				"interface_index":    nhMap["interfaceIndex"],
-				"interface_name":     nhMap["interfaceName"],
-				"active":             nhMap["active"],
-				"weight":             nhMap["weight"],
-			}
-		}
-		transformed["nexthops"] = transformedNexthops
 	}
 
 	return transformed

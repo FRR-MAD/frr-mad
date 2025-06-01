@@ -8,7 +8,6 @@ import (
 
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
-	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 
 	"strconv"
@@ -74,10 +73,13 @@ func (m *Model) View() string {
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
 				var cutToSizeMessage string
-				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
-					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
-				} else {
+				maxLength := styles.WidthTwoH1Box - styles.MarginX2 - 3
+				if maxLength > 0 && len(m.statusMessage) > maxLength {
+					cutToSizeMessage = m.statusMessage[:maxLength] + "..."
+				} else if maxLength > 0 {
 					cutToSizeMessage = m.statusMessage
+				} else {
+					cutToSizeMessage = "..."
 				}
 				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
@@ -134,7 +136,7 @@ func (m *Model) renderOSPFDashboard() string {
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
 	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
-		getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
+		m.getSystemResourcesBox(), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -149,17 +151,25 @@ func (m *Model) renderOSPFDashboard() string {
 	return horizontalDashboard
 }
 
-func getSystemResourcesBox(logger *logger.Logger) string {
-	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(logger)
+func (m *Model) getSystemResourcesBox() string {
+	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(m.logger)
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
 		cpuAmountString = "N/A"
 		cpuUsageString = "N/A"
 		memoryString = "N/A"
+		m.statusMessage = "Failed to fetch system resources"
+		m.statusSeverity = styles.SeverityError
 	} else {
 		cpuAmountString = fmt.Sprintf("%v", cpuAmount)
 		cpuUsageString = fmt.Sprintf("%.2f%%", cpuUsage*100)
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
+
+		const epsilon = 1e-9
+		if cpuUsage > 0.9-epsilon || memoryUsage > 90-epsilon {
+			m.statusMessage = "High system resource usage detected"
+			m.statusSeverity = styles.SeverityWarning
+		}
 	}
 
 	systemStatistics := lipgloss.JoinVertical(lipgloss.Left,
@@ -176,6 +186,8 @@ func getSystemResourcesBox(logger *logger.Logger) string {
 func (m *Model) getOSPFGeneralInfoBox() string {
 	ospfInformation, err := backend.GetOSPF(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch OSPF general information"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOSPF")
 	}
 
@@ -260,6 +272,8 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 
 	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch LSDB data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetLSDB")
 	}
 
@@ -548,17 +562,34 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 func (m *Model) getOspfDashboardAnomalies() string {
 	ospfRouterAnomalies, err := backend.GetRouterAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch router anomalies"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
 
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch external anomalies"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
 
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch NSSA external anomalies"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
+	}
+
+	totalAnomalies := 0
+	if common.HasAnyAnomaly(ospfRouterAnomalies) {
+		totalAnomalies += countAnomalies(ospfRouterAnomalies)
+	}
+	if common.HasAnyAnomaly(ospfExternalAnomalies) {
+		totalAnomalies += countAnomalies(ospfExternalAnomalies)
+	}
+	if common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		totalAnomalies += countAnomalies(ospfNSSAExternalAnomalies)
 	}
 
 	var routerAnomalyTable string

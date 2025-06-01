@@ -1,6 +1,8 @@
 package ospfMonitoring
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -31,6 +33,8 @@ type Model struct {
 	viewportRightHalf viewport.Model
 	statusMessage     string
 	statusSeverity    styles.StatusSeverity
+	statusTimer       time.Time
+	statusDuration    time.Duration
 	logger            *logger.Logger
 }
 
@@ -83,6 +87,13 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 		PageTitle:   m.title,
 		PageOptions: keyBoardOptions,
 	}
+}
+
+func (m *Model) setTimedStatus(message string, severity styles.StatusSeverity, duration time.Duration) {
+	m.statusMessage = message
+	m.statusSeverity = severity
+	m.statusTimer = time.Now()
+	m.statusDuration = duration
 }
 
 // fetchLatestData fetches all data from the backend that are possible to export from the ospf monitor exporter

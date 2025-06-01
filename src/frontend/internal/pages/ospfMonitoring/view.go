@@ -2,10 +2,11 @@ package ospfMonitoring
 
 import (
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	"github.com/frr-mad/frr-tui/internal/common"
 	backend "github.com/frr-mad/frr-tui/internal/services"
@@ -72,10 +73,13 @@ func (m *Model) View() string {
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
 				var cutToSizeMessage string
-				if len(m.statusMessage) > (styles.WidthTwoH1Box - styles.MarginX2) {
-					cutToSizeMessage = m.statusMessage[:styles.WidthTwoH1Box-styles.MarginX2-3] + "..."
-				} else {
+				maxLength := styles.WidthTwoH1Box - styles.MarginX2 - 3
+				if maxLength > 0 && len(m.statusMessage) > maxLength {
+					cutToSizeMessage = m.statusMessage[:maxLength] + "..."
+				} else if maxLength > 0 {
 					cutToSizeMessage = m.statusMessage
+				} else {
+					cutToSizeMessage = "..."
 				}
 				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
@@ -107,6 +111,8 @@ func (m *Model) renderLsdbMonitorTab() string {
 
 	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch LSDB data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetLSDB")
 	}
 
@@ -405,14 +411,20 @@ func (m *Model) renderLsdbMonitorTab() string {
 func (m *Model) renderRouterMonitorTab() string {
 	ospfNeighbors, err := backend.GetOspfNeighborInterfaces(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch OSPF neighbor interfaces"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
 	routerLSASelf, err := backend.GetOspfRouterDataSelf(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch router LSA data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
 	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch P2P Interface data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfP2PInterfaceMapping")
 	}
 
@@ -590,6 +602,8 @@ func (m *Model) renderRouterMonitorTab() string {
 func (m *Model) renderNetworkMonitorTab() string {
 	networkLSASelf, err := backend.GetOspfNetworkDataSelf(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch network LSA data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfRouterDataSelf")
 	}
 	routerName, _, err := backend.GetRouterName(m.logger)
@@ -623,7 +637,6 @@ func (m *Model) renderNetworkMonitorTab() string {
 					strconv.Itoa(int(lsa.LsaAge)),
 				})
 			} else {
-				// TODO: print a pretty anomaly error when lsaID != linkstateID
 				return "Anomaly: LSA Mismatch"
 			}
 		}
@@ -662,19 +675,20 @@ func (m *Model) renderNetworkMonitorTab() string {
 		if areaData.LsaEntries != nil {
 			networkLSABlocks = append(networkLSABlocks, completeAreaNetworkLSAs+"\n\n")
 		}
-
-	}
-
-	if networkLSABlocks == nil {
-		return lipgloss.JoinHorizontal(lipgloss.Left,
-			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"),
-			lipgloss.NewStyle().Height(styles.HeightH1EmptyContentPadding).Render(""))
 	}
 
 	m.viewport.Width = styles.WidthViewPortCompletePage
 	m.viewport.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
-	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
+	if len(networkLSABlocks) == 0 {
+		emptyContent := lipgloss.JoinVertical(lipgloss.Left,
+			styles.H1TitleStyleForOne().Render(routerName+" does not originate Network LSAs (Type 2)"),
+			lipgloss.NewStyle().Height(styles.HeightViewPortCompletePage-styles.BodyFooterHeight-styles.HeightH1).Render(""),
+		)
+		m.viewport.SetContent(emptyContent)
+	} else {
+		m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, networkLSABlocks...))
+	}
 
 	return m.viewport.View()
 }
@@ -685,10 +699,14 @@ func (m *Model) renderExternalMonitorTab() string {
 
 	externalLSASelf, err := backend.GetOspfExternalDataSelf(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch external LSA data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfExternalDataSelf")
 	}
 	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch NSSA external LSA data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfNssaExternalDataSelf")
 	}
 	routerName, _, err := backend.GetRouterName(m.logger)
@@ -835,6 +853,8 @@ func (m *Model) renderExternalMonitorTab() string {
 func (m *Model) renderNeighborMonitorTab() string {
 	ospfNeighbors, err := backend.GetOspfNeighbors(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch OSPF neighbor data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOspfNeighborInterfaces")
 	}
 

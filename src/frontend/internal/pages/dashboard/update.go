@@ -4,11 +4,12 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
@@ -17,6 +18,11 @@ import (
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var toastCmd tea.Cmd
 	m.toast, toastCmd = m.toast.Update(msg)
+
+	if !m.statusTimer.IsZero() && time.Since(m.statusTimer) > m.statusDuration {
+		m.statusMessage = ""
+		m.statusTimer = time.Time{}
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:

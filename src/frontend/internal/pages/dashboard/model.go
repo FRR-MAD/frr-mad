@@ -1,8 +1,9 @@
 package dashboard
 
 import (
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"time"
+
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -36,6 +37,8 @@ type Model struct {
 	currentTime        time.Time
 	statusMessage      string
 	statusSeverity     styles.StatusSeverity
+	statusTimer        time.Time
+	statusDuration     time.Duration
 	logger             *logger.Logger
 }
 
@@ -112,6 +115,13 @@ func (m *Model) detectAnomaly() {
 	} else {
 		m.hasAnomalyDetected = false
 	}
+}
+
+func (m *Model) setTimedStatus(message string, severity styles.StatusSeverity, duration time.Duration) {
+	m.statusMessage = message
+	m.statusSeverity = severity
+	m.statusTimer = time.Now()
+	m.statusDuration = duration
 }
 
 // fetchLatestData fetches all data from the backend that are possible to export from the dashboard exporter
