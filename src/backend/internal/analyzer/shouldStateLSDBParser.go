@@ -64,18 +64,20 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		targetArea := iface.Area
 
 		for _, interfaceIpPrefix := range iface.InterfaceIpPrefixes {
-			if interfaceIpPrefix.IpPrefix == nil {
+			if interfaceIpPrefix.IpPrefix == nil || !interfaceIpPrefix.Ospf{
 				continue
 			}
 
 			adv := frrProto.Advertisement{
 				InterfaceAddress: interfaceIpPrefix.IpPrefix.IpAddress,
 				PrefixLength:     strconv.Itoa(int(interfaceIpPrefix.IpPrefix.PrefixLength)),
+				Ospf: interfaceIpPrefix.Ospf,
+				OspfArea: interfaceIpPrefix.OspfArea,	
 			}
 
 			if interfaceIpPrefix.Passive {
 				adv.LinkType = "stub network"
-				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
+				adv.InterfaceAddress = getNetworkAddress(adv.InterfaceAddress, int32(interfaceIpPrefix.IpPrefix.PrefixLength))
 			} else if peerInterface {
 				adv.LinkType = "stub network"
 				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
@@ -84,7 +86,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				areaTmpMap[targetArea] = append(areaTmpMap[targetArea], advTransit)
 				adv.LinkType = "point-to-point"
 			} else if virtualMap[iface.Area] {
-				adv.LinkType = "stub network"
+				adv.LinkType = "transit network"
 				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
 				areaTmpMap[targetArea] = append(areaTmpMap[targetArea], advTransit)
 				targetArea = backboneArea
@@ -98,6 +100,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 
 			areaTmpMap[targetArea] = append(areaTmpMap[targetArea], &adv)
 		}
+
 	}
 
 	a.Logger.WithAttrs(map[string]any{
@@ -105,7 +108,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		"areas_found":          len(areaMap),
 	}).Debug("Processed interface configurations")
 
-	for area, _ := range areaTmpMap {
+	for area := range areaTmpMap {
 		_, exists := areaMap[area]
 		if !exists {
 			areaMap[area] = &frrProto.AreaAnalyzer{
@@ -337,3 +340,4 @@ func getOspfArea(config *frrProto.GeneralOspfInformation) string {
 	// Return most likely default area...
 	return "0"
 }
+

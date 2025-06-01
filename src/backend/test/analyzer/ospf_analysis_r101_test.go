@@ -76,6 +76,7 @@ func TestRouterLsaHappy1(t *testing.T) {
 	})
 
 	isNssa, actualPredictedRouterLSDB := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+	// _, actualPredictedRouterLSDB := ana.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
 	ana.RouterAnomalyAnalysisLSDB(actualAccessList, actualPredictedRouterLSDB, actualRuntimeRouterLSDB)
 
 	t.Run("TestGetAccessList", func(t *testing.T) {
@@ -110,7 +111,8 @@ func TestRouterLsaHappy1(t *testing.T) {
 		tmp = append(tmp, area.Links...)
 		expectedPredictedRouterLSDBIntPerArea[area.AreaName] = tmp
 	}
-
+	// pretty, _ := json.MarshalIndent(actualPredictedRouterLSDB, "", "  ")
+	// t.Log(string(pretty))
 	for _, area := range actualPredictedRouterLSDB.Areas {
 		tmp := []*frrProto.Advertisement{}
 		actualPredictedRouterLSDBAreas = append(actualPredictedRouterLSDBAreas, area.AreaName)
@@ -136,6 +138,7 @@ func TestRouterLsaHappy1(t *testing.T) {
 
 		for _, key := range expectedPredictedRouterLSDBAreas {
 			expectedIfaceMap, expectedIfaceList := getIfaceMap(expectedPredictedRouterLSDBIntPerArea[key])
+
 			actualIfaceMap, actualIfaceList := getIfaceMap(actualPredictedRouterLSDBIntPerArea[key])
 			assert.Equal(t, len(expectedIfaceList), len(actualIfaceList))
 			assert.True(t, cmp.Diff(expectedIfaceList, actualIfaceList, cmpopts.SortSlices(less)) == "")
@@ -197,6 +200,7 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 	}
 
 	ana.RouterAnomalyAnalysisLSDB(accessList, shouldRouterLSDB2, isRouterLSDB2)
+
 	t.Run("TestOveradvertised", func(t *testing.T) {
 		assert.False(t, ana.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes)
 		assert.True(t, ana.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes)
@@ -209,6 +213,9 @@ func TestRouterLsaUnhappy1(t *testing.T) {
 			missingOne = strings.EqualFold(expectedSuperfluousEntrires[0].LinkType, ana.AnalysisResult.RouterAnomaly.SuperfluousEntries[1].LinkType)
 		}
 		assert.True(t, missingOne)
+	})
+	t.Run("Test", func(t *testing.T) {
+
 	})
 }
 

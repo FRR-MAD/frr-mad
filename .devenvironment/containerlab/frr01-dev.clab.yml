@@ -2,16 +2,6 @@ name: frr01
 
 topology:
   nodes:
-#    mon:
-#       kind: linux
-#       image: moni.local
-#       #binds:
-#       #  - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-#       #  - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-#       #  - ./monitoring/grafana/provisioning/dashboards:/var/lib/grafana/provisioning/dashboards
-#       ports:
-#         - "3000:3000"   # Grafana UI
-#         - "9090:9090"   # Prometheus
     r101:
       kind: linux
       image: frr-img
@@ -19,51 +9,40 @@ topology:
         - r101/daemons:/etc/frr/daemons
         - r101/frr.conf:/etc/frr/frr.conf
         - r101/vtysh.conf:/etc/frr/vtysh.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
-
     r102:
       kind: linux
       image: frr-img
       binds:
         - r102/daemons:/etc/frr/daemons
         - r102/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r103:
       kind: linux
       image: frr-img
       binds:
         - r103/daemons:/etc/frr/daemons
         - r103/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     cr104:
       kind: linux
       image: frr-img
       binds:
         - cr104/daemons:/etc/frr/daemons
         - cr104/frr.conf:/etc/frr/frr.conf
-        ##- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     cr105:
       kind: linux
       image: frr-img
       binds:
         - cr105/daemons:/etc/frr/daemons
         - cr105/frr.conf:/etc/frr/frr.conf
-        ##- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     cr106:
       kind: linux
@@ -71,10 +50,8 @@ topology:
       binds:
         - cr106/daemons:/etc/frr/daemons
         - cr106/frr.conf:/etc/frr/frr.conf
-        ##- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     cr107:
       kind: linux
@@ -82,10 +59,8 @@ topology:
       binds:
         - cr107/daemons:/etc/frr/daemons
         - cr107/frr.conf:/etc/frr/frr.conf
-        ##- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     cr108:
       kind: linux
@@ -93,10 +68,8 @@ topology:
       binds:
         - cr108/daemons:/etc/frr/daemons
         - cr108/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     cr109:
       kind: linux
@@ -104,10 +77,8 @@ topology:
       binds:
         - cr109/daemons:/etc/frr/daemons
         - cr109/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     r1010:
       kind: linux
@@ -115,10 +86,8 @@ topology:
       binds:
         - r1010/daemons:/etc/frr/daemons
         - r1010/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     r111:
       kind: linux
@@ -126,111 +95,88 @@ topology:
       binds:
         - r111/daemons:/etc/frr/daemons
         - r111/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r112:
       kind: linux
       image: frr-img
       binds:
         - r112/daemons:/etc/frr/daemons
         - r112/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r121:
       kind: linux
       image: frr-img
       binds:
         - r121/daemons:/etc/frr/daemons
         - r121/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
-#        - r121/vtysh.conf:/etc/frr/vtysh.conf
     r122:
       kind: linux
       image: frr-img
       binds:
         - r122/daemons:/etc/frr/daemons
         - r122/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r131:
       kind: linux
       image: frr-img
       binds:
         - r131/daemons:/etc/frr/daemons
         - r131/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r191:
       kind: linux
       image: frr-img
       binds:
         - r191/daemons:/etc/frr/daemons
         - r191/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r192:
       kind: linux
       image: frr-img
       binds:
         - r192/daemons:/etc/frr/daemons
         - r192/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r193:
       kind: linux
       image: frr-img
       binds:
         - r193/daemons:/etc/frr/daemons
         - r193/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r301:
       kind: linux
       image: frr-img
       binds:
         - r301/daemons:/etc/frr/daemons
         - r301/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r302:
       kind: linux
       image: frr-img
       binds:
         - r302/daemons:/etc/frr/daemons
         - r302/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     r391:
       kind: linux
       image: frr-img
       binds:
         - r391/daemons:/etc/frr/daemons
         - r391/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
     
     r201:
       kind: linux
@@ -238,10 +184,8 @@ topology:
       binds:
         - r201/daemons:/etc/frr/daemons
         - r201/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     r202:
       kind: linux
@@ -249,10 +193,8 @@ topology:
       binds:
         - r202/daemons:/etc/frr/daemons
         - r202/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     r203:
       kind: linux
@@ -260,10 +202,8 @@ topology:
       binds:
         - r203/daemons:/etc/frr/daemons
         - r203/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     r204:
       kind: linux
@@ -271,10 +211,8 @@ topology:
       binds:
         - r204/daemons:/etc/frr/daemons
         - r204/frr.conf:/etc/frr/frr.conf
-        #- ../src:/app/src
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
-        #- ../protobufSource:/app/protobufSource
 
     buildHost:
       kind: linux
