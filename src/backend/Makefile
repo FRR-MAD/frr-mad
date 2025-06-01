@@ -1,11 +1,13 @@
 # Backend Makefile
 
+export ROOT_DIR := $(shell pwd)/../..
 include $(ROOT_DIR)/Makefile.inc
 
 ANALYZER_OUTPUT_NAME := frr-mad-analyzer
 OUTPUT_PATH := $(BINARY_PATH)/$(ANALYZER_OUTPUT_NAME)
+TEST_CASE := ""
 
-.PHONY: all dev prod test test-analyzer test-aggregator test-exporter test-comms clean
+.PHONY: all dev prod test test/analyzer test/aggregator test/exporter test/comms clean
 
 # Default target
 all: dev
@@ -23,22 +25,26 @@ prod:
 	$(GO_FLAGS) go build -ldflags "$(LD_FLAGS)" -o $(OUTPUT_PATH) ./cmd/frr-analyzer
 
 # Run all backend tests
-test: test-analyzer test-aggregator test-exporter test-comms
+test: test/analyzer test/aggregator test/exporter test/comms
 
 # Individual test targets
-test-analyzer:
+test/analyzer:
 	@echo "Running analyzer tests..."
-	go test -v ./test/analyzer/...
+ifeq ($(TEST_CASE),"")
+	go test -v ./test/analyzer/... 
+else
+	go test -v ./test/analyzer -run $(TEST_CASE)
+endif
 
-test-aggregator:
+test/aggregator:
 	@echo "Running aggregator tests..."
 	go test -v ./test/aggregator/...
 
-test-exporter:
+test/exporter:
 	@echo "Running exporter tests..."
 	go test -v ./test/exporter/...
 
-test-comms:
+test/comms:
 	@echo "Running communication tests..."
 	go test -v ./test/comms/...
 
