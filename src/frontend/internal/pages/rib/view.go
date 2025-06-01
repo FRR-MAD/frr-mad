@@ -171,6 +171,8 @@ func (m *Model) renderRibTab() string {
 	} else if len(ribTableData) > 1000 {
 		m.statusMessage = fmt.Sprintf("Showing %d routes - consider filtering for better performance", len(ribTableData))
 		m.statusSeverity = styles.SeverityWarning
+	} else {
+		m.statusMessage = ""
 	}
 
 	rowsRIB := len(ribTableData)
