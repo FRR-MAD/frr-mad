@@ -104,8 +104,8 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	isStateCounter := make(map[string]int)
 	// pretty, _ := json.MarshalIndent(shouldState, "", "  ")
 	// fmt.Println(string(pretty))
-	shouldStateMap := getLsdbStateMap(shouldState, true)
-	isStateMap := getLsdbStateMap(isState, false)
+	shouldStateMap := getLsdbStateMap(shouldState)
+	isStateMap := getLsdbStateMap(isState)
 
 	for key, shouldLink := range shouldStateMap {
 		if shouldLink.LinkType == strings.ToLower("unknown") {
@@ -207,8 +207,8 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	}
 
 	isStateCounter := make(map[string]int)
-	lsdbShouldStateMap := getLsdbStateMap(shouldState, false)
-	lsdbIsStateMap := getLsdbStateMap(isState, false)
+	lsdbShouldStateMap := getLsdbStateMap(shouldState)
+	lsdbIsStateMap := getLsdbStateMap(isState)
 
 	for key, shouldLink := range lsdbShouldStateMap {
 		if _, exists := lsdbIsStateMap[key]; !exists {
@@ -528,7 +528,7 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 	return false
 }
 
-func getLsdbStateMap(lsdbState any, routerPredict bool) map[string]*frrProto.Advertisement {
+func getLsdbStateMap(lsdbState any) map[string]*frrProto.Advertisement {
 	result := make(map[string]*frrProto.Advertisement)
 	var areas []*frrProto.AreaAnalyzer
 
@@ -543,14 +543,6 @@ func getLsdbStateMap(lsdbState any, routerPredict bool) map[string]*frrProto.Adv
 		for i := range area.Links {
 
 			link := area.Links[i]
-
-			if !link.Ospf && routerPredict {
-				// pretty, _ := json.MarshalIndent(area.Links[i], "", "  ")
-				// fmt.Println(string(pretty))
-				continue
-			}
-			// pretty, _ := json.MarshalIndent(area.Links[i], "", "  ")
-			// fmt.Println(string(pretty))
 
 			key := getAdvertisementKey(link)
 			adv := &frrProto.Advertisement{

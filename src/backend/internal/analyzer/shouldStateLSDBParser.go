@@ -64,7 +64,7 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 		targetArea := iface.Area
 
 		for _, interfaceIpPrefix := range iface.InterfaceIpPrefixes {
-			if interfaceIpPrefix.IpPrefix == nil {
+			if interfaceIpPrefix.IpPrefix == nil || !interfaceIpPrefix.Ospf{
 				continue
 			}
 
@@ -72,11 +72,12 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				InterfaceAddress: interfaceIpPrefix.IpPrefix.IpAddress,
 				PrefixLength:     strconv.Itoa(int(interfaceIpPrefix.IpPrefix.PrefixLength)),
 				Ospf: interfaceIpPrefix.Ospf,
+				OspfArea: interfaceIpPrefix.OspfArea,	
 			}
 
 			if interfaceIpPrefix.Passive {
 				adv.LinkType = "stub network"
-				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
+				adv.InterfaceAddress = getNetworkAddress(adv.InterfaceAddress, int32(interfaceIpPrefix.IpPrefix.PrefixLength))
 			} else if peerInterface {
 				adv.LinkType = "stub network"
 				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
@@ -86,7 +87,6 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				adv.LinkType = "point-to-point"
 			} else if virtualMap[iface.Area] {
 				adv.LinkType = "transit network"
-				// adv.LinkType = "stub network"
 				advTransit := proto.Clone(&adv).(*frrProto.Advertisement)
 				areaTmpMap[targetArea] = append(areaTmpMap[targetArea], advTransit)
 				targetArea = backboneArea
@@ -96,7 +96,6 @@ func (a *Analyzer) GetStaticFileRouterData(config *frrProto.StaticFRRConfigurati
 				adv.LinkType = "unknown"
 				adv.InterfaceAddress = zeroLastOctetString(adv.InterfaceAddress)
 				adv.LinkStateId = interfaceIpPrefix.IpPrefix.IpAddress
-				// adv.Ospf = interfaceIpPrefix.
 			}
 
 			areaTmpMap[targetArea] = append(areaTmpMap[targetArea], &adv)
@@ -341,3 +340,4 @@ func getOspfArea(config *frrProto.GeneralOspfInformation) string {
 	// Return most likely default area...
 	return "0"
 }
+

@@ -1043,23 +1043,20 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 		}
 		return true
 	case strings.HasPrefix(line, "ip ospf area "):
-		currentInterfacePointer.Area = strings.Fields(line)[3]
 		if len(parts) > 4 {
-			ospfIpAddresses := make(map[string]bool)
-			for i := 4; i < len(parts); i++ {
-				ospfIpAddresses[parts[i]] = true
-			}
-
 			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
-				if ospfIpAddresses[interfaceIPPrefix.IpPrefix.IpAddress] {
+				if strings.EqualFold(interfaceIPPrefix.IpPrefix.IpAddress, parts[4]){
 					interfaceIPPrefix.Ospf = true
+					interfaceIPPrefix.OspfArea = parts[3]
 				}
 			}
 		} else {
 			for _, interfaceIPPrefix := range currentInterfacePointer.InterfaceIpPrefixes {
 				interfaceIPPrefix.Ospf = true
+				interfaceIPPrefix.OspfArea = parts[3]
 			}
 		}
+		currentInterfacePointer.Area = strings.Fields(line)[3]
    	return true
 	case strings.HasPrefix(line, "ip ospf passive"):
 		if len(parts) == 3 {

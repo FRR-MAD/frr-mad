@@ -1656,9 +1656,10 @@ type InterfaceIPPrefix struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	IpPrefix      *IPPrefix              `protobuf:"bytes,1,opt,name=ip_prefix,json=ipPrefix,proto3" json:"ip_prefix,omitempty"`
 	Ospf          bool                   `protobuf:"varint,2,opt,name=ospf,proto3" json:"ospf,omitempty"`
-	Passive       bool                   `protobuf:"varint,3,opt,name=passive,proto3" json:"passive,omitempty"`
-	HasPeer       bool                   `protobuf:"varint,4,opt,name=has_peer,json=hasPeer,proto3" json:"has_peer,omitempty"` // true/false
-	PeerIpPrefix  *IPPrefix              `protobuf:"bytes,5,opt,name=peer_ip_prefix,json=peerIpPrefix,proto3" json:"peer_ip_prefix,omitempty"`
+	OspfArea      string                 `protobuf:"bytes,3,opt,name=ospf_area,json=ospfArea,proto3" json:"ospf_area,omitempty"`
+	Passive       bool                   `protobuf:"varint,4,opt,name=passive,proto3" json:"passive,omitempty"`
+	HasPeer       bool                   `protobuf:"varint,5,opt,name=has_peer,json=hasPeer,proto3" json:"has_peer,omitempty"` // true/false
+	PeerIpPrefix  *IPPrefix              `protobuf:"bytes,6,opt,name=peer_ip_prefix,json=peerIpPrefix,proto3" json:"peer_ip_prefix,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1705,6 +1706,13 @@ func (x *InterfaceIPPrefix) GetOspf() bool {
 		return x.Ospf
 	}
 	return false
+}
+
+func (x *InterfaceIPPrefix) GetOspfArea() string {
+	if x != nil {
+		return x.OspfArea
+	}
+	return ""
 }
 
 func (x *InterfaceIPPrefix) GetPassive() bool {
@@ -6061,6 +6069,7 @@ type Advertisement struct {
 	PBit             bool                   `protobuf:"varint,5,opt,name=PBit,proto3" json:"PBit,omitempty"`
 	Options          string                 `protobuf:"bytes,6,opt,name=Options,proto3" json:"Options,omitempty"`
 	Ospf             bool                   `protobuf:"varint,7,opt,name=Ospf,proto3" json:"Ospf,omitempty"`
+	OspfArea         string                 `protobuf:"bytes,8,opt,name=ospf_area,json=ospfArea,proto3" json:"ospf_area,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -6142,6 +6151,13 @@ func (x *Advertisement) GetOspf() bool {
 		return x.Ospf
 	}
 	return false
+}
+
+func (x *Advertisement) GetOspfArea() string {
+	if x != nil {
+		return x.OspfArea
+	}
+	return ""
 }
 
 type AccessListAnalyzer struct {
@@ -7165,13 +7181,14 @@ const file_protocol_proto_rawDesc = "" +
 	"\x0eaccess_control\x18\x02 \x01(\tR\raccessControl\x126\n" +
 	"\tip_prefix\x18\x03 \x01(\v2\x17.communication.IPPrefixH\x00R\bipPrefix\x12\x12\n" +
 	"\x03any\x18\x04 \x01(\bH\x00R\x03anyB\r\n" +
-	"\vdestination\"\xd1\x01\n" +
+	"\vdestination\"\xee\x01\n" +
 	"\x11InterfaceIPPrefix\x124\n" +
 	"\tip_prefix\x18\x01 \x01(\v2\x17.communication.IPPrefixR\bipPrefix\x12\x12\n" +
-	"\x04ospf\x18\x02 \x01(\bR\x04ospf\x12\x18\n" +
-	"\apassive\x18\x03 \x01(\bR\apassive\x12\x19\n" +
-	"\bhas_peer\x18\x04 \x01(\bR\ahasPeer\x12=\n" +
-	"\x0epeer_ip_prefix\x18\x05 \x01(\v2\x17.communication.IPPrefixR\fpeerIpPrefix\"N\n" +
+	"\x04ospf\x18\x02 \x01(\bR\x04ospf\x12\x1b\n" +
+	"\tospf_area\x18\x03 \x01(\tR\bospfArea\x12\x18\n" +
+	"\apassive\x18\x04 \x01(\bR\apassive\x12\x19\n" +
+	"\bhas_peer\x18\x05 \x01(\bR\ahasPeer\x12=\n" +
+	"\x0epeer_ip_prefix\x18\x06 \x01(\v2\x17.communication.IPPrefixR\fpeerIpPrefix\"N\n" +
 	"\bIPPrefix\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\x12#\n" +
@@ -7652,7 +7669,7 @@ const file_protocol_proto_rawDesc = "" +
 	"\x18HasMisconfiguredPrefixes\x18\x04 \x01(\bR\x18HasMisconfiguredPrefixes\x12M\n" +
 	"\x13superfluous_entries\x18\x05 \x03(\v2\x1c.communication.AdvertisementR\x12superfluousEntries\x12E\n" +
 	"\x0fmissing_entries\x18\x06 \x03(\v2\x1c.communication.AdvertisementR\x0emissingEntries\x12I\n" +
-	"\x11duplicate_entries\x18\a \x03(\v2\x1c.communication.AdvertisementR\x10duplicateEntries\"\xdf\x01\n" +
+	"\x11duplicate_entries\x18\a \x03(\v2\x1c.communication.AdvertisementR\x10duplicateEntries\"\xfc\x01\n" +
 	"\rAdvertisement\x12*\n" +
 	"\x10InterfaceAddress\x18\x01 \x01(\tR\x10InterfaceAddress\x12 \n" +
 	"\vLinkStateId\x18\x02 \x01(\tR\vLinkStateId\x12\"\n" +
@@ -7660,7 +7677,8 @@ const file_protocol_proto_rawDesc = "" +
 	"\bLinkType\x18\x04 \x01(\tR\bLinkType\x12\x12\n" +
 	"\x04PBit\x18\x05 \x01(\bR\x04PBit\x12\x18\n" +
 	"\aOptions\x18\x06 \x01(\tR\aOptions\x12\x12\n" +
-	"\x04Ospf\x18\a \x01(\bR\x04Ospf\"j\n" +
+	"\x04Ospf\x18\a \x01(\bR\x04Ospf\x12\x1b\n" +
+	"\tospf_area\x18\b \x01(\tR\bospfArea\"j\n" +
 	"\x12AccessListAnalyzer\x12\x1e\n" +
 	"\n" +
 	"AccessList\x18\x01 \x01(\tR\n" +
