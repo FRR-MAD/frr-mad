@@ -24,11 +24,11 @@ func TestRouterLsaHappy2(t *testing.T) {
 	less := func(a, b string) bool { return a < b }
 
 	var actualAccessListKeys []string
-	for k, _ := range actualAccessList {
+	for k := range actualAccessList {
 		actualAccessListKeys = append(actualAccessListKeys, k)
 	}
 	var expectedAccessListKeys []string
-	for k, _ := range actualAccessList {
+	for k := range actualAccessList {
 		expectedAccessListKeys = append(expectedAccessListKeys, k)
 	}
 
@@ -44,11 +44,11 @@ func TestRouterLsaHappy2(t *testing.T) {
 	peerInterfaceMap := analyzer.GetPeerNetworkAddress(frrMetrics.StaticFrrConfiguration)
 
 	var actualStaticListKeys []string
-	for k, _ := range actualStaticList {
+	for k := range actualStaticList {
 		actualStaticListKeys = append(actualStaticListKeys, k)
 	}
 	var expectedStaticListKeys []string
-	for k, _ := range actualStaticList {
+	for k := range actualStaticList {
 		expectedStaticListKeys = append(expectedStaticListKeys, k)
 	}
 
@@ -64,9 +64,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 	for _, area := range expectedIsRouterLSDB.Areas {
 		expectedRuntimeRouterLSDBAreas = append(expectedRuntimeRouterLSDBAreas, area.AreaName)
 		expectedRuntimeRouterLSDBLsaType[area.AreaName] = area.LsaType
-		for _, link := range area.Links {
-			expectedRuntimeRouterLSDBAreaMap[area.AreaName] = append(expectedRuntimeRouterLSDBAreaMap[area.AreaName], link)
-		}
+			expectedRuntimeRouterLSDBAreaMap[area.AreaName] = append(expectedRuntimeRouterLSDBAreaMap[area.AreaName], area.Links...)
 	}
 
 	actualRuntimeRouterLSDBAreaMap := make(map[string][]*frrProto.Advertisement)
@@ -75,9 +73,7 @@ func TestRouterLsaHappy2(t *testing.T) {
 	for _, area := range actualRuntimeRouterLSDB.Areas {
 		actualRuntimeRouterLSDBAreas = append(actualRuntimeRouterLSDBAreas, area.AreaName)
 		actualRuntimeRouterLSDBLsaType[area.AreaName] = area.LsaType
-		for _, link := range area.Links {
-			actualRuntimeRouterLSDBAreaMap[area.AreaName] = append(actualRuntimeRouterLSDBAreaMap[area.AreaName], link)
-		}
+			actualRuntimeRouterLSDBAreaMap[area.AreaName] = append(actualRuntimeRouterLSDBAreaMap[area.AreaName], area.Links...)
 	}
 
 	t.Run("TestRuntimeRouterParsing", func(t *testing.T) {
@@ -129,9 +125,8 @@ func TestRouterLsaHappy2(t *testing.T) {
 		tmp := []*frrProto.Advertisement{}
 		expectedPredictedRouterLSDBAreas = append(expectedPredictedRouterLSDBAreas, area.AreaName)
 		expectedPredictedRouterLSDBLsaTypePerArea[area.GetAreaName()] = area.LsaType
-		for _, iface := range area.Links {
-			tmp = append(tmp, iface)
-		}
+		tmp = append(tmp, area.Links...)
+
 		expectedPredictedRouterLSDBIntPerArea[area.AreaName] = tmp
 	}
 
@@ -139,9 +134,8 @@ func TestRouterLsaHappy2(t *testing.T) {
 		tmp := []*frrProto.Advertisement{}
 		actualPredictedRouterLSDBAreas = append(actualPredictedRouterLSDBAreas, area.AreaName)
 		actualPredictedRouterLSDBLsaTypePerArea[area.GetAreaName()] = area.LsaType
-		for _, iface := range area.Links {
-			tmp = append(tmp, iface)
-		}
+			tmp = append(tmp, area.Links...)
+
 		actualPredictedRouterLSDBIntPerArea[area.AreaName] = tmp
 	}
 
@@ -199,7 +193,7 @@ func TestRouterLsaUnhappy2(t *testing.T) {
 		assert.Equal(t, len(expectedMissingEntrires), len(ana.AnalysisResult.RouterAnomaly.MissingEntries))
 		missingOne := false
 		if expectedMissingEntrires[0].InterfaceAddress == ana.AnalysisResult.RouterAnomaly.MissingEntries[0].InterfaceAddress {
-			missingOne = strings.ToLower(expectedMissingEntrires[0].LinkType) == strings.ToLower(ana.AnalysisResult.RouterAnomaly.MissingEntries[0].LinkType)
+			missingOne = strings.EqualFold(expectedMissingEntrires[0].LinkType, ana.AnalysisResult.RouterAnomaly.MissingEntries[0].LinkType)
 		}
 		assert.True(t, missingOne)
 	})

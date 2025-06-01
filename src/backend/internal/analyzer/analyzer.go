@@ -72,7 +72,6 @@ func (a *Analyzer) AnomalyAnalysis() {
 	a.Logger.Debug("Running FIB analysis")
 	a.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
-	//a.UpdateMetrics(p2pMap)
 
 	a.AnalyserStateParserResults.ShouldRouterLsdb.Reset()
 	a.AnalyserStateParserResults.ShouldExternalLsdb.Reset()
@@ -202,12 +201,6 @@ func GetPeerNeighbor(config *frrProto.OSPFNeighbors, peerInterface map[string]st
 	}
 
 	return result
-}
-
-func (a *Analyzer) UpdateMetrics(p2pMap *frrProto.PeerInterfaceMap) {
-
-	proto.Merge(a.P2pMap, p2pMap)
-
 }
 
 func (a *Analyzer) logAnalysisSummary(start time.Time) {

@@ -5,6 +5,9 @@ FRR_VERSION := 8.5.4
 export ROOT_DIR := $(shell pwd)
 export BINARY_PATH := $(ROOT_DIR)/build
 
+$(info ROOT_DIR is: '$(ROOT_DIR)')
+$(info Current working directory: $(shell pwd))
+$(info Makefile location: $(MAKEFILE_LIST))
 # Include common definitions
 include Makefile.inc
 

@@ -63,13 +63,17 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.12.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 					{
 						IpPrefix: &frrProto.IPPrefix{
 							IpAddress:    "10.0.2.1",
 							PrefixLength: 24,
 						},
-						Passive: true,
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
+						Passive:  true,
 					},
 				},
 				Area: "0.0.0.0",
@@ -82,6 +86,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.13.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -94,7 +100,9 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.0.1",
 							PrefixLength: 23,
 						},
-						Passive: true,
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
+						Passive:  true,
 					},
 				},
 				Area: "0.0.0.0",
@@ -118,6 +126,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.14.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -130,6 +140,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.15.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -142,6 +154,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.16.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -154,6 +168,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.17.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -166,6 +182,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.18.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -178,6 +196,8 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.19.1",
 							PrefixLength: 24,
 						},
+						Ospf:     true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -426,19 +446,6 @@ func getR101FRRdata() *frrProto.FullFRRData {
 	return metrics
 }
 
-// type accessList struct {
-// 	accessListName string     `json:"access_list_name"`
-// 	aclEntry       []ACLEntry `json:"acl_entries"`
-// }
-
-// type ACLEntry struct {
-// 	IPAddress    string `json:"ip_address,omitempty"`
-// 	PrefixLength int    `json:"prefix_length,omitempty"`
-// 	IsPermit     bool   `json:"is_permit"`
-// 	Any          bool   `json:"any,omitempty"`
-// 	Sequence     int    `json:"sequence"`
-// }
-
 func getR102FRRdata() *frrProto.FullFRRData {
 	staticFRRConfiguration := &frrProto.StaticFRRConfiguration{
 		Hostname:   "r102",
@@ -452,6 +459,8 @@ func getR102FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.12.2",
 							PrefixLength: 24,
 						},
+						Ospf: true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -464,6 +473,8 @@ func getR102FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.0.23.2",
 							PrefixLength: 24,
 						},
+						Ospf: true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -476,6 +487,8 @@ func getR102FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.1.21.2",
 							PrefixLength: 24,
 						},
+						Ospf: true,
+						OspfArea: "0.0.0.1",
 					},
 				},
 				Area: "0.0.0.1",
@@ -2044,6 +2057,8 @@ func getR201FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.20.12.1",
 							PrefixLength: 24,
 						},
+						Ospf: true,
+						OspfArea: "0.0.0.0",
 					},
 				},
 				Area: "0.0.0.0",
@@ -2060,6 +2075,8 @@ func getR201FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.20.13.3",
 							PrefixLength: 32,
 						},
+						Ospf: true,
+						OspfArea: "0.0.0.0",
 						HasPeer: true,
 					},
 				},
@@ -2077,6 +2094,8 @@ func getR201FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "10.20.14.4",
 							PrefixLength: 32,
 						},
+						Ospf: true,
+						OspfArea: "0.0.0.0",
 						HasPeer: true,
 					},
 				},
@@ -2090,6 +2109,16 @@ func getR201FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "65.0.2.1",
 							PrefixLength: 32,
 						},
+						Passive: true,
+					},
+					{
+						PeerIpPrefix: &frrProto.IPPrefix{
+							IpAddress:    "192.168.100.201",
+							PrefixLength: 32,
+						},
+						Ospf: true,
+						OspfArea: "0.0.0.0",
+						Passive: true,
 					},
 				},
 			},

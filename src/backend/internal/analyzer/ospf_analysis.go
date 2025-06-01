@@ -23,9 +23,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 	}).Debug("Analysis input counts")
 
 	result := &frrProto.AnomalyDetection{
-		SuperfluousEntries: []*frrProto.Advertisement{},
-		MissingEntries:     []*frrProto.Advertisement{},
-		DuplicateEntries:   []*frrProto.Advertisement{},
+		MissingEntries: []*frrProto.Advertisement{},
 	}
 
 	lsdbList := []string{}
@@ -45,7 +43,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 		setA[v.Prefix] = true
 	}
 	fibList := []string{}
-	for prefix, _ := range fibMap {
+	for prefix := range fibMap {
 		fibList = append(fibList, prefix)
 	}
 	sort.Strings(fibList)
@@ -86,7 +84,6 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 		"duration":      time.Since(start).String(),
 		"missing_count": len(result.MissingEntries),
 	}).Debug("Completed FIB-LSDB analysis")
-
 }
 
 func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
@@ -105,6 +102,8 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	isStateCounter := make(map[string]int)
+	// pretty, _ := json.MarshalIndent(shouldState, "", "  ")
+	// fmt.Println(string(pretty))
 	shouldStateMap := getLsdbStateMap(shouldState)
 	isStateMap := getLsdbStateMap(isState)
 
@@ -115,7 +114,7 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 			_, isTransit := isStateMap[shouldLink.LinkStateId]
 			_, isStubWithPrefix := isStateMap[shouldLink.InterfaceAddress+prefixLength]
 			_, isStub := isStateMap[shouldLink.InterfaceAddress]
-			if !(isTransit || isTransitWithPrefix) && !(isStub || isStubWithPrefix) {
+			if (isTransit && isTransitWithPrefix) && (isStub && isStubWithPrefix) {
 				result.MissingEntries = append(result.MissingEntries, shouldLink)
 			}
 		} else {
@@ -208,8 +207,8 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	}
 
 	isStateCounter := make(map[string]int)
-	lsdbIsStateMap := getLsdbStateMap(isState)
 	lsdbShouldStateMap := getLsdbStateMap(shouldState)
+	lsdbIsStateMap := getLsdbStateMap(isState)
 
 	for key, shouldLink := range lsdbShouldStateMap {
 		if _, exists := lsdbIsStateMap[key]; !exists {
@@ -279,7 +278,6 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	a.AnalysisResult.ExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.ExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.ExternalAnomaly.DuplicateEntries = result.DuplicateEntries
-
 }
 
 func normalizeNetworkAddress(address string) string {
@@ -531,7 +529,6 @@ func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]
 }
 
 func getLsdbStateMap(lsdbState any) map[string]*frrProto.Advertisement {
-
 	result := make(map[string]*frrProto.Advertisement)
 	var areas []*frrProto.AreaAnalyzer
 
@@ -544,7 +541,9 @@ func getLsdbStateMap(lsdbState any) map[string]*frrProto.Advertisement {
 
 	for _, area := range areas {
 		for i := range area.Links {
+
 			link := area.Links[i]
+
 			key := getAdvertisementKey(link)
 			adv := &frrProto.Advertisement{
 				InterfaceAddress: link.InterfaceAddress,
@@ -565,5 +564,4 @@ func getLsdbStateMap(lsdbState any) map[string]*frrProto.Advertisement {
 	}
 
 	return result
-
 }

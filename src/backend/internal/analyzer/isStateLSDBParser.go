@@ -471,19 +471,19 @@ func GetFIB(rib *frrProto.RoutingInformationBase, logger *logger.Logger) map[str
 	return OspfFibMap
 }
 
-func getNetworkAddress(prefix string, prefixLength int32) string {
-	ip := net.ParseIP(prefix)
+ func getNetworkAddress(prefix string, prefixLength int32) string {
+ 	ip := net.ParseIP(prefix)
 
-	tmpNet := &net.IPNet{
-		IP:   ip,
-		Mask: net.CIDRMask(int(prefixLength), 32),
-	}
+ 	tmpNet := &net.IPNet{
+ 		IP:   ip,
+ 		Mask: net.CIDRMask(int(prefixLength), 32),
+ 	}
 
-	network := tmpNet.IP.Mask(tmpNet.Mask)
+ 	network := tmpNet.IP.Mask(tmpNet.Mask)
 
-	return network.String()
+ 	return network.String()
 
-}
+ }
 
 // Helper functions
 func countTotalLinks(lsa *frrProto.IntraAreaLsa) int {
