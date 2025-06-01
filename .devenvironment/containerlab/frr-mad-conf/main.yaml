@@ -3,15 +3,12 @@ default:
   exportpath: /tmp/frr-mad/exports
   logpath: /var/log/frr-mad
   # default is info
-  debuglevel: none
+  debuglevel: error
 
 socket:
   unixsocketlocation: /var/run/frr-mad
   unixsocketname: analyzer.sock
   sockettype: unix
-
-analyzer:
-  foo: bar
 
 aggregator:
   frrmetricsurl: http://localhost:9342/metrics

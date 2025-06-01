@@ -1,21 +1,24 @@
 # FRR-MAD
 
-FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) is an intuitive Terminal User Interface for monitoring OSPF states within FRRouting.
-It effectively detects anomalies by comparing static file data with the Link-State Database (LSDB) and the Forwarding Information Base (FIB).
+FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) consists of two tools, frr-mad-analyzer and frr-mad-tui. The analyzer component analyzes the static Free Range Routing configuration and compares it against the runtime lsdb. It detects wrongly advertised routes and reports them as such. The results are exposed via a Prometheus Node Exporter layer inherent to the analyzer component.
+
+The frr-mad-tui component is a useful text user interface to give live results from the analyzer. Anomalies are presented at the dashboard and should contain valuable information. Apart from that, the tool also provides much useful information pertaining to OSPF.
+
+## Introduction
+
+This Project is split into two parts:
+- **frr-mad-analyzer**: The analysis system that consits of aggregator, analyzer, exporting and comms. It spawns a Unix socket, which is accessed by frr-mad-tui, to fetch all available data. The exporter collects routing data and anomalies, exports them via the well-defined Prometheus Node Exporter API. 
+- **frr-mad-tui**: frr-mad-tui is the frontend of this project. It's optional but highly practical. It enables swifter sanity checks of ospf, by providing the most useful information neatly displayed. A dynamic filter function provides additional Quality of Life improvements to the experience. Regardless of the expertise of the user, it's a useful tool to get a quick run-down of an ospf system.
 
 ## Usage
 
-This Project is split into two parts:
-- **frr-analyzer**: The analysis system that consits of aggregation, analysis and information exporting. It spawns a socket, which the frr-tui unit uses to fetch all necessary data. The exporter collects routing data and exports them via the well-defined Prometheus Node Exporter uri. 
-- **frr-tui**: The frontend of our application. It's not really necessary, but makes it a lot easier to check the sanity of the application. It also provides many OSPF stats, helpful to less experienced network engineers. Regardless of experience, anomalies are monitored with the frr-tui.
-
-The backend application features a handy help output. By simply executing the application, all available options are present.
+The backend application features a handy help output. Executing the application without any arguments provides a list of available commands.
 ```sh
-r101:/app# frr-analyzer
+r101:/app# frr-mad-analyzer
 A CLI tool for managing the FRR-MAD application.
 
 Usage:
-  frr-analyzer [command]
+  frr-mad-analyzer [command]
 
 Available Commands:
   help        Help about any command
@@ -27,51 +30,32 @@ Available Commands:
 Flags:
   -h, --help   help for analyzer_frr
 
-Use "frr-analyzer [command] --help" for more information about a command.
+Use "frr-mad-analyzer [command] --help" for more information about a command.
 ```
 
 ### Starting the Application
 
-The daemon is fairly easy to start. Always provide a configuration file. To get the frr-mad-tui running, an environment variable needs to be set or default configuration path needs to be used.
+To start either application a configuration file needs to be provided. Below are two options to do so. Further information for advanced settings, are available in the build instructions.
 - **FRR_MAD_CONFFILE Env**: Export **FRR_MAD_CONFFILE** with the absolut path to the configuration file. frr-mad-tui will use the file specified in the environment variable, otherwise it will default to /etc/frr-mad/main.yaml. The frr-mad-analyzer service works regardless of what the environment variable is.
   - This could be set with /etc/environment or /etc/profile, pick your poison.
-- **--configFile Option**: When starting the daemon a custom configuration file can be provided. The path can be absolute or relative. 
+- **--configFile Option**: When starting the daemon a custom configuration file can be provided. The path can be absolute or relative. Otherwise it will default to /etc/frr-mad/main.yaml as well.
 
-To run the tui the environment variable is **mandatory**. If neither is provided the applications with both default to **/etc/frr-mad/main.yaml**.
+To run the tui the environment variable is **mandatory**. If neither is provided the applications will both default to **/etc/frr-mad/main.yaml**.
 
 #### Daemon
 ```sh
-/path/to/frr-analyzer  start --configFile /path/to/configuration
+/path/to/frr-mad-analyzer  start --configFile /path/to/configuration
 ```
 
 #### Frontend
 ```sh
-/path/to/frr-tui
+export FRR_MAD_CONFFILE=/path/to/configuration
+/path/to/frr-mad-tui
 ```
 
+## Build
 
-### frr-analyzer
-Install the applications where you want or create your custom start scripts. To start the analyzer simply execute:
-```sh
-/path/to/frr-analyzer start
-```
-
-This will start a persistent service and spawn a socket. To stop it, you can execute the binary again with the stop argument. Don't kill it if possible, as it will leave a spawned socket.
-
-By default the exporter runs on port 9091 an all ips. The port is freely adjustable. 
-
-
-### frr-tui
-The tui can be started by running:
-```
-/path/to/frr-tui
-```
-
-You will enter a small terminal user interface. It serves as a small monitoring application with the most important information already present. 
-
-## Installation
-
-Installation is fairly easy. Clone the repo and build it. The executable is compiled with the static flag, so remove it if you have all the dependencies set on the host.
+It's recommended to have a dedicated build host for frr-mad. The applications should be build staticaly, to remove any dependencies issues. To build it, clonse the repo and execute make. Provided make is installed. Otherwise follow the build instructions down below.
 
 ```sh
 mkdir -p /tmp/frr-mad-binaries/
@@ -81,23 +65,34 @@ cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' 
 cd ../../
 ```
 
-Provided is a default configuration file. Creating it will start the application. The configuration file location is either placed in the /etc/frr-mad folder or can be provided with the `--configFile` option.
+### Custom Configuration Path
+The default configuration path can be overriden during the build process with build flags. Provide the build flag `-X configs.ConfigLocation=/path/to/configuration.yaml` to the `go build` command.
 
+```sh
+mkdir -p /tmp/frr-mad-binaries/
+cd src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -X configs.ConfigLocation=/path/to/configuration.yaml' -o /tmp/frr-mad-binaries/frr-mad-analyzer ./cmd/frr-analyzer
+cd ../../
+cd src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -X configs.ConfigLocation=/path/to/configuration.yaml' -o /tmp/frr-mad-binaries/frr-mad-tui ./cmd/tui
+cd ../../
+```
+
+## Configuration File Example
 ```sh
 mkdir -p /etc/frr-mad
 cat <<EOF>/etc/frr-mad/main.yaml
 default:
   tempfiles: /tmp/frr-mad
-  logpath: /tmp/frr-mad/log
-  debuglevel: none 
+  exportpath: /tmp/frr-mad/exports
+  logpath: /var/log/frr-mad
+  # set debugLevel to receive different levels of logging
+  # debug > info >  warn > error > none
+  # Debug provides the most verbose output but it's highly resource intensive. The default is error.
+  #debuglevel: error 
 
 socket:
   unixsocketlocation: /var/run/frr-mad
   unixsocketname: analyzer.sock
   sockettype: unix
-
-analyzer:
-  foo: bar
 
 aggregator:
   frrmetricsurl: http://localhost:9342/metrics
@@ -109,31 +104,19 @@ aggregator:
   socketpath: /var/run/frr
 
 exporter:
-  Port: 9091     
-  OSPFRouterData: (collector.ospf.router,"Collect OSPF router information metrics",true)
-  OSPFNetworkData: (collector.ospf.network,"Collect OSPF network information metrics",true)
-  OSPFSummaryData: (collector.ospf.summary,"Collect OSPF summary information metrics",true)
-  OSPFAsbrSummaryData: (collector.ospf.asbr-summary,"Collect OSPF ASBR summary information metrics",true)
-  OSPFExternalData: (collector.ospf.external,"Collect OSPF external route information metrics",true)
-  OSPFNssaExternalData: (collector.ospf.nssa-external,"Collect OSPF NSSA external route information metrics",true)
-  OSPFDatabase: (collector.ospf.database,"Collect OSPF database information metrics",true)
-  OSPFDuplicates: (collector.ospf.duplicates,"Collect OSPF duplicate information metrics",true)
-  OSPFNeighbors: (collector.ospf.neighbors,"Collect OSPF neighbor information metrics",true)
-  InterfaceList: (collector.interface.list,"Collect interface list information metrics",true)
-  RouteList: (collector.route.list,"Collect route list information metrics",true)
+  Port: 9091
+  OSPFRouterData: true
+  OSPFNetworkData: true
+  OSPFSummaryData: false
+  OSPFAsbrSummaryData: false
+  OSPFExternalData: false
+  OSPFNssaExternalData: false
+  OSPFDatabase: false
+  OSPFNeighbors: false
+  InterfaceList: false
+  RouteList: false
+
 EOF
-```
-
-The default folders for this application are:
-- config location: /etc/frr-mad/
-- log location: /var/tmp/frr-mad
-- tmp files: /tmp/frr-mad
-- Unix socket location: /var/run/frr-mad
-
-
-Once the setup is done, the applicaiton can be started by simply executing it with the appropriate command (and option). The application will spawn a daemon running in the background.
-```sh
-frr-analyzer start --configFile /path/to/my/configuration
 ```
 
 ## Project Structure
@@ -161,23 +144,54 @@ root/
 ```
 backend
 ├──internal/
-│  └── aggregator/          # This is your collector
+│  └── aggregator/           # This is the collector system
 │       ├── collector.go     # Main collection logic
 │       ├── fetcher.go       # HTTP metrics fetching
 │       ├── parser.go        # FRR config parsing
 │       ├── types.go         # DTO definitions
 │       └── converter.go     # Metrics to DTO conversion
 ```
+### Backend Analyzer Structure
 
-1. **Separation by functionality**: UI, distro handling, and configuration are clearly separated
-2. **Easy extension**: Adding support for a new distro only requires adding a new handler in `internal/distro/handlers/`
-3. **Private vs public code**: `internal/` keeps implementation details hidden while `pkg/` exposes reusable components
-4. **Single responsibility**: Each package has a clear purpose
-5. **Testability**: Components are modular and can be tested independently
+```
+backend
+├──internal/
+│  └── analyzer/                        # This is the analyzer system
+│       ├── analyzer.go                 # Main analysis hub
+│       ├── isStateLSDBParser.go        # Parses is state (lsdb)
+│       ├── main.go                     # Initializes analyzer object
+│       ├── ospfAnalysis.go             # Analyses anomalies from is state and should state
+│       └── shouldStateLSDBParser.go    # Parses should state from configuration
+```
 
-This is the initial design of the code environment.
+### Backend comms Structure
 
-### Frontend Structure
+```
+backend
+├──internal/
+│  └── comms/                             # This is the comms system 
+│      └── socket/                        # Unix Socket creation        
+│           ├── analysisProcessing.go     # Processing of socket calls for analyzer data
+│           ├── dummyData.go              # Dummy data for testing
+│           ├── frrProcessing.go          # Processing of socket calls for frr data
+│           ├── ospfProcessing.go         # Processing of socket calls for ospf data
+│           ├── processing.go             # Processing of socket calls
+│           └── socket.go                 # Initializes and spawns the socket
+
+```
+
+### Backend exporter Structure
+
+```
+backend
+├──internal/
+│  └── exporter/                    # This is the exporter system 
+│       ├── anomalyExporter.go      # Attaches to exporter object and exporter anomaly data
+│       ├── main.go                 # Initializes the exporter object
+│       └── metricsExporter.go      # Attaches to exporter object and exports frr metrics
+```
+
+## Frontend Structure
 
 ```
 root/
@@ -195,11 +209,3 @@ root/
 │   │   │   ├── services/          # Backend service layer to call external systems
 │   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
 ```
-
-## Development
-
-TODO
-
-### CI/CD
-
-- **GitHub Actions**: For this project we will use GitHub Actions for automated nightly builds and manual deployments.
