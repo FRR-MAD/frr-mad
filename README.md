@@ -7,8 +7,8 @@ The frr-mad-tui component is a useful text user interface to give live results f
 ## Introduction
 
 This Project is split into two parts:
-- **frr-mad-analyzer**: The analysis system that consits of aggregator, analyzer, exporting and comms. It spawns a Unix socket, which is accessed by frr-mad-tui, to fetch all available data. The exporter collects routing data and anomalies, exports them via the well-defined Prometheus Node Exporter API. 
-- **frr-mad-tui**: frr-mad-tui is the frontend of this project. It's optional but highly practical. It enables swifter sanity checks of ospf, by providing the most useful information neatly displayed. A dynamic filter function provides additional Quality of Life improvements to the experience. Regardless of the expertise of the user, it's a useful tool to get a quick run-down of an ospf system.
+- **frr-mad-analyzer**: The analysis system that consists of aggregator, analyzer, exporting and comms. It spawns a Unix socket, which is accessed by frr-mad-tui, to fetch all available data. The exporter collects routing data and anomalies, exports them via the well-defined Prometheus Node Exporter API. 
+- **frr-mad-tui**: frr-mad-tui is the frontend of this project. It's optional but highly practical. It enables swifter sanity checks of OSPF, by providing the most useful information neatly displayed. A dynamic filter function provides additional Quality of Life improvements to the experience. Regardless of the expertise of the user, it's a useful tool to get a quick run-down of an OSPF system.
 
 ## Usage
 
@@ -35,8 +35,8 @@ Use "frr-mad-analyzer [command] --help" for more information about a command.
 
 ### Starting the Application
 
-To start either application a configuration file needs to be provided. Below are two options to do so. Further information for advanced settings, are available in the build instructions.
-- **FRR_MAD_CONFFILE Env**: Export **FRR_MAD_CONFFILE** with the absolut path to the configuration file. frr-mad-tui will use the file specified in the environment variable, otherwise it will default to /etc/frr-mad/main.yaml. The frr-mad-analyzer service works regardless of what the environment variable is.
+To start either application a configuration file needs to be provided. Below are two options to do so. Further information for advanced settings is available in the build instructions.
+- **FRR_MAD_CONFFILE Env**: Export **FRR_MAD_CONFFILE** with the absolute path to the configuration file. frr-mad-tui will use the file specified in the environment variable, otherwise it will default to /etc/frr-mad/main.yaml. The frr-mad-analyzer service works regardless of what the environment variable is.
   - This could be set with /etc/environment or /etc/profile, pick your poison.
 - **--configFile Option**: When starting the daemon a custom configuration file can be provided. The path can be absolute or relative. Otherwise it will default to /etc/frr-mad/main.yaml as well.
 
@@ -55,7 +55,7 @@ export FRR_MAD_CONFFILE=/path/to/configuration
 
 ## Build
 
-It's recommended to have a dedicated build host for frr-mad. The applications should be build staticaly, to remove any dependencies issues. To build it, clonse the repo and execute make. Provided make is installed. Otherwise follow the build instructions down below.
+It's recommended to have a dedicated build host for frr-mad. The applications should be built statically, to remove any dependency issues. To build it, clone the repo and execute make. Provided make is installed. Otherwise follow the build instructions down below.
 
 ```sh
 mkdir -p /tmp/frr-mad-binaries/
@@ -66,7 +66,7 @@ cd ../../
 ```
 
 ### Custom Configuration Path
-The default configuration path can be overriden during the build process with build flags. Provide the build flag `-X configs.ConfigLocation=/path/to/configuration.yaml` to the `go build` command.
+The default configuration path can be overridden during the build process with build flags. Provide the build flag `-X configs.ConfigLocation=/path/to/configuration.yaml` to the `go build` command.
 
 ```sh
 mkdir -p /tmp/frr-mad-binaries/
@@ -123,9 +123,6 @@ EOF
 
 ```
 root/
-├── archive/                 # 
-├── backend/                 # 
-├── binaries/                # Ready to use Go binaries
 ├── protobufSource/          # Protofile for go-types generation
 ├── src/                     # Source Code 
 │   ├── backend/             # 
@@ -160,7 +157,7 @@ backend
 │       ├── analyzer.go                 # Main analysis hub
 │       ├── isStateLSDBParser.go        # Parses is state (lsdb)
 │       ├── main.go                     # Initializes analyzer object
-│       ├── ospfAnalysis.go             # Analyses anomalies from is state and should state
+│       ├── ospfAnalysis.go             # Analyzes anomalies from is state and should state
 │       └── shouldStateLSDBParser.go    # Parses should state from configuration
 ```
 
@@ -173,8 +170,8 @@ backend
 │      └── socket/                        # Unix Socket creation        
 │           ├── analysisProcessing.go     # Processing of socket calls for analyzer data
 │           ├── dummyData.go              # Dummy data for testing
-│           ├── frrProcessing.go          # Processing of socket calls for frr data
-│           ├── ospfProcessing.go         # Processing of socket calls for ospf data
+│           ├── frrProcessing.go          # Processing of socket calls for FRR data
+│           ├── ospfProcessing.go         # Processing of socket calls for OSPF data
 │           ├── processing.go             # Processing of socket calls
 │           └── socket.go                 # Initializes and spawns the socket
 
@@ -186,9 +183,9 @@ backend
 backend
 ├──internal/
 │  └── exporter/                    # This is the exporter system 
-│       ├── anomalyExporter.go      # Attaches to exporter object and exporter anomaly data
+│       ├── anomalyExporter.go      # Attaches to exporter object and exports anomaly data
 │       ├── main.go                 # Initializes the exporter object
-│       └── metricsExporter.go      # Attaches to exporter object and exports frr metrics
+│       └── metricsExporter.go      # Attaches to exporter object and exports FRR metrics
 ```
 
 ## Frontend Structure
@@ -200,8 +197,8 @@ root/
 │   │   ├── cmd/                   # 
 │   │   │   ├── tui/               # Entry Point (main.go)
 │   │   ├── internal/              # 
-│   │   │   ├── common/            # Shared types, helpers, and utilites across pages
-│   │   │   ├── pages/             # Each Page has it’s own model
+│   │   │   ├── common/            # Shared types, helpers, and utilities across pages
+│   │   │   ├── pages/             # Each Page has its own model
 │   │   │   │   ├── examplePage/   #
 │   │   │   │   │   ├── model/     # Bubbletea model
 │   │   │   │   │   ├── update/    # update logic and message handling
