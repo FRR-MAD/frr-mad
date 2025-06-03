@@ -1001,23 +1001,7 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 	parts := strings.Fields(line)
 	switch {
 	case strings.HasPrefix(line, "ip address "):
-		if len(parts) == 3 || strings.Contains(line, "label") {
-			ip, ipNet, err := net.ParseCIDR(parts[2])
-			if err != nil || ipNet == nil {
-				log.Printf("bad CIDR %q: %v", parts[2], err)
-				return true
-			}
-			prefixLength, _ := ipNet.Mask.Size()
-			currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
-				IpPrefix: &frrProto.IPPrefix{
-					IpAddress:    ip.String(),
-					PrefixLength: uint32(prefixLength),
-				},
-				Passive: false,
-				HasPeer: false,
-			})
-			return true
-		} else if strings.Contains(line, "peer") {
+		if strings.Contains(line, "peer") {
 			ip := parts[2]
 			peerIp, ipNet, err := net.ParseCIDR(parts[4])
 			if err != nil || ipNet == nil {
@@ -1036,6 +1020,22 @@ func parseInterfaceSubLine(currentInterfacePointer *frrProto.Interface, line str
 					IpAddress:    peerIp.String(),
 					PrefixLength: uint32(peerIpPrefixLength),
 				},
+			})
+			return true
+		} else {
+			ip, ipNet, err := net.ParseCIDR(parts[2])
+			if err != nil || ipNet == nil {
+				log.Printf("bad CIDR %q: %v", parts[2], err)
+				return true
+			}
+			prefixLength, _ := ipNet.Mask.Size()
+			currentInterfacePointer.InterfaceIpPrefixes = append(currentInterfacePointer.InterfaceIpPrefixes, &frrProto.InterfaceIPPrefix{
+				IpPrefix: &frrProto.IPPrefix{
+					IpAddress:    ip.String(),
+					PrefixLength: uint32(prefixLength),
+				},
+				Passive: false,
+				HasPeer: false,
 			})
 			return true
 		}
