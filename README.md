@@ -1,3 +1,9 @@
+**Disclaimer**
+
+The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4. In the near future we intend to extend this functionality to the latest versio of FRR.
+
+---
+
 # FRR-MAD
 
 FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) consists of two tools, frr-mad-analyzer and frr-mad-tui. The analyzer component analyzes the static Free Range Routing configuration and compares it against the runtime lsdb. It detects wrongly advertised routes and reports them as such. The results are exposed via a Prometheus Node Exporter layer inherent to the analyzer component.
