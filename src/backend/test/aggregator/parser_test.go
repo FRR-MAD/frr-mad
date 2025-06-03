@@ -260,18 +260,33 @@ func testInterfaces(
 	if r101Lo.Name != "lo" {
 		t.Errorf("Expected r101Lo interface name to be 'r101Lo', got '%s'", r101Lo.Name)
 	}
-	if len(r101Lo.InterfaceIpPrefixes) == 0 {
-		t.Error("Expected r101Lo to have at least one IP address")
+	if len(r101Lo.InterfaceIpPrefixes) != 2 {
+		t.Error("Expected r101Lo to have two IP address")
 	} else {
 		if r101Lo.InterfaceIpPrefixes[0].IpPrefix.IpAddress != "65.0.1.1" {
-			t.Errorf("Expected r101Lo IP to be 65.0.1.1, got '%s'", r101Lo.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
+			t.Errorf("Expected r101Lo IP 1 to be 65.0.1.1, got '%s'", r101Lo.InterfaceIpPrefixes[0].IpPrefix.IpAddress)
 		}
 		if r101Lo.InterfaceIpPrefixes[0].IpPrefix.PrefixLength != 32 {
-			t.Errorf("Expected r101Lo prefix length to be 32, got %d", r101Lo.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
+			t.Errorf("Expected r101Lo prefix length of IP 1 to be 32, got %d", r101Lo.InterfaceIpPrefixes[0].IpPrefix.PrefixLength)
+		}
+		if r101Lo.InterfaceIpPrefixes[1].IpPrefix.IpAddress != "231.89.0.52" {
+			t.Errorf("Expected r101Lo IP 2 to be 231.89.0.52, got '%s'", r101Lo.InterfaceIpPrefixes[1].IpPrefix.IpAddress)
+		}
+		if r101Lo.InterfaceIpPrefixes[1].IpPrefix.PrefixLength != 32 {
+			t.Errorf("Expected r101Lo prefix length of IP 2 to be 32, got %d", r101Lo.InterfaceIpPrefixes[1].IpPrefix.PrefixLength)
 		}
 	}
 	if !r101Lo.InterfaceIpPrefixes[0].Passive {
-		t.Error("Expected r101Lo to be passive")
+		t.Error("Expected r101Lo IP 1 to be passive")
+	}
+	if !r101Lo.InterfaceIpPrefixes[1].Ospf {
+		t.Error("Expected r101Lo IP 2 to be in OSPF")
+	}
+	if r101Lo.InterfaceIpPrefixes[1].OspfArea != "0.0.0.0" {
+		t.Error("Expected r101Lo IP 2 to be in OSPF area 0.0.0.0")
+	}
+	if !r101Lo.InterfaceIpPrefixes[1].Passive {
+		t.Error("Expected r101Lo IP 2 to be passive")
 	}
 
 	// ========== r103 ==========
