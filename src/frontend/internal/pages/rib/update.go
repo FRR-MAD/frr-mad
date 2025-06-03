@@ -4,16 +4,23 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
+	"sort"
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
-	"sort"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var toastCmd tea.Cmd
 	m.toast, toastCmd = m.toast.Update(msg)
+
+	if !m.statusTimer.IsZero() && time.Since(m.statusTimer) > m.statusDuration {
+		m.statusMessage = ""
+		m.statusTimer = time.Time{}
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -126,6 +133,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
+
+	case common.QuitTuiFailedMsg:
+		m.statusSeverity = styles.SeverityError
+		m.statusMessage = string(msg)
+		return m, nil
 	}
 
 	return m, nil

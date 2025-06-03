@@ -17,3 +17,7 @@ LD_FLAGS := -s \
 # Protobuf settings
 PROTO_DIR := $(ROOT_DIR)/protobufSource
 PROTO_SRC := $(ROOT_DIR)/protobufSource/protocol.proto
+
+# Dev Environment settings
+DEV_DIR := .devenvironment
+CONTAINERLAB := $(DEV_DIR)/containerlab

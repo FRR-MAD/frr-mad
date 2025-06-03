@@ -15,14 +15,17 @@ type Analyzer struct {
 	metrics                    *frrProto.FullFRRData
 	P2pMap                     *frrProto.PeerInterfaceMap
 	Logger                     *logger.Logger
-	config                     interface{}
+	AnomalyLogger              *logger.Logger
+	config                     any
 }
 
 func InitAnalyzer(
-	config interface{},
+	config any,
 	metrics *frrProto.FullFRRData,
 	logger *logger.Logger,
+	anomalyLogger *logger.Logger,
 ) *Analyzer {
+	logger.Info("Initializing analyzer")
 
 	anomalyAnalysis := &frrProto.AnomalyAnalysis{
 		RouterAnomaly:       initAnomalyDetection(),
@@ -31,6 +34,8 @@ func InitAnalyzer(
 		RibToFibAnomaly:     initAnomalyDetection(),
 		LsdbToRibAnomaly:    initAnomalyDetection(),
 	}
+
+	logger.Debug("Created empty anomaly detection structures")
 
 	analyserStateParserResults := &frrProto.ParsedAnalyzerData{
 		ShouldRouterLsdb:       &frrProto.IntraAreaLsa{},
@@ -48,18 +53,27 @@ func InitAnalyzer(
 		P2pMap: &frrProto.PeerInterfaceMap{
 			PeerInterfaceToAddress: map[string]string{},
 		},
-		Logger: logger,
-		config: config,
+		Logger:        logger,
+		AnomalyLogger: anomalyLogger,
+		config:        config,
 	}
 }
 
 func StartAnalyzer(analyzer *Analyzer, pollInterval time.Duration) {
+	analyzer.Logger.WithAttrs(map[string]any{
+		"interval": pollInterval.String(),
+	}).Info("Starting analyzer")
+
 	ticker := time.NewTicker(pollInterval)
 
 	go func() {
 		defer ticker.Stop()
 		for range ticker.C {
+			start := time.Now()
 			analyzer.AnomalyAnalysis()
+			analyzer.Logger.WithAttrs(map[string]any{
+				"duration": time.Since(start).String(),
+			}).Debug("Completed analysis cycle")
 		}
 	}()
 

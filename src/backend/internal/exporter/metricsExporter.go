@@ -3,7 +3,9 @@ package exporter
 import (
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/frr-mad/frr-mad/src/backend/configs"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
@@ -15,188 +17,206 @@ type MetricExporter struct {
 	enabledMetrics map[string]bool
 	logger         *logger.Logger
 	mutex          sync.RWMutex
+	config         configs.ExporterConfig
 }
 
 func NewMetricExporter(
 	data *frrProto.FullFRRData,
 	registry prometheus.Registerer,
 	logger *logger.Logger,
-	flags map[string]*ParsedFlag,
+	config configs.ExporterConfig,
 ) *MetricExporter {
+	logger.Debug("Initializing metric exporter")
+
 	m := &MetricExporter{
 		data:           data,
 		metrics:        make(map[string]prometheus.Collector),
 		enabledMetrics: make(map[string]bool),
 		logger:         logger,
+		config:         config,
 	}
 
 	// Initialize all metrics based on config flags
-	m.initializeRouterMetrics(flags)
-	m.initializeNetworkMetrics(flags)
-	m.initializeSummaryMetrics(flags)
-	m.initializeASBRSummaryMetrics(flags)
-	m.initializeExternalMetrics(flags)
-	m.initializeNSSAExternalMetrics(flags)
-	m.initializeDatabaseMetrics(flags)
-	m.initializeNeighborMetrics(flags)
-	m.initializeInterfaceMetrics(flags)
-	m.initializeRouteMetrics(flags)
+	m.initializeMetrics()
 
 	// Register all enabledMetrics metrics
 	for _, metric := range m.metrics {
 		registry.MustRegister(metric)
 	}
 
+	enabled := []string{}
+	for k := range m.enabledMetrics {
+		enabled = append(enabled, k)
+	}
+	logger.WithAttrs(map[string]interface{}{
+		"enabled_metrics": enabled,
+		"total_metrics":   len(m.metrics),
+	}).Info("Metric exporter initialized")
+
 	return m
 }
 
-func (m *MetricExporter) initializeRouterMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFRouterData"]; ok && flag.Enabled {
-		m.enabledMetrics["router"] = true
-		m.metrics["ospf_router_links"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_router_links_total",
-				Help: "Number of router interfaces in OSPF",
-			},
-			[]string{"area_id", "link_state_id"},
-		)
+func (m *MetricExporter) initializeMetrics() {
+	// Use a struct to define metric configurations
+	type metricConfig struct {
+		configFlag   bool
+		metricName   string
+		metricKey    string
+		helpText     string
+		labels       []string
+		extraMetrics []struct {
+			name   string
+			help   string
+			labels []string
+		}
 	}
-}
 
-func (m *MetricExporter) initializeNetworkMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFNetworkData"]; ok && flag.Enabled {
-		m.enabledMetrics["network"] = true
-		m.metrics["ospf_network_attached_routers"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_network_attached_routers_total",
-				Help: "Number of attached routers announced in network LSA",
+	metricsConfig := map[string]metricConfig{
+		"router": {
+			configFlag: m.config.OSPFRouterData,
+			metricName: "frr_mad_ospf_router_links_total",
+			metricKey:  "ospf_router_links",
+			helpText:   "Number of router interfaces in OSPF",
+			labels:     []string{"area_id", "link_state_id"},
+		},
+		"network": {
+			configFlag: m.config.OSPFNetworkData,
+			metricName: "frr_mad_ospf_network_attached_routers_total",
+			metricKey:  "ospf_network_attached_routers",
+			helpText:   "Number of attached routers announced in network LSA",
+			labels:     []string{"area_id", "link_state_id"},
+		},
+		"summary": {
+			configFlag: m.config.OSPFSummaryData,
+			metricName: "frr_mad_ospf_summary_metric",
+			metricKey:  "ospf_summary_metric",
+			helpText:   "OSPF summary LSA metric",
+			labels:     []string{"area_id", "link_state_id"},
+		},
+		"asbr_summary": {
+			configFlag: m.config.OSPFAsbrSummaryData,
+			metricName: "frr_mad_ospf_asbr_summary_metric",
+			metricKey:  "ospf_asbr_summary_metric",
+			helpText:   "OSPF ASBR summary LSA metric",
+			labels:     []string{"area_id", "link_state_id"},
+		},
+		"external": {
+			configFlag: m.config.OSPFExternalData,
+			metricName: "frr_mad_ospf_external_metric",
+			metricKey:  "ospf_external_metric",
+			helpText:   "OSPF external LSA route metric",
+			labels:     []string{"link_state_id", "metric_type"},
+		},
+		"nssa_external": {
+			configFlag: m.config.OSPFNssaExternalData,
+			metricName: "frr_mad_ospf_nssa_external_metric",
+			metricKey:  "ospf_nssa_external_metric",
+			helpText:   "OSPF NSSA external LSA route metric",
+			labels:     []string{"area_id", "link_state_id", "metric_type"},
+		},
+		"database": {
+			configFlag: m.config.OSPFDatabase,
+			metricName: "frr_mad_ospf_database_lsa_count",
+			metricKey:  "ospf_database_counts",
+			helpText:   "Amount of LSDB entries for each LSA type",
+			labels:     []string{"area_id", "lsa_type"},
+		},
+		"neighbors": {
+			configFlag: m.config.OSPFNeighbors,
+			metricKey:  "neighbors",
+			extraMetrics: []struct {
+				name   string
+				help   string
+				labels []string
+			}{
+				{
+					name:   "ospf_neighbor_state",
+					help:   "OSPF neighbor state (1=Full, 0.5=2-Way, 0=Down)",
+					labels: []string{"neighbor_id", "interface"},
+				},
+				{
+					name:   "ospf_neighbor_uptime",
+					help:   "OSPF neighbor uptime in seconds",
+					labels: []string{"neighbor_id", "interface"},
+				},
 			},
-			[]string{"area_id", "link_state_id"},
-		)
+		},
+		"interfaces": {
+			configFlag: m.config.InterfaceList,
+			metricKey:  "interfaces",
+			extraMetrics: []struct {
+				name   string
+				help   string
+				labels []string
+			}{
+				{
+					name:   "interface_operational_status",
+					help:   "Network interface operational status (1=Up, 0=Down)",
+					labels: []string{"interface", "vrf"},
+				},
+				{
+					name:   "interface_admin_status",
+					help:   "Network interface administrative status (1=Up, 0=Down)",
+					labels: []string{"interface", "vrf"},
+				},
+			},
+		},
+		"routes": {
+			configFlag: m.config.RouteList,
+			metricKey:  "routes",
+			extraMetrics: []struct {
+				name   string
+				help   string
+				labels []string
+			}{
+				{
+					name:   "installed_ospf_route",
+					help:   "Routing protocol metric for installed ospf routes",
+					labels: []string{"prefix", "protocol", "vrf"},
+				},
+				{
+					name: "installed_ospf_routes_count",
+					help: "Number of installed ospf routes from RIB",
+				},
+			},
+		},
 	}
-}
 
-func (m *MetricExporter) initializeSummaryMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFSummaryData"]; ok && flag.Enabled {
-		m.enabledMetrics["summary"] = true
-		m.metrics["ospf_summary_metric"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_summary_metric",
-				Help: "OSPF summary LSA metric",
-			},
-			[]string{"area_id", "link_state_id"},
-		)
-	}
-}
+	for key, cfg := range metricsConfig {
+		if !cfg.configFlag {
+			continue
+		}
 
-func (m *MetricExporter) initializeASBRSummaryMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFAsbrSummaryData"]; ok && flag.Enabled {
-		m.enabledMetrics["asbr_summary"] = true
-		m.metrics["ospf_asbr_summary_metric"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_asbr_summary_metric",
-				Help: "OSPF ASBR summary LSA metric",
-			},
-			[]string{"area_id", "link_state_id"},
-		)
-	}
-}
+		m.enabledMetrics[key] = true
 
-func (m *MetricExporter) initializeExternalMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFExternalData"]; ok && flag.Enabled {
-		m.enabledMetrics["external"] = true
-		m.metrics["ospf_external_metric"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_external_metric",
-				Help: "OSPF external LSA route metric",
-			},
-			[]string{"link_state_id", "metric_type"},
-		)
-	}
-}
+		if cfg.metricName != "" {
+			m.metrics[cfg.metricKey] = prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Name: cfg.metricName,
+					Help: cfg.helpText,
+				},
+				cfg.labels,
+			)
+		}
 
-func (m *MetricExporter) initializeNSSAExternalMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFNssaExternalData"]; ok && flag.Enabled {
-		m.enabledMetrics["nssa_external"] = true
-		m.metrics["ospf_nssa_external_metric"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_nssa_external_metric",
-				Help: "OSPF NSSA external LSA route metric",
-			},
-			[]string{"area_id", "link_state_id", "metric_type"},
-		)
-	}
-}
-
-func (m *MetricExporter) initializeDatabaseMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFDatabase"]; ok && flag.Enabled {
-		m.enabledMetrics["database"] = true
-		m.metrics["ospf_database_counts"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_database_lsa_count",
-				Help: "Amount of LSDB entries for each LSA type",
-			},
-			[]string{"area_id", "lsa_type"},
-		)
-	}
-}
-
-func (m *MetricExporter) initializeNeighborMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["OSPFNeighbors"]; ok && flag.Enabled {
-		m.enabledMetrics["neighbors"] = true
-		m.metrics["ospf_neighbor_state"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_neighbor_state",
-				Help: "OSPF neighbor state (1=Full, 0.5=2-Way, 0=Down)",
-			},
-			[]string{"neighbor_id", "interface"},
-		)
-		m.metrics["ospf_neighbor_uptime"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_ospf_neighbor_uptime_seconds",
-				Help: "OSPF neighbor uptime in seconds",
-			},
-			[]string{"neighbor_id", "interface"},
-		)
-	}
-}
-
-func (m *MetricExporter) initializeInterfaceMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["InterfaceList"]; ok && flag.Enabled {
-		m.enabledMetrics["interfaces"] = true
-		m.metrics["interface_operational_status"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_interface_operational_status",
-				Help: "Network interface operational status (1=Up, 0=Down)",
-			},
-			[]string{"interface", "vrf"},
-		)
-		m.metrics["interface_admin_status"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_interface_admin_status",
-				Help: "Network interface administrative status (1=Up, 0=Down)",
-			},
-			[]string{"interface", "vrf"},
-		)
-	}
-}
-
-func (m *MetricExporter) initializeRouteMetrics(flags map[string]*ParsedFlag) {
-	if flag, ok := flags["RouteList"]; ok && flag.Enabled {
-		m.enabledMetrics["routes"] = true
-		m.metrics["installed_ospf_route"] = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "frr_installed_ospf_route",
-				Help: "Routing protocol metric for installed ospf routes",
-			},
-			[]string{"prefix", "protocol", "vrf"},
-		)
-		m.metrics["installed_ospf_routes_count"] = prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Name: "frr_installed_ospf_routes_count",
-				Help: "Number of installed ospf routes from RIB",
-			},
-		)
+		for _, extra := range cfg.extraMetrics {
+			if len(extra.labels) > 0 {
+				m.metrics[extra.name] = prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Name: "frr_mad_" + extra.name,
+						Help: extra.help,
+					},
+					extra.labels,
+				)
+			} else {
+				m.metrics[extra.name] = prometheus.NewGauge(
+					prometheus.GaugeOpts{
+						Name: "frr_mad_" + extra.name,
+						Help: extra.help,
+					},
+				)
+			}
+		}
 	}
 }
 
@@ -205,8 +225,12 @@ func (m *MetricExporter) Update() {
 	defer m.mutex.Unlock()
 
 	if m.data == nil {
+		m.logger.Warning("Skipping metric update - no data available")
 		return
 	}
+
+	m.logger.Debug("Starting metric update")
+	start := time.Now()
 
 	// Update all enabledMetrics
 	if m.enabledMetrics["router"] {
@@ -239,6 +263,10 @@ func (m *MetricExporter) Update() {
 	if m.enabledMetrics["routes"] {
 		m.updateRouteMetrics()
 	}
+
+	m.logger.WithAttrs(map[string]interface{}{
+		"duration": time.Since(start).String(),
+	}).Debug("Completed metric update")
 }
 
 func (m *MetricExporter) updateRouterMetrics() {

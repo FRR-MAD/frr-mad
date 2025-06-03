@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -44,7 +43,6 @@ type FrrMadApp struct {
 	Pid          int
 	PidFile      string
 	PollInterval time.Duration
-	DebugLevel   int
 }
 
 type ServiceConfig struct {
@@ -57,6 +55,7 @@ type ServiceConfig struct {
 
 type LoggerService struct {
 	Application *logger.Logger
+	Anomaly     *logger.Logger
 }
 
 // TODO: create status command
@@ -72,17 +71,19 @@ func main() {
 		Use:   "start",
 		Short: "Start the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, app := loadMadApplication(configFile)
+			app := loadMadApplication(configFile)
 			if os.Getenv("FRR_MAD_DAEMON") != "1" {
-				createdConfiguration(confPath)
 				command := exec.Command(os.Args[0], os.Args[1:]...)
 				command.Env = append(os.Environ(), "FRR_MAD_DAEMON=1")
 				command.Start()
 
-				app.Logger.Application.Info(fmt.Sprintf("FRR-MAD started with PID %d", command.Process.Pid))
+				app.Logger.Application.WithAttrs(map[string]interface{}{
+					"child_pid":   command.Process.Pid,
+					"config_file": configFile,
+				}).Info("FRR-MAD daemon started")
 				os.Exit(0)
 			} else {
-				app.startApp()
+				app.startApp(cmd)
 			}
 		},
 	}
@@ -91,7 +92,7 @@ func main() {
 		Use:   "stop",
 		Short: "Stop the FRR-MAD application",
 		Run: func(cmd *cobra.Command, args []string) {
-			_, app := loadMadApplication(configFile)
+			app := loadMadApplication(configFile)
 			app.stopApp()
 		},
 	}
@@ -120,9 +121,17 @@ func main() {
 		Short:  "Run the application in debug mode",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, app := loadMadApplication(configFile)
-			createdConfiguration(confPath)
-			app.startApp()
+			app := loadMadApplication(configFile)
+			app.startApp(cmd)
+		},
+	}
+	var testCmd = &cobra.Command{
+		Use:    "test",
+		Short:  "testing",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(os.LookupEnv("FRR_MAD_CONFFILE"))
+			fmt.Println(configs.ConfigLocation)
 		},
 	}
 
@@ -141,6 +150,27 @@ func main() {
 
 	startCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
 	debugCmd.Flags().StringVarP(&configFile, "configFile", "c", "", "Provide path overwriting default configuration file location.")
+	startCmd.Flags().Bool("ospf-router", false, "Enable OSPF router metrics")
+	startCmd.Flags().Bool("ospf-network", false, "Enable OSPF network metrics")
+	startCmd.Flags().Bool("ospf-summary", false, "Enable OSPF summary metrics")
+	startCmd.Flags().Bool("ospf-asbr-summary", false, "Enable OSPF ASBR summary metrics")
+	startCmd.Flags().Bool("ospf-external", false, "Enable OSPF external route metrics")
+	startCmd.Flags().Bool("ospf-nssa-external", false, "Enable OSPF NSSA external route metrics")
+	startCmd.Flags().Bool("ospf-database", false, "Enable OSPF database metrics")
+	startCmd.Flags().Bool("ospf-neighbors", false, "Enable OSPF neighbor metrics")
+	startCmd.Flags().Bool("interface-list", false, "Enable interface list metrics")
+	startCmd.Flags().Bool("route-list", false, "Enable route list metrics")
+
+	debugCmd.Flags().Bool("ospf-router", false, "Enable OSPF router metrics")
+	debugCmd.Flags().Bool("ospf-network", false, "Enable OSPF network metrics")
+	debugCmd.Flags().Bool("ospf-summary", false, "Enable OSPF summary metrics")
+	debugCmd.Flags().Bool("ospf-asbr-summary", false, "Enable OSPF ASBR summary metrics")
+	debugCmd.Flags().Bool("ospf-external", false, "Enable OSPF external route metrics")
+	debugCmd.Flags().Bool("ospf-nssa-external", false, "Enable OSPF NSSA external route metrics")
+	debugCmd.Flags().Bool("ospf-database", false, "Enable OSPF database metrics")
+	debugCmd.Flags().Bool("ospf-neighbors", false, "Enable OSPF neighbor metrics")
+	debugCmd.Flags().Bool("interface-list", false, "Enable interface list metrics")
+	debugCmd.Flags().Bool("route-list", false, "Enable route list metrics")
 
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)
@@ -148,8 +178,9 @@ func main() {
 	rootCmd.AddCommand(reloadCmd)
 	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(testCmd)
 
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.CompletionOptions.DisableDefaultCmd = false
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -157,7 +188,7 @@ func main() {
 	}
 }
 
-func (a *FrrMadApp) startApp() {
+func (a *FrrMadApp) startApp(cmd *cobra.Command) {
 	if isProcessRunning(a.Pid) && a.Pid != 0 {
 		fmt.Println("FRR-MAD is already running")
 		a.Logger.Application.Error("FRR-MAD is already running")
@@ -172,42 +203,47 @@ func (a *FrrMadApp) startApp() {
 	services = append(services, "exporter")
 
 	for _, service := range services {
-		a.Logger.Application.Info(fmt.Sprintf("Starting %s service", service))
+		serviceLogger := a.Logger.Application.WithComponent(service)
+		serviceLogger.Info("Starting service")
+
 		switch service {
 		case "analyzer":
 			if a.Aggregator == nil {
-				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", a.Config.basis.LogPath))
-				aggregatorLogger.SetDebugLevel(a.DebugLevel)
-				a.Aggregator = startAggregator(a.Config.aggregator, aggregatorLogger, a.PollInterval)
+				aggLogger := serviceLogger.WithComponent("aggregator")
+				a.Aggregator = startAggregator(a.Config.aggregator, aggLogger, a.PollInterval)
 			}
 
-			analyzerLogger := createLogger("analyzer", fmt.Sprintf("%v/analyzer.log", a.Config.basis.LogPath))
-			analyzerLogger.SetDebugLevel(a.DebugLevel)
-			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.PollInterval, a.Aggregator)
-
-		case "aggregator":
-			if a.Aggregator == nil {
-				aggregatorLogger := createLogger("aggregator", fmt.Sprintf("%v/aggregator.log", a.Config.basis.LogPath))
-				aggregatorLogger.SetDebugLevel(a.DebugLevel)
-				a.Aggregator = startAggregator(a.Config.aggregator, aggregatorLogger, a.PollInterval)
-			}
+			analyzerLogger := serviceLogger.WithComponent("analyzer")
+			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.Logger.Anomaly, a.PollInterval, a.Aggregator)
 
 		case "exporter":
 			if a.Exporter == nil {
-				exporterLogger := createLogger("exporter", fmt.Sprintf("%v/exporter.log", a.Config.basis.LogPath))
-				exporterLogger.SetDebugLevel(a.DebugLevel)
-				a.Exporter = startExporter(a.Config.exporter, exporterLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
+				expLogger := serviceLogger.WithComponent("exporter")
+				getFlagConfigsFromCmd(cmd, &a.Config.exporter)
+				a.Exporter = startExporter(a.Config.exporter, expLogger, a.PollInterval, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult)
 			}
 		}
 	}
 
 	// TODO: Create a better handler for p2pMapping. This should ideally be part of FullFrrData and not a separate data object.
 	if a.Aggregator != nil && a.Analyzer != nil && a.Exporter != nil {
-		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Analyzer.Logger, a.Analyzer.AnalyserStateParserResults)
+		a.Socket = socket.NewSocket(a.Config.socket, a.Aggregator.FullFrrData, a.Analyzer.AnalysisResult, a.Logger.Application, a.Analyzer.AnalyserStateParserResults)
 
 		go func() {
+			a.Logger.Application.WithAttrs(map[string]interface{}{
+				"socket_path": fmt.Sprintf("%s/%s",
+					a.Config.socket.UnixSocketLocation,
+					a.Config.socket.UnixSocketName),
+			}).Info("Starting socket server")
+
 			if err := a.Socket.Start(); err != nil {
-				a.Logger.Application.Error(fmt.Sprintf("Error starting socket server: %s", err))
+				a.Logger.Application.WithAttrs(map[string]interface{}{
+					"error": err.Error(),
+					"socket_path": fmt.Sprintf("%s/%s",
+						a.Config.socket.UnixSocketLocation,
+						a.Config.socket.UnixSocketName),
+				}).Error("Socket server failed")
+
 				os.Exit(1)
 			}
 		}()
@@ -235,6 +271,10 @@ func (a *FrrMadApp) startApp() {
 func (a *FrrMadApp) createPidFile() string {
 	pid := os.Getpid()
 	pidFile := fmt.Sprintf("%s/frr-mad.pid", a.Config.socket.UnixSocketLocation)
+	a.Logger.Application.WithAttrs(map[string]interface{}{
+		"path": pidFile,
+		"pid":  pid,
+	}).Debug("Creating PID file")
 	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644); err != nil {
 		a.Logger.Application.Error(fmt.Sprintf("Failed to create PID file: %s", err))
 		os.Exit(1)
@@ -243,6 +283,11 @@ func (a *FrrMadApp) createPidFile() string {
 }
 
 func (a *FrrMadApp) stopApp() {
+	a.Logger.Application.WithAttrs(map[string]interface{}{
+		"pid":      a.Pid,
+		"pid_file": a.PidFile,
+	}).Info("Initiating shutdown")
+
 	if a.Pid == 0 {
 		a.Logger.Application.Error("Service is not running or PID file not found.")
 		os.Exit(1)
@@ -263,17 +308,21 @@ func (a *FrrMadApp) stopApp() {
 	time.Sleep(500 * time.Millisecond)
 
 	if isProcessRunning(a.Pid) {
-		a.Logger.Application.Error("Signal sent, but process is still running. It may take a moment to shut down...")
+		a.Logger.Application.WithAttrs(map[string]any{
+			"pid": a.Pid,
+		}).Warning("Process still running after signal")
 	} else {
-		a.Logger.Application.Info("FRR-MAD successfully stopped")
+		a.Logger.Application.WithAttrs(map[string]any{
+			"pid": a.Pid,
+		}).Info("Process terminated successfully")
 		if _, err := os.Stat(a.PidFile); !os.IsNotExist(err) {
 			os.Remove(a.PidFile)
 		}
 	}
 }
 
-func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
-	confgPath, configRaw, err := configs.LoadConfig(overwriteConfigPath)
+func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
+	configRaw, err := configs.LoadConfig(overwriteConfigPath)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -287,18 +336,35 @@ func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
 		exporter:   configRaw.Exporter,
 	}
 
-	debugLevel := getDebugLevel(config.basis.DebugLevel)
+	logLevel := logger.ConvertLogLevelFromConfig(config.basis.DebugLevel)
 	pollInterval := time.Duration(config.aggregator.PollInterval) * time.Second
 	pidFile := fmt.Sprintf("%s/frr-mad.pid", configRaw.Socket.UnixSocketLocation)
 	pid, _ := readPidFile(pidFile)
 
-	appLogger := createLogger("frr_mad", fmt.Sprintf("%v/frr_mad.log", config.basis.LogPath))
-	appLogger.SetDebugLevel(debugLevel)
-	appLogger.Info("Starting FRR Monitoring and Analysis Daemon")
-	appLogger.Info(fmt.Sprintf("Setting poll interval to %v seconds", config.aggregator.PollInterval))
+	appLogger, err := logger.NewApplicationLogger("frr-mad",
+		fmt.Sprintf("%v/application.log", config.basis.LogPath))
+	if err != nil {
+		log.Fatalf("Failed to create application logger: %v", err)
+	}
+	appLogger.SetDebugLevel(logLevel)
+
+	appLogger.Info(fmt.Sprintf("FRR-MAD initializing (version: %s)", DaemonVersion))
+	appLogger.WithAttrs(map[string]interface{}{
+		"config_path":              overwriteConfigPath,
+		"debug_level":              config.basis.DebugLevel,
+		"poll_interval in seconds": config.aggregator.PollInterval,
+	}).Info("Configuration loaded")
+
+	anomalyLogger, err := logger.NewApplicationLogger("frr-mad-anomaly",
+		fmt.Sprintf("%v/anomalies.log", config.basis.LogPath))
+	if err != nil {
+		log.Fatalf("Failed to create anomaly logger: %v", err)
+	}
+	anomalyLogger.SetDebugLevel(logLevel)
 
 	logService := &LoggerService{
 		Application: appLogger,
+		Anomaly:     anomalyLogger,
 	}
 
 	app := &FrrMadApp{
@@ -306,11 +372,10 @@ func loadMadApplication(overwriteConfigPath string) (string, *FrrMadApp) {
 		Pid:          pid,
 		PollInterval: pollInterval,
 		Config:       config,
-		DebugLevel:   debugLevel,
 		PidFile:      pidFile,
 	}
 
-	return confgPath, app
+	return app
 }
 
 func readPidFile(pidFile string) (int, error) {
@@ -342,38 +407,35 @@ func isProcessRunning(pid int) bool {
 	return err == nil
 }
 
-func createLogger(name, filePath string) *logger.Logger {
-	logger, err := logger.NewLogger(name, filePath)
-	if err != nil {
-		log.Fatalf("Failed to create logger %s: %v", name, err)
+func getFlagConfigsFromCmd(cmd *cobra.Command, exporterConfig *configs.ExporterConfig) {
+	if cmd.Flags().Changed("ospf-router") {
+		exporterConfig.OSPFRouterData, _ = cmd.Flags().GetBool("ospf-router")
 	}
-	return logger
-}
-
-func getDebugLevel(level string) int {
-	switch level {
-	case "none":
-		return 99
-	case "debug":
-		return 2
-	case "error":
-		return 1
-	default:
-		return 0
+	if cmd.Flags().Changed("ospf-network") {
+		exporterConfig.OSPFNetworkData, _ = cmd.Flags().GetBool("ospf-network")
 	}
-}
-
-func createdConfiguration(configPath string) error {
-	appDir := "/tmp"
-
-	sourcePath := filepath.Join(configPath)
-	destinationPath := filepath.Join(appDir, "mad-configuration.yaml")
-
-	content, _ := os.ReadFile(sourcePath)
-	err := os.WriteFile(destinationPath, content, 0444)
-	if err != nil {
-		return err
+	if cmd.Flags().Changed("ospf-summary") {
+		exporterConfig.OSPFSummaryData, _ = cmd.Flags().GetBool("ospf-summary")
 	}
-
-	return nil
+	if cmd.Flags().Changed("ospf-asbr-summary") {
+		exporterConfig.OSPFAsbrSummaryData, _ = cmd.Flags().GetBool("ospf-asbr-summary")
+	}
+	if cmd.Flags().Changed("ospf-external") {
+		exporterConfig.OSPFExternalData, _ = cmd.Flags().GetBool("ospf-external")
+	}
+	if cmd.Flags().Changed("ospf-nssa-external") {
+		exporterConfig.OSPFNssaExternalData, _ = cmd.Flags().GetBool("ospf-nssa-external")
+	}
+	if cmd.Flags().Changed("ospf-database") {
+		exporterConfig.OSPFDatabase, _ = cmd.Flags().GetBool("ospf-database")
+	}
+	if cmd.Flags().Changed("ospf-neighbors") {
+		exporterConfig.OSPFNeighbors, _ = cmd.Flags().GetBool("ospf-neighbors")
+	}
+	if cmd.Flags().Changed("interface-list") {
+		exporterConfig.InterfaceList, _ = cmd.Flags().GetBool("interface-list")
+	}
+	if cmd.Flags().Changed("route-list") {
+		exporterConfig.RouteList, _ = cmd.Flags().GetBool("route-list")
+	}
 }

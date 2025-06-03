@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/logger"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/frr-mad/frr-mad/src/logger"
 )
 
 type OSPFMsg string
@@ -131,8 +131,18 @@ func FetchRunningConfig(logger *logger.Logger) tea.Cmd {
 func GetRunningConfig(logger *logger.Logger) (string, error) {
 	vtyshOutput, err := exec.Command("vtysh", "-c", "show running-config").Output()
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error fetching OSPF neighbor data: %v", err))
-		return "", fmt.Errorf("error fetching OSPF neighbor data: %v", err)
+		logger.Error(fmt.Sprintf("Error fetching OSPF Running-Config: %v", err))
+		return "", fmt.Errorf("error fetching OSPF Running-Config: %v", err)
+	}
+
+	return string(vtyshOutput), nil
+}
+
+// GetRunningConfigWithoutLog is used in the main function, if config cannot be fetched, abort tui start
+func GetRunningConfigWithoutLog() (string, error) {
+	vtyshOutput, err := exec.Command("vtysh", "-c", "show running-config").Output()
+	if err != nil {
+		return "", fmt.Errorf("error fetching OSPF Running-Config: %v", err)
 	}
 
 	return string(vtyshOutput), nil

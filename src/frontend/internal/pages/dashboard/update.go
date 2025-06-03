@@ -4,11 +4,12 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-tui/internal/common"
@@ -17,6 +18,11 @@ import (
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var toastCmd tea.Cmd
 	m.toast, toastCmd = m.toast.Update(msg)
+
+	if !m.statusTimer.IsZero() && time.Since(m.statusTimer) > m.statusDuration {
+		m.statusMessage = ""
+		m.statusTimer = time.Time{}
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -129,6 +135,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					err := m.fetchLatestData()
 					if err != nil {
 						m.logger.Error("Error while fetching all backend data for dashboard")
+						m.statusSeverity = styles.SeverityError
+						m.statusMessage = "Please re-open export options: Error while fetching data"
 						return m, tea.Batch(
 							toastCmd,
 							toast.Show(fmt.Sprintf("Fetching data failed:\n%v", err)),
@@ -153,6 +161,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case common.ReloadMessage:
 		m.currentTime = time.Time(msg)
 		return m, reloadView()
+
+	case common.QuitTuiFailedMsg:
+		m.statusSeverity = styles.SeverityError
+		m.statusMessage = string(msg)
+		return m, nil
 	}
 
 	return m, nil

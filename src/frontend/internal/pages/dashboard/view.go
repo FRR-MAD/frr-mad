@@ -8,7 +8,6 @@ import (
 
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
-	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/frr-mad/frr-tui/internal/common"
 
 	"strconv"
@@ -73,10 +72,16 @@ func (m *Model) View() string {
 			statusBox := lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(m.statusMessage)
 			if m.statusMessage != "" {
 				styles.SetStatusSeverity(m.statusSeverity)
-				if len(m.statusMessage) > 50 {
-					m.statusMessage = m.statusMessage[:47] + "..."
+				var cutToSizeMessage string
+				maxLength := styles.WidthTwoH1Box - styles.MarginX2 - 3
+				if maxLength > 0 && len(m.statusMessage) > maxLength {
+					cutToSizeMessage = m.statusMessage[:maxLength] + "..."
+				} else if maxLength > 0 {
+					cutToSizeMessage = m.statusMessage
+				} else {
+					cutToSizeMessage = "..."
 				}
-				statusMessage := styles.StatusTextStyle().Render(m.statusMessage)
+				statusMessage := styles.StatusTextStyle().Render(cutToSizeMessage)
 				statusBox = lipgloss.NewStyle().Width(styles.WidthTwoH1Box).Margin(0, 2).Render(statusMessage)
 			}
 
@@ -103,10 +108,10 @@ func (m *Model) View() string {
 
 func (m *Model) renderOSPFDashboard() string {
 	m.viewportLeft.Width = styles.WidthViewPortThreeFourth
-	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
+	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	m.viewportRight.Width = styles.WidthViewPortOneFourth
-	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.FilterBoxHeight
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -130,7 +135,8 @@ func (m *Model) renderOSPFDashboard() string {
 	}
 
 	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
-	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left, getSystemResourcesBox(m.logger), m.getOSPFGeneralInfoBox())
+	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
+		m.getSystemResourcesBox(), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
 	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
@@ -145,17 +151,25 @@ func (m *Model) renderOSPFDashboard() string {
 	return horizontalDashboard
 }
 
-func getSystemResourcesBox(logger *logger.Logger) string {
-	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(logger)
+func (m *Model) getSystemResourcesBox() string {
+	cpuAmount, cpuUsage, memoryUsage, err := backend.GetSystemResources(m.logger)
 	var cpuAmountString, cpuUsageString, memoryString string
 	if err != nil {
 		cpuAmountString = "N/A"
 		cpuUsageString = "N/A"
 		memoryString = "N/A"
+		m.statusMessage = "Failed to fetch system resources"
+		m.statusSeverity = styles.SeverityError
 	} else {
 		cpuAmountString = fmt.Sprintf("%v", cpuAmount)
 		cpuUsageString = fmt.Sprintf("%.2f%%", cpuUsage*100)
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
+
+		const epsilon = 1e-9
+		if cpuUsage > 0.9-epsilon || memoryUsage > 90-epsilon {
+			m.statusMessage = "High system resource usage detected"
+			m.statusSeverity = styles.SeverityWarning
+		}
 	}
 
 	systemStatistics := lipgloss.JoinVertical(lipgloss.Left,
@@ -172,6 +186,8 @@ func getSystemResourcesBox(logger *logger.Logger) string {
 func (m *Model) getOSPFGeneralInfoBox() string {
 	ospfInformation, err := backend.GetOSPF(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch OSPF general information"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetOSPF")
 	}
 
@@ -235,11 +251,29 @@ func (m *Model) getOSPFGeneralInfoBox() string {
 	return ospfInformationBox
 }
 
+func (m *Model) getSystemInfo() string {
+
+	appInfo := styles.H1TwoContentBoxesStyle().Width(styles.WidthTwoH1OneFourthBox).Render(
+		"Daemon Version: " + common.DaemonVersion + "\n" +
+			"FRR-MAD TUI Version: " + common.TUIVersion + "\n" +
+			"Latest Git Commit : " + common.GitCommit + "\n" +
+			"Build Date: " + common.BuildDate + "\n")
+
+	appInfoBox := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("FRR-MAD Application"),
+		appInfo,
+	)
+
+	return appInfoBox
+}
+
 func (m *Model) getOspfDashboardLsdbSelf() string {
 	var lsdbSelfBlocks []string
 
 	lsdb, err := backend.GetLSDB(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch LSDB data"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetLSDB")
 	}
 
@@ -528,17 +562,34 @@ func (m *Model) getOspfDashboardLsdbSelf() string {
 func (m *Model) getOspfDashboardAnomalies() string {
 	ospfRouterAnomalies, err := backend.GetRouterAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch router anomalies"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetRouterAnomalies")
 	}
 
 	ospfExternalAnomalies, err := backend.GetExternalAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch external anomalies"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetExternalAnomalies")
 	}
 
 	ospfNSSAExternalAnomalies, err := backend.GetNSSAExternalAnomalies(m.logger)
 	if err != nil {
+		m.statusMessage = "Failed to fetch NSSA external anomalies"
+		m.statusSeverity = styles.SeverityError
 		return common.PrintBackendError(err, "GetNSSAExternalAnomalies")
+	}
+
+	totalAnomalies := 0
+	if common.HasAnyAnomaly(ospfRouterAnomalies) {
+		totalAnomalies += countAnomalies(ospfRouterAnomalies)
+	}
+	if common.HasAnyAnomaly(ospfExternalAnomalies) {
+		totalAnomalies += countAnomalies(ospfExternalAnomalies)
+	}
+	if common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		totalAnomalies += countAnomalies(ospfNSSAExternalAnomalies)
 	}
 
 	var routerAnomalyTable string
@@ -626,19 +677,22 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	// extract data for tables
 	var tableData [][]string
 
-	// TODO: add all anomily types
+	// TODO: add all anomaly types
 	if a.HasOverAdvertisedPrefixes {
 		for _, superfluousEntry := range a.SuperfluousEntries {
 			var firstCol string
-			if strings.Contains(lsaTypeHeader, "Router") {
+			var cidr string
+			if strings.Contains(lsaTypeHeader, "Router") && superfluousEntry.InterfaceAddress != "" {
 				firstCol = superfluousEntry.InterfaceAddress
+				cidr = ""
 			} else {
 				firstCol = superfluousEntry.LinkStateId
+				cidr = "/" + superfluousEntry.PrefixLength
 			}
 
 			tableData = append(tableData, []string{
 				firstCol,
-				"/" + superfluousEntry.PrefixLength,
+				cidr,
 				superfluousEntry.LinkType,
 				"Overadvertised Route",
 			})
@@ -648,15 +702,18 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	if a.HasUnAdvertisedPrefixes {
 		for _, missingEntry := range a.MissingEntries {
 			var firstCol string
+			var cidr string
 			if strings.Contains(lsaTypeHeader, "Router") {
 				firstCol = missingEntry.InterfaceAddress
+				cidr = ""
 			} else {
 				firstCol = missingEntry.LinkStateId
+				cidr = "/" + missingEntry.PrefixLength
 			}
 
 			tableData = append(tableData, []string{
 				firstCol,
-				"/" + missingEntry.PrefixLength,
+				cidr,
 				missingEntry.LinkType,
 				"Unadvertised Route",
 			})
@@ -704,7 +761,7 @@ func (m *Model) renderAnomalyDetails() string {
 	// ===== Solution:  Use newline '\n' after maximum 149 characters                    ===== //
 	// =====            to ensure minimum supported width of FRR-MAD-TUI (157)           ===== //
 
-	anomalyProcessTitle := styles.TextTitleStyle.Padding(0, 0, 0, 0).Render("Anomaly Detection Process")
+	anomalyProcessTitle := styles.TextTitleStyle.Render("Anomaly Detection Process")
 	anomalyProcessText1 := "The frr-mad-analyzer predicts a 'should-state' for the router based on its static FRR configuration. This includes:\n"
 	anomalyPossibilities := []string{
 		"Interface addresses that should be announced in Type 1 Router LSAs",
@@ -716,7 +773,7 @@ func (m *Model) renderAnomalyDetails() string {
 	anomalyProcessText2 := "\nIt then retrieves the 'is-state' using vtysh queries and compares it against the predicted state.\n" +
 		"If a mismatch is detected, the anomaly is identified and classified into one of the defined types listed below."
 
-	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 0, 0, 0).Render("OSPF Anomaly Types")
+	anomalyTypesTitle := styles.TextTitleStyle.Padding(1, 2, 0, 0).Render("OSPF Anomaly Types")
 	anomalyTypes := [][]string{
 		{"Unadvertised", "A prefix that is expected to be announced (advertised) to other devices in the network but is missing."},
 		{"Overadvertised", "A prefix that is being announced (advertised) to other devices in the network but should not be."},

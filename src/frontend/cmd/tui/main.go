@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/viewport"
+
 	"github.com/frr-mad/frr-tui/internal/pages/rib"
 
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -32,43 +34,56 @@ const (
 	totalViews
 )
 
+var (
+	DaemonVersion = "unknown"
+	TUIVersion    = "unknown"
+	GitCommit     = "unknown"
+	BuildDate     = "unknown"
+	RepoURL       = "https://github.com/frr-mad/frr-mad"
+)
+
 var subTabsLength int
 
 type AppModel struct {
-	currentView   AppState
-	tabs          []common.Tab
-	currentSubTab int
-	readOnlyMode  bool
-	windowSize    *common.WindowSize
-	dashboard     *dashboard.Model
-	ospf          *ospfMonitoring.Model
-	rib           *rib.Model
-	shell         *shell.Model
-	footer        *components.Footer
-	footerOptions []common.FooterOption
-	textFilter    *common.Filter
-	logger        *logger.Logger
+	startupConfig     string
+	currentView       AppState
+	tabs              []common.Tab
+	currentSubTab     int
+	readOnlyMode      bool
+	windowSize        *common.WindowSize
+	viewport          viewport.Model
+	dashboard         *dashboard.Model
+	ospf              *ospfMonitoring.Model
+	rib               *rib.Model
+	shell             *shell.Model
+	showSystemInfo    bool
+	preventSubTabExit bool
+	footer            *components.Footer
+	footerOptions     []common.FooterOption
+	textFilter        *common.Filter
+	logger            *logger.Logger
 }
 
 func initModel(config *configs.Config) *AppModel {
-	windowSize := &common.WindowSize{Width: 80, Height: 24}
+	windowSize := &common.WindowSize{Width: 157, Height: 38}
 
-	debugLevel := getDebugLevel(config.Default.DebugLevel)
-	appLogger := createLogger("frr_mad_frontend", fmt.Sprintf("%v/frr_mad_frontend.log", config.Default.LogPath))
-	appLogger.SetDebugLevel(debugLevel)
+	vp := viewport.New(styles.WidthViewPortCompletePage,
+		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
+
+	logLevel := logger.ConvertLogLevelFromConfig(config.Default.DebugLevel)
+
+	appLogger, err := logger.NewApplicationLogger("frr-mad-tui",
+		fmt.Sprintf("%v/frr_mad_tui_application.log", config.Default.LogPath))
+	if err != nil {
+		log.Fatalf("Failed to create application logger: %v", err)
+	}
+	appLogger.SetDebugLevel(logLevel)
 	appLogger.Info("Starting Frontend Application")
 
-	dashboardLogger := createLogger("dashboard_frontend", fmt.Sprintf("%v/dashboard_frontend.log", config.Default.LogPath))
-	dashboardLogger.SetDebugLevel(debugLevel)
-
-	ospfLogger := createLogger("ospf_frontend", fmt.Sprintf("%v/ospf_frontend.log", config.Default.LogPath))
-	ospfLogger.SetDebugLevel(debugLevel)
-
-	ribLogger := createLogger("rib_frontend", fmt.Sprintf("%v/rib_frontend.log", config.Default.LogPath))
-	ribLogger.SetDebugLevel(debugLevel)
-
-	shellLogger := createLogger("shell_frontend", fmt.Sprintf("%v/shell_frontend.log", config.Default.LogPath))
-	shellLogger.SetDebugLevel(debugLevel)
+	dashboardLogger := appLogger.WithComponent("dashboard")
+	ospfLogger := appLogger.WithComponent("ospf")
+	ribLogger := appLogger.WithComponent("rib")
+	shellLogger := appLogger.WithComponent("shell")
 
 	ti := textinput.New()
 	ti.Placeholder = "type to filter..."
@@ -76,23 +91,39 @@ func initModel(config *configs.Config) *AppModel {
 	ti.Width = 20
 
 	return &AppModel{
-		currentView:   ViewDashboard,
-		tabs:          []common.Tab{},
-		currentSubTab: -1,
-		readOnlyMode:  true,
-		windowSize:    windowSize,
-		dashboard:     dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
-		ospf:          ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
-		rib:           rib.New(windowSize, ribLogger, config.Default.ExportPath),
-		shell:         shell.New(windowSize, shellLogger),
-		footer:        components.NewFooter("[ctrl+c] exit FRR-MAD", "[enter] enter sub tabs"),
-		logger:        appLogger,
-		textFilter:    &common.Filter{Active: false, Query: "", Input: ti},
+		startupConfig:     "",
+		currentView:       ViewDashboard,
+		tabs:              []common.Tab{},
+		currentSubTab:     -1,
+		readOnlyMode:      true,
+		windowSize:        windowSize,
+		viewport:          vp,
+		dashboard:         dashboard.New(windowSize, dashboardLogger, config.Default.ExportPath),
+		ospf:              ospfMonitoring.New(windowSize, ospfLogger, config.Default.ExportPath),
+		rib:               rib.New(windowSize, ribLogger, config.Default.ExportPath),
+		shell:             shell.New(windowSize, shellLogger),
+		showSystemInfo:    false,
+		preventSubTabExit: false,
+		footer:            components.NewFooter("[ctrl+c] exit FRR-MAD", "[i] info", "[enter] enter sub tabs"),
+		logger:            appLogger,
+		textFilter:        &common.Filter{Active: false, Query: "", Input: ti},
 	}
 }
 
 func (m *AppModel) Init() tea.Cmd {
 	m.setTitles()
+	startupConfig, err := m.setStartupConfig()
+	if err != nil {
+		return tea.Batch(
+			tea.ClearScreen,
+			tea.Quit,
+		)
+	} else {
+		m.startupConfig = startupConfig
+	}
+
+	common.SetAppVersionInfo(DaemonVersion, TUIVersion, GitCommit, BuildDate, RepoURL)
+
 	return tea.Batch(
 		m.dashboard.Init(),
 	)
@@ -103,25 +134,61 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "right":
-			if !m.textFilter.Active {
+			if !m.textFilter.Active && !m.preventSubTabExit {
 				if m.currentSubTab == -1 {
 					m.currentView = (m.currentView + 1) % totalViews
 					m.currentSubTab = -1
+					if m.currentView == ViewShell {
+						m.footer.CleanInfo()
+						m.footer.Append("[enter] enter sub tabs")
+					} else {
+						m.footer.CleanInfo()
+						m.footer.SetMainMenuOptions()
+					}
 				} else {
 					m.currentSubTab = (m.currentSubTab + 1) % subTabsLength
 				}
 			}
 		case "left":
-			if !m.textFilter.Active {
+			if !m.textFilter.Active && !m.preventSubTabExit {
 				if m.currentSubTab == -1 {
 					m.currentView = (m.currentView + totalViews - 1) % totalViews
 					m.currentSubTab = -1
+					if m.currentView == ViewShell {
+						m.footer.CleanInfo()
+						m.footer.Append("[enter] enter sub tabs")
+					} else {
+						m.footer.CleanInfo()
+						m.footer.SetMainMenuOptions()
+					}
 				} else {
 					m.currentSubTab = (m.currentSubTab + subTabsLength - 1) % subTabsLength
 				}
 			}
-		case "up", "down", "home", "end":
-			return m.delegateToActiveView(msg)
+		case "up":
+			if m.showSystemInfo {
+				m.viewport.LineUp(10)
+			} else {
+				return m.delegateToActiveView(msg)
+			}
+		case "down":
+			if m.showSystemInfo {
+				m.viewport.LineDown(10)
+			} else {
+				return m.delegateToActiveView(msg)
+			}
+		case "home":
+			if m.showSystemInfo {
+				m.viewport.GotoTop()
+			} else {
+				return m.delegateToActiveView(msg)
+			}
+		case "end":
+			if m.showSystemInfo {
+				m.viewport.GotoBottom()
+			} else {
+				return m.delegateToActiveView(msg)
+			}
 		case "enter":
 			if m.currentSubTab == -1 {
 				m.currentSubTab = 0
@@ -144,21 +211,41 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+w":
 			m.readOnlyMode = !m.readOnlyMode
 			styles.ChangeReadWriteMode(m.readOnlyMode)
+		case "ctrl+e", "ctrl+a":
+			m.preventSubTabExit = !m.preventSubTabExit
+		case "i":
+			if m.currentView != ViewShell && !m.textFilter.Active {
+				m.showSystemInfo = !m.showSystemInfo
+			}
 		case "esc":
 			if m.textFilter.Active {
 				m.textFilter.Active = false
 				m.textFilter.Query = ""
 				m.textFilter.Input.Blur()
 				return m, nil
+			} else if m.showSystemInfo {
+				m.showSystemInfo = false
+			} else if m.preventSubTabExit {
+				m.preventSubTabExit = false
 			} else {
 				m.currentSubTab = -1
 				m.footer.SetMainMenuOptions()
 			}
 		case "ctrl+c":
-			return m, tea.Batch(
-				tea.ClearScreen,
-				tea.Quit,
-			)
+			currentConfig, err := common.GetRunningConfig(m.logger)
+			if err != nil {
+				m.logger.Error(fmt.Sprintf("Error fetching OSPF Running-Config: %v", err))
+			}
+			if m.startupConfig == currentConfig {
+				return m, tea.Batch(
+					tea.ClearScreen,
+					tea.Quit,
+				)
+			} else {
+				return m, common.QuitTuiFailedCmd(
+					"Config changed: running FRR config must match the config at TUI startup.",
+				)
+			}
 		}
 	//case tea.MouseEvent:
 	//	return m, nil
@@ -210,24 +297,6 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *AppModel) View() string {
 
-	var content string
-	switch m.currentView {
-	case ViewDashboard:
-		content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode, m.textFilter)
-		subTabsLength = m.dashboard.GetSubTabsLength()
-	case ViewOSPF:
-		content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)
-		subTabsLength = m.ospf.GetSubTabsLength()
-	case ViewRIB:
-		content = m.rib.RibView(m.currentSubTab, m.readOnlyMode, m.textFilter)
-		subTabsLength = m.rib.GetSubTabsLength()
-	case ViewShell:
-		content = m.shell.ShellView(m.currentSubTab, m.readOnlyMode)
-		subTabsLength = m.shell.GetSubTabsLength()
-	default:
-		return "Unknown view"
-	}
-
 	// -2 (for content border) -2 (is necessary for error free usage --> leads to style errors without it)
 	contentWidth := m.windowSize.Width - 4
 	contentHeight := m.windowSize.Height - styles.TabRowHeight - styles.BorderContentBox - styles.FooterHeight
@@ -235,12 +304,47 @@ func (m *AppModel) View() string {
 	tabRow := components.CreateTabRow(m.tabs, int(m.currentView), m.currentSubTab, m.windowSize, m.logger)
 	footer := m.footer.Get()
 
-	return lipgloss.JoinVertical(
+	m.viewport.Width = styles.WidthBasis
+	m.viewport.Height = styles.HeightViewPortCompletePage
+
+	var content string
+	if m.showSystemInfo {
+		systemInfo := components.GetSystemInfoOverlay()
+		m.viewport.SetContent(systemInfo)
+	} else {
+		switch m.currentView {
+		case ViewDashboard:
+			content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode, m.textFilter)
+			subTabsLength = m.dashboard.GetSubTabsLength()
+		case ViewOSPF:
+			content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)
+			subTabsLength = m.ospf.GetSubTabsLength()
+		case ViewRIB:
+			content = m.rib.RibView(m.currentSubTab, m.readOnlyMode, m.textFilter)
+			subTabsLength = m.rib.GetSubTabsLength()
+		case ViewShell:
+			content = m.shell.ShellView(m.currentSubTab, m.readOnlyMode)
+			subTabsLength = m.shell.GetSubTabsLength()
+		default:
+			return "Unknown view"
+		}
+	}
+
+	var tuiContent string
+	if m.showSystemInfo {
+		tuiContent = m.viewport.View()
+	} else {
+		tuiContent = content
+	}
+
+	tui := lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.NewStyle().Width(contentWidth).Margin(0, 1).Render(tabRow),
-		styles.ContentBoxStyle().Width(contentWidth).Height(contentHeight).Render(content),
+		styles.ContentBoxStyle().Width(contentWidth).Height(contentHeight).Render(tuiContent),
 		styles.FooterBoxStyle.Width(contentWidth).Render(footer),
 	)
+
+	return tui
 }
 
 func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
@@ -268,28 +372,17 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 	return m, cmd
 }
 
-// Create a new logger instance
-func createLogger(name, filePath string) *logger.Logger {
-	tuiLogger, err := logger.NewLogger(name, filePath)
-	if err != nil {
-		log.Fatalf("Failed to create logger %s: %v", name, err)
-	}
-	return tuiLogger
-}
-
-// Convert debug level string to int
-func getDebugLevel(level string) int {
-	switch level {
-	case "debug":
-		return 2
-	case "error":
-		return 1
-	default:
-		return 0
-	}
-}
-
 func main() {
+	startupConfig, err := common.GetRunningConfigWithoutLog()
+	if err != nil || startupConfig == "" {
+		fmt.Fprintf(os.Stderr, "Error loading FRR config: %v\n", err)
+		os.Exit(1)
+	} else {
+		startFrrMadTui()
+	}
+}
+
+func startFrrMadTui() {
 	// Load configuration
 	config, err := configs.LoadConfig()
 	if err != nil {

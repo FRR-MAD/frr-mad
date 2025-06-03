@@ -5,15 +5,25 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
 func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, receivedNetworkLSDB *frrProto.IntraAreaLsa, receivedSummaryLSDB *frrProto.InterAreaLsa, receivedExternalLSDB *frrProto.InterAreaLsa, receivedNssaExternalLSDB *frrProto.InterAreaLsa) {
+	a.Logger.Debug("Starting FIB-LSDB consistency analysis")
+	start := time.Now()
+
+	a.Logger.WithAttrs(map[string]any{
+		"fib_entries":   len(fibMap),
+		"network_lsas":  len(getLSDBMapAndList(receivedNetworkLSDB)),
+		"summary_lsas":  len(getLSDBMapAndList(receivedSummaryLSDB)),
+		"external_lsas": len(getLSDBMapAndList(receivedExternalLSDB)),
+		"nssa_lsas":     len(getLSDBMapAndList(receivedNssaExternalLSDB)),
+	}).Debug("Analysis input counts")
+
 	result := &frrProto.AnomalyDetection{
-		SuperfluousEntries: []*frrProto.Advertisement{},
-		MissingEntries:     []*frrProto.Advertisement{},
-		DuplicateEntries:   []*frrProto.Advertisement{},
+		MissingEntries: []*frrProto.Advertisement{},
 	}
 
 	lsdbList := []string{}
@@ -33,7 +43,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 		setA[v.Prefix] = true
 	}
 	fibList := []string{}
-	for prefix, _ := range fibMap {
+	for prefix := range fibMap {
 		fibList = append(fibList, prefix)
 	}
 	sort.Strings(fibList)
@@ -53,10 +63,35 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 	a.AnalysisResult.LsdbToRibAnomaly.HasUnAdvertisedPrefixes = result.HasUnAdvertisedPrefixes
 	a.AnalysisResult.LsdbToRibAnomaly.MissingEntries = result.MissingEntries
 
+	if len(result.MissingEntries) > 0 {
+		missingExamples := make([]string, 0, 3)
+		for i, entry := range result.MissingEntries {
+			// Limit to 3 because of storage
+			if i >= 3 {
+				break
+			}
+			missingExamples = append(missingExamples,
+				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"missing_count":    len(result.MissingEntries),
+			"missing_examples": missingExamples,
+			"analysis":         "LSDB contains prefixes not found in FIB",
+		}).Warning("Found prefixes in LSDB missing from FIB")
+	}
+	a.Logger.WithAttrs(map[string]any{
+		"duration":      time.Since(start).String(),
+		"missing_count": len(result.MissingEntries),
+	}).Debug("Completed FIB-LSDB analysis")
 }
 
 func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.IntraAreaLsa, isState *frrProto.IntraAreaLsa) (map[string]*frrProto.Advertisement, map[string]*frrProto.Advertisement) {
+	a.Logger.Debug("Starting router LSDB analysis")
+	start := time.Now()
+
 	if isState == nil || shouldState == nil {
+		a.Logger.Error("Skipping router analysis - missing input data")
 		return nil, nil
 	}
 
@@ -66,62 +101,26 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
-	isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
-	shouldStateMap := make(map[string]*frrProto.Advertisement)
-
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			isStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				isStateMap[key].PrefixLength = link.PrefixLength
-			}
-		}
-	}
-
-	for _, area := range shouldState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			adv := &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkType:         link.LinkType,
-			}
-			if link.LinkType == strings.ToLower("Stub Network") {
-				shouldStateMap[key] = adv
-				shouldStateMap[key].PrefixLength = link.PrefixLength
-			} else if link.LinkType == strings.ToLower("unknown") {
-				adv.LinkStateId = link.LinkStateId
-				shouldStateMap[link.InterfaceAddress] = adv
-				shouldStateMap[link.LinkStateId] = adv
-				shouldStateMap[link.InterfaceAddress].PrefixLength = link.PrefixLength
-				shouldStateMap[link.LinkStateId].PrefixLength = link.PrefixLength
-			} else {
-				shouldStateMap[key] = adv
-			}
-		}
-	}
+	// pretty, _ := json.MarshalIndent(shouldState, "", "  ")
+	// fmt.Println(string(pretty))
+	shouldStateMap := getLsdbStateMap(shouldState)
+	isStateMap := getLsdbStateMap(isState)
 
 	for key, shouldLink := range shouldStateMap {
-		isMissing := false
 		if shouldLink.LinkType == strings.ToLower("unknown") {
+			prefixLength := "/" + shouldLink.PrefixLength
+			_, isTransitWithPrefix := isStateMap[shouldLink.LinkStateId+prefixLength]
 			_, isTransit := isStateMap[shouldLink.LinkStateId]
+			_, isStubWithPrefix := isStateMap[shouldLink.InterfaceAddress+prefixLength]
 			_, isStub := isStateMap[shouldLink.InterfaceAddress]
-			if !isTransit && !isStub {
-				isMissing = true
+			if (isTransit && isTransitWithPrefix) && (isStub && isStubWithPrefix) {
+				result.MissingEntries = append(result.MissingEntries, shouldLink)
 			}
 		} else {
 			if _, exists := isStateMap[key]; !exists {
-				isMissing = true
+				result.MissingEntries = append(result.MissingEntries, shouldLink)
 			}
-		}
-		if isMissing {
-			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
@@ -136,123 +135,142 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
 		}
 	}
+
+	if len(result.MissingEntries) > 0 {
+		missingExamples := make([]map[string]any, 0, 3)
+		for i, entry := range result.MissingEntries {
+			if i >= 3 {
+				break
+			}
+			missingExamples = append(missingExamples, map[string]any{
+				"address": entry.InterfaceAddress,
+				"type":    entry.LinkType,
+			})
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"type":             "router",
+			"count":            len(result.MissingEntries),
+			"missing_examples": missingExamples,
+			"analysis":         "Expected router links not found in operational state",
+		}).Warning("Missing router LSAs detected")
+	}
+
+	if len(result.SuperfluousEntries) > 0 {
+		extraExamples := make([]map[string]any, 0, 3)
+		for i, entry := range result.SuperfluousEntries {
+			if i >= 3 {
+				break
+			}
+			extraExamples = append(extraExamples, map[string]any{
+				"address": entry.InterfaceAddress,
+				"type":    entry.LinkType,
+			})
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"type":           "router",
+			"count":          len(result.SuperfluousEntries),
+			"extra_examples": extraExamples,
+			"analysis":       "Unexpected router links found in operational state",
+		}).Warning("Over-advertised router LSAs detected")
+	}
+
+	a.Logger.WithAttrs(map[string]any{
+		"duration":       time.Since(start).String(),
+		"areas_analyzed": len(isState.Areas),
+		"missing":        len(result.MissingEntries),
+		"extra":          len(result.SuperfluousEntries),
+		"duplicates":     len(result.DuplicateEntries),
+	}).Info("Completed router LSDB analysis")
 
 	a.AnalysisResult.RouterAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.RouterAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
 	a.AnalysisResult.RouterAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.RouterAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	return isStateMap, shouldStateMap
-
-}
-
-func getAdvertisementKey(adv *frrProto.Advertisement) string {
-	if adv.LinkType == "transit network" {
-		return normalizeNetworkAddress(adv.InterfaceAddress)
-	} else if strings.Contains(strings.ToLower(adv.LinkType), "virtual link") {
-		return adv.InterfaceAddress + "/32"
-	}
-	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
-}
-
-func getKeyWithFallback(primary, fallback, prefixLength string) string {
-	addr := normalizeNetworkAddress(primary)
-	if addr == "" {
-		addr = normalizeNetworkAddress(fallback)
-	}
-	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
-}
-
-func normalizePrefixLength(prefixLength string) string {
-	if prefixLength == "" {
-		return "32"
-	}
-	i, err := strconv.Atoi(prefixLength)
-	if err != nil {
-		return "32"
-	}
-	return strconv.Itoa(i)
-}
-
-func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
-	for _, acl := range accessLists {
-		for _, entry := range acl.AclEntry {
-			if !entry.IsPermit {
-				if entry.Any {
-					return true
-				} else {
-					networkAddr := normalizeNetworkAddress(adv.InterfaceAddress)
-					if networkAddr == entry.IPAddress {
-						return true
-					}
-				}
-			}
-		}
-	}
-
-	return false
 }
 
 func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa) {
+	a.Logger.Debug("Starting external LSDB analysis")
+	start := time.Now()
+
 	if isState == nil || shouldState == nil {
+		a.Logger.Warning("Skipping external analysis - missing input data")
 		return
 	}
 
 	result := &frrProto.AnomalyDetection{
-		HasMisconfiguredPrefixes: false,
-		SuperfluousEntries:       []*frrProto.Advertisement{},
-		MissingEntries:           []*frrProto.Advertisement{},
-		DuplicateEntries:         []*frrProto.Advertisement{},
+		SuperfluousEntries: []*frrProto.Advertisement{},
+		MissingEntries:     []*frrProto.Advertisement{},
+		DuplicateEntries:   []*frrProto.Advertisement{},
 	}
 
-	isStateMap := make(map[string]*frrProto.Advertisement)
 	isStateCounter := make(map[string]int)
-	shouldStateMap := make(map[string]*frrProto.Advertisement)
+	lsdbShouldStateMap := getLsdbStateMap(shouldState)
+	lsdbIsStateMap := getLsdbStateMap(isState)
 
-	for _, area := range isState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			isStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkStateId:      link.LinkStateId,
-				LinkType:         link.LinkType,
-				PrefixLength:     link.PrefixLength,
-			}
-
-		}
-	}
-
-	for _, area := range shouldState.Areas {
-		for i := range area.Links {
-			link := area.Links[i]
-			key := getAdvertisementKey(link)
-			shouldStateMap[key] = &frrProto.Advertisement{
-				InterfaceAddress: link.InterfaceAddress,
-				LinkStateId:      link.LinkStateId,
-				LinkType:         link.LinkType,
-				PrefixLength:     link.PrefixLength,
-			}
-
-		}
-	}
-
-	for key, shouldLink := range shouldStateMap {
-		if _, exists := isStateMap[key]; !exists {
+	for key, shouldLink := range lsdbShouldStateMap {
+		if _, exists := lsdbIsStateMap[key]; !exists {
 			result.MissingEntries = append(result.MissingEntries, shouldLink)
 		}
 	}
 
-	for key, isLink := range isStateMap {
-		if _, exists := shouldStateMap[key]; !exists {
+	for key, isLink := range lsdbIsStateMap {
+		if _, exists := lsdbShouldStateMap[key]; !exists {
 			result.SuperfluousEntries = append(result.SuperfluousEntries, isLink)
 		}
 	}
 
 	for prefix, counter := range isStateCounter {
 		if counter > 1 {
-			result.DuplicateEntries = append(result.DuplicateEntries, isStateMap[prefix])
+			result.DuplicateEntries = append(result.DuplicateEntries, lsdbIsStateMap[prefix])
 		}
 	}
+
+	if len(result.MissingEntries) > 0 {
+		missingPrefixes := make([]string, 0, 3)
+		for i, entry := range result.MissingEntries {
+			if i >= 3 {
+				break
+			}
+			missingPrefixes = append(missingPrefixes,
+				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"type":             "external",
+			"count":            len(result.MissingEntries),
+			"missing_prefixes": missingPrefixes,
+			"analysis":         "Expected external prefixes not advertised",
+		}).Warning("Missing external LSAs detected")
+	}
+
+	if len(result.SuperfluousEntries) > 0 {
+		extraPrefixes := make([]string, 0, 3)
+		for i, entry := range result.SuperfluousEntries {
+			if i >= 3 {
+				break
+			}
+			extraPrefixes = append(extraPrefixes,
+				fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength))
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"type":           "external",
+			"count":          len(result.SuperfluousEntries),
+			"extra_prefixes": extraPrefixes,
+			"analysis":       "Unexpected external prefixes advertised",
+		}).Warning("Over-advertised external LSAs detected")
+	}
+
+	a.Logger.WithAttrs(map[string]any{
+		"duration":       time.Since(start).String(),
+		"areas_analyzed": len(isState.Areas),
+		"missing":        len(result.MissingEntries),
+		"extra":          len(result.SuperfluousEntries),
+		"duplicates":     len(result.DuplicateEntries),
+	}).Info("Completed external LSDB analysis")
 
 	a.AnalysisResult.ExternalAnomaly.HasOverAdvertisedPrefixes = len(result.SuperfluousEntries) > 0
 	a.AnalysisResult.ExternalAnomaly.HasUnAdvertisedPrefixes = len(result.MissingEntries) > 0
@@ -260,16 +278,18 @@ func (a *Analyzer) ExternalAnomalyAnalysisLSDB(shouldState *frrProto.InterAreaLs
 	a.AnalysisResult.ExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.ExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.ExternalAnomaly.DuplicateEntries = result.DuplicateEntries
-
 }
 
 func normalizeNetworkAddress(address string) string {
 	return strings.ToLower(strings.TrimSpace(address))
 }
 
-// TODO: Add missing analysis
 func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.AccessListAnalyzer, shouldState *frrProto.InterAreaLsa, isState *frrProto.InterAreaLsa, externalState *frrProto.InterAreaLsa) {
+	a.Logger.Debug("Starting NSSA external analysis")
+	start := time.Now()
+
 	if isState == nil || shouldState == nil {
+		a.Logger.Warning("Skipping NSSA analysis - missing input data")
 		return
 	}
 
@@ -340,6 +360,45 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 		}
 	}
 
+	if len(result.MissingEntries) > 0 {
+		missingDetails := make([]map[string]any, 0, 3)
+		for i, entry := range result.MissingEntries {
+			if i >= 3 {
+				break
+			}
+			missingDetails = append(missingDetails, map[string]any{
+				"prefix": fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength),
+				"p-bit":  entry.PBit,
+			})
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"type":           "nssa",
+			"count":          len(result.MissingEntries),
+			"missing_routes": missingDetails,
+			"analysis":       "Expected NSSA external routes not advertised",
+		}).Warning("Missing NSSA external LSAs detected")
+	}
+
+	if len(result.SuperfluousEntries) > 0 {
+		extraDetails := make([]map[string]any, 0, 3)
+		for i, entry := range result.SuperfluousEntries {
+			if i >= 3 {
+				break
+			}
+			extraDetails = append(extraDetails, map[string]any{
+				"prefix": fmt.Sprintf("%s/%s", entry.LinkStateId, entry.PrefixLength),
+			})
+		}
+
+		a.AnomalyLogger.WithAttrs(map[string]any{
+			"type":         "nssa",
+			"count":        len(result.SuperfluousEntries),
+			"extra_routes": extraDetails,
+			"analysis":     "Unexpected NSSA external routes advertised",
+		}).Warning("Over-advertised NSSA external LSAs detected")
+	}
+
 	// P-bit validation
 	a.checkNssaPBitTranslation(isState, externalState, result)
 
@@ -350,9 +409,16 @@ func (a *Analyzer) NssaExternalAnomalyAnalysis(accessList map[string]*frrProto.A
 	a.AnalysisResult.NssaExternalAnomaly.MissingEntries = result.MissingEntries
 	a.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries = result.SuperfluousEntries
 	a.AnalysisResult.NssaExternalAnomaly.DuplicateEntries = result.DuplicateEntries
+
+	a.Logger.WithAttrs(map[string]any{
+		"duration":   time.Since(start).String(),
+		"nssa_areas": len(isState.Areas),
+		"missing":    len(result.MissingEntries),
+		"extra":      len(result.SuperfluousEntries),
+	}).Info("Completed NSSA external analysis")
 }
 
-func getLSDBMapAndList(lsdb interface{}) []string {
+func getLSDBMapAndList(lsdb any) []string {
 	lsdbList := []string{}
 
 	switch db := lsdb.(type) {
@@ -386,39 +452,6 @@ func filterUnique(lsaList []string) []string {
 	return uniqueNames
 }
 
-func isSublist(lsdbList, fibList []int) bool {
-	if len(fibList) == 0 {
-		return true
-	}
-
-	if len(fibList) > len(lsdbList) {
-		return false
-	}
-
-	if len(lsdbList) == len(fibList) {
-		for i := range lsdbList {
-			if lsdbList[i] != fibList[i] {
-				return false
-			}
-		}
-		return true
-	}
-
-	for i := 0; i <= len(lsdbList)-len(fibList); i++ {
-		found := true
-		for j := 0; j < len(fibList); j++ {
-			if lsdbList[i+j] != fibList[j] {
-				found = false
-				break
-			}
-		}
-		if found {
-			return true
-		}
-	}
-
-	return false
-}
 func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, externalState *frrProto.InterAreaLsa, result *frrProto.AnomalyDetection) {
 	if externalState == nil {
 		return
@@ -446,4 +479,89 @@ func (a *Analyzer) checkNssaPBitTranslation(nssaState *frrProto.InterAreaLsa, ex
 			}
 		}
 	}
+}
+
+func getAdvertisementKey(adv *frrProto.Advertisement) string {
+	if adv.LinkType == "transit network" {
+		return normalizeNetworkAddress(adv.InterfaceAddress)
+	} else if strings.Contains(strings.ToLower(adv.LinkType), "virtual link") {
+		return adv.InterfaceAddress + "/32"
+	}
+	return getKeyWithFallback(adv.InterfaceAddress, adv.LinkStateId, adv.PrefixLength)
+}
+
+func getKeyWithFallback(primary, fallback, prefixLength string) string {
+	addr := normalizeNetworkAddress(primary)
+	if addr == "" {
+		addr = normalizeNetworkAddress(fallback)
+	}
+	return fmt.Sprintf("%s/%s", addr, normalizePrefixLength(prefixLength))
+}
+
+func normalizePrefixLength(prefixLength string) string {
+	if prefixLength == "" {
+		return "32"
+	}
+	i, err := strconv.Atoi(prefixLength)
+	if err != nil {
+		return "32"
+	}
+	return strconv.Itoa(i)
+}
+
+func isExcludedByAccessList(adv *frrProto.Advertisement, accessLists map[string]*frrProto.AccessListAnalyzer) bool {
+	for _, acl := range accessLists {
+		for _, entry := range acl.AclEntry {
+			if !entry.IsPermit {
+				if entry.Any {
+					return true
+				} else {
+					networkAddr := normalizeNetworkAddress(adv.InterfaceAddress)
+					if networkAddr == entry.IPAddress {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func getLsdbStateMap(lsdbState any) map[string]*frrProto.Advertisement {
+	result := make(map[string]*frrProto.Advertisement)
+	var areas []*frrProto.AreaAnalyzer
+
+	switch area := lsdbState.(type) {
+	case *frrProto.IntraAreaLsa:
+		areas = area.Areas
+	case *frrProto.InterAreaLsa:
+		areas = area.Areas
+	}
+
+	for _, area := range areas {
+		for i := range area.Links {
+
+			link := area.Links[i]
+
+			key := getAdvertisementKey(link)
+			adv := &frrProto.Advertisement{
+				InterfaceAddress: link.InterfaceAddress,
+				LinkStateId:      link.LinkStateId,
+				LinkType:         link.LinkType,
+				PrefixLength:     link.PrefixLength,
+			}
+			if strings.ToLower(link.LinkType) == "unknown" {
+				prefixLength := "/" + link.PrefixLength
+				result[link.InterfaceAddress+prefixLength] = adv
+				result[link.LinkStateId+prefixLength] = adv
+				result[link.InterfaceAddress] = adv
+				result[link.LinkStateId] = adv
+			} else {
+				result[key] = adv
+			}
+		}
+	}
+
+	return result
 }

@@ -25,6 +25,8 @@ type Model struct {
 	activeBackendInput  string
 	backendResponse     string
 	viewport            viewport.Model
+	statusMessage       string
+	statusSeverity      styles.StatusSeverity
 	logger              *logger.Logger
 }
 
@@ -44,6 +46,8 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger) *Model {
 		backendCommandInput: "",
 		activeBackendInput:  "service",
 		viewport:            vp,
+		statusMessage:       "",
+		statusSeverity:      styles.SeverityInfo,
 		logger:              appLogger,
 	}
 }

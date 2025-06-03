@@ -24,6 +24,8 @@ __pycache__/
 clab-frr01
 containerlab/.frr01-dev.clab.yml.bak
 *.bak
+containerlab/.shared/*
+containerlab/.shared
 
 # go files
 vendor
@@ -40,4 +42,7 @@ build
 # misc
 /makefile.yannick
 julian-router.conf
-
+src/backend/test/analyzer/cust_tmp_test_bak.go
+src/backend/test/analyzer/bak_cust_tmp_test.go
+analyzer_frr
+frr-tui

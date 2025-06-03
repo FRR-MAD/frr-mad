@@ -1,6 +1,8 @@
 package ospfMonitoring
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -8,6 +10,7 @@ import (
 	backend "github.com/frr-mad/frr-tui/internal/services"
 	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/frr-mad/frr-tui/internal/ui/toast"
+	"google.golang.org/protobuf/proto"
 )
 
 // Model defines the state for the dashboard page.
@@ -30,6 +33,8 @@ type Model struct {
 	viewportRightHalf viewport.Model
 	statusMessage     string
 	statusSeverity    styles.StatusSeverity
+	statusTimer       time.Time
+	statusDuration    time.Duration
 	logger            *logger.Logger
 }
 
@@ -38,7 +43,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 
 	// Create the viewport with the desired dimensions.
 	vp := viewport.New(styles.WidthViewPortCompletePage,
-		styles.HeightViewPortCompletePage-styles.FilterBoxHeight)
+		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 	vprh := viewport.New(styles.WidthViewPortHalf,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
@@ -84,118 +89,93 @@ func (m *Model) GetFooterOptions() common.FooterOption {
 	}
 }
 
+func (m *Model) setTimedStatus(message string, severity styles.StatusSeverity, duration time.Duration) {
+	m.statusMessage = message
+	m.statusSeverity = severity
+	m.statusTimer = time.Now()
+	m.statusDuration = duration
+}
+
 // fetchLatestData fetches all data from the backend that are possible to export from the ospf monitor exporter
 func (m *Model) fetchLatestData() error {
-	lsdb, err := backend.GetLSDB(m.logger)
-	if err != nil {
-		return err
+	items := []struct {
+		key, label, filename string
+		fetch                func() (proto.Message, error)
+	}{
+		{
+			key:      "GetLSDB",
+			label:    "complete link-state database",
+			filename: "link-state_database.json",
+			fetch:    func() (proto.Message, error) { return backend.GetLSDB(m.logger) },
+		},
+		{
+			key:      "GetOspfNeighbors",
+			label:    "ospf neighbors",
+			filename: "ospf_neighbors.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfNeighbors(m.logger) },
+		},
+		{
+			key:      "GetOspfRouterDataSelf",
+			label:    "lsdb type 1 router self-originating",
+			filename: "lsdb_router_self.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfRouterDataSelf(m.logger) },
+		},
+		{
+			key:      "GetOspfNetworkDataSelf",
+			label:    "lsdb type 2 network self-originating",
+			filename: "lsdb_network_self.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfNetworkDataSelf(m.logger) },
+		},
+		{
+			key:      "GetOspfSummaryDataSelf",
+			label:    "lsdb type 3 summary self-originating",
+			filename: "lsdb_summary_self.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfSummaryDataSelf(m.logger) },
+		},
+		{
+			key:      "GetOspfAsbrSummaryDataSelf",
+			label:    "lsdb type 4 asbr summary self-originating",
+			filename: "lsdb_asbr_summary_self.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfAsbrSummaryDataSelf(m.logger) },
+		},
+		{
+			key:      "GetOspfExternalDataSelf",
+			label:    "lsdb type 5 external self-originating",
+			filename: "lsdb_external_self.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfExternalDataSelf(m.logger) },
+		},
+		{
+			key:      "GetOspfNssaExternalDataSelf",
+			label:    "lsdb type 7 nssa external self-originating",
+			filename: "lsdb_nssa_external_self.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfNssaExternalDataSelf(m.logger) },
+		},
+		{
+			key:      "GetOspfP2PInterfaceMapping",
+			label:    "mapping of P2P interfaces",
+			filename: "p2p_mapping.json",
+			fetch:    func() (proto.Message, error) { return backend.GetOspfP2PInterfaceMapping(m.logger) },
+		},
+		{
+			key:      "GetStaticFRRConfiguration",
+			label:    "parsed frr configuration",
+			filename: "frr_configuration.json",
+			fetch:    func() (proto.Message, error) { return backend.GetStaticFRRConfiguration(m.logger) },
+		},
 	}
-	m.exportData["GetLSDB"] = common.PrettyPrintJSON(lsdb)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "complete link-state database",
-		MapKey:   "GetLSDB",
-		Filename: "link-state_database.json",
-	})
 
-	ospfNeighbors, err := backend.GetOspfNeighbors(m.logger)
-	if err != nil {
-		return nil
+	var err error
+	for _, it := range items {
+		m.exportOptions, err = common.ExportProto(
+			m.exportData,
+			m.exportOptions,
+			it.key, it.label, it.filename,
+			it.fetch,
+		)
+		if err != nil {
+			return err
+		}
 	}
-	m.exportData["GetOspfNeighbors"] = common.PrettyPrintJSON(ospfNeighbors)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "ospf neighbors",
-		MapKey:   "GetOspfNeighbors",
-		Filename: "ospf_neighbors.json",
-	})
-
-	routerLSASelf, err := backend.GetOspfRouterDataSelf(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfRouterDataSelf"] = common.PrettyPrintJSON(routerLSASelf)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "lsdb type 1 router self-originating",
-		MapKey:   "GetOspfRouterDataSelf",
-		Filename: "lsdb_ruoter_self.json",
-	})
-
-	networkLSASelf, err := backend.GetOspfNetworkDataSelf(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfNetworkDataSelf"] = common.PrettyPrintJSON(networkLSASelf)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "lsdb type 2 network self-originating",
-		MapKey:   "GetOspfNetworkDataSelf",
-		Filename: "lsdb_network_self.json",
-	})
-
-	summaryLSASelf, err := backend.GetOspfSummaryDataSelf(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfSummaryDataSelf"] = common.PrettyPrintJSON(summaryLSASelf)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "lsdb type 3 summary self-originating",
-		MapKey:   "GetOspfSummaryDataSelf",
-		Filename: "lsdb_summary_self.json",
-	})
-
-	asbrSummaryLSASelf, err := backend.GetOspfAsbrSummaryDataSelf(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfAsbrSummaryDataSelf"] = common.PrettyPrintJSON(asbrSummaryLSASelf)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "lsdb type 4 asbr summary self-originating",
-		MapKey:   "GetOspfAsbrSummaryDataSelf",
-		Filename: "lsdb_asbr_summary_self.json",
-	})
-
-	externalLSASelf, err := backend.GetOspfExternalDataSelf(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfExternalDataSelf"] = common.PrettyPrintJSON(externalLSASelf)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "lsdb type 5 external self-originating",
-		MapKey:   "GetOspfExternalDataSelf",
-		Filename: "lsdb_external_self.json",
-	})
-
-	nssaExternalDataSelf, err := backend.GetOspfNssaExternalDataSelf(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfNssaExternalDataSelf"] = common.PrettyPrintJSON(nssaExternalDataSelf)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "lsdb type 7 nssa external self-originating",
-		MapKey:   "GetOspfNssaExternalDataSelf",
-		Filename: "lsdb_nssa_external_self.json",
-	})
-
-	p2pInterfaceMap, err := backend.GetOspfP2PInterfaceMapping(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetOspfP2PInterfaceMapping"] = common.PrettyPrintJSON(p2pInterfaceMap)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "mapping of P2P Interfaces",
-		MapKey:   "GetOspfP2PInterfaceMapping",
-		Filename: "p2p_mapping.json",
-	})
-
-	staticFRRConfiguration, err := backend.GetStaticFRRConfiguration(m.logger)
-	if err != nil {
-		return nil
-	}
-	m.exportData["GetStaticFRRConfiguration"] = common.PrettyPrintJSON(staticFRRConfiguration)
-	m.exportOptions = common.AddExportOption(m.exportOptions, common.ExportOption{
-		Label:    "parsed frr configuration",
-		MapKey:   "GetStaticFRRConfiguration",
-		Filename: "frr_configuration.json",
-	})
-
 	return nil
 }
 
