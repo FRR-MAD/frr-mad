@@ -21,8 +21,8 @@ aggregator:
 
 exporter:
   Port: 9091
-  OSPFRouterData: true
-  OSPFNetworkData: true
+  OSPFRouterData: false
+  OSPFNetworkData: false
   OSPFSummaryData: false
   OSPFAsbrSummaryData: false
   OSPFExternalData: false
