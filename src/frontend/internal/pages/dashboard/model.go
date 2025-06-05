@@ -55,7 +55,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 
 	return &Model{
 		title:              "Dashboard",
-		subTabs:            []string{"OSPF"},
+		subTabs:            []string{"Anomalies", "OSPF"},
 		footer:             []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options", "[ctrl+a] anomaly details"},
 		readOnlyMode:       true,
 		cursor:             0,
@@ -106,10 +106,14 @@ func (m *Model) detectAnomaly() {
 	ospfRouterAnomalies, _ := backend.GetRouterAnomalies(m.logger)
 	ospfExternalAnomalies, _ := backend.GetExternalAnomalies(m.logger)
 	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies(m.logger)
+	ospfLSDBToRibAnomalies, _ := backend.GetLSDBToRibAnomalies(m.logger)
+	ribToFibAnomalies, _ := backend.GetRibToFibAnomalies(m.logger)
 
 	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
 		common.HasAnyAnomaly(ospfExternalAnomalies) ||
-		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) ||
+		common.HasAnyAnomaly(ospfLSDBToRibAnomalies) ||
+		common.HasAnyAnomaly(ribToFibAnomalies) {
 
 		m.hasAnomalyDetected = true
 	} else {
