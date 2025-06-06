@@ -11,7 +11,7 @@ frrmadtui:
       enabled: true
       #permission_level: admin
     rib:
-      enabled: false
+      enabled: true
       #permission_level: admin
     shell:
       enabled: true
