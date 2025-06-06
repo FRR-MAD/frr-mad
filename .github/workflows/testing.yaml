@@ -23,7 +23,10 @@ jobs:
           go work sync
 
       - name: Run tests
-        run: go test -coverprofile=coverage.txt ./backend/test/...
+        run: |
+          cd src
+          go test -coverprofile=../coverage.txt ./backend/test/...
+          
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
