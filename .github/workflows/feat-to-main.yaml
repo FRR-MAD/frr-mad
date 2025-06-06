@@ -24,3 +24,4 @@ jobs:
           else
             echo "Branch check passed. This is not a feature or fix branch merging directly to main."
           fi
+
