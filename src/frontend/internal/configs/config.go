@@ -18,6 +18,15 @@ type DefaultConfig struct {
 	DebugLevel string `mapstructure:"debuglevel"`
 }
 
+type FrrMadTuiConfig struct {
+	Pages map[string]PageConfig `mapstructure:"pages"`
+}
+
+type PageConfig struct {
+	Enabled bool `mapstructure:"enabled"`
+	// PermissionLevel string `mapstructure:"permission_level"`
+}
+
 type SocketConfig struct {
 	UnixSocketLocation string `mapstructure:"unixsocketlocation"`
 	UnixSocketName     string `mapstructure:"unixsocketname"`
@@ -44,6 +53,7 @@ type ExporterConfig struct {
 
 type Config struct {
 	Default    DefaultConfig    `mapstructure:"default"`
+	FrrMadTui  FrrMadTuiConfig  `mapstructure:"frrmadtui"`
 	Socket     SocketConfig     `mapstructure:"socket"`
 	Analyzer   AnalyzerConfig   `mapstructure:"analyzer"`
 	Aggregator AggregatorConfig `mapstructure:"aggregator"`
@@ -62,6 +72,7 @@ func LoadConfig() (*Config, error) {
 	return loadYAMLConfig(yamlPath)
 }
 
+// unused?
 func GetConfig() map[string]map[string]string {
 	config, err := LoadConfig()
 	if err != nil {
@@ -103,6 +114,7 @@ func GetConfig() map[string]map[string]string {
 	return result
 }
 
+// unused?
 func loadYAMLConfig(yamlPath string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(yamlPath)
@@ -125,6 +137,7 @@ func getYAMLPath() string {
 	return base + ".yaml"
 }
 
+// unused?
 func InitConfig() (*Config, error) {
 	if _, err := os.Stat(ConfigLocation); os.IsNotExist(err) {
 		yamlPath := getYAMLPath()
@@ -157,6 +170,7 @@ func createDefaultConfig() (*Config, error) {
 	return loadYAMLConfig(yamlPath)
 }
 
+// unused?
 func SaveConfig(config *Config) error {
 	v := viper.New()
 

@@ -90,6 +90,10 @@ func initModel(config *configs.Config) *AppModel {
 	ti.CharLimit = 32
 	ti.Width = 20
 
+	for pageName, pageConfig := range config.FrrMadTui.Pages {
+		fmt.Printf("Page %s is enabled: %v\n", pageName, pageConfig.Enabled)
+	}
+
 	return &AppModel{
 		startupConfig:     "",
 		currentView:       ViewDashboard,
@@ -369,6 +373,7 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 	default:
 		panic("unhandled default case")
 	}
+	// this is unreachable
 	return m, cmd
 }
 
