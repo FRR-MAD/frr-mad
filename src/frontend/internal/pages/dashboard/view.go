@@ -644,6 +644,7 @@ func (m *Model) getDashboardAnomalies() string {
 		routerAnomalyTable = createAnomalyTable(
 			ospfRouterAnomalies,
 			"Router Anomalies (Type 1 LSAs)",
+			m.textFilter.Query,
 		)
 
 		m.logger.WithAttrs(map[string]interface{}{
@@ -662,6 +663,7 @@ func (m *Model) getDashboardAnomalies() string {
 		externalAnomalyTable = createAnomalyTable(
 			ospfExternalAnomalies,
 			"External Link State Anomalies (Type 5 LSAs)",
+			m.textFilter.Query,
 		)
 
 		m.logger.WithAttrs(map[string]interface{}{
@@ -680,6 +682,7 @@ func (m *Model) getDashboardAnomalies() string {
 		nssaExternalAnomalyTable = createAnomalyTable(
 			ospfNSSAExternalAnomalies,
 			"NSSA External Link State Anomalies (Type 7 LSAs)",
+			m.textFilter.Query,
 		)
 
 		m.logger.WithAttrs(map[string]interface{}{
@@ -698,6 +701,7 @@ func (m *Model) getDashboardAnomalies() string {
 		lsdbToRibAnomalyTable = createAnomalyTable(
 			ospfLSDBToRibAnomalies,
 			"Deviation from the LSDB and RIB",
+			m.textFilter.Query,
 		)
 
 		m.logger.WithAttrs(map[string]interface{}{
@@ -716,6 +720,7 @@ func (m *Model) getDashboardAnomalies() string {
 		ribToFibAnomalyTable = createAnomalyTable(
 			ribToFibAnomalies,
 			"Deviation from the RIB and FIB",
+			m.textFilter.Query,
 		)
 
 		m.logger.WithAttrs(map[string]interface{}{
@@ -762,7 +767,7 @@ func (m *Model) getDashboardAnomalies() string {
 	return allAnomalies
 }
 
-func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) string {
+func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string, filterQuery string) string {
 	// extract data for tables
 	var tableData [][]string
 
@@ -792,6 +797,7 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 		for _, missingEntry := range a.MissingEntries {
 			var firstCol string
 			var cidr string
+			var anomalyType string
 			if strings.Contains(lsaTypeHeader, "Router") {
 				firstCol = missingEntry.InterfaceAddress
 				cidr = ""
@@ -800,11 +806,19 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 				cidr = "/" + missingEntry.PrefixLength
 			}
 
+			if strings.Contains(lsaTypeHeader, "LSDB and RIB") {
+				anomalyType = "Missing Route"
+			} else if strings.Contains(lsaTypeHeader, "RIB and FIB") {
+				anomalyType = "Not installed Route"
+			} else {
+				anomalyType = "Unadvertised Route"
+			}
+
 			tableData = append(tableData, []string{
 				firstCol,
 				cidr,
 				missingEntry.LinkType,
-				"Unadvertised Route",
+				anomalyType,
 			})
 		}
 	}
@@ -813,6 +827,11 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string) stri
 	sort.Slice(tableData, func(i, j int) bool {
 		return tableData[i][0] < tableData[j][0]
 	})
+
+	// Apply filter if active
+	if filterQuery != "" {
+		tableData = common.FilterRows(tableData, filterQuery)
+	}
 
 	// create the tables and fill it with collected data
 	rows := len(tableData)

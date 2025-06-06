@@ -5,6 +5,18 @@ default:
   # default is info
   debuglevel: error
 
+frrmadtui:
+  pages:
+    ospf:
+      enabled: true
+      #permission_level: admin
+    rib:
+      enabled: false
+      #permission_level: admin
+    shell:
+      enabled: true
+      #permission_level: admin
+
 socket:
   unixsocketlocation: /var/run/frr-mad
   unixsocketname: analyzer.sock

@@ -1,10 +1,6 @@
 name: Feature Branch to Staging Workflow
 
 on:
-#  push:
-#    branches:
-#      - 'feature/**'
-#      - 'fix/**'
   pull_request:
     branches:
       - 'staging'
