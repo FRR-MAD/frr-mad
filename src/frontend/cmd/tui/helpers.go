@@ -38,16 +38,37 @@ func (m *AppModel) setTitles() {
 		m.shell,
 	}
 	for _, page := range pages {
-		m.tabs = append(m.tabs, page.GetTitle())
-		m.footerOptions = append(m.footerOptions, page.GetFooterOptions())
+		for _, activeView := range m.activeViews {
+			if activeView == page.GetAppState() {
+				m.tabs = append(m.tabs, page.GetPageInfo())
+				m.footerOptions = append(m.footerOptions, page.GetFooterOptions())
+			}
+		}
 	}
 }
 
 func (m *AppModel) getCurrentFooterOptions() []string {
+	pages := []common.PageInterface{
+		m.dashboard,
+		m.ospf,
+		m.rib,
+		m.shell,
+	}
 	for _, opt := range m.footerOptions {
-		if opt.PageTitle == m.tabs[m.currentView].Title {
-			return opt.PageOptions
+		for _, page := range pages {
+			if opt.PageTitle == page.GetPageInfo().Title && m.currentView == page.GetPageInfo().AppState {
+				return opt.PageOptions
+			}
 		}
 	}
 	return nil
+}
+
+func (m *AppModel) indexOfAppState(state common.AppState) int {
+	for i, st := range m.activeViews {
+		if st == state {
+			return i
+		}
+	}
+	return 0
 }

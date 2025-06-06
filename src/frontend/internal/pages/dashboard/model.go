@@ -16,6 +16,7 @@ import (
 )
 
 type Model struct {
+	appState           common.AppState
 	title              string
 	subTabs            []string
 	footer             []string
@@ -54,6 +55,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
+		appState:           0,
 		title:              "Dashboard",
 		subTabs:            []string{"Anomalies", "OSPF"},
 		footer:             []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options", "[ctrl+a] anomaly details"},
@@ -77,10 +79,15 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 	}
 }
 
-func (m *Model) GetTitle() common.Tab {
+func (m *Model) GetAppState() common.AppState {
+	return m.appState
+}
+
+func (m *Model) GetPageInfo() common.Tab {
 	return common.Tab{
-		Title:   m.title,
-		SubTabs: m.subTabs,
+		Title:    m.title,
+		SubTabs:  m.subTabs,
+		AppState: m.appState,
 	}
 }
 
