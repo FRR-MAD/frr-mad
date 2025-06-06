@@ -111,7 +111,7 @@ func (m *Model) renderAnomaliesDashboard() string {
 	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	m.viewportRight.Width = styles.WidthViewPortOneFourth
-	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	var statusHeader string
 	if m.hasAnomalyDetected {
@@ -133,12 +133,11 @@ func (m *Model) renderAnomaliesDashboard() string {
 		m.viewportLeft.SetContent("")
 	}
 
-	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
 	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
 		m.getSystemResourcesBox(), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
-	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
+	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, m.viewportRight.View())
 
 	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, statusHeader, m.viewportLeft.View())
 
@@ -155,17 +154,16 @@ func (m *Model) renderOSPFDashboard() string {
 	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
 
 	m.viewportRight.Width = styles.WidthViewPortOneFourth
-	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
+	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	ospfDashboardLsdbSelf := m.getOspfDashboardLsdbSelf()
 	m.viewportLeft.SetContent(ospfDashboardLsdbSelf)
 
-	systemResourceHeader := styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resourcess")
 	rightSideDashboardContent := lipgloss.JoinVertical(lipgloss.Left,
 		m.getSystemResourcesBox(), m.getOSPFGeneralInfoBox(), m.getSystemInfo())
 	m.viewportRight.SetContent(rightSideDashboardContent)
 
-	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, systemResourceHeader, m.viewportRight.View())
+	rightSideDashboard := lipgloss.JoinVertical(lipgloss.Left, m.viewportRight.View())
 
 	leftSideDashboard := lipgloss.JoinVertical(lipgloss.Left, m.viewportLeft.View())
 
@@ -199,6 +197,7 @@ func (m *Model) getSystemResourcesBox() string {
 	}
 
 	systemStatistics := lipgloss.JoinVertical(lipgloss.Left,
+		styles.H1TitleStyle().Width(styles.WidthTwoH1OneFourth).Render("System Resources"),
 		styles.H2TitleStyle().Width(styles.WidthTwoH2OneFourth).Render("CPU Metrics"),
 		styles.H2TwoContentBoxStyleP1101().Width(styles.WidthTwoH2OneFourthBox).Render(
 			"CPU Usage: "+cpuUsageString+"\n"+
