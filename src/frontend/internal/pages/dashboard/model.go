@@ -49,7 +49,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 	vpl := viewport.New(styles.WidthViewPortThreeFourth,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.BodyFooterHeight)
 	vpr := viewport.New(styles.WidthViewPortOneFourth,
-		styles.HeightViewPortCompletePage-styles.HeightH1-styles.BodyFooterHeight)
+		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 	vprh := viewport.New(styles.WidthViewPortHalf,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
