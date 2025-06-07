@@ -110,7 +110,7 @@ func (c *Collector) Collect() error {
 	}
 
 	fetchAndMerge("StaticFRRConfig", c.FullFrrData.StaticFrrConfiguration, func() (proto.Message, error) {
-		return fetchStaticFRRConfig()
+		return fetchStaticFRRConfig(executor)
 	})
 
 	fetchAndMerge("GeneralOSPFInformation", c.FullFrrData.GeneralOspfInformation, func() (proto.Message, error) {
