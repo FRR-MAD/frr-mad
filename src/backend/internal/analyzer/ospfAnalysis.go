@@ -27,16 +27,36 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 	}
 
 	lsdbList := []string{}
-	networkLsdbList := getLSDBMapAndList(receivedSummaryLSDB)
+	networkLsdbList := getLSDBMapAndList(receivedNetworkLSDB)
 	summaryLsdbList := getLSDBMapAndList(receivedSummaryLSDB)
 	externalLsdbList := getLSDBMapAndList(receivedExternalLSDB)
 	nssaExternalLsdbList := getLSDBMapAndList(receivedNssaExternalLSDB)
+
+	// pretty1,_ := json.MarshalIndent(receivedNetworkLSDB, "", "  ")
+	// pretty2,_ := json.MarshalIndent(receivedSummaryLSDB, "", "  ")
+	// pretty3,_ := json.MarshalIndent(receivedExternalLSDB, "", "  ")
+	// pretty4,_ := json.MarshalIndent(receivedNssaExternalLSDB, "", "  ")
+	// fmt.Println(string(pretty1))
+	// fmt.Println(string(pretty2))
+	// fmt.Println(string(pretty3))
+	// fmt.Println(string(pretty4))
+	//
+	// pretty5,_ := json.MarshalIndent(fibMap, "", "  ")
+	// fmt.Println(string(pretty5))
 
 	lsdbList = append(lsdbList, networkLsdbList...)
 	lsdbList = append(lsdbList, summaryLsdbList...)
 	lsdbList = append(lsdbList, externalLsdbList...)
 	lsdbList = append(lsdbList, nssaExternalLsdbList...)
 	lsdbList = filterUnique(lsdbList)
+
+	// foobar := make(map[string]bool)
+	fmt.Println(lsdbList)
+	 for _, v := range lsdbList {
+	   // foobar[v]
+		fmt.Println(v)
+	
+	 }
 
 	setA := make(map[string]bool)
 	for _, v := range fibMap {
@@ -425,14 +445,14 @@ func getLSDBMapAndList(lsdb any) []string {
 	case *frrProto.IntraAreaLsa:
 		for _, area := range db.Areas {
 			for _, lsa := range area.Links {
-				lsdbList = append(lsdbList, lsa.LinkStateId+"/"+lsa.PrefixLength)
+				lsdbList = append(lsdbList, lsa.LinkStateId)
 			}
 		}
 
 	case *frrProto.InterAreaLsa:
 		for _, area := range db.Areas {
 			for _, lsa := range area.Links {
-				lsdbList = append(lsdbList, lsa.LinkStateId+"/"+lsa.PrefixLength)
+				lsdbList = append(lsdbList, lsa.LinkStateId)
 			}
 		}
 	}

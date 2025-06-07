@@ -72,7 +72,6 @@ func (a *Analyzer) AnomalyAnalysis() {
 	a.Logger.Debug("Running FIB analysis")
 	a.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
 
-
 	a.AnalyserStateParserResults.ShouldRouterLsdb.Reset()
 	a.AnalyserStateParserResults.ShouldExternalLsdb.Reset()
 	a.AnalyserStateParserResults.ShouldNssaExternalLsdb.Reset()

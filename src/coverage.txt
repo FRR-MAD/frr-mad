@@ -1,0 +1,7 @@
+mode: set
+github.com/frr-mad/frr-mad/src/backend/test/comms/mock_data.go:10.54,45.2 1 1
+github.com/frr-mad/frr-mad/src/backend/test/comms/mock_data.go:48.58,78.2 1 1
+github.com/frr-mad/frr-mad/src/backend/test/comms/mock_data.go:81.56,105.2 1 1
+github.com/frr-mad/frr-mad/src/backend/test/comms/mock_data.go:108.56,114.2 1 1
+github.com/frr-mad/frr-mad/src/backend/test/comms/mock_data.go:117.52,124.2 1 1
+github.com/frr-mad/frr-mad/src/backend/test/comms/mock_data.go:126.110,135.2 5 1
