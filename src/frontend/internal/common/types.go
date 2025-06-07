@@ -16,7 +16,8 @@ import (
 // PageInterface defines a module that has a title.
 type PageInterface interface {
 	tea.Model
-	GetTitle() Tab
+	GetAppState() AppState
+	GetPageInfo() Tab
 	GetSubTabsLength() int
 	GetFooterOptions() FooterOption
 }
@@ -31,8 +32,9 @@ type WindowSize struct {
 }
 
 type Tab struct {
-	Title   string
-	SubTabs []string
+	Title    string
+	SubTabs  []string
+	AppState AppState
 }
 
 type Filter struct {
@@ -70,6 +72,9 @@ type TimedPayload struct {
 // ================================ //
 // TYPES                            //
 // ================================ //
+
+// AppState is used for iota in main.go -> simplifies handling of currentView
+type AppState int
 
 // SortedIpList implements sort.Interface for a slice of IP address strings.
 type SortedIpList []string

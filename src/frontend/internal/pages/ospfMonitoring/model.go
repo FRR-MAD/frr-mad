@@ -15,6 +15,7 @@ import (
 
 // Model defines the state for the dashboard page.
 type Model struct {
+	appState          common.AppState
 	title             string
 	subTabs           []string
 	footer            []string
@@ -48,7 +49,8 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
-		title: "OSPF Monitoring",
+		appState: 1,
+		title:    "OSPF Monitoring",
 		// 'Running Config' has to remain last in the list
 		// because the key '9' is mapped to the last element of the list.
 		subTabs:           []string{"LSDB", "Router LSAs", "Network LSAs", "External LSAs", "Neighbors", "Running Config"},
@@ -70,10 +72,15 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 	}
 }
 
-func (m *Model) GetTitle() common.Tab {
+func (m *Model) GetAppState() common.AppState {
+	return m.appState
+}
+
+func (m *Model) GetPageInfo() common.Tab {
 	return common.Tab{
-		Title:   m.title,
-		SubTabs: m.subTabs,
+		Title:    m.title,
+		SubTabs:  m.subTabs,
+		AppState: m.appState,
 	}
 }
 
