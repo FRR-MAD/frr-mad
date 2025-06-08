@@ -196,6 +196,8 @@ func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string, lo
 		}
 	}
 
+	fmt.Println(networkLsdb)
+
 	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
 		"network_lsas": len(networkLsdb.Links),
@@ -229,13 +231,15 @@ func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string, lo
 	for _, sumStates := range config.SummaryStates {
 		for _, lsaEntry := range sumStates.LsaEntries {
 			adv := &frrProto.Advertisement{
-				LinkStateId:  lsaEntry.LinkStateId,
+				// LinkStateId:  lsaEntry.LinkStateId,
+				LinkStateId:  getNetworkAddress(lsaEntry.LinkStateId, lsaEntry.NetworkMask) + "/" + strconv.Itoa(int(lsaEntry.NetworkMask)),
 				PrefixLength: strconv.Itoa(int(lsaEntry.NetworkMask)),
 				Options:      lsaEntry.Options,
 			}
 			summaryLsdb.Links = append(summaryLsdb.Links, adv)
 		}
 	}
+	fmt.Println(summaryLsdb)
 
 	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
@@ -318,13 +322,15 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string, l
 
 	for _, linkState := range config.AsExternalLinkStates {
 		adv := frrProto.Advertisement{
-			LinkStateId:  linkState.LinkStateId,
+			LinkStateId:  getNetworkAddress(linkState.LinkStateId, linkState.NetworkMask) + "/" + strconv.Itoa(int(linkState.NetworkMask)),
 			PrefixLength: strconv.Itoa(int(linkState.NetworkMask)),
 			LinkType:     "external",
 			Options:      linkState.Options,
 		}
 		externalArea.Links = append(externalArea.Links, &adv)
 	}
+
+	fmt.Println(externalArea)
 
 	logger.WithAttrs(map[string]any{
 		"duration":      time.Since(start).String(),
@@ -416,7 +422,7 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 	for _, linkStates := range config.NssaExternalAllLinkStates {
 		for _, linkState := range linkStates.Data {
 			adv := frrProto.Advertisement{
-				LinkStateId:  linkState.LinkStateId,
+				LinkStateId:  getNetworkAddress(linkState.LinkStateId, linkState.NetworkMask) + "/" + strconv.Itoa(int(linkState.NetworkMask)),
 				PrefixLength: strconv.Itoa(int(linkState.NetworkMask)),
 				LinkType:     "nssa-external",
 				Options:      linkState.Options,
@@ -424,6 +430,8 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 			externalArea.Links = append(externalArea.Links, &adv)
 		}
 	}
+
+	fmt.Println(externalArea)
 
 	logger.WithAttrs(map[string]any{
 		"duration":  time.Since(start).String(),

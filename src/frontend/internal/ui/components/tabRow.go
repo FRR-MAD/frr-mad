@@ -13,8 +13,8 @@ import (
 func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize *common.WindowSize, logger *logger.Logger) string {
 	var renderedTabs []string
 	var renderedSubTabs []string
-	for i, tab := range tabs {
-		if i == activeTab {
+	for _, tab := range tabs {
+		if int(tab.AppState) == activeTab {
 			if activeSubTab != -1 {
 				renderedTabs = append(renderedTabs, styles.ActiveTabBoxLockedStyle().Render(tab.Title))
 			} else {
@@ -72,17 +72,3 @@ func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize
 
 	return lipgloss.JoinVertical(lipgloss.Left, horizontalTabs, horizontalSubTabs)
 }
-
-//func getRouterName() (string, string, error) {
-//	response, err := backend.SendMessage("frr", "routerData", nil)
-//	if err != nil {
-//		return "", "", err
-//	}
-//
-//	routerData := response.Data.GetFrrRouterData()
-//
-//	routerName := routerData.RouterName
-//	ospfRouterId := routerData.OspfRouterId
-//
-//	return routerName, ospfRouterId, nil
-//}

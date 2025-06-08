@@ -2,6 +2,7 @@
 
 # Set root directory for use in included files
 FRR_VERSION := 8.5.4
+#FRR_VERSION := 10.3.0
 export ROOT_DIR := $(shell pwd)
 export BINARY_PATH := $(ROOT_DIR)/build
 

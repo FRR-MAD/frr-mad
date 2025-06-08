@@ -352,6 +352,24 @@ func GetNSSAExternalAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection
 	return response.Data.GetAnomaly(), nil
 }
 
+func GetLSDBToRibAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "lsdbToRib", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
+}
+
+func GetRibToFibAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "ribToFib", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
+}
+
 func GetParsedShouldStates(logger *logger.Logger) (*frrProto.ParsedAnalyzerData, error) {
 	response, err := SendMessage("analysis", "shouldParsedLsdb", nil, logger)
 	if err != nil {

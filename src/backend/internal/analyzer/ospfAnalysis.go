@@ -27,7 +27,7 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 	}
 
 	lsdbList := []string{}
-	networkLsdbList := getLSDBMapAndList(receivedSummaryLSDB)
+	networkLsdbList := getLSDBMapAndList(receivedNetworkLSDB)
 	summaryLsdbList := getLSDBMapAndList(receivedSummaryLSDB)
 	externalLsdbList := getLSDBMapAndList(receivedExternalLSDB)
 	nssaExternalLsdbList := getLSDBMapAndList(receivedNssaExternalLSDB)
@@ -66,7 +66,6 @@ func (a *Analyzer) AnomalyAnalysisFIB(fibMap map[string]*frrProto.RibPrefixes, r
 	if len(result.MissingEntries) > 0 {
 		missingExamples := make([]string, 0, 3)
 		for i, entry := range result.MissingEntries {
-			// Limit to 3 because of storage
 			if i >= 3 {
 				break
 			}
@@ -102,8 +101,6 @@ func (a *Analyzer) RouterAnomalyAnalysisLSDB(accessList map[string]*frrProto.Acc
 	}
 
 	isStateCounter := make(map[string]int)
-	// pretty, _ := json.MarshalIndent(shouldState, "", "  ")
-	// fmt.Println(string(pretty))
 	shouldStateMap := getLsdbStateMap(shouldState)
 	isStateMap := getLsdbStateMap(isState)
 
@@ -425,14 +422,14 @@ func getLSDBMapAndList(lsdb any) []string {
 	case *frrProto.IntraAreaLsa:
 		for _, area := range db.Areas {
 			for _, lsa := range area.Links {
-				lsdbList = append(lsdbList, lsa.LinkStateId+"/"+lsa.PrefixLength)
+				lsdbList = append(lsdbList, lsa.LinkStateId)
 			}
 		}
 
 	case *frrProto.InterAreaLsa:
 		for _, area := range db.Areas {
 			for _, lsa := range area.Links {
-				lsdbList = append(lsdbList, lsa.LinkStateId+"/"+lsa.PrefixLength)
+				lsdbList = append(lsdbList, lsa.LinkStateId)
 			}
 		}
 	}
