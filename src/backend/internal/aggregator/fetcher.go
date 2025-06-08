@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -14,9 +13,8 @@ import (
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
-func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
-	cmd := exec.Command("vtysh", "-c", "show running-config")
-	output, err := cmd.Output()
+func fetchStaticFRRConfig(executor *frrSocket.FRRCommandExecutor) (*frrProto.StaticFRRConfiguration, error) {
+	output, err := executor.ExecZebraCmd("show running-config")
 	if err != nil {
 		return nil, fmt.Errorf("can not open file: %w", err)
 	}
@@ -41,6 +39,8 @@ func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse static FRR config: %w", err)
 	}
+
+	fmt.Println(parsedStaticFRRConfig)
 
 	return parsedStaticFRRConfig, nil
 }

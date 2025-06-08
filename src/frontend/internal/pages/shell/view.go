@@ -66,15 +66,8 @@ func (m *Model) View() string {
 
 func (m *Model) renderBashShellTab() string {
 	if m.readOnlyMode {
-		m.statusMessage = "Read-only mode active"
-		m.statusSeverity = styles.SeverityWarning
 		return lipgloss.NewStyle().Height(styles.HeightBasis - styles.BodyFooterHeight).
 			Render("You are in read only mode. Press [ctrl+w] to deactivate it.")
-	}
-
-	if currentSubTabLocal == 0 && m.statusMessage == "Read-only mode active" {
-		m.statusMessage = "Bash shell ready - Type commands"
-		m.statusSeverity = styles.SeverityInfo
 	}
 
 	// Update the viewport dimensions.

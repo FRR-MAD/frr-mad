@@ -16,6 +16,7 @@ import (
 )
 
 type Model struct {
+	appState           common.AppState
 	title              string
 	subTabs            []string
 	footer             []string
@@ -49,13 +50,14 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 	vpl := viewport.New(styles.WidthViewPortThreeFourth,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.BodyFooterHeight)
 	vpr := viewport.New(styles.WidthViewPortOneFourth,
-		styles.HeightViewPortCompletePage-styles.HeightH1-styles.BodyFooterHeight)
+		styles.HeightViewPortCompletePage-styles.BodyFooterHeight)
 	vprh := viewport.New(styles.WidthViewPortHalf,
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
+		appState:           0,
 		title:              "Dashboard",
-		subTabs:            []string{"OSPF"},
+		subTabs:            []string{"Anomalies", "OSPF"},
 		footer:             []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options", "[ctrl+a] anomaly details"},
 		readOnlyMode:       true,
 		cursor:             0,
@@ -77,10 +79,15 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 	}
 }
 
-func (m *Model) GetTitle() common.Tab {
+func (m *Model) GetAppState() common.AppState {
+	return m.appState
+}
+
+func (m *Model) GetPageInfo() common.Tab {
 	return common.Tab{
-		Title:   m.title,
-		SubTabs: m.subTabs,
+		Title:    m.title,
+		SubTabs:  m.subTabs,
+		AppState: m.appState,
 	}
 }
 
@@ -106,10 +113,14 @@ func (m *Model) detectAnomaly() {
 	ospfRouterAnomalies, _ := backend.GetRouterAnomalies(m.logger)
 	ospfExternalAnomalies, _ := backend.GetExternalAnomalies(m.logger)
 	ospfNSSAExternalAnomalies, _ := backend.GetNSSAExternalAnomalies(m.logger)
+	ospfLSDBToRibAnomalies, _ := backend.GetLSDBToRibAnomalies(m.logger)
+	ribToFibAnomalies, _ := backend.GetRibToFibAnomalies(m.logger)
 
 	if common.HasAnyAnomaly(ospfRouterAnomalies) ||
 		common.HasAnyAnomaly(ospfExternalAnomalies) ||
-		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) {
+		common.HasAnyAnomaly(ospfNSSAExternalAnomalies) ||
+		common.HasAnyAnomaly(ospfLSDBToRibAnomalies) ||
+		common.HasAnyAnomaly(ribToFibAnomalies) {
 
 		m.hasAnomalyDetected = true
 	} else {

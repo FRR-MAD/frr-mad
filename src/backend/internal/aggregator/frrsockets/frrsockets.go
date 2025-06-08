@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+// Package frrsockets provides FRR routing daemon communication via Unix sockets.
+//
+// This implementation is derived from the original work in tynany/frr_exporter:
+// https://github.com/tynany/frr_exporter
+//
+// Original License:
+// MIT License
+
 type FRRCommandExecutor struct {
 	DirPath string
 	Timeout time.Duration
