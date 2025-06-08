@@ -1,6 +1,7 @@
 **Disclaimer**
 
-The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4. In the near future we intend to extend this functionality to the latest versio of FRR.
+The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4.
+Support for newer FRR releases is planned for the near future.
 
 ---
 
