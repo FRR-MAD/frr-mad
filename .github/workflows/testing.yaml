@@ -25,7 +25,7 @@ jobs:
       - name: Run tests
         run: |
           cd src
-          go test -coverprofile=../coverage.txt ./backend/test/...
+          go test -coverprofile=../coverage.txt -coverpkg=./src/backend/... ./test/...
           
 
       - name: Upload results to Codecov
