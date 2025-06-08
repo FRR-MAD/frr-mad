@@ -13,7 +13,6 @@ import (
 func maybeUpdateTERM() {
 	term := os.Getenv("TERM")
 	if term == "xterm" {
-		// fmt.Println("Detected TERM=xterm, updating to xterm-256color")
 		err := os.Setenv("TERM", "xterm-256color")
 		if err != nil {
 			return
@@ -21,7 +20,6 @@ func maybeUpdateTERM() {
 	}
 }
 
-// setStartupConfig stores the running-config to check consistency before quitting FRR-MAD-TUI
 func (m *AppModel) setStartupConfig() (string, error) {
 	startupConfig, err := common.GetRunningConfig(m.logger)
 	if err != nil {
@@ -31,7 +29,6 @@ func (m *AppModel) setStartupConfig() (string, error) {
 	return startupConfig, nil
 }
 
-// setTitles fetches all texts of all pages to fill the TabRow, SubTabRow and Footer
 func (m *AppModel) setTitles() {
 	pages := []common.PageInterface{
 		m.dashboard,
@@ -70,7 +67,6 @@ func getEnabledPages(config *configs.Config) []common.AppState {
 		}
 	}
 
-	// Sort by the underlying int value of each AppState
 	sort.Slice(enabled, func(i, j int) bool {
 		return enabled[i] < enabled[j]
 	})
