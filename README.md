@@ -1,6 +1,7 @@
 **Disclaimer**
 
-The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4. In the near future we intend to extend this functionality to the latest versio of FRR.
+The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4.
+Support for newer FRR releases is planned for the near future.
 
 ---
 
@@ -9,6 +10,10 @@ The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4. I
 FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) consists of two tools, frr-mad-analyzer and frr-mad-tui. The analyzer component analyzes the static Free Range Routing configuration and compares it against the runtime lsdb. It detects wrongly advertised routes and reports them as such. The results are exposed via a Prometheus Node Exporter layer inherent to the analyzer component.
 
 The frr-mad-tui component is a useful text user interface to give live results from the analyzer. Anomalies are presented at the dashboard and should contain valuable information. Apart from that, the tool also provides much useful information pertaining to OSPF.
+
+| ![How the feature works](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/demo.gif) |
+|:----------------------------------------------:|
+|     For more demos see [DEMO.md](DEMO.md)      |
 
 ## Introduction
 
@@ -197,18 +202,16 @@ backend
 ## Frontend Structure
 
 ```
-root/
-├── src/                           # Source Code 
-│   ├── frontend/                  # 
-│   │   ├── cmd/                   # 
-│   │   │   ├── tui/               # Entry Point (main.go)
-│   │   ├── internal/              # 
-│   │   │   ├── common/            # Shared types, helpers, and utilities across pages
-│   │   │   ├── pages/             # Each Page has its own model
-│   │   │   │   ├── examplePage/   #
-│   │   │   │   │   ├── model/     # Bubbletea model
-│   │   │   │   │   ├── update/    # update logic and message handling
-│   │   │   │   │   ├── view/      # UI rendering and Backend data aggregation
-│   │   │   ├── services/          # Backend service layer to call external systems
-│   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
+frontend/                  # 
+├── cmd/                   # 
+│   ├── tui/               # Entry Point (main.go)
+├── internal/              # 
+│   ├── common/            # Shared types, helpers, and utilities across pages
+│   ├── pages/             # Each Page has its own model
+│   │   └── examplePage/   #
+│   │       ├── model/     # Bubbletea model
+│   │       ├── update/    # update logic and message handling
+│   │       └── view/      # UI rendering and Backend data aggregation
+│   ├── services/          # Backend service layer to call external systems
+│   └── ui/                # Shared UI styling, mainly lipgloss
 ```

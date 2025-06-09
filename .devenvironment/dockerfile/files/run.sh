@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BINARY_PATH="/app/tmp/analyzer_frr"
+BINARY_PATH="/app/tmp/frr-mad-analyzer"
 LAST_MODIFIED=""
 INIT_START=1
 
