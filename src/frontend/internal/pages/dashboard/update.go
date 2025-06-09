@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/toast"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/frr-mad/frr-tui/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

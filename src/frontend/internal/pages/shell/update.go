@@ -4,12 +4,13 @@ import (
 	// "math/rand/v2"
 
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"time"
 
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
+
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/frr-mad/frr-tui/internal/common"
-	backend "github.com/frr-mad/frr-tui/internal/services"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	backend "github.com/frr-mad/frr-mad/src/frontend/internal/services"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

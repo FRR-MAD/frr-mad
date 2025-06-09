@@ -3,9 +3,9 @@ package shell
 import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 	"github.com/frr-mad/frr-mad/src/logger"
-	"github.com/frr-mad/frr-tui/internal/common"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 )
 
 // Model defines the state for the shell page.

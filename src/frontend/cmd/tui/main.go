@@ -7,16 +7,16 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 
-	"github.com/frr-mad/frr-tui/internal/pages/rib"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/rib"
 
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/configs"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/dashboard"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/ospfMonitoring"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/shell"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/components"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 	"github.com/frr-mad/frr-mad/src/logger"
-	"github.com/frr-mad/frr-tui/internal/common"
-	"github.com/frr-mad/frr-tui/internal/configs"
-	"github.com/frr-mad/frr-tui/internal/pages/dashboard"
-	"github.com/frr-mad/frr-tui/internal/pages/ospfMonitoring"
-	"github.com/frr-mad/frr-tui/internal/pages/shell"
-	"github.com/frr-mad/frr-tui/internal/ui/components"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"

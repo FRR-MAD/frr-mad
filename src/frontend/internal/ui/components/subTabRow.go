@@ -1,8 +1,8 @@
 package components
 
 import (
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 )
 
 func CreateSubTabRow(subTabs []string, activeSubTab int) string {

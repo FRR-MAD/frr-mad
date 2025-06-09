@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	backend "github.com/frr-mad/frr-mad/src/frontend/internal/services"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 	"github.com/frr-mad/frr-mad/src/logger"
-	"github.com/frr-mad/frr-tui/internal/common"
-	backend "github.com/frr-mad/frr-tui/internal/services"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 )
 
 func CreateTabRow(tabs []common.Tab, activeTab int, activeSubTab int, windowSize *common.WindowSize, logger *logger.Logger) string {

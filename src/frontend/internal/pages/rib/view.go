@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/toast"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/frr-mad/frr-tui/internal/common"
-	backend "github.com/frr-mad/frr-tui/internal/services"
-	"github.com/frr-mad/frr-tui/internal/ui/components"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	backend "github.com/frr-mad/frr-mad/src/frontend/internal/services"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/components"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 )
 
 var currentSubTabLocal = -1

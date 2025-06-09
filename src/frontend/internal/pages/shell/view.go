@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 
 	"slices"
 
@@ -102,18 +102,11 @@ func (m *Model) renderBashShellTab() string {
 
 func (m *Model) renderVtyshShellTab() string {
 	if m.readOnlyMode {
-		m.statusMessage = "Read-only mode active"
-		m.statusSeverity = styles.SeverityWarning
 		return lipgloss.NewStyle().Height(styles.HeightBasis - styles.BodyFooterHeight).
 			Render("You are in read only mode. Press [ctrl+w] to deactivate it.")
 	}
 
 	m.activeShell = "vtysh"
-
-	if currentSubTabLocal == 1 && m.statusMessage == "Read-only mode active" {
-		m.statusMessage = "VTY shell ready"
-		m.statusSeverity = styles.SeverityInfo
-	}
 
 	// Update the viewport dimensions.
 	m.viewport.Width = styles.WidthViewPortCompletePage
