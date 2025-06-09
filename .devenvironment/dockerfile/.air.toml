@@ -2,10 +2,10 @@ root = "/app/src"
 tmp_dir = "/app/tmp"
 
 [build]
-cmd = "cd /app/src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/analyzer_frr ./cmd/frr-analyzer && cd /app/src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/frr-tui ./cmd/tui"
+cmd = "cd /app/src/backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/frr-mad-analyzer ./cmd/frr-analyzer && cd /app/src/frontend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s' -tags=docker -o /app/tmp/frr-mad-tui ./cmd/tui"
 bin = "/app/tmp/analyzer_frr"
 #full_bin = "/app/tmp/analyzer_frr stop;  /app/tmp/analyzer_frr debug"
-full_bin = "/app/tmp/analyzer_frr version"
+full_bin = "/app/tmp/frr-mad-analyzer version"
 delay = 1000
 exclude_dir = ["tmp", "vendor"]
 include_ext = ["go", "proto", "yaml", "yml", "json", "toml", "css", "js", "html", "md", "conf"]
