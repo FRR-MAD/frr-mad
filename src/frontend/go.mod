@@ -1,4 +1,4 @@
-module github.com/frr-mad/frr-tui
+module github.com/frr-mad/frr-mad/src/frontend
 
 go 1.24.2
 

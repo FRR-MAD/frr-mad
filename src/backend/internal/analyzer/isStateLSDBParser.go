@@ -229,7 +229,8 @@ func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string, lo
 	for _, sumStates := range config.SummaryStates {
 		for _, lsaEntry := range sumStates.LsaEntries {
 			adv := &frrProto.Advertisement{
-				LinkStateId:  lsaEntry.LinkStateId,
+				// LinkStateId:  lsaEntry.LinkStateId,
+				LinkStateId:  getNetworkAddress(lsaEntry.LinkStateId, lsaEntry.NetworkMask) + "/" + strconv.Itoa(int(lsaEntry.NetworkMask)),
 				PrefixLength: strconv.Itoa(int(lsaEntry.NetworkMask)),
 				Options:      lsaEntry.Options,
 			}
@@ -318,7 +319,7 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string, l
 
 	for _, linkState := range config.AsExternalLinkStates {
 		adv := frrProto.Advertisement{
-			LinkStateId:  linkState.LinkStateId,
+			LinkStateId:  getNetworkAddress(linkState.LinkStateId, linkState.NetworkMask) + "/" + strconv.Itoa(int(linkState.NetworkMask)),
 			PrefixLength: strconv.Itoa(int(linkState.NetworkMask)),
 			LinkType:     "external",
 			Options:      linkState.Options,
@@ -416,7 +417,7 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 	for _, linkStates := range config.NssaExternalAllLinkStates {
 		for _, linkState := range linkStates.Data {
 			adv := frrProto.Advertisement{
-				LinkStateId:  linkState.LinkStateId,
+				LinkStateId:  getNetworkAddress(linkState.LinkStateId, linkState.NetworkMask) + "/" + strconv.Itoa(int(linkState.NetworkMask)),
 				PrefixLength: strconv.Itoa(int(linkState.NetworkMask)),
 				LinkType:     "nssa-external",
 				Options:      linkState.Options,
@@ -471,19 +472,19 @@ func GetFIB(rib *frrProto.RoutingInformationBase, logger *logger.Logger) map[str
 	return OspfFibMap
 }
 
- func getNetworkAddress(prefix string, prefixLength int32) string {
- 	ip := net.ParseIP(prefix)
+func getNetworkAddress(prefix string, prefixLength int32) string {
+	ip := net.ParseIP(prefix)
 
- 	tmpNet := &net.IPNet{
- 		IP:   ip,
- 		Mask: net.CIDRMask(int(prefixLength), 32),
- 	}
+	tmpNet := &net.IPNet{
+		IP:   ip,
+		Mask: net.CIDRMask(int(prefixLength), 32),
+	}
 
- 	network := tmpNet.IP.Mask(tmpNet.Mask)
+	network := tmpNet.IP.Mask(tmpNet.Mask)
 
- 	return network.String()
+	return network.String()
 
- }
+}
 
 // Helper functions
 func countTotalLinks(lsa *frrProto.IntraAreaLsa) int {

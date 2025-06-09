@@ -62,16 +62,15 @@ func (a *Analyzer) AnomalyAnalysis() {
 
 	a.Logger.Debug("Running external LSDB analysis")
 	a.ExternalAnomalyAnalysisLSDB(shouldExternalLSDB, isExternalLSDB)
-	//}
 
 	if isNssa {
 		a.Logger.Debug("Running NSSA external analysis")
 		a.NssaExternalAnomalyAnalysis(accessList, shouldNssaExternalLSDB, isNssaExternalLSDB, isExternalLSDB)
 	}
+
 	// TODO: implement ribMap -> fibMap analysis, if necessary?
 	a.Logger.Debug("Running FIB analysis")
 	a.AnomalyAnalysisFIB(fibMap, receivedNetworkLSDB, receivedSummaryLSDB, receivedExternalLSDB, receivedNssaExternalLSDB)
-
 
 	a.AnalyserStateParserResults.ShouldRouterLsdb.Reset()
 	a.AnalyserStateParserResults.ShouldExternalLsdb.Reset()

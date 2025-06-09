@@ -32,10 +32,10 @@ func NewExporter(
 	port := 9091
 
 	if config.Port > 0 {
-		var err error
-		port = config.Port
-		if err != nil {
-			logger.Error(fmt.Sprintf("invalid port in config: %v", err))
+		if config.Port > 65535 {
+			logger.Error(fmt.Sprintf("invalid port in config: port %d is too high", config.Port))
+		} else {
+			port = config.Port
 		}
 	}
 

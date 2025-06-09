@@ -8,9 +8,9 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/frr-mad/frr-tui/internal/common"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/toast"
 )
 
 // Update handles incoming messages and updates the OSPF Monitor state.

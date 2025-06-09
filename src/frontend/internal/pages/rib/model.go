@@ -4,17 +4,18 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	backend "github.com/frr-mad/frr-mad/src/frontend/internal/services"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/toast"
 	"github.com/frr-mad/frr-mad/src/logger"
-	"github.com/frr-mad/frr-tui/internal/common"
-	backend "github.com/frr-mad/frr-tui/internal/services"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/protobuf/proto"
 )
 
 type Model struct {
+	appState          common.AppState
 	title             string
 	subTabs           []string
 	footer            []string
@@ -45,6 +46,7 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 		styles.HeightViewPortCompletePage-styles.HeightH1-styles.AdditionalFooterHeight)
 
 	return &Model{
+		appState:          2,
 		title:             "RIB",
 		subTabs:           []string{"RIB", "FIB", "RIB-OSPF", "RIB-BGP", "RIB-Connected", "RIB-Static"},
 		footer:            []string{"[↑ ↓ home end] scroll", "[ctrl+e] export options"},
@@ -63,10 +65,15 @@ func New(windowSize *common.WindowSize, appLogger *logger.Logger, exportPath str
 	}
 }
 
-func (m *Model) GetTitle() common.Tab {
+func (m *Model) GetAppState() common.AppState {
+	return m.appState
+}
+
+func (m *Model) GetPageInfo() common.Tab {
 	return common.Tab{
-		Title:   m.title,
-		SubTabs: m.subTabs,
+		Title:    m.title,
+		SubTabs:  m.subTabs,
+		AppState: m.appState,
 	}
 }
 

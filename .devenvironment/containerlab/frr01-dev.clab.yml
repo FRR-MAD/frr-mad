@@ -17,6 +17,7 @@ topology:
       binds:
         - r102/daemons:/etc/frr/daemons
         - r102/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r103:
@@ -25,6 +26,7 @@ topology:
       binds:
         - r103/daemons:/etc/frr/daemons
         - r103/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     cr104:
@@ -33,6 +35,7 @@ topology:
       binds:
         - cr104/daemons:/etc/frr/daemons
         - cr104/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     cr105:
@@ -41,6 +44,7 @@ topology:
       binds:
         - cr105/daemons:/etc/frr/daemons
         - cr105/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -50,6 +54,7 @@ topology:
       binds:
         - cr106/daemons:/etc/frr/daemons
         - cr106/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -59,6 +64,7 @@ topology:
       binds:
         - cr107/daemons:/etc/frr/daemons
         - cr107/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -68,6 +74,7 @@ topology:
       binds:
         - cr108/daemons:/etc/frr/daemons
         - cr108/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -77,6 +84,7 @@ topology:
       binds:
         - cr109/daemons:/etc/frr/daemons
         - cr109/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -86,6 +94,7 @@ topology:
       binds:
         - r1010/daemons:/etc/frr/daemons
         - r1010/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -95,6 +104,7 @@ topology:
       binds:
         - r111/daemons:/etc/frr/daemons
         - r111/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r112:
@@ -103,6 +113,7 @@ topology:
       binds:
         - r112/daemons:/etc/frr/daemons
         - r112/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r121:
@@ -111,6 +122,7 @@ topology:
       binds:
         - r121/daemons:/etc/frr/daemons
         - r121/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r122:
@@ -119,6 +131,7 @@ topology:
       binds:
         - r122/daemons:/etc/frr/daemons
         - r122/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r131:
@@ -127,6 +140,7 @@ topology:
       binds:
         - r131/daemons:/etc/frr/daemons
         - r131/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r191:
@@ -135,6 +149,7 @@ topology:
       binds:
         - r191/daemons:/etc/frr/daemons
         - r191/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r192:
@@ -143,6 +158,7 @@ topology:
       binds:
         - r192/daemons:/etc/frr/daemons
         - r192/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r193:
@@ -151,6 +167,7 @@ topology:
       binds:
         - r193/daemons:/etc/frr/daemons
         - r193/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r301:
@@ -159,6 +176,7 @@ topology:
       binds:
         - r301/daemons:/etc/frr/daemons
         - r301/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r302:
@@ -167,6 +185,7 @@ topology:
       binds:
         - r302/daemons:/etc/frr/daemons
         - r302/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     r391:
@@ -175,6 +194,7 @@ topology:
       binds:
         - r391/daemons:/etc/frr/daemons
         - r391/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
     
@@ -184,6 +204,7 @@ topology:
       binds:
         - r201/daemons:/etc/frr/daemons
         - r201/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -193,6 +214,7 @@ topology:
       binds:
         - r202/daemons:/etc/frr/daemons
         - r202/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -202,6 +224,7 @@ topology:
       binds:
         - r203/daemons:/etc/frr/daemons
         - r203/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -211,6 +234,7 @@ topology:
       binds:
         - r204/daemons:/etc/frr/daemons
         - r204/frr.conf:/etc/frr/frr.conf
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - frr-mad-conf:/app/config
 
@@ -219,6 +243,7 @@ topology:
       image: frr-img-dev
       binds:
         - ../../src:/app/src
+        - r101/vtysh.conf:/etc/frr/vtysh.conf
         - .shared/binary:/app/tmp
         - ../../protobufSource:/app/protobufSource
 

@@ -9,8 +9,8 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	frrProto "github.com/frr-mad/frr-mad/src/frontend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
-	frrProto "github.com/frr-mad/frr-tui/pkg"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -345,6 +345,24 @@ func GetExternalAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, er
 
 func GetNSSAExternalAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
 	response, err := SendMessage("analysis", "nssaExternal", nil, logger) // nssaExternal / dummyNSSAExternalOne
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
+}
+
+func GetLSDBToRibAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "lsdbToRib", nil, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Data.GetAnomaly(), nil
+}
+
+func GetRibToFibAnomalies(logger *logger.Logger) (*frrProto.AnomalyDetection, error) {
+	response, err := SendMessage("analysis", "ribToFib", nil, logger)
 	if err != nil {
 		return nil, err
 	}

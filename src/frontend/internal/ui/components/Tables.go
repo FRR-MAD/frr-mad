@@ -1,9 +1,9 @@
 package components
 
 import (
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 )
 
 func NewOspfMonitorTable(headers []string, rows int) *ltable.Table {

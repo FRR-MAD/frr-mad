@@ -3,8 +3,6 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	"net"
 	"os"
 	"path/filepath"
@@ -12,7 +10,10 @@ import (
 	"strings"
 	"time"
 
-	frrProto "github.com/frr-mad/frr-tui/pkg"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+
+	frrProto "github.com/frr-mad/frr-mad/src/frontend/pkg"
 )
 
 func ContainsString(slice []string, s string) bool {

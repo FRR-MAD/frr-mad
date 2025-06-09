@@ -7,27 +7,25 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 
-	"github.com/frr-mad/frr-tui/internal/pages/rib"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/rib"
 
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/configs"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/dashboard"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/ospfMonitoring"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/pages/shell"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/components"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 	"github.com/frr-mad/frr-mad/src/logger"
-	"github.com/frr-mad/frr-tui/internal/common"
-	"github.com/frr-mad/frr-tui/internal/configs"
-	"github.com/frr-mad/frr-tui/internal/pages/dashboard"
-	"github.com/frr-mad/frr-tui/internal/pages/ospfMonitoring"
-	"github.com/frr-mad/frr-tui/internal/pages/shell"
-	"github.com/frr-mad/frr-tui/internal/ui/components"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type AppState int
-
 const (
-	ViewDashboard AppState = iota
-	ViewOSPF
+	ViewDashboard common.AppState = iota
+	ViewOSPFMonitoring
 	ViewRIB
 	ViewShell
 	// add here new Views
@@ -46,7 +44,8 @@ var subTabsLength int
 
 type AppModel struct {
 	startupConfig     string
-	currentView       AppState
+	activeViews       []common.AppState
+	currentView       common.AppState
 	tabs              []common.Tab
 	currentSubTab     int
 	readOnlyMode      bool
@@ -92,6 +91,7 @@ func initModel(config *configs.Config) *AppModel {
 
 	return &AppModel{
 		startupConfig:     "",
+		activeViews:       getEnabledPages(config),
 		currentView:       ViewDashboard,
 		tabs:              []common.Tab{},
 		currentSubTab:     -1,
@@ -136,7 +136,9 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right":
 			if !m.textFilter.Active && !m.preventSubTabExit {
 				if m.currentSubTab == -1 {
-					m.currentView = (m.currentView + 1) % totalViews
+					idx := m.indexOfAppState(m.currentView)
+					next := (idx + 1) % len(m.activeViews)
+					m.currentView = m.activeViews[next]
 					m.currentSubTab = -1
 					if m.currentView == ViewShell {
 						m.footer.CleanInfo()
@@ -152,7 +154,9 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "left":
 			if !m.textFilter.Active && !m.preventSubTabExit {
 				if m.currentSubTab == -1 {
-					m.currentView = (m.currentView + totalViews - 1) % totalViews
+					idx := m.indexOfAppState(m.currentView)
+					next := (idx + len(m.activeViews) - 1) % len(m.activeViews)
+					m.currentView = m.activeViews[next]
 					m.currentSubTab = -1
 					if m.currentView == ViewShell {
 						m.footer.CleanInfo()
@@ -277,7 +281,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updatedModel, cmd := m.dashboard.Update(msg)
 		m.dashboard = updatedModel.(*dashboard.Model)
 		return m, cmd
-	case ViewOSPF:
+	case ViewOSPFMonitoring:
 		updatedModel, cmd := m.ospf.Update(msg)
 		m.ospf = updatedModel.(*ospfMonitoring.Model)
 		return m, cmd
@@ -316,7 +320,7 @@ func (m *AppModel) View() string {
 		case ViewDashboard:
 			content = m.dashboard.DashboardView(m.currentSubTab, m.readOnlyMode, m.textFilter)
 			subTabsLength = m.dashboard.GetSubTabsLength()
-		case ViewOSPF:
+		case ViewOSPFMonitoring:
 			content = m.ospf.OSPFView(m.currentSubTab, m.readOnlyMode, m.textFilter)
 			subTabsLength = m.ospf.GetSubTabsLength()
 		case ViewRIB:
@@ -354,7 +358,7 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 		updatedModel, cmd := m.dashboard.Update(msg)
 		m.dashboard = updatedModel.(*dashboard.Model)
 		return m, cmd
-	case ViewOSPF:
+	case ViewOSPFMonitoring:
 		updatedModel, cmd := m.ospf.Update(msg)
 		m.ospf = updatedModel.(*ospfMonitoring.Model)
 		return m, cmd
@@ -369,6 +373,7 @@ func (m *AppModel) delegateToActiveView(msg tea.Msg) (*AppModel, tea.Cmd) {
 	default:
 		panic("unhandled default case")
 	}
+	// this is unreachable
 	return m, cmd
 }
 

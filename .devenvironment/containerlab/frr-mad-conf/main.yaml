@@ -3,15 +3,24 @@ default:
   exportpath: /tmp/frr-mad/exports
   logpath: /var/log/frr-mad
   # default is info
-  debuglevel: none
+  debuglevel: error
+
+frrmadtui:
+  pages:
+    ospf:
+      enabled: true
+      #permission_level: admin
+    rib:
+      enabled: true
+      #permission_level: admin
+    shell:
+      enabled: true
+      #permission_level: admin
 
 socket:
   unixsocketlocation: /var/run/frr-mad
   unixsocketname: analyzer.sock
   sockettype: unix
-
-analyzer:
-  foo: bar
 
 aggregator:
   frrmetricsurl: http://localhost:9342/metrics

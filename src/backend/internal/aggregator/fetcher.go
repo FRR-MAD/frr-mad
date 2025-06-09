@@ -1,22 +1,21 @@
 package aggregator
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/cpu"
+
 	frrSocket "github.com/frr-mad/frr-mad/src/backend/internal/aggregator/frrsockets"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
-func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
-	cmd := exec.Command("vtysh", "-c", "show running-config")
-	output, err := cmd.Output()
+func fetchStaticFRRConfig(executor *frrSocket.FRRCommandExecutor) (*frrProto.StaticFRRConfiguration, error) {
+	output, err := executor.ExecZebraCmd("show running-config")
 	if err != nil {
 		return nil, fmt.Errorf("can not open file: %w", err)
 	}
@@ -198,7 +197,7 @@ func collectSystemMetrics() (*frrProto.SystemMetrics, error) {
 		metrics.CpuAmount = cores
 	}
 
-	if cpu, err := getCPUUsagePercent(1*time.Second, int(cores)); err == nil {
+	if cpu, err := getCPUUsagePercent(); err == nil {
 		metrics.CpuUsage = cpu
 	}
 
@@ -215,55 +214,26 @@ func getCPUAmount() (int64, error) {
 	return int64(cores), nil
 }
 
-func readCPUSample() (total, idle float64, err error) {
-	f, err := os.Open("/proc/stat")
-	if err != nil {
-		return 0, 0, err
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	if !scanner.Scan() {
-		return 0, 0, fmt.Errorf("failed to scan /proc/stat")
-	}
-	fields := strings.Fields(scanner.Text())
-	var values []float64
-	for _, s := range fields[1:] {
-		v, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return 0, 0, err
-		}
-		values = append(values, v)
-	}
-
-	idle = values[3]
-	for _, v := range values {
-		total += v
-	}
-	return total, idle, nil
-}
-
-func getCPUUsagePercent(interval time.Duration, cores int) (float64, error) {
-	t0, id0, err := readCPUSample()
-	if err != nil {
-		return 0, err
-	}
-	time.Sleep(interval)
-	t1, id1, err := readCPUSample()
+func getCPUUsagePercent() (float64, error) {
+	percentages, err := cpu.Percent(time.Second, false)
 	if err != nil {
 		return 0, err
 	}
 
-	totalDelta := t1 - t0
-	idleDelta := id1 - id0
-	if totalDelta <= 0 {
-		return 0, fmt.Errorf("invalid CPU delta: %.0f", totalDelta)
+	if len(percentages) == 0 {
+		return 0, fmt.Errorf("no CPU usage data returned")
 	}
 
-	busy := (totalDelta - idleDelta) / totalDelta * 100.0
-	normalizedBusy := busy / float64(cores)
+	// First val is avg
+	usage := percentages[0]
 
-	return normalizedBusy, nil
+	if usage < 0 {
+		usage = 0
+	} else if usage > 100 {
+		usage = 100
+	}
+
+	return usage / 100, nil
 }
 
 func getMemoryUsage() (float64, error) {

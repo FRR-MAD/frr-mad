@@ -2,11 +2,18 @@ package frrsockets
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"path/filepath"
 	"time"
 )
+
+// Package frrsockets provides FRR routing daemon communication via Unix sockets.
+//
+// This implementation is derived from the original work in tynany/frr_exporter:
+// https://github.com/tynany/frr_exporter
+//
+// Original License:
+// MIT License
 
 type FRRCommandExecutor struct {
 	DirPath string
@@ -17,16 +24,8 @@ func NewConnection(dirPath string, timeout time.Duration) *FRRCommandExecutor {
 	return &FRRCommandExecutor{DirPath: dirPath, Timeout: timeout}
 }
 
-func (c FRRCommandExecutor) ExecBGPCmd(cmd string) ([]byte, error) {
-	return executeCmd(filepath.Join(c.DirPath, "bgpd.vty"), cmd, c.Timeout)
-}
-
 func (c FRRCommandExecutor) ExecOSPFCmd(cmd string) ([]byte, error) {
 	return executeCmd(filepath.Join(c.DirPath, "ospfd.vty"), cmd, c.Timeout)
-}
-
-func (c FRRCommandExecutor) ExecOSPFMultiInstanceCmd(cmd string, instanceID int) ([]byte, error) {
-	return executeCmd(filepath.Join(c.DirPath, fmt.Sprintf("ospfd-%d.vty", instanceID)), cmd, c.Timeout)
 }
 
 func (c FRRCommandExecutor) ExecZebraCmd(cmd string) ([]byte, error) {
