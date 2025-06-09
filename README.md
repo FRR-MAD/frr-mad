@@ -1,6 +1,7 @@
 **Disclaimer**
 
-The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4. In the near future we intend to extend this functionality to the latest versio of FRR.
+The current version of the frr-mad-analyzer is only compatible with FRR 8.5.4.
+Support for newer FRR releases is planned for the near future.
 
 ---
 
@@ -201,18 +202,16 @@ backend
 ## Frontend Structure
 
 ```
-root/
-├── src/                           # Source Code 
-│   ├── frontend/                  # 
-│   │   ├── cmd/                   # 
-│   │   │   ├── tui/               # Entry Point (main.go)
-│   │   ├── internal/              # 
-│   │   │   ├── common/            # Shared types, helpers, and utilities across pages
-│   │   │   ├── pages/             # Each Page has its own model
-│   │   │   │   ├── examplePage/   #
-│   │   │   │   │   ├── model/     # Bubbletea model
-│   │   │   │   │   ├── update/    # update logic and message handling
-│   │   │   │   │   ├── view/      # UI rendering and Backend data aggregation
-│   │   │   ├── services/          # Backend service layer to call external systems
-│   │   │   ├── ui/                # Shared UI styling, mainly lipgloss
+frontend/                  # 
+├── cmd/                   # 
+│   ├── tui/               # Entry Point (main.go)
+├── internal/              # 
+│   ├── common/            # Shared types, helpers, and utilities across pages
+│   ├── pages/             # Each Page has its own model
+│   │   └── examplePage/   #
+│   │       ├── model/     # Bubbletea model
+│   │       ├── update/    # update logic and message handling
+│   │       └── view/      # UI rendering and Backend data aggregation
+│   ├── services/          # Backend service layer to call external systems
+│   └── ui/                # Shared UI styling, mainly lipgloss
 ```
