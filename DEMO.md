@@ -2,35 +2,35 @@
 
 ## Dashboard
 
-|    ![How the feature works](assets/demo/demo_dashboardAnomaly.gif)    |
+|    ![Anomaly Dashboard](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/demo_dashboardAnomaly.gif)    
 |:----------------------------------------:|
-| How anomalies are shown on the Dashboard |
+| Landing page with anomalies |
 
-|   ![How the feature works](assets/demo/demo_dashboardOspf.png)   |
+|   ![OSPF Dashboard](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/demo_dashboardOspf.png)   
 |:-----------------------------------------------------------:|
-| OSPF dashboard, showing self-originating LSAs and Summaries |
+| OSPF dashboard, showing self-originating LSAs and summaries |
 
 ## OSPF Monitor
 
-| ![How the feature works](assets/demo/demo_ospfMonitor.gif) |
+| ![OSPF Monitor](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/demo_ospfMonitor.gif) 
 |:-----------------------------------------------------:|
-|           Monitoring Capabilities for OSPF            |
+|           Monitoring capabilities for OSPF            |
 
 ## RIB and FIB Monitor
 
-| ![How the feature works](assets/demo/ribFibMonitor.gif) |
+| ![RIB and FIB Monitor](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/ribFibMonitor.gif) 
 |:-------------------------------------------------------:|
 |   RIB and FIB tables, plus predefined filtered RIB tables    |
 
 ## Custom Shell
 
-|          ![How the feature works](assets/demo/customShell.gif)          |
+|          ![Custom Shell](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/customShell.gif)          |
 |:---------------------------------------------------------:|
 | Write-Mode activation and vtysh command execution |
 
 ## Filter Option
 
-| ![How the feature works](assets/demo/filterOption.gif) |
+| ![Filter Options](https://github.com/FRR-MAD/frr-mad-assets/blob/main/demo/filterOption.gif) |
 |:---------------------------------------:|
 |       Filter activation and usage       |
 
