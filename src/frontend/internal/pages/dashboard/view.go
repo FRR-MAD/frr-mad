@@ -190,7 +190,7 @@ func (m *Model) getSystemResourcesBox() string {
 		memoryString = fmt.Sprintf("%.2f%%", memoryUsage)
 
 		const epsilon = 1e-9
-		if cpuUsage > 0.9-epsilon || memoryUsage > 90-epsilon {
+		if cpuUsage > 0.6-epsilon || memoryUsage > 80-epsilon {
 			m.statusMessage = "High system resource usage detected"
 			m.statusSeverity = styles.SeverityWarning
 		}
