@@ -10,9 +10,9 @@ FRR-MAD (Free Range Routing – Monitoring and Anomaly Detection) consists of tw
 
 The frr-mad-tui component is a useful text user interface to give live results from the analyzer. Anomalies are presented at the dashboard and should contain valuable information. Apart from that, the tool also provides much useful information pertaining to OSPF.
 
-![How the feature works](assets/demo.gif)
-![How the feature works](assets/Test4.gif)
-![How the feature works](assets/demo1.gif)
+| ![How the feature works](assets/demo/demo.gif) |
+|:----------------------------------------------:|
+|     For more demos see [DEMO.md](DEMO.md)      |
 
 ## Introduction
 
