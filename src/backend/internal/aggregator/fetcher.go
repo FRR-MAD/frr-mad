@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/cpu"
+
 	frrSocket "github.com/frr-mad/frr-mad/src/backend/internal/aggregator/frrsockets"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
@@ -212,6 +214,7 @@ func collectSystemMetrics() (*frrProto.SystemMetrics, error) {
 // Helper functions
 func getCPUAmount() (int64, error) {
 	cores := runtime.NumCPU()
+	fmt.Println(cpu.Percent(time.Second, false))
 	return int64(cores), nil
 }
 
