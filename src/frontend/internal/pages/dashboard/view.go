@@ -151,7 +151,7 @@ func (m *Model) renderAnomaliesDashboard() string {
 
 func (m *Model) renderOSPFDashboard() string {
 	m.viewportLeft.Width = styles.WidthViewPortThreeFourth
-	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.HeightH1 - styles.BodyFooterHeight
+	m.viewportLeft.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
 
 	m.viewportRight.Width = styles.WidthViewPortOneFourth
 	m.viewportRight.Height = styles.HeightViewPortCompletePage - styles.BodyFooterHeight
@@ -798,7 +798,7 @@ func createAnomalyTable(a *frrProto.AnomalyDetection, lsaTypeHeader string, filt
 			var firstCol string
 			var cidr string
 			var anomalyType string
-			if strings.Contains(lsaTypeHeader, "Router") {
+			if strings.Contains(lsaTypeHeader, "Router") && missingEntry.InterfaceAddress != "" {
 				firstCol = missingEntry.InterfaceAddress
 				cidr = ""
 			} else {
