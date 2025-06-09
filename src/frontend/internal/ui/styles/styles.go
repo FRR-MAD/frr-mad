@@ -3,7 +3,7 @@ package styles
 import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/frr-mad/frr-tui/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
 )
 
 // ======================================== //

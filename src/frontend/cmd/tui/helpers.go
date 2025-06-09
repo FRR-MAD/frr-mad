@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/frr-mad/frr-tui/internal/common"
-	"github.com/frr-mad/frr-tui/internal/configs"
 	"os"
 	"sort"
+
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/configs"
 )
 
 // maybeUpdateTERM updates the environment variable 'TERM' to 'xterm-256color'

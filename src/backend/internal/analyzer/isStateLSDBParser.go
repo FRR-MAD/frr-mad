@@ -196,8 +196,6 @@ func GetRuntimeNetworkData(config *frrProto.OSPFNetworkData, hostname string, lo
 		}
 	}
 
-	fmt.Println(networkLsdb)
-
 	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
 		"network_lsas": len(networkLsdb.Links),
@@ -239,7 +237,6 @@ func GetRuntimeSummaryData(config *frrProto.OSPFSummaryData, hostname string, lo
 			summaryLsdb.Links = append(summaryLsdb.Links, adv)
 		}
 	}
-	fmt.Println(summaryLsdb)
 
 	logger.WithAttrs(map[string]any{
 		"duration":     time.Since(start).String(),
@@ -329,8 +326,6 @@ func GetRuntimeExternalData(config *frrProto.OSPFExternalAll, hostname string, l
 		}
 		externalArea.Links = append(externalArea.Links, &adv)
 	}
-
-	fmt.Println(externalArea)
 
 	logger.WithAttrs(map[string]any{
 		"duration":      time.Since(start).String(),
@@ -431,8 +426,6 @@ func GetRuntimeNssaExternalData(config *frrProto.OSPFNssaExternalAll, hostname s
 		}
 	}
 
-	fmt.Println(externalArea)
-
 	logger.WithAttrs(map[string]any{
 		"duration":  time.Since(start).String(),
 		"nssa_lsas": len(externalArea.Links),
@@ -479,19 +472,19 @@ func GetFIB(rib *frrProto.RoutingInformationBase, logger *logger.Logger) map[str
 	return OspfFibMap
 }
 
- func getNetworkAddress(prefix string, prefixLength int32) string {
- 	ip := net.ParseIP(prefix)
+func getNetworkAddress(prefix string, prefixLength int32) string {
+	ip := net.ParseIP(prefix)
 
- 	tmpNet := &net.IPNet{
- 		IP:   ip,
- 		Mask: net.CIDRMask(int(prefixLength), 32),
- 	}
+	tmpNet := &net.IPNet{
+		IP:   ip,
+		Mask: net.CIDRMask(int(prefixLength), 32),
+	}
 
- 	network := tmpNet.IP.Mask(tmpNet.Mask)
+	network := tmpNet.IP.Mask(tmpNet.Mask)
 
- 	return network.String()
+	return network.String()
 
- }
+}
 
 // Helper functions
 func countTotalLinks(lsa *frrProto.IntraAreaLsa) int {

@@ -1,10 +1,11 @@
 package toast
 
 import (
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
 )
 
 // Model represents the state of a toast notification.

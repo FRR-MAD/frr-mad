@@ -6,17 +6,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/frr-mad/frr-tui/internal/ui/toast"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/toast"
 
-	"github.com/frr-mad/frr-tui/internal/common"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/common"
 
 	"strconv"
 
 	"github.com/charmbracelet/lipgloss"
-	backend "github.com/frr-mad/frr-tui/internal/services"
-	"github.com/frr-mad/frr-tui/internal/ui/components"
-	"github.com/frr-mad/frr-tui/internal/ui/styles"
-	frrProto "github.com/frr-mad/frr-tui/pkg"
+	backend "github.com/frr-mad/frr-mad/src/frontend/internal/services"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/components"
+	"github.com/frr-mad/frr-mad/src/frontend/internal/ui/styles"
+	frrProto "github.com/frr-mad/frr-mad/src/frontend/pkg"
 )
 
 var (
