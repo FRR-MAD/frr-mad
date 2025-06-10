@@ -49,7 +49,6 @@ type ServiceConfig struct {
 	basis      configs.DefaultConfig
 	socket     configs.SocketConfig
 	aggregator configs.AggregatorConfig
-	analyzer   configs.AnalyzerConfig
 	exporter   configs.ExporterConfig
 }
 
@@ -214,7 +213,7 @@ func (a *FrrMadApp) startApp(cmd *cobra.Command) {
 			}
 
 			analyzerLogger := serviceLogger.WithComponent("analyzer")
-			a.Analyzer = startAnalyzer(a.Config.analyzer, analyzerLogger, a.Logger.Anomaly, a.PollInterval, a.Aggregator)
+			a.Analyzer = startAnalyzer(analyzerLogger, a.Logger.Anomaly, a.PollInterval, a.Aggregator)
 
 		case "exporter":
 			if a.Exporter == nil {
@@ -332,7 +331,6 @@ func loadMadApplication(overwriteConfigPath string) *FrrMadApp {
 		basis:      configRaw.Default,
 		socket:     configRaw.Socket,
 		aggregator: configRaw.Aggregator,
-		analyzer:   configRaw.Analyzer,
 		exporter:   configRaw.Exporter,
 	}
 

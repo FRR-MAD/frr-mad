@@ -16,11 +16,9 @@ type Analyzer struct {
 	P2pMap                     *frrProto.PeerInterfaceMap
 	Logger                     *logger.Logger
 	AnomalyLogger              *logger.Logger
-	config                     any
 }
 
 func InitAnalyzer(
-	config any,
 	metrics *frrProto.FullFRRData,
 	logger *logger.Logger,
 	anomalyLogger *logger.Logger,
@@ -55,7 +53,6 @@ func InitAnalyzer(
 		},
 		Logger:        logger,
 		AnomalyLogger: anomalyLogger,
-		config:        config,
 	}
 }
 
