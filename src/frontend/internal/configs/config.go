@@ -24,7 +24,6 @@ type FrrMadTuiConfig struct {
 
 type PageConfig struct {
 	Enabled bool `mapstructure:"enabled"`
-	// PermissionLevel string `mapstructure:"permission_level"`
 }
 
 type SocketConfig struct {
@@ -33,31 +32,10 @@ type SocketConfig struct {
 	SocketType         string `mapstructure:"sockettype"`
 }
 
-type AnalyzerConfig struct {
-	Foo string `mapstructure:"foo"`
-}
-
-type AggregatorConfig struct {
-	FRRMetricsURL   string `mapstructure:"frrmetricsurl"`
-	FRRConfigPath   string `mapstructure:"frrconfigpath"`
-	PollInterval    int    `mapstructure:"pollinterval"`
-	SocketPathBGP   string `mapstructure:"socketpathbgp"`
-	SocketPathOSPF  string `mapstructure:"socketpathospf"`
-	SocketPathZebra string `mapstructure:"socketpathzebra"`
-	SocketPath      string `mapstructure:"socketpath"`
-}
-
-type ExporterConfig struct {
-	Foo string `mapstructure:"foo"`
-}
-
 type Config struct {
-	Default    DefaultConfig    `mapstructure:"default"`
-	FrrMadTui  FrrMadTuiConfig  `mapstructure:"frrmadtui"`
-	Socket     SocketConfig     `mapstructure:"socket"`
-	Analyzer   AnalyzerConfig   `mapstructure:"analyzer"`
-	Aggregator AggregatorConfig `mapstructure:"aggregator"`
-	Exporter   ExporterConfig   `mapstructure:"exporter"`
+	Default   DefaultConfig   `mapstructure:"default"`
+	FrrMadTui FrrMadTuiConfig `mapstructure:"frrmadtui"`
+	Socket    SocketConfig    `mapstructure:"socket"`
 }
 
 func LoadConfig() (*Config, error) {

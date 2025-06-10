@@ -18,7 +18,7 @@ The frr-mad-tui component is a useful text user interface to give live results f
 ## Introduction
 
 This Project is split into two parts:
-- **frr-mad-analyzer**: The analysis system that consists of aggregator, analyzer, exporting and comms. It spawns a Unix socket, which is accessed by frr-mad-tui, to fetch all available data. The exporter collects routing data and anomalies, exports them via the well-defined Prometheus Node Exporter API. 
+- **frr-mad-analyzer**: The analysis system that consists of aggregator, analyzer, exporting and comms. It spawns a Unix socket, which is accessed by frr-mad-tui, to fetch all available data. The exporter collects routing data and anomalies, exports them via the well-defined Prometheus Node Exporter API.
 - **frr-mad-tui**: frr-mad-tui is the frontend of this project. It's optional but highly practical. It enables swifter sanity checks of OSPF, by providing the most useful information neatly displayed. A dynamic filter function provides additional Quality of Life improvements to the experience. Regardless of the expertise of the user, it's a useful tool to get a quick run-down of an OSPF system.
 
 ## Usage
@@ -98,7 +98,7 @@ default:
   # set debugLevel to receive different levels of logging
   # debug > info >  warn > error > none
   # Debug provides the most verbose output but it's highly resource intensive. The default is error.
-  #debuglevel: error 
+  #debuglevel: error
 
 socket:
   unixsocketlocation: /var/run/frr-mad
@@ -106,16 +106,12 @@ socket:
   sockettype: unix
 
 aggregator:
-  frrmetricsurl: http://localhost:9342/metrics
   frrconfigpath: /etc/frr/frr.conf
   pollinterval: 5
-  socketpathbgp: /var/run/frr/bgpd.vty
-  socketpathospf: /var/run/frr/ospfd.vty
-  socketpathzebra: /var/run/frr/zebra.vty
   socketpath: /var/run/frr
 
 exporter:
-  Port: 9091
+  # default: Port: 9091
   OSPFRouterData: true
   OSPFNetworkData: true
   OSPFSummaryData: false
@@ -135,9 +131,9 @@ EOF
 ```
 root/
 ├── protobufSource/          # Protofile for go-types generation
-├── src/                     # Source Code 
-│   ├── backend/             # 
-│   │   ├── internal/        # 
+├── src/                     # Source Code
+│   ├── backend/             #
+│   │   ├── internal/        #
 │   │   │   ├── aggregator/  # Logic to fetch, process and parse data
 │   │   │   ├── analyzer/    # Logic to analyze collected data
 │   │   │   ├── comms/       # Unix Socket creation
@@ -177,8 +173,8 @@ backend
 ```
 backend
 ├──internal/
-│  └── comms/                             # This is the comms system 
-│      └── socket/                        # Unix Socket creation        
+│  └── comms/                             # This is the comms system
+│      └── socket/                        # Unix Socket creation
 │           ├── analysisProcessing.go     # Processing of socket calls for analyzer data
 │           ├── dummyData.go              # Dummy data for testing
 │           ├── frrProcessing.go          # Processing of socket calls for FRR data
@@ -193,7 +189,7 @@ backend
 ```
 backend
 ├──internal/
-│  └── exporter/                    # This is the exporter system 
+│  └── exporter/                    # This is the exporter system
 │       ├── anomalyExporter.go      # Attaches to exporter object and exports anomaly data
 │       ├── main.go                 # Initializes the exporter object
 │       └── metricsExporter.go      # Attaches to exporter object and exports FRR metrics
@@ -202,10 +198,10 @@ backend
 ## Frontend Structure
 
 ```
-frontend/                  # 
-├── cmd/                   # 
+frontend/                  #
+├── cmd/                   #
 │   ├── tui/               # Entry Point (main.go)
-├── internal/              # 
+├── internal/              #
 │   ├── common/            # Shared types, helpers, and utilities across pages
 │   ├── pages/             # Each Page has its own model
 │   │   └── examplePage/   #
