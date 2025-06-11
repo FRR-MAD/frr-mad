@@ -9,13 +9,10 @@ frrmadtui:
   pages:
     ospf:
       enabled: true
-      #permission_level: admin
     rib:
       enabled: true
-      #permission_level: admin
     shell:
       enabled: true
-      #permission_level: admin
 
 socket:
   unixsocketlocation: /var/run/frr-mad
@@ -23,16 +20,12 @@ socket:
   sockettype: unix
 
 aggregator:
-  frrmetricsurl: http://localhost:9342/metrics
   frrconfigpath: /etc/frr/frr.conf
   pollinterval: 5
-  socketpathbgp: /var/run/frr/bgpd.vty
-  socketpathospf: /var/run/frr/ospfd.vty
-  socketpathzebra: /var/run/frr/zebra.vty
   socketpath: /var/run/frr
 
 exporter:
-  Port: 9091
+  # default: Port: 9091
   OSPFRouterData: false
   OSPFNetworkData: false
   OSPFSummaryData: false

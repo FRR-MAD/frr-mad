@@ -38,6 +38,8 @@ src/go.work.sum
 binaries
 proto-binary
 build
+.devenvironment/containerlab/.shared
+shared
 
 # misc
 /makefile.yannick
@@ -46,3 +48,4 @@ src/backend/test/analyzer/cust_tmp_test_bak.go
 src/backend/test/analyzer/bak_cust_tmp_test.go
 analyzer_frr
 frr-tui
+bak_cust_tmp_test.go_bak

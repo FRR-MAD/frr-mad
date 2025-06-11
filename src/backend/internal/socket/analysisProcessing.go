@@ -83,7 +83,7 @@ func (s *Socket) getShouldParsedLsdb() *frrProto.Response {
 
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "",
+		Message: "Returning parsed should lsdb",
 		Data:    value,
 	}
 }

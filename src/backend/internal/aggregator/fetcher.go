@@ -3,6 +3,7 @@ package aggregator
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -14,8 +15,9 @@ import (
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
-func fetchStaticFRRConfig(executor *frrSocket.FRRCommandExecutor) (*frrProto.StaticFRRConfiguration, error) {
-	output, err := executor.ExecZebraCmd("show running-config")
+func fetchStaticFRRConfig() (*frrProto.StaticFRRConfiguration, error) {
+	cmd := exec.Command("vtysh", "-c", "show running-config")
+	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("can not open file: %w", err)
 	}

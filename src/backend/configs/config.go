@@ -23,17 +23,10 @@ type SocketConfig struct {
 	SocketType         string `mapstructure:"sockettype"`
 }
 
-type AnalyzerConfig struct {
-}
-
 type AggregatorConfig struct {
-	FRRMetricsURL   string `mapstructure:"frrmetricsurl"`
-	FRRConfigPath   string `mapstructure:"frrconfigpath"`
-	PollInterval    int    `mapstructure:"pollinterval"`
-	SocketPathBGP   string `mapstructure:"socketpathbgp"`
-	SocketPathOSPF  string `mapstructure:"socketpathospf"`
-	SocketPathZebra string `mapstructure:"socketpathzebra"`
-	SocketPath      string `mapstructure:"socketpath"`
+	FRRConfigPath string `mapstructure:"frrconfigpath"`
+	PollInterval  int    `mapstructure:"pollinterval"`
+	SocketPath    string `mapstructure:"socketpath"`
 }
 
 type ExporterConfig struct {
@@ -53,7 +46,6 @@ type ExporterConfig struct {
 type Config struct {
 	Default    DefaultConfig    `mapstructure:"default"`
 	Socket     SocketConfig     `mapstructure:"socket"`
-	Analyzer   AnalyzerConfig   `mapstructure:"analyzer"`
 	Aggregator AggregatorConfig `mapstructure:"aggregator"`
 	Exporter   ExporterConfig   `mapstructure:"exporter"`
 }
