@@ -66,18 +66,18 @@ func LoadConfig(overwriteConfigPath string) (*Config, error) {
 	}
 	defer file.Close()
 
-	yamlPath := getYAMLPath()
-	result, err := loadYAMLConfig(yamlPath)
+	yamlPath := GetYAMLPath()
+	result, err := LoadYAMLConfig(yamlPath)
 	return result, err
 }
 
-func getYAMLPath() string {
+func GetYAMLPath() string {
 
 	base := strings.TrimSuffix(ConfigLocation, filepath.Ext(ConfigLocation))
 	return base + ".yaml"
 }
 
-func loadYAMLConfig(yamlPath string) (*Config, error) {
+func LoadYAMLConfig(yamlPath string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(yamlPath)
 	v.SetConfigType("yaml")

@@ -7,7 +7,7 @@ ANALYZER_OUTPUT_NAME := frr-mad-analyzer
 OUTPUT_PATH := $(BINARY_PATH)/$(ANALYZER_OUTPUT_NAME)
 TEST_CASE := ""
 
-.PHONY: all dev prod test test/analyzer test/aggregator test/exporter test/socket clean
+.PHONY: all dev prod test test/analyzer test/aggregator test/exporter test/socket test/config clean
 
 # Default target
 all: dev
@@ -25,7 +25,7 @@ prod:
 	$(GO_FLAGS) go build -ldflags "$(LD_FLAGS)" -o $(OUTPUT_PATH) ./cmd/frr-analyzer
 
 # Run all backend tests
-test: test/analyzer test/aggregator test/exporter test/socket
+test: test/analyzer test/aggregator test/exporter test/socket test/config
 
 # Individual test targets
 test/analyzer:
@@ -47,6 +47,10 @@ test/exporter:
 test/socket:
 	@echo "Running communication tests..."
 	go test -v ./test/socket/...
+
+test/config:
+	@echo "Running config tests..."
+	go test -v ./test/configs/...
 
 # Clean backend artifacts
 clean:
