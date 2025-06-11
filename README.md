@@ -135,3 +135,6 @@ exporter:
 EOF
 ```
 
+---
+
+Refere to ![Docs](docs/README.md) for more project related information
