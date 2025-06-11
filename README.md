@@ -99,6 +99,15 @@ default:
   # debug > info >  warn > error > none
   # Debug provides the most verbose output but it's highly resource intensive. The default is error.
   #debuglevel: error 
+  
+frrmadtui:
+  pages:
+    ospf:
+      enabled: true
+    rib:
+      enabled: true
+    shell:
+      enabled: true
 
 socket:
   unixsocketlocation: /var/run/frr-mad
