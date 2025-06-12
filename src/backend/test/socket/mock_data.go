@@ -46,6 +46,13 @@ func CreateMockOSPFDatabase() *frrProto.OSPFDatabase {
 	}
 }
 
+func CreateMockFRRRouterData() *frrProto.FRRRouterData {
+	return &frrProto.FRRRouterData{
+		RouterName:   "r101",
+		OspfRouterId: "192.168.1.1",
+	}
+}
+
 // CreateMockOSPFRouterData creates a simple mock OSPFRouterData for testing
 func CreateMockOSPFRouterData() *frrProto.OSPFRouterData {
 	return &frrProto.OSPFRouterData{
@@ -190,6 +197,7 @@ func CreateMockFullFRRData() *frrProto.FullFRRData {
 		OspfRouterData: CreateMockOSPFRouterData(),
 		OspfNeighbors:  CreateMockOSPFNeighbors(),
 		SystemMetrics:  CreateMockSystemMetrics(),
+		FrrRouterData:  CreateMockFRRRouterData(),
 	}
 }
 

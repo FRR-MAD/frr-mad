@@ -235,3 +235,50 @@ func TestAnalysisUnhappyPath(t *testing.T) {
 	})
 
 }
+
+func TestFrrHappyPath(t *testing.T) {
+	s := getEmptyMockSocket()
+	s.Metrics = CreateMockFullFRRData()
+	m := &frrProto.Message{
+		Service: "frr",
+	}
+
+	t.Run("TestUnknownCommand", func(t *testing.T) {
+		m.Command = "foobar"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "error", response.Status)
+		assert.Equal(t, "Unknown command: foobar", response.Message)
+	})
+
+	t.Run("TestCommand_routerData", func(t *testing.T) {
+		m.Command = "routerData"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning FRR meta data of router itself", response.Message)
+		assert.Equal(t, "r101", response.Data.GetFrrRouterData().RouterName)
+		assert.Equal(t, "192.168.1.1", response.Data.GetFrrRouterData().OspfRouterId)
+	})
+
+	t.Run("TestCommand_rib", func(t *testing.T) {
+		m.Command = "rib"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning all routes (RIB)", response.Message)
+		assert.IsType(t, &frrProto.ResponseValue_RoutingInformationBase{}, response.Data.Kind)
+
+	})
+
+	t.Run("TestCommand_ribfibSummary", func(t *testing.T) {
+		m.Command = "ribfibSummary"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning route summaries of RIB and FIB", response.Message)
+		assert.IsType(t, &frrProto.ResponseValue_RibFibSummaryRoutes{}, response.Data.Kind)
+
+	})
+
+}

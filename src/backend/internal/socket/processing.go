@@ -52,7 +52,7 @@ func (s *Socket) frrProcessing(command string) *frrProto.Response {
 		return s.getRibFibSummary()
 	default:
 		response.Status = "error"
-		response.Message = "There was an error"
+		response.Message = fmt.Sprintf("Unknown command: %s", command)
 		return &response
 	}
 }
