@@ -7,7 +7,7 @@ import (
 func (s *Socket) getOspfDatabase() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfDatabase{
-			OspfDatabase: s.metrics.GetOspfDatabase(),
+			OspfDatabase: s.Metrics.GetOspfDatabase(),
 		},
 	}
 
@@ -21,7 +21,7 @@ func (s *Socket) getOspfDatabase() *frrProto.Response {
 func (s *Socket) getGeneralOspfInformation() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_GeneralOspfInformation{
-			GeneralOspfInformation: s.metrics.GetGeneralOspfInformation(),
+			GeneralOspfInformation: s.Metrics.GetGeneralOspfInformation(),
 		},
 	}
 
@@ -35,7 +35,7 @@ func (s *Socket) getGeneralOspfInformation() *frrProto.Response {
 func (s *Socket) getOspfRouterData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfRouterData{
-			OspfRouterData: s.metrics.GetOspfRouterData(),
+			OspfRouterData: s.Metrics.GetOspfRouterData(),
 		},
 	}
 	return &frrProto.Response{
@@ -48,7 +48,7 @@ func (s *Socket) getOspfRouterData() *frrProto.Response {
 func (s *Socket) getOspfNetworkData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfNetworkData{
-			OspfNetworkData: s.metrics.GetOspfNetworkData(),
+			OspfNetworkData: s.Metrics.GetOspfNetworkData(),
 		},
 	}
 	return &frrProto.Response{
@@ -61,7 +61,7 @@ func (s *Socket) getOspfNetworkData() *frrProto.Response {
 func (s *Socket) getOspfNetworkDataAll() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfNetworkData{
-			OspfNetworkData: s.metrics.GetOspfNetworkDataAll(),
+			OspfNetworkData: s.Metrics.GetOspfNetworkDataAll(),
 		},
 	}
 	return &frrProto.Response{
@@ -74,7 +74,7 @@ func (s *Socket) getOspfNetworkDataAll() *frrProto.Response {
 func (s *Socket) getOspfSummaryData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfSummaryData{
-			OspfSummaryData: s.metrics.GetOspfSummaryData(),
+			OspfSummaryData: s.Metrics.GetOspfSummaryData(),
 		},
 	}
 	return &frrProto.Response{
@@ -87,7 +87,7 @@ func (s *Socket) getOspfSummaryData() *frrProto.Response {
 func (s *Socket) getOspfAsbrSummaryData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfAsbrSummaryData{
-			OspfAsbrSummaryData: s.metrics.GetOspfAsbrSummaryData(),
+			OspfAsbrSummaryData: s.Metrics.GetOspfAsbrSummaryData(),
 		},
 	}
 	return &frrProto.Response{
@@ -100,7 +100,7 @@ func (s *Socket) getOspfAsbrSummaryData() *frrProto.Response {
 func (s *Socket) getOspfExternalData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfExternalData{
-			OspfExternalData: s.metrics.GetOspfExternalData(),
+			OspfExternalData: s.Metrics.GetOspfExternalData(),
 		},
 	}
 	return &frrProto.Response{
@@ -113,7 +113,7 @@ func (s *Socket) getOspfExternalData() *frrProto.Response {
 func (s *Socket) getOspfNssaExternalData() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfNssaExternalData{
-			OspfNssaExternalData: s.metrics.GetOspfNssaExternalData(),
+			OspfNssaExternalData: s.Metrics.GetOspfNssaExternalData(),
 		},
 	}
 	return &frrProto.Response{
@@ -126,7 +126,7 @@ func (s *Socket) getOspfNssaExternalData() *frrProto.Response {
 func (s *Socket) getOspfDuplicates() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfExternalAll{
-			OspfExternalAll: s.metrics.GetOspfExternalAll(),
+			OspfExternalAll: s.Metrics.GetOspfExternalAll(),
 		},
 	}
 	return &frrProto.Response{
@@ -139,7 +139,7 @@ func (s *Socket) getOspfDuplicates() *frrProto.Response {
 func (s *Socket) getOspfNeighbors() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_OspfNeighbors{
-			OspfNeighbors: s.metrics.GetOspfNeighbors(),
+			OspfNeighbors: s.Metrics.GetOspfNeighbors(),
 		},
 	}
 	return &frrProto.Response{
@@ -152,7 +152,7 @@ func (s *Socket) getOspfNeighbors() *frrProto.Response {
 func (s *Socket) getInterfaces() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_Interfaces{
-			Interfaces: s.metrics.GetInterfaces(),
+			Interfaces: s.Metrics.GetInterfaces(),
 		},
 	}
 	return &frrProto.Response{
@@ -165,7 +165,7 @@ func (s *Socket) getInterfaces() *frrProto.Response {
 func (s *Socket) getp2pMap() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_PeerInterfaceToAddress{
-			PeerInterfaceToAddress: s.parsedAnalyzerData.P2PMap,
+			PeerInterfaceToAddress: s.ParsedAnalyzerData.P2PMap,
 		},
 	}
 	return &frrProto.Response{

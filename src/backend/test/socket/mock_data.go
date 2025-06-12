@@ -2,6 +2,8 @@ package socket_test
 
 import (
 	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/socket"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 )
@@ -41,6 +43,13 @@ func CreateMockOSPFDatabase() *frrProto.OSPFDatabase {
 				Route:      "192.168.1.0/24",
 			},
 		},
+	}
+}
+
+func CreateMockFRRRouterData() *frrProto.FRRRouterData {
+	return &frrProto.FRRRouterData{
+		RouterName:   "r101",
+		OspfRouterId: "192.168.1.1",
 	}
 }
 
@@ -104,6 +113,74 @@ func CreateMockOSPFNeighbors() *frrProto.OSPFNeighbors {
 	}
 }
 
+func CreateMockAnomalyDetectionRouter() *frrProto.AnomalyDetection {
+	return &frrProto.AnomalyDetection{
+		HasOverAdvertisedPrefixes: true,
+		HasUnAdvertisedPrefixes:   false,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries: []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "89.207.132.170",
+				LinkStateId:      "89.207.132.170/24",
+				PrefixLength:     "24",
+				LinkType:         "transit network",
+			},
+		},
+		MissingEntries: []*frrProto.Advertisement{},
+	}
+}
+
+func CreateMockAnomalyDetectionExternal() *frrProto.AnomalyDetection {
+	return &frrProto.AnomalyDetection{
+		HasOverAdvertisedPrefixes: false,
+		HasUnAdvertisedPrefixes:   true,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries:        []*frrProto.Advertisement{},
+		MissingEntries: []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "89.207.132.170",
+				LinkStateId:      "89.207.132.170/24",
+				PrefixLength:     "24",
+				LinkType:         "transit network",
+			},
+		},
+		DuplicateEntries: []*frrProto.Advertisement{},
+	}
+}
+
+func CreateMockAnomalyDetectionNssaExternal() *frrProto.AnomalyDetection {
+	return &frrProto.AnomalyDetection{
+		HasOverAdvertisedPrefixes: true,
+		HasUnAdvertisedPrefixes:   false,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries: []*frrProto.Advertisement{
+			{
+				InterfaceAddress: "89.207.132.170",
+				LinkStateId:      "89.207.132.170/24",
+				PrefixLength:     "24",
+				LinkType:         "transit network",
+			},
+		},
+		MissingEntries:   []*frrProto.Advertisement{},
+		DuplicateEntries: []*frrProto.Advertisement{},
+	}
+}
+
+func CreateMockAnomalyDetectionLsdbToRib() *frrProto.AnomalyDetection {
+	return &frrProto.AnomalyDetection{
+		HasOverAdvertisedPrefixes: false,
+		HasUnAdvertisedPrefixes:   false,
+		HasDuplicatePrefixes:      false,
+		HasMisconfiguredPrefixes:  false,
+		SuperfluousEntries:        []*frrProto.Advertisement{},
+		MissingEntries:            []*frrProto.Advertisement{},
+		DuplicateEntries:          []*frrProto.Advertisement{},
+	}
+}
+
 // CreateMockSystemMetrics creates a simple mock SystemMetrics for testing
 func CreateMockSystemMetrics() *frrProto.SystemMetrics {
 	return &frrProto.SystemMetrics{
@@ -120,6 +197,7 @@ func CreateMockFullFRRData() *frrProto.FullFRRData {
 		OspfRouterData: CreateMockOSPFRouterData(),
 		OspfNeighbors:  CreateMockOSPFNeighbors(),
 		SystemMetrics:  CreateMockSystemMetrics(),
+		FrrRouterData:  CreateMockFRRRouterData(),
 	}
 }
 
@@ -132,4 +210,14 @@ func getMockData() (*logger.Logger, *analyzer.Analyzer, *frrProto.FullFRRData, *
 	mockParsedAnalyzerdata := &frrProto.ParsedAnalyzerData{}
 
 	return mockLoggerInstance, mockAnalyzerInstance, mockMetrics, mockParsedAnalyzerdata
+}
+
+func getEmptyMockSocket() *socket.Socket {
+	socket := socket.NewSocket(
+		configs.SocketConfig{},
+		&frrProto.FullFRRData{},
+		&frrProto.AnomalyAnalysis{},
+		&logger.Logger{},
+		&frrProto.ParsedAnalyzerData{})
+	return socket
 }

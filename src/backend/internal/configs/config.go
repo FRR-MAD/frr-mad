@@ -23,17 +23,10 @@ type SocketConfig struct {
 	SocketType         string `mapstructure:"sockettype"`
 }
 
-type AnalyzerConfig struct {
-}
-
 type AggregatorConfig struct {
-	FRRMetricsURL   string `mapstructure:"frrmetricsurl"`
-	FRRConfigPath   string `mapstructure:"frrconfigpath"`
-	PollInterval    int    `mapstructure:"pollinterval"`
-	SocketPathBGP   string `mapstructure:"socketpathbgp"`
-	SocketPathOSPF  string `mapstructure:"socketpathospf"`
-	SocketPathZebra string `mapstructure:"socketpathzebra"`
-	SocketPath      string `mapstructure:"socketpath"`
+	FRRConfigPath string `mapstructure:"frrconfigpath"`
+	PollInterval  int    `mapstructure:"pollinterval"`
+	SocketPath    string `mapstructure:"socketpath"`
 }
 
 type ExporterConfig struct {
@@ -53,7 +46,6 @@ type ExporterConfig struct {
 type Config struct {
 	Default    DefaultConfig    `mapstructure:"default"`
 	Socket     SocketConfig     `mapstructure:"socket"`
-	Analyzer   AnalyzerConfig   `mapstructure:"analyzer"`
 	Aggregator AggregatorConfig `mapstructure:"aggregator"`
 	Exporter   ExporterConfig   `mapstructure:"exporter"`
 }
@@ -74,18 +66,18 @@ func LoadConfig(overwriteConfigPath string) (*Config, error) {
 	}
 	defer file.Close()
 
-	yamlPath := getYAMLPath()
-	result, err := loadYAMLConfig(yamlPath)
+	yamlPath := GetYAMLPath()
+	result, err := LoadYAMLConfig(yamlPath)
 	return result, err
 }
 
-func getYAMLPath() string {
+func GetYAMLPath() string {
 
 	base := strings.TrimSuffix(ConfigLocation, filepath.Ext(ConfigLocation))
 	return base + ".yaml"
 }
 
-func loadYAMLConfig(yamlPath string) (*Config, error) {
+func LoadYAMLConfig(yamlPath string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(yamlPath)
 	v.SetConfigType("yaml")

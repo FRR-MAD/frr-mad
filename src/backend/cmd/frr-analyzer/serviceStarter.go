@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/aggregator"
 	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
@@ -23,8 +23,8 @@ func startAggregator(config configs.AggregatorConfig, logging *logger.Logger, po
 	return collector
 }
 
-func startAnalyzer(config interface{}, logging *logger.Logger, anomalyLogger *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
-	detection := analyzer.InitAnalyzer(config, aggregatorService.FullFrrData, logging, anomalyLogger)
+func startAnalyzer(logging *logger.Logger, anomalyLogger *logger.Logger, pollInterval time.Duration, aggregatorService *aggregator.Collector) *analyzer.Analyzer {
+	detection := analyzer.InitAnalyzer(aggregatorService.FullFrrData, logging, anomalyLogger)
 	analyzer.StartAnalyzer(detection, pollInterval)
 	logging.WithAttrs(map[string]interface{}{
 		"poll_interval": pollInterval.String(),

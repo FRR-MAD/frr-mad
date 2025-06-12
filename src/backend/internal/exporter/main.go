@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,12 +31,10 @@ func NewExporter(
 	// Default port
 	port := 9091
 
-	if config.Port > 0 {
-		if config.Port > 65535 {
-			logger.Error(fmt.Sprintf("invalid port in config: port %d is too high", config.Port))
-		} else {
-			port = config.Port
-		}
+	if config.Port > 0 && config.Port <= 65535 {
+		port = config.Port
+	} else if config.Port != 0 {
+		logger.Error(fmt.Sprintf("invalid port in config: port %d is out of bounds (must be between 1 and 65535)", config.Port))
 	}
 
 	logger.WithAttrs(map[string]interface{}{

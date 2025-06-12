@@ -7,7 +7,7 @@ import (
 func (s *Socket) getRouterAnomaly() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.RouterAnomaly,
+			Anomaly: s.Anomalies.RouterAnomaly,
 		},
 	}
 
@@ -21,7 +21,7 @@ func (s *Socket) getRouterAnomaly() *frrProto.Response {
 func (s *Socket) getExternalAnomaly() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.ExternalAnomaly,
+			Anomaly: s.Anomalies.ExternalAnomaly,
 		},
 	}
 
@@ -35,7 +35,7 @@ func (s *Socket) getExternalAnomaly() *frrProto.Response {
 func (s *Socket) getNssaExternalAnomaly() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.NssaExternalAnomaly,
+			Anomaly: s.Anomalies.NssaExternalAnomaly,
 		},
 	}
 
@@ -49,7 +49,7 @@ func (s *Socket) getNssaExternalAnomaly() *frrProto.Response {
 func (s *Socket) getLsdbToRibAnomaly() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.LsdbToRibAnomaly,
+			Anomaly: s.Anomalies.LsdbToRibAnomaly,
 		},
 	}
 
@@ -63,7 +63,7 @@ func (s *Socket) getLsdbToRibAnomaly() *frrProto.Response {
 func (s *Socket) getRibToFibAnomaly() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_Anomaly{
-			Anomaly: s.anomalies.RibToFibAnomaly,
+			Anomaly: s.Anomalies.RibToFibAnomaly,
 		},
 	}
 
@@ -77,13 +77,13 @@ func (s *Socket) getRibToFibAnomaly() *frrProto.Response {
 func (s *Socket) getShouldParsedLsdb() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_ParsedAnalyzerData{
-			ParsedAnalyzerData: s.parsedAnalyzerData,
+			ParsedAnalyzerData: s.ParsedAnalyzerData,
 		},
 	}
 
 	return &frrProto.Response{
 		Status:  "success",
-		Message: "",
+		Message: "Returning parsed should lsdb",
 		Data:    value,
 	}
 }

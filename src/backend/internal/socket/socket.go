@@ -8,7 +8,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"google.golang.org/protobuf/proto"
@@ -22,20 +22,21 @@ type Socket struct {
 	socketPath         string
 	listener           net.Listener
 	mutex              sync.Mutex
-	metrics            *frrProto.FullFRRData
-	anomalies          *frrProto.AnomalyAnalysis
+	Metrics            *frrProto.FullFRRData
+	Anomalies          *frrProto.AnomalyAnalysis
 	p2pMap             *frrProto.PeerInterfaceMap
-	parsedAnalyzerData *frrProto.ParsedAnalyzerData
+	ParsedAnalyzerData *frrProto.ParsedAnalyzerData
 	logger             *logger.Logger
 }
 
 func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger, parsedAnalyzerData *frrProto.ParsedAnalyzerData) *Socket {
+	fmt.Println(config)
 	return &Socket{
 		socketPath:         fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:              sync.Mutex{},
-		metrics:            metrics,
-		anomalies:          analysisResult,
-		parsedAnalyzerData: parsedAnalyzerData,
+		Metrics:            metrics,
+		Anomalies:          analysisResult,
+		ParsedAnalyzerData: parsedAnalyzerData,
 		logger:             logger,
 	}
 }
@@ -102,7 +103,7 @@ func (s *Socket) handleConnection(conn net.Conn) {
 	execMutex.Lock()
 	defer execMutex.Unlock()
 
-	protoResponse := s.processCommand(protoMessage)
+	protoResponse := s.ProcessCommand(protoMessage)
 
 	responseData, err := proto.Marshal(protoResponse)
 	if err != nil {
