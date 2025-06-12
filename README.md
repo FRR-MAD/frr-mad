@@ -137,4 +137,4 @@ EOF
 
 ---
 
-Refere to ![Docs](docs/) for more project related information
+Refere to [Docs](docs) for more project related information

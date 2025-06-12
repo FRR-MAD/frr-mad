@@ -14,7 +14,7 @@ A detail installation process can be found here: https://containerlab.dev/instal
 
 If the requirements from above are met and make is installed, you can use the makefile to deploy the environment locally.
 - creates docker images for frr and build host
-- it deploys the topology found in ../.devenvironment/
+- it deploys the topology found in [devenvironment](../.devenvironment/)
 - restarts or cleans up the topology
 
 
