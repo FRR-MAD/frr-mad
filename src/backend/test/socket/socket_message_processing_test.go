@@ -119,7 +119,6 @@ func TestMessageProcessing(t *testing.T) {
 
 	})
 
-	socketInstance.Close()
 }
 
 // Helper function to send a request to the socket and get the response
@@ -355,5 +354,132 @@ func TestFrrUnhappyPath(t *testing.T) {
 		assert.IsType(t, &frrProto.ResponseValue_RibFibSummaryRoutes{}, response.Data.Kind)
 		assert.Empty(t, response.Data.GetRibFibSummaryRoutes())
 	})
+
+}
+
+func TestOspfProcessing(t *testing.T) {
+	s := getEmptyMockSocket()
+	m := &frrProto.Message{
+		Service: "ospf",
+	}
+
+	t.Run("TestSystemDefault", func(t *testing.T) {
+		m.Command = "generalInfo"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.IsType(t, &frrProto.ResponseValue_GeneralOspfInformation{}, response.Data.Kind)
+		assert.Equal(t, "Returning OSPF database", response.Message)
+
+	})
+
+	t.Run("TestNetworkAll", func(t *testing.T) {
+		m.Command = "networkAll"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.IsType(t, &frrProto.ResponseValue_OspfNetworkData{}, response.Data.Kind)
+		assert.Equal(t, "Returning OSPF network data", response.Message)
+
+	})
+
+	t.Run("TestSummary", func(t *testing.T) {
+		m.Command = "summary"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning OSPF summary data", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestAsbrSummary", func(t *testing.T) {
+		m.Command = "asbrSummary"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning OSPF ASBR summary data", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestExternalData", func(t *testing.T) {
+		m.Command = "externalData"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning OSPF external data", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestNssaExternalData", func(t *testing.T) {
+		m.Command = "nssaExternalData"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning OSPF NSSA external data", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestDuplicates", func(t *testing.T) {
+		m.Command = "duplicates"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning OSPF duplicates", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestNeighbors", func(t *testing.T) {
+		m.Command = "neighbors"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning OSPF neighbors", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestInterfaces", func(t *testing.T) {
+		m.Command = "interfaces"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning interfaces", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestStaticConfig", func(t *testing.T) {
+		m.Command = "staticConfig"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		// Note: You'll need to verify the expected message for getStaticFrrConfiguration()
+		assert.NotNil(t, response.Data)
+	})
+
+	t.Run("TestPeerMap", func(t *testing.T) {
+		m.Command = "peerMap"
+		response := s.ProcessCommand(m)
+
+		assert.NotNil(t, response)
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning compounded P2P OSPF generated Interface Address to static Interface Address", response.Message)
+		assert.NotNil(t, response.Data)
+	})
+
+	// m.Command = "asbrSummary"
+	// m.Command = "externalData"
+	// m.Command = "nssaExternalData"
+	// m.Command = "duplicates"
+	// m.Command = "neighbors"
+	// m.Command = "interfaces"
+	// m.Command = "staticConfig"
+	// m.Command = "peerMap"
 
 }
