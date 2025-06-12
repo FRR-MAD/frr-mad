@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/logger"
 )
 

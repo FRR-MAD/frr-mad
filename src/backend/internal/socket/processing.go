@@ -7,7 +7,7 @@ import (
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 )
 
-func (s *Socket) processCommand(message *frrProto.Message) *frrProto.Response {
+func (s *Socket) ProcessCommand(message *frrProto.Message) *frrProto.Response {
 	var response frrProto.Response
 
 	switch message.Service {
@@ -52,7 +52,7 @@ func (s *Socket) frrProcessing(command string) *frrProto.Response {
 		return s.getRibFibSummary()
 	default:
 		response.Status = "error"
-		response.Message = "There was an error"
+		response.Message = fmt.Sprintf("Unknown command: %s", command)
 		return &response
 	}
 }
@@ -113,12 +113,6 @@ func (s *Socket) analysisProcessing(command string) *frrProto.Response {
 	case "shouldParsedLsdb":
 		return s.getShouldParsedLsdb()
 
-	case "dummyRouterOne":
-		return getRouterAnomalyDummy1()
-	case "dummyExternalOne":
-		return getExternalAnomalyDummy1()
-	case "dummyNSSAExternalOne":
-		return getNSSAExternalAnomalyDummy1()
 	default:
 		response.Status = "error"
 		response.Message = fmt.Sprintf("Unknown command: %s", command)

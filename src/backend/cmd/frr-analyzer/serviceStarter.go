@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/aggregator"
 	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"

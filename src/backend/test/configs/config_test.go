@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/stretchr/testify/assert"
 )
 

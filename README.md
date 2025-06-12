@@ -137,4 +137,4 @@ EOF
 
 ---
 
-Refere to ![Docs](docs/README.md) for more project related information
+Refere to ![Docs](docs/) for more project related information

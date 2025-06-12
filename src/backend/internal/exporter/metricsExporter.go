@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/prometheus/client_golang/prometheus"
