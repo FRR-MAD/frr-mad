@@ -81,6 +81,32 @@ func TestMessageProcessing(t *testing.T) {
 		assert.Contains(t, response.Message, "Unknown service: invalid")
 	})
 
+	t.Run("TestSystemDefault", func(t *testing.T) {
+		request := &frrProto.Message{
+			Service: "system",
+			Command: "foo",
+		}
+
+		response := sendRequestAndGetResponse(t, request, "/tmp/test-message-socket")
+
+		assert.Equal(t, "error", response.Status)
+		assert.Contains(t, response.Message, "There was an error getting system resources")
+
+	})
+
+	t.Run("TestSystemDefault", func(t *testing.T) {
+		request := &frrProto.Message{
+			Service: "system",
+			Command: "exit",
+		}
+
+		response := sendRequestAndGetResponse(t, request, "/tmp/test-message-socket")
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Shutting system down", response.Message)
+
+	})
+
 	socketInstance.Close()
 }
 
@@ -229,7 +255,6 @@ func TestAnalysisUnhappyPath(t *testing.T) {
 
 		m.Command = "shouldParsedLsdb"
 		response = s.ProcessCommand(m)
-		// assert.IsType(t, &frrProto.AnomalyDetection{}, response.Data.Kind)
 		assert.IsType(t, &frrProto.ResponseValue_ParsedAnalyzerData{}, response.Data.Kind)
 		assert.Equal(t, "success", response.Status)
 	})
@@ -279,6 +304,44 @@ func TestFrrHappyPath(t *testing.T) {
 		assert.Equal(t, "Returning route summaries of RIB and FIB", response.Message)
 		assert.IsType(t, &frrProto.ResponseValue_RibFibSummaryRoutes{}, response.Data.Kind)
 
+	})
+
+}
+func TestFrrUnhappyPath(t *testing.T) {
+	s := getEmptyMockSocket()
+	m := &frrProto.Message{
+		Service: "frr",
+	}
+	t.Run("TestCommand_routerData", func(t *testing.T) {
+		m.Command = "routerData"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning FRR meta data of router itself", response.Message)
+		assert.Equal(t, "r101", response.Data.GetFrrRouterData().RouterName)
+		assert.Equal(t, "192.168.1.1", response.Data.GetFrrRouterData().OspfRouterId)
+		assert.Empty(t, response.Data.GetFrrRouterData())
+	})
+
+	t.Run("TestCommand_rib", func(t *testing.T) {
+		m.Command = "rib"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning all routes (RIB)", response.Message)
+		assert.IsType(t, &frrProto.ResponseValue_RoutingInformationBase{}, response.Data.Kind)
+		assert.Empty(t, response.Data.GetRoutingInformationBase())
+
+	})
+
+	t.Run("TestCommand_ribfibSummary", func(t *testing.T) {
+		m.Command = "ribfibSummary"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "success", response.Status)
+		assert.Equal(t, "Returning route summaries of RIB and FIB", response.Message)
+		assert.IsType(t, &frrProto.ResponseValue_RibFibSummaryRoutes{}, response.Data.Kind)
+		assert.Empty(t, response.Data.GetRibFibSummaryRoutes())
 	})
 
 }
