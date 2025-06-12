@@ -69,6 +69,18 @@ func TestMessageProcessing(t *testing.T) {
 		assert.Equal(t, 40.2, systemMetrics.MemoryUsage)
 	})
 
+	t.Run("TestSystemInvalidCommand", func(t *testing.T) {
+		request := &frrProto.Message{
+			Service: "system",
+			Command: "foobar",
+		}
+
+		response := sendRequestAndGetResponse(t, request, "/tmp/test-message-socket")
+
+		assert.Equal(t, "error", response.Status)
+		assert.Equal(t, "There was an error getting system resources", response.Message)
+	})
+
 	t.Run("TestInvalidCommand", func(t *testing.T) {
 		request := &frrProto.Message{
 			Service: "invalid",
