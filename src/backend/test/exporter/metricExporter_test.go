@@ -6,7 +6,7 @@ import (
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/frr-mad/frr-mad/src/logger"

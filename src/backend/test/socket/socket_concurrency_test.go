@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/socket"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/stretchr/testify/assert"

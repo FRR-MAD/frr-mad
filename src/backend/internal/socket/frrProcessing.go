@@ -7,7 +7,7 @@ import (
 func (s *Socket) getRouterName() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_FrrRouterData{
-			FrrRouterData: s.metrics.GetFrrRouterData(),
+			FrrRouterData: s.Metrics.GetFrrRouterData(),
 		},
 	}
 	return &frrProto.Response{
@@ -20,7 +20,7 @@ func (s *Socket) getRouterName() *frrProto.Response {
 func (s *Socket) getSystemResources() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_SystemMetrics{
-			SystemMetrics: s.metrics.GetSystemMetrics(),
+			SystemMetrics: s.Metrics.GetSystemMetrics(),
 		},
 	}
 	return &frrProto.Response{
@@ -33,7 +33,7 @@ func (s *Socket) getSystemResources() *frrProto.Response {
 func (s *Socket) getRoutingInformationBase() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_RoutingInformationBase{
-			RoutingInformationBase: s.metrics.GetRoutingInformationBase(),
+			RoutingInformationBase: s.Metrics.GetRoutingInformationBase(),
 		},
 	}
 	return &frrProto.Response{
@@ -46,7 +46,7 @@ func (s *Socket) getRoutingInformationBase() *frrProto.Response {
 func (s *Socket) getRibFibSummary() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_RibFibSummaryRoutes{
-			RibFibSummaryRoutes: s.metrics.GetRibFibSummaryRoutes(),
+			RibFibSummaryRoutes: s.Metrics.GetRibFibSummaryRoutes(),
 		},
 	}
 	return &frrProto.Response{
@@ -59,7 +59,7 @@ func (s *Socket) getRibFibSummary() *frrProto.Response {
 func (s *Socket) getStaticFrrConfiguration() *frrProto.Response {
 	value := &frrProto.ResponseValue{
 		Kind: &frrProto.ResponseValue_StaticFrrConfiguration{
-			StaticFrrConfiguration: s.metrics.GetStaticFrrConfiguration(),
+			StaticFrrConfiguration: s.Metrics.GetStaticFrrConfiguration(),
 		},
 	}
 	return &frrProto.Response{

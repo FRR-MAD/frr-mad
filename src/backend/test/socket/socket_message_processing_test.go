@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/socket"
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
 	"github.com/stretchr/testify/assert"
@@ -116,4 +116,122 @@ func sendRequestAndGetResponse(t *testing.T, request *frrProto.Message, socketPa
 	assert.NoError(t, err)
 
 	return response
+}
+
+func TestAnalysisHappyPath(t *testing.T) {
+	s := getEmptyMockSocket()
+	s.Anomalies.RouterAnomaly = CreateMockAnomalyDetectionRouter()
+	s.Anomalies.ExternalAnomaly = CreateMockAnomalyDetectionExternal()
+	s.Anomalies.NssaExternalAnomaly = CreateMockAnomalyDetectionNssaExternal()
+	s.Anomalies.LsdbToRibAnomaly = CreateMockAnomalyDetectionLsdbToRib()
+	m := &frrProto.Message{
+		Service: "analysis",
+		Command: "router",
+	}
+
+	t.Run("TestAnalysisRouter", func(t *testing.T) {
+		m.Command = "router"
+		response := s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+		assert.True(t, response.Data.GetAnomaly().HasOverAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasUnAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasDuplicatePrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasMisconfiguredPrefixes)
+		assert.Equal(t, "89.207.132.170", response.Data.GetAnomaly().SuperfluousEntries[0].InterfaceAddress)
+		assert.Empty(t, response.Data.GetAnomaly().MissingEntries)
+		assert.Empty(t, response.Data.GetAnomaly().DuplicateEntries)
+	})
+
+	t.Run("TestAnalysisExternal", func(t *testing.T) {
+		m.Command = "external"
+		response := s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+		assert.False(t, response.Data.GetAnomaly().HasOverAdvertisedPrefixes)
+		assert.True(t, response.Data.GetAnomaly().HasUnAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasDuplicatePrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasMisconfiguredPrefixes)
+		assert.Empty(t, response.Data.GetAnomaly().SuperfluousEntries)
+		assert.Equal(t, "89.207.132.170", response.Data.GetAnomaly().MissingEntries[0].InterfaceAddress)
+		assert.Empty(t, response.Data.GetAnomaly().DuplicateEntries)
+	})
+
+	t.Run("TestAnalysisNssaExternal", func(t *testing.T) {
+		m.Command = "nssaExternal"
+		response := s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+		assert.True(t, response.Data.GetAnomaly().HasOverAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasUnAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasDuplicatePrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasMisconfiguredPrefixes)
+		assert.Equal(t, "89.207.132.170", response.Data.GetAnomaly().SuperfluousEntries[0].InterfaceAddress)
+		assert.Empty(t, response.Data.GetAnomaly().MissingEntries)
+		assert.Empty(t, response.Data.GetAnomaly().DuplicateEntries)
+	})
+	t.Run("TestAnalysisLsdbToRib", func(t *testing.T) {
+		m.Command = "lsdbToRib"
+		response := s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+		assert.False(t, response.Data.GetAnomaly().HasOverAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasUnAdvertisedPrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasDuplicatePrefixes)
+		assert.False(t, response.Data.GetAnomaly().HasMisconfiguredPrefixes)
+		assert.Empty(t, response.Data.GetAnomaly().SuperfluousEntries)
+		assert.Empty(t, response.Data.GetAnomaly().MissingEntries)
+		assert.Empty(t, response.Data.GetAnomaly().DuplicateEntries)
+	})
+
+}
+
+func TestAnalysisUnhappyPath(t *testing.T) {
+	s := getEmptyMockSocket()
+	m := &frrProto.Message{
+		Service: "analysis",
+		Command: "router",
+	}
+
+	t.Run("TestUnknownService", func(t *testing.T) {
+		m.Command = "foobar"
+		response := s.ProcessCommand(m)
+
+		assert.Equal(t, "error", response.Status)
+		assert.Equal(t, "Unknown command: foobar", response.Message)
+
+	})
+	t.Run("TestAnalysisSwitchCase", func(t *testing.T) {
+		m.Command = "router"
+		response := s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+
+		m.Command = "external"
+		response = s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+
+		m.Command = "nssaExternal"
+		response = s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+
+		m.Command = "lsdbToRib"
+		response = s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+
+		m.Command = "ribToFib"
+		response = s.ProcessCommand(m)
+		assert.IsType(t, &frrProto.ResponseValue_Anomaly{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+
+		m.Command = "shouldParsedLsdb"
+		response = s.ProcessCommand(m)
+		// assert.IsType(t, &frrProto.AnomalyDetection{}, response.Data.Kind)
+		assert.IsType(t, &frrProto.ResponseValue_ParsedAnalyzerData{}, response.Data.Kind)
+		assert.Equal(t, "success", response.Status)
+	})
+
 }

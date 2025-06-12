@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/frr-mad/frr-mad/src/backend/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/aggregator"
 	"github.com/frr-mad/frr-mad/src/backend/internal/analyzer"
-	socket "github.com/frr-mad/frr-mad/src/backend/internal/socket"
+	"github.com/frr-mad/frr-mad/src/backend/internal/configs"
 	"github.com/frr-mad/frr-mad/src/backend/internal/exporter"
+	socket "github.com/frr-mad/frr-mad/src/backend/internal/socket"
 	"github.com/frr-mad/frr-mad/src/logger"
 	"github.com/spf13/cobra"
 )
