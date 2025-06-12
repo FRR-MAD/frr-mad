@@ -119,6 +119,7 @@ func TestMessageProcessing(t *testing.T) {
 
 	})
 
+	socketInstance.Close()
 }
 
 // Helper function to send a request to the socket and get the response
@@ -329,9 +330,8 @@ func TestFrrUnhappyPath(t *testing.T) {
 
 		assert.Equal(t, "success", response.Status)
 		assert.Equal(t, "Returning FRR meta data of router itself", response.Message)
-		assert.Equal(t, "r101", response.Data.GetFrrRouterData().RouterName)
-		assert.Equal(t, "192.168.1.1", response.Data.GetFrrRouterData().OspfRouterId)
-		assert.Empty(t, response.Data.GetFrrRouterData())
+		assert.Nil(t, response.Data.GetFrrRouterData())
+		assert.NotNil(t, response.Data)
 	})
 
 	t.Run("TestCommand_rib", func(t *testing.T) {
@@ -472,14 +472,5 @@ func TestOspfProcessing(t *testing.T) {
 		assert.Equal(t, "Returning compounded P2P OSPF generated Interface Address to static Interface Address", response.Message)
 		assert.NotNil(t, response.Data)
 	})
-
-	// m.Command = "asbrSummary"
-	// m.Command = "externalData"
-	// m.Command = "nssaExternalData"
-	// m.Command = "duplicates"
-	// m.Command = "neighbors"
-	// m.Command = "interfaces"
-	// m.Command = "staticConfig"
-	// m.Command = "peerMap"
 
 }
