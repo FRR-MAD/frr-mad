@@ -151,6 +151,11 @@ func TestRouterLsaHappy1(t *testing.T) {
 	})
 
 	t.Run("TestConfigOrOspfNil", func(t *testing.T) {
+		ana2 := initAnalyzerNoBackbone()
+		result1, _ := ana2.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+
+		assert.False(t, result1)
+
 		originalMetrics := frrMetrics.StaticFrrConfiguration
 		adjustedMetrics := originalMetrics
 
