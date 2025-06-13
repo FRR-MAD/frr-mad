@@ -149,6 +149,29 @@ func TestRouterLsaHappy1(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("TestConfigOrOspfNil", func(t *testing.T) {
+		ana2 := initAnalyzerNoBackbone()
+		result1, _ := ana2.GetStaticFileRouterData(frrMetrics.StaticFrrConfiguration)
+
+		assert.False(t, result1)
+
+		originalMetrics := frrMetrics.StaticFrrConfiguration
+		adjustedMetrics := originalMetrics
+
+		adjustedMetrics.OspfConfig = nil
+		result1, result2 := ana.GetStaticFileRouterData(adjustedMetrics)
+
+		assert.False(t, result1)
+		assert.Nil(t, result2)
+
+		// adjustedMetrics = &frrProto.StaticFRRConfiguration{}
+		adjustedMetrics = nil
+		result1, result2 = ana.GetStaticFileRouterData(adjustedMetrics)
+		assert.False(t, result1)
+		assert.Nil(t, result2)
+
+	})
 }
 
 func TestRouterLsaUnhappy1(t *testing.T) {
@@ -467,7 +490,12 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
+
+		frrMetrics.StaticFrrConfiguration.OspfConfig = nil
+		result := ana.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
+		assert.Nil(t, result)
 	})
+
 }
 
 func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {

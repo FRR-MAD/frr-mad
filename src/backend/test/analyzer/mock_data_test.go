@@ -13,6 +13,13 @@ func initAnalyzer() *analyzer.Analyzer {
 	return analyzer.InitAnalyzer(metrics, appLogger, anomalyLogger)
 }
 
+func initAnalyzerNoBackbone() *analyzer.Analyzer {
+
+	metrics, appLogger, anomalyLogger := getMockDataNoBackbone()
+
+	return analyzer.InitAnalyzer(metrics, appLogger, anomalyLogger)
+}
+
 func getMockData() (*frrProto.FullFRRData, *logger.Logger, *logger.Logger) {
 	metrics := &frrProto.FullFRRData{
 		GeneralOspfInformation: &frrProto.GeneralOspfInformation{
@@ -21,6 +28,19 @@ func getMockData() (*frrProto.FullFRRData, *logger.Logger, *logger.Logger) {
 					Backbone: true,
 				},
 			},
+		},
+	}
+	appLogger, _ := logger.NewApplicationLogger("testing", "/tmp/testing.log")
+	anomalyLogger, _ := logger.NewApplicationLogger("testing2", "/tmp/testing2.log")
+
+	return metrics, appLogger, anomalyLogger
+
+}
+
+func getMockDataNoBackbone() (*frrProto.FullFRRData, *logger.Logger, *logger.Logger) {
+	metrics := &frrProto.FullFRRData{
+		GeneralOspfInformation: &frrProto.GeneralOspfInformation{
+			Areas: map[string]*frrProto.GeneralInfoOspfArea{},
 		},
 	}
 	appLogger, _ := logger.NewApplicationLogger("testing", "/tmp/testing.log")
@@ -108,6 +128,7 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "192.168.100.1",
 							PrefixLength: 24,
 						},
+						Ospf: false,
 					},
 				},
 			},
