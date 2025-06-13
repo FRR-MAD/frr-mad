@@ -490,7 +490,12 @@ func TestNssaExternalLsaHappy1(t *testing.T) {
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.MissingEntries)
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.SuperfluousEntries)
 		assert.Empty(t, ana.AnalysisResult.NssaExternalAnomaly.DuplicateEntries)
+
+		frrMetrics.StaticFrrConfiguration.OspfConfig = nil
+		result := ana.GetStaticFileNssaExternalData(frrMetrics.StaticFrrConfiguration, accessList, staticRouteMap)
+		assert.Nil(t, result)
 	})
+
 }
 
 func TestNssaExternalAnomaliesUnhappy1(t *testing.T) {
