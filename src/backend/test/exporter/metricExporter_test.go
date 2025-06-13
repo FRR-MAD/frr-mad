@@ -2,6 +2,7 @@ package exporter_test
 
 import (
 	"math"
+	"os"
 	"testing"
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
@@ -1132,4 +1133,79 @@ func TestMetricExporter_OutageSimulation(t *testing.T) {
 		"area_id":       "0.0.0.1",
 		"link_state_id": "172.16.0.0",
 	}))
+}
+
+func TestMetricExporter_NilData(t *testing.T) {
+	registry := prometheus.NewRegistry()
+	logPath := "/tmp/frrMadExporter_nil.log"
+	testLogger, err := logger.NewApplicationLogger("test", logPath)
+	assert.NoError(t, err)
+
+	flags := configs.ExporterConfig{
+		OSPFRouterData:       true,
+		OSPFNetworkData:      true,
+		OSPFSummaryData:      true,
+		OSPFAsbrSummaryData:  true,
+		OSPFExternalData:     true,
+		OSPFNssaExternalData: true,
+		OSPFDatabase:         true,
+		OSPFNeighbors:        true,
+		InterfaceList:        true,
+		RouteList:            true,
+	}
+
+	frrMadExporter := exporter.NewMetricExporter(nil, registry, testLogger, flags)
+
+	frrMadExporter.Update()
+
+	metrics, err := registry.Gather()
+	assert.NoError(t, err)
+
+	expectedMetrics := []string{
+		"frr_mad_ospf_router_links_total",
+		"frr_mad_ospf_network_attached_routers_total",
+		"frr_mad_ospf_summary_metric",
+		"frr_mad_ospf_asbr_summary_metric",
+		"frr_mad_ospf_external_metric",
+		"frr_mad_ospf_nssa_external_metric",
+		"frr_mad_ospf_database_lsa_count",
+		"frr_mad_ospf_neighbor_state",
+		"frr_mad_ospf_neighbor_uptime",
+		"frr_mad_interface_operational_status",
+		"frr_mad_interface_admin_status",
+		"frr_mad_installed_ospf_route",
+		"frr_mad_installed_ospf_routes_count",
+	}
+
+	for _, metricName := range expectedMetrics {
+		for _, metric := range metrics {
+			if *metric.Name == metricName {
+				if len(metric.Metric) > 0 {
+					for _, m := range metric.Metric {
+						assert.Equal(t, 0.0, m.GetGauge().GetValue(), "metric %s should be 0", metricName)
+					}
+				}
+				break
+			}
+		}
+	}
+
+	assert.True(t, checkLogForWarning(t, logPath, "Skipping metric update - no data available"),
+		"Expected warning message not found in log file")
+
+	// Clear log file before second test
+	if err := os.WriteFile("/tmp/frrMadExporter_nil.log", []byte{}, 0644); err != nil {
+		t.Fatalf("Failed to clear log file: %v", err)
+	}
+
+	registry = prometheus.NewRegistry()
+	emptyData := &frrProto.FullFRRData{}
+	frrMadExporter = exporter.NewMetricExporter(emptyData, registry, testLogger, flags)
+	frrMadExporter.Update()
+
+	_, err = registry.Gather()
+	assert.NoError(t, err)
+
+	assert.False(t, checkLogForWarning(t, logPath, "Skipping metric update - no data available"),
+		"Should not log warning when data is empty but not nil")
 }

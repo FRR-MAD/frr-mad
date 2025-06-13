@@ -447,11 +447,9 @@ func TestAnomalyExporter_NilAdvertisement(t *testing.T) {
 	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 	exp.Update()
 
-	// Verify the warning was logged
 	assert.True(t, checkLogForWarning(t, logPath, "Attempted to set anomaly detail with nil advertisement"),
 		"Expected warning message not found in log file")
 
-	// Verify no metrics were created for nil entries
 	metrics, err := registry.Gather()
 	fmt.Println(metrics)
 	assert.NoError(t, err)
@@ -468,14 +466,12 @@ func TestBoolToString(t *testing.T) {
 func checkLogForWarning(t *testing.T, logPath string, expectedMessage string) bool {
 	t.Helper()
 
-	// Read the entire log file
 	content, err := os.ReadFile(logPath)
 	if err != nil {
 		t.Fatalf("Failed to read log file: %v", err)
 		return false
 	}
 
-	// Convert to string and check for the message
 	logContent := string(content)
 	return strings.Contains(logContent, expectedMessage)
 }
