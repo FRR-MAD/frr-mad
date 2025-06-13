@@ -149,6 +149,24 @@ func TestRouterLsaHappy1(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("TestConfigOrOspfNil", func(t *testing.T) {
+		originalMetrics := frrMetrics.StaticFrrConfiguration
+		adjustedMetrics := originalMetrics
+
+		adjustedMetrics.OspfConfig = nil
+		result1, result2 := ana.GetStaticFileRouterData(adjustedMetrics)
+
+		assert.False(t, result1)
+		assert.Nil(t, result2)
+
+		// adjustedMetrics = &frrProto.StaticFRRConfiguration{}
+		adjustedMetrics = nil
+		result1, result2 = ana.GetStaticFileRouterData(adjustedMetrics)
+		assert.False(t, result1)
+		assert.Nil(t, result2)
+
+	})
 }
 
 func TestRouterLsaUnhappy1(t *testing.T) {
