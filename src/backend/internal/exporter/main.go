@@ -13,12 +13,12 @@ import (
 )
 
 type Exporter struct {
-	interval        time.Duration
-	anomalyExporter *AnomalyExporter
-	metricExporter  *MetricExporter
-	server          *http.Server
-	stopChan        chan struct{}
-	logger          *logger.Logger
+	Interval        time.Duration
+	AnomalyExporter *AnomalyExporter
+	MetricExporter  *MetricExporter
+	Server          *http.Server
+	StopChan        chan struct{}
+	Logger          *logger.Logger
 }
 
 func NewExporter(
@@ -66,12 +66,12 @@ func NewExporter(
 	})
 
 	e := &Exporter{
-		interval:        pollInterval,
-		anomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
-		metricExporter:  NewMetricExporter(frrData, registry, logger, config),
-		stopChan:        make(chan struct{}),
-		logger:          logger,
-		server: &http.Server{
+		Interval:        pollInterval,
+		AnomalyExporter: NewAnomalyExporter(anomalies, registry, logger),
+		MetricExporter:  NewMetricExporter(frrData, registry, logger, config),
+		StopChan:        make(chan struct{}),
+		Logger:          logger,
+		Server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", port),
 			Handler: mux,
 		},
@@ -82,78 +82,78 @@ func NewExporter(
 
 func (e *Exporter) Start() {
 	go func() {
-		if err := e.server.ListenAndServe(); err != nil {
-			e.logger.WithAttrs(map[string]interface{}{
+		if err := e.Server.ListenAndServe(); err != nil {
+			e.Logger.WithAttrs(map[string]interface{}{
 				"error": err.Error(),
 			}).Error("Metrics server failed")
 		}
 	}()
 
 	//e.runExportLoop()
-	go e.runExportLoop()
-	e.logger.WithAttrs(map[string]interface{}{
-		"address":  e.server.Addr,
-		"interval": e.interval.String(),
+	go e.RunExportLoop()
+	e.Logger.WithAttrs(map[string]interface{}{
+		"address":  e.Server.Addr,
+		"interval": e.Interval.String(),
 	}).Info("Exporter successfully started")
 }
 
 func (e *Exporter) Stop() {
-	e.logger.Info("Shutting down exporter")
-	close(e.stopChan)
-	if err := e.server.Close(); err != nil {
-		e.logger.WithAttrs(map[string]interface{}{
+	e.Logger.Info("Shutting down exporter")
+	close(e.StopChan)
+	if err := e.Server.Close(); err != nil {
+		e.Logger.WithAttrs(map[string]interface{}{
 			"error": err.Error(),
 		}).Error("Error while shutting down server")
 	}
-	e.logger.Info("Exporter shutdown complete")
+	e.Logger.Info("Exporter shutdown complete")
 }
 
-func (e *Exporter) runExportLoop() {
-	e.logger.Info("Starting export loop")
-	defer e.logger.Info("Export loop stopped")
+func (e *Exporter) RunExportLoop() {
+	e.Logger.Info("Starting export loop")
+	defer e.Logger.Info("Export loop stopped")
 
-	ticker := time.NewTicker(e.interval)
+	ticker := time.NewTicker(e.Interval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
 			start := time.Now()
-			e.exportData()
-			e.logger.WithAttrs(map[string]interface{}{
+			e.ExportData()
+			e.Logger.WithAttrs(map[string]interface{}{
 				"duration": time.Since(start).String(),
 			}).Debug("Completed export cycle")
-		case <-e.stopChan:
+		case <-e.StopChan:
 			return
 		}
 	}
 }
 
-func (e *Exporter) exportData() {
-	e.logger.Debug("Starting data export")
+func (e *Exporter) ExportData() {
+	e.Logger.Debug("Starting data export")
 
-	err := tryUpdateWithRetry("AnomalyExporter", e.anomalyExporter.Update, e.logger)
+	err := TryUpdateWithRetry("AnomalyExporter", e.AnomalyExporter.Update, e.Logger)
 	if err != nil {
-		e.logger.WithAttrs(map[string]interface{}{
+		e.Logger.WithAttrs(map[string]interface{}{
 			"component": "AnomalyExporter",
 			"error":     err.Error(),
 		}).Error("Failed to update after retry")
 	}
 
-	if e.metricExporter != nil {
-		err := tryUpdateWithRetry("MetricExporter", e.metricExporter.Update, e.logger)
+	if e.MetricExporter != nil {
+		err := TryUpdateWithRetry("MetricExporter", e.MetricExporter.Update, e.Logger)
 		if err != nil {
-			e.logger.WithAttrs(map[string]interface{}{
+			e.Logger.WithAttrs(map[string]interface{}{
 				"component": "MetricExporter",
 				"error":     err.Error(),
 			}).Error("Failed to update after retry")
 		}
 	}
 
-	e.logger.Debug("Data export completed")
+	e.Logger.Debug("Data export completed")
 }
 
-func tryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) error {
+func TryUpdateWithRetry(name string, updateFunc func(), logger *logger.Logger) error {
 	const retryDelay = 500 * time.Millisecond
 
 	logger.WithAttrs(map[string]interface{}{
