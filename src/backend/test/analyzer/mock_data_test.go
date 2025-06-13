@@ -128,6 +128,7 @@ func getR101FRRdata() *frrProto.FullFRRData {
 							IpAddress:    "192.168.100.1",
 							PrefixLength: 24,
 						},
+						Ospf: false,
 					},
 				},
 			},
