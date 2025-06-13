@@ -1,6 +1,9 @@
 package exporter_test
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -297,7 +300,185 @@ func TestAnomalyExporter_MixedAnomalies(t *testing.T) {
 		}))
 }
 
+func TestAnomalyExporter_RibToFibAnomalies(t *testing.T) {
+	registry := prometheus.NewRegistry()
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
+	assert.NoError(t, err)
+
+	anomalyResult := &frrProto.AnomalyAnalysis{
+		RibToFibAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes: true,
+			HasUnAdvertisedPrefixes:   true,
+			HasDuplicatePrefixes:      true,
+			HasMisconfiguredPrefixes:  true,
+			SuperfluousEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "10.0.0.1", LinkStateId: "1.1.1.1", PrefixLength: "24"},
+				{InterfaceAddress: "10.0.0.2", LinkStateId: "2.2.2.2", PrefixLength: "24"},
+			},
+			MissingEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "192.168.1.1", LinkStateId: "3.3.3.3", PrefixLength: "24"},
+			},
+			DuplicateEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "172.16.0.1", LinkStateId: "4.4.4.4", PrefixLength: "24"},
+			},
+		},
+	}
+
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
+	exp.Update()
+
+	metrics, err := registry.Gather()
+	assert.NoError(t, err)
+
+	// Check total anomalies counter
+	assert.Equal(t, 4.0, getMetricValue(metrics, "frr_mad_rib_to_fib_anomalies_total"))
+
+	// Check flags
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_flags",
+		map[string]string{"source": "RibToFib", "flag_type": "overadvertised"}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_flags",
+		map[string]string{"source": "RibToFib", "flag_type": "unadvertised"}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_flags",
+		map[string]string{"source": "RibToFib", "flag_type": "duplicate"}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_flags",
+		map[string]string{"source": "RibToFib", "flag_type": "misconfigured"}))
+
+	// Check details for each type of anomaly
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "overadvertised",
+			"source":            "RibToFib",
+			"interface_address": "10.0.0.1",
+			"link_state_id":     "1.1.1.1",
+		}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "overadvertised",
+			"source":            "RibToFib",
+			"interface_address": "10.0.0.2",
+			"link_state_id":     "2.2.2.2",
+		}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "unadvertised",
+			"source":            "RibToFib",
+			"interface_address": "192.168.1.1",
+			"link_state_id":     "3.3.3.3",
+		}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "duplicate",
+			"source":            "RibToFib",
+			"interface_address": "172.16.0.1",
+			"link_state_id":     "4.4.4.4",
+		}))
+}
+
+func TestAnomalyExporter_LsdbToRibAnomalies(t *testing.T) {
+	registry := prometheus.NewRegistry()
+	testLogger, err := logger.NewApplicationLogger("test", "/tmp/frrMadExporter.log")
+	assert.NoError(t, err)
+
+	anomalyResult := &frrProto.AnomalyAnalysis{
+		LsdbToRibAnomaly: &frrProto.AnomalyDetection{
+			HasOverAdvertisedPrefixes: true,
+			HasDuplicatePrefixes:      true,
+			SuperfluousEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "10.1.0.1", LinkStateId: "5.5.5.5", PrefixLength: "24"},
+			},
+			DuplicateEntries: []*frrProto.Advertisement{
+				{InterfaceAddress: "10.2.0.1", LinkStateId: "6.6.6.6", PrefixLength: "24"},
+				{InterfaceAddress: "10.2.0.2", LinkStateId: "7.7.7.7", PrefixLength: "24"},
+			},
+		},
+	}
+
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
+	exp.Update()
+
+	metrics, err := registry.Gather()
+	assert.NoError(t, err)
+
+	// Check total anomalies counter
+	assert.Equal(t, 3.0, getMetricValue(metrics, "frr_mad_lsdb_to_rib_anomalies_total"))
+
+	// Check flags
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_flags",
+		map[string]string{"source": "LsdbToRib", "flag_type": "overadvertised"}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_flags",
+		map[string]string{"source": "LsdbToRib", "flag_type": "duplicate"}))
+
+	// Check details
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "overadvertised",
+			"source":            "LsdbToRib",
+			"interface_address": "10.1.0.1",
+			"link_state_id":     "5.5.5.5",
+		}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "duplicate",
+			"source":            "LsdbToRib",
+			"interface_address": "10.2.0.1",
+			"link_state_id":     "6.6.6.6",
+		}))
+	assert.Equal(t, 1.0, getMetricValueWithLabels(metrics, "frr_mad_anomaly_details",
+		map[string]string{
+			"anomaly_type":      "duplicate",
+			"source":            "LsdbToRib",
+			"interface_address": "10.2.0.2",
+			"link_state_id":     "7.7.7.7",
+		}))
+}
+
+func TestAnomalyExporter_NilAdvertisement(t *testing.T) {
+	registry := prometheus.NewRegistry()
+	logPath := "/tmp/frrMadExporter.log"
+	testLogger, err := logger.NewApplicationLogger("test", logPath)
+	assert.NoError(t, err)
+
+	anomalyResult := &frrProto.AnomalyAnalysis{
+		RouterAnomaly: &frrProto.AnomalyDetection{
+			SuperfluousEntries: []*frrProto.Advertisement{nil},
+		},
+	}
+
+	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
+	exp.Update()
+
+	// Verify the warning was logged
+	assert.True(t, checkLogForWarning(t, logPath, "Attempted to set anomaly detail with nil advertisement"),
+		"Expected warning message not found in log file")
+
+	// Verify no metrics were created for nil entries
+	metrics, err := registry.Gather()
+	fmt.Println(metrics)
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, getMetricValue(metrics, "frr_mad_ospf_overadvertised_routes_total"))
+}
+
+func TestBoolToString(t *testing.T) {
+	assert.Equal(t, "true", exporter.BoolToString(true))
+	assert.Equal(t, "false", exporter.BoolToString(false))
+}
+
 // Helper functions
+
+func checkLogForWarning(t *testing.T, logPath string, expectedMessage string) bool {
+	t.Helper()
+
+	// Read the entire log file
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+		return false
+	}
+
+	// Convert to string and check for the message
+	logContent := string(content)
+	return strings.Contains(logContent, expectedMessage)
+}
 
 func getMetricValue(metrics []*dto.MetricFamily, name string) float64 {
 	for _, mf := range metrics {

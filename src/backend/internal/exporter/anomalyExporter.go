@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"fmt"
 	"sync"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
@@ -214,9 +215,9 @@ func (a *AnomalyExporter) processOspfSources() {
 		a.anomalyFlags.WithLabelValues(source, "duplicate").Set(boolToFloat(detection.GetHasDuplicatePrefixes()))
 		a.anomalyFlags.WithLabelValues(source, "misconfigured").Set(boolToFloat(detection.GetHasMisconfiguredPrefixes()))
 
-		over := detection.GetSuperfluousEntries()
-		under := detection.GetMissingEntries()
-		dup := detection.GetDuplicateEntries()
+		over := filterNilAdvertisements(detection.GetSuperfluousEntries())
+		under := filterNilAdvertisements(detection.GetMissingEntries())
+		dup := filterNilAdvertisements(detection.GetDuplicateEntries())
 
 		a.logger.WithAttrs(map[string]interface{}{
 			"source":               source,
@@ -228,6 +229,10 @@ func (a *AnomalyExporter) processOspfSources() {
 		totalOver += len(over)
 		totalUnder += len(under)
 		totalDup += len(dup)
+
+		fmt.Println("----------------------------------------------")
+		fmt.Println(over)
+		fmt.Println("----------------------------------------------")
 
 		for _, ad := range over {
 			a.setAnomalyDetail("overadvertised", source, ad)
@@ -278,7 +283,7 @@ func (a *AnomalyExporter) setAnomalyDetail(anomalyType, source string, ad *frrPr
 		"link_state_id":     ad.GetLinkStateId(),
 		"prefix_length":     ad.GetPrefixLength(),
 		"link_type":         ad.GetLinkType(),
-		"p_bit":             boolToString(ad.GetPBit()),
+		"p_bit":             BoolToString(ad.GetPBit()),
 		"options":           ad.GetOptions(),
 	}
 
@@ -296,6 +301,16 @@ func (a *AnomalyExporter) setAnomalyDetail(anomalyType, source string, ad *frrPr
 	}).Debug("Set anomaly detail metric")
 }
 
+func filterNilAdvertisements(ads []*frrProto.Advertisement) []*frrProto.Advertisement {
+	var result []*frrProto.Advertisement
+	for _, ad := range ads {
+		if ad != nil {
+			result = append(result, ad)
+		}
+	}
+	return result
+}
+
 func boolToFloat(b bool) float64 {
 	if b {
 		return 1
@@ -303,7 +318,7 @@ func boolToFloat(b bool) float64 {
 	return 0
 }
 
-func boolToString(b bool) string {
+func BoolToString(b bool) string {
 	if b {
 		return "true"
 	}
