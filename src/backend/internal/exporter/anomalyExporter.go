@@ -1,7 +1,6 @@
 package exporter
 
 import (
-	"fmt"
 	"sync"
 
 	frrProto "github.com/frr-mad/frr-mad/src/backend/pkg"
@@ -229,10 +228,6 @@ func (a *AnomalyExporter) processOspfSources() {
 		totalOver += len(over)
 		totalUnder += len(under)
 		totalDup += len(dup)
-
-		fmt.Println("----------------------------------------------")
-		fmt.Println(over)
-		fmt.Println("----------------------------------------------")
 
 		for _, ad := range over {
 			a.setAnomalyDetail("overadvertised", source, ad)

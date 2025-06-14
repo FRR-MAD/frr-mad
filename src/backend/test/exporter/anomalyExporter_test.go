@@ -1,7 +1,6 @@
 package exporter_test
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -448,11 +447,10 @@ func TestAnomalyExporter_NilAdvertisement(t *testing.T) {
 	exp.Update()
 
 	// TODO: Fix this @mp
-	// assert.True(t, checkLogForWarning(t, logPath, "Attempted to set anomaly detail with nil advertisement"),
-	// "Expected warning message not found in log file")
-	//
+	assert.True(t, checkLogForWarning(t, logPath, "Attempted to set anomaly detail with nil advertisement"),
+		"Expected warning message not found in log file")
+
 	metrics, err := registry.Gather()
-	fmt.Println(metrics)
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, getMetricValue(metrics, "frr_mad_ospf_overadvertised_routes_total"))
 }

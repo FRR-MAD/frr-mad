@@ -30,7 +30,6 @@ type Socket struct {
 }
 
 func NewSocket(config configs.SocketConfig, metrics *frrProto.FullFRRData, analysisResult *frrProto.AnomalyAnalysis, logger *logger.Logger, parsedAnalyzerData *frrProto.ParsedAnalyzerData) *Socket {
-	fmt.Println(config)
 	return &Socket{
 		socketPath:         fmt.Sprintf("%s/%s", config.UnixSocketLocation, config.UnixSocketName),
 		mutex:              sync.Mutex{},
