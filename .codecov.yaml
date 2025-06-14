@@ -1,0 +1,5 @@
+coverage:
+  ignore:
+    - "src/backend/pkg/**"
+    - "src/backend/test/**"
+
