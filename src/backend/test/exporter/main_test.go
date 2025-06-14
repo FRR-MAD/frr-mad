@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -382,3 +383,18 @@ func TestExporterEndpoints(t *testing.T) {
 // 	require.NoError(t, err)
 // 	assert.NotContains(t, string(content), "error", "No errors should be logged")
 // }
+
+// Helper functions
+
+func checkLogForWarning(t *testing.T, logPath string, expectedMessage string) bool {
+	t.Helper()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+		return false
+	}
+
+	logContent := string(content)
+	return strings.Contains(logContent, expectedMessage)
+}

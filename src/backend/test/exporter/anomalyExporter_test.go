@@ -1,8 +1,6 @@
 package exporter_test
 
 import (
-	"os"
-	"strings"
 	"sync"
 	"testing"
 
@@ -431,48 +429,12 @@ func TestAnomalyExporter_LsdbToRibAnomalies(t *testing.T) {
 		}))
 }
 
-func TestAnomalyExporter_NilAdvertisement(t *testing.T) {
-	registry := prometheus.NewRegistry()
-	logPath := "/tmp/frrMadExporter.log"
-	testLogger, err := logger.NewApplicationLogger("test", logPath)
-	assert.NoError(t, err)
-
-	anomalyResult := &frrProto.AnomalyAnalysis{
-		RouterAnomaly: &frrProto.AnomalyDetection{
-			SuperfluousEntries: []*frrProto.Advertisement{nil},
-		},
-	}
-
-	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
-	exp.Update()
-
-	assert.True(t, checkLogForWarning(t, logPath, "Attempted to set anomaly detail with nil advertisement"),
-		"Expected warning message not found in log file")
-
-	metrics, err := registry.Gather()
-	assert.NoError(t, err)
-	assert.Equal(t, 0.0, getMetricValue(metrics, "frr_mad_ospf_overadvertised_routes_total"))
-}
-
 func TestBoolToString(t *testing.T) {
 	assert.Equal(t, "true", exporter.BoolToString(true))
 	assert.Equal(t, "false", exporter.BoolToString(false))
 }
 
 // Helper functions
-
-func checkLogForWarning(t *testing.T, logPath string, expectedMessage string) bool {
-	t.Helper()
-
-	content, err := os.ReadFile(logPath)
-	if err != nil {
-		t.Fatalf("Failed to read log file: %v", err)
-		return false
-	}
-
-	logContent := string(content)
-	return strings.Contains(logContent, expectedMessage)
-}
 
 func getMetricValue(metrics []*dto.MetricFamily, name string) float64 {
 	for _, mf := range metrics {

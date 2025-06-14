@@ -263,14 +263,6 @@ func (a *AnomalyExporter) processOspfSources() {
 }
 
 func (a *AnomalyExporter) setAnomalyDetail(anomalyType, source string, ad *frrProto.Advertisement) {
-	if ad == nil {
-		a.logger.WithAttrs(map[string]interface{}{
-			"anomaly_type": anomalyType,
-			"source":       source,
-		}).Warning("Attempted to set anomaly detail with nil advertisement")
-		return
-	}
-
 	labels := prometheus.Labels{
 		"anomaly_type":      anomalyType,
 		"source":            source,
