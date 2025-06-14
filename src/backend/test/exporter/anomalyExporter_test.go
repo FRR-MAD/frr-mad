@@ -446,7 +446,6 @@ func TestAnomalyExporter_NilAdvertisement(t *testing.T) {
 	exp := exporter.NewAnomalyExporter(anomalyResult, registry, testLogger)
 	exp.Update()
 
-	// TODO: Fix this @mp
 	assert.True(t, checkLogForWarning(t, logPath, "Attempted to set anomaly detail with nil advertisement"),
 		"Expected warning message not found in log file")
 
