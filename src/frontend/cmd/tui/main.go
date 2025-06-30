@@ -29,7 +29,6 @@ const (
 	ViewRIB
 	ViewShell
 	// add here new Views
-	totalViews
 )
 
 var (
