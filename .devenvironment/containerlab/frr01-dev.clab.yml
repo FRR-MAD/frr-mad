@@ -90,7 +90,7 @@ topology:
 
     r1010:
       kind: linux
-      image: frr-854
+      image: frr-img
       binds:
         - r1010/daemons:/etc/frr/daemons
         - r1010/frr.conf:/etc/frr/frr.conf
